@@ -1,0 +1,667 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { getProgress, updateProgress, LocalStats } from '@/utils/storage';
+import { useAuth } from '@/context/AuthContext';
+import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile } from '@/utils/firestore';
+import styles from './page.module.css';
+
+// Simple markdown formatter helper for protocol preview
+function formatProtocolMarkdown(text: string): string {
+  let formatted = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Bold: **text**
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italic: *text*
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+  
+  // Headers
+  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.25rem; margin-bottom: 0.5rem; color: var(--accent-secondary); font-size:1.15rem;">$1</h3>');
+  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.75rem; margin-bottom: 0.75rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.35rem;">$1</h2>');
+  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size:1.75rem; text-align:center;">$1</h1>');
+
+  // Horizontal rules
+  formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
+
+  // List items
+  formatted = formatted.replace(/^\s*[-*]\s+(.*?)$/gm, '<li style="margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.35rem;">$1</li>');
+
+  // Double newlines to paragraphs
+  formatted = formatted.split('\n').join('<br />');
+
+  // Cleanup redundant br tags
+  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/li>|<hr \/>)<br \/>/g, '$1');
+
+  return formatted;
+}
+
+export default function ProtocoleGenerator() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'info' | 'methodo' | 'endpoints'>('info');
+  
+  // Form State
+  const [title, setTitle] = useState('');
+  const [acronym, setAcronym] = useState('');
+  const [riphCategory, setRiphCategory] = useState('observational');
+  const [question, setQuestion] = useState('');
+  const [design, setDesign] = useState('Étude de Cohorte');
+  const [intervention, setIntervention] = useState('');
+  const [population, setPopulation] = useState('');
+  const [inclusion, setInclusion] = useState('');
+  const [exclusion, setExclusion] = useState('');
+  const [primaryEndpoint, setPrimaryEndpoint] = useState('');
+  const [secondaryEndpoints, setSecondaryEndpoints] = useState('');
+
+  // App State
+  const [generatedProtocol, setGeneratedProtocol] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<LocalStats['recentProtocols']>([]);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (user) {
+        try {
+          const firestoreProtos = await loadFirestoreProtocols(user.uid);
+          setHistory(firestoreProtos);
+        } catch (err) {
+          console.error("Erreur lors de la récupération de l'historique des protocoles:", err);
+          setHistory(getProgress().recentProtocols || []);
+        }
+      } else {
+        setHistory(getProgress().recentProtocols || []);
+      }
+    };
+    fetchHistory();
+  }, [user]);
+
+  const handleGenerate = async () => {
+    if (!title.trim() || !question.trim()) {
+      alert('Veuillez remplir au moins le titre de l\'étude et la question de recherche.');
+      return;
+    }
+
+    setLoading(true);
+    setGeneratedProtocol(null);
+
+    const formData = {
+      title,
+      acronym,
+      riphCategory,
+      question,
+      design,
+      intervention,
+      population,
+      inclusion,
+      exclusion,
+      primaryEndpoint,
+      secondaryEndpoints
+    };
+
+    try {
+      const response = await fetch('/api/generate-protocol', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setGeneratedProtocol(data.protocol);
+        
+        // Sauvegarder dans l'historique local
+        const newProtocolItem = {
+          id: Math.random().toString(36).substring(7),
+          title: title,
+          acronym: acronym || 'SANS ACRONYME',
+          date: new Date().toISOString(),
+          content: data.protocol
+        };
+
+        updateProgress((stats) => {
+          const updatedHistory = [newProtocolItem, ...stats.recentProtocols];
+          return {
+            protocolsGenerated: stats.protocolsGenerated + 1,
+            recentProtocols: updatedHistory.slice(0, 15) // Garder les 15 derniers
+          };
+        });
+
+        // Si connecté, synchroniser avec Firestore
+        if (user) {
+          try {
+            await saveFirestoreProtocol(user.uid, newProtocolItem);
+            const currentStats = getProgress();
+            await syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, currentStats);
+          } catch (e) {
+            console.error("Erreur de sauvegarde du protocole sur Firestore:", e);
+          }
+        }
+
+        // Mettre à jour l'état local de l'historique
+        setHistory((prev) => [newProtocolItem, ...prev].slice(0, 15));
+      } else {
+        throw new Error(data.error || 'Erreur lors de la génération.');
+      }
+    } catch (error: any) {
+      alert(`⚠️ Échec de la génération : ${error.message || 'Le serveur n\'a pas pu répondre.'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopy = () => {
+    if (!generatedProtocol) return;
+    navigator.clipboard.writeText(generatedProtocol);
+    alert('Protocole copié dans le presse-papiers !');
+  };
+
+  const handleDownload = (format: 'md' | 'txt') => {
+    if (!generatedProtocol) return;
+    const blob = new Blob([generatedProtocol], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `protocole_${acronym || 'recherche'}.${format}`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    if (!generatedProtocol) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Veuillez autoriser les fenêtres pop-up pour pouvoir exporter le PDF.');
+      return;
+    }
+
+    const formattedHtml = formatProtocolMarkdown(generatedProtocol);
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Protocole [${acronym || 'SANS ACRONYME'}] - ${title || 'Sans titre'}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          :root {
+            --font-title: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --accent-primary: #005a70;
+            --accent-secondary: #0d9488;
+            --border-glass: #e5e7eb;
+            --text-primary: #111827;
+          }
+
+          
+          body {
+            font-family: var(--font-body);
+            color: #1f2937;
+            line-height: 1.6;
+            padding: 2cm 2.5cm;
+            font-size: 11pt;
+            background: #ffffff;
+          }
+
+          @page {
+            size: A4;
+            margin: 2cm;
+          }
+
+          /* En-tête */
+          .doc-header {
+            border-bottom: 2px solid #005a70;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+          }
+
+          .doc-header h3 {
+            margin: 0;
+            font-family: var(--font-title);
+            font-size: 13pt;
+            color: #005a70;
+            font-weight: 700;
+          }
+
+          .doc-header p {
+            margin: 2px 0 0 0;
+            font-size: 9pt;
+            color: #6b7280;
+          }
+
+          .doc-header-date {
+            font-size: 9pt;
+            color: #6b7280;
+          }
+
+          /* Titre */
+          h1 {
+            font-family: var(--font-title);
+            font-size: 20pt;
+            color: #111827;
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            line-height: 1.25;
+          }
+
+          .acronym-badge {
+            display: block;
+            text-align: center;
+            font-family: var(--font-title);
+            font-size: 12pt;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 0.35rem 1rem;
+            border-radius: 4px;
+            width: fit-content;
+            margin: 0 auto 2rem auto;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+          }
+
+          /* Sections */
+          h2 {
+            font-family: var(--font-title);
+            font-size: 14pt;
+            color: #005a70;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+            margin-top: 2.5rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            page-break-after: avoid;
+          }
+
+          h3 {
+            font-family: var(--font-title);
+            font-size: 11pt;
+            color: #111827;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            page-break-after: avoid;
+          }
+
+          p {
+            margin-top: 0;
+            margin-bottom: 0.85rem;
+            text-align: justify;
+          }
+
+          ul, ol {
+            margin-top: 0;
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+          }
+
+          li {
+            margin-bottom: 0.35rem;
+          }
+
+          /* Bas de page */
+          .doc-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            font-size: 8pt;
+            color: #9ca3af;
+          }
+
+          hr {
+            border: 0;
+            border-top: 1px solid #e5e7eb;
+            margin: 2rem 0;
+          }
+
+          @media print {
+            body {
+              padding: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="doc-header">
+          <div>
+            <h3>PROTOCOLE DE RECHERCHE CLINIQUE</h3>
+            <p>Conforme aux recommandations RECIF & Loi n° 18-11 Santé (Algérie)</p>
+          </div>
+          <div class="doc-header-date">
+            Généré le ${new Date().toLocaleDateString('fr-FR')}
+          </div>
+        </div>
+
+        <h1>${title}</h1>
+        ${acronym ? `<div class="acronym-badge">${acronym}</div>` : ''}
+
+        <div class="doc-body">
+          ${formattedHtml}
+        </div>
+
+        <div class="doc-footer">
+          <span>Plateforme RECIF Éducation - Formation en Méthodologie</span>
+          <span>Algérie • Ministère de la Santé</span>
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  };
+
+  const handleSelectHistory = (content: string, histTitle: string, histAcronym: string) => {
+    setGeneratedProtocol(content);
+    setTitle(histTitle);
+    setAcronym(histAcronym);
+  };
+
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Générateur de Protocole de Recherche</h1>
+        <p className={styles.subtitle}>
+          Remplissez les détails cliniques pour générer une trame de protocole formalisée selon les exigences du RECIF.
+        </p>
+      </header>
+
+      <div className={styles.layout}>
+        {/* Formulaire de gauche */}
+        <div className={`${styles.formCard} glass-card`}>
+          <div className={styles.tabs}>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'info' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('info')}
+            >
+              1. Identité & Réglementation
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'methodo' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('methodo')}
+            >
+              2. Question & Schéma
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'endpoints' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('endpoints')}
+            >
+              3. Critères & Population
+            </button>
+          </div>
+
+          <div className={styles.stepContainer}>
+            {activeTab === 'info' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="title">Titre Complet de l'étude *</label>
+                  <input
+                    id="title"
+                    type="text"
+                    className="form-input"
+                    placeholder="ex. Évaluation de l'efficacité de la thérapie X..."
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="acronym">Acronyme</label>
+                  <input
+                    id="acronym"
+                    type="text"
+                    className="form-input"
+                    placeholder="ex. COVID-CARE"
+                    value={acronym}
+                    onChange={(e) => setAcronym(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="riph">Catégorie d'Étude (Loi n° 18-11 Santé)</label>
+                  <select
+                    id="riph"
+                    className="form-select"
+                    value={riphCategory}
+                    onChange={(e) => setRiphCategory(e.target.value)}
+                  >
+                    <option value="interventional">Étude clinique interventionnelle (Essai thérapeutique/diagnostique/préventif)</option>
+                    <option value="observational">Étude clinique observationnelle (Épidémiologique/Pharmaco-épidémiologique)</option>
+                    <option value="sbid">Étude sans bénéfice individuel direct (SBID, Art. 391)</option>
+                    <option value="bid">Étude avec bénéfice individuel direct (Art. 388)</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {activeTab === 'methodo' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="question">Question de recherche principale *</label>
+                  <textarea
+                    id="question"
+                    className="form-textarea"
+                    placeholder="Quelle est la question clinique précise à laquelle l'étude doit répondre ?"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="design">Schéma d'étude préconisé</label>
+                  <select
+                    id="design"
+                    className="form-select"
+                    value={design}
+                    onChange={(e) => setDesign(e.target.value)}
+                  >
+                    <option value="Essai Clinique Randomisé Contrôlé (ECR)">Essai Clinique Randomisé Contrôlé (ECR)</option>
+                    <option value="Étude de Cohorte prospective">Étude de Cohorte prospective</option>
+                    <option value="Étude de Cohorte rétrospective">Étude de Cohorte rétrospective</option>
+                    <option value="Étude Cas-Témoins">Étude Cas-Témoins</option>
+                    <option value="Étude Transversale">Étude Transversale</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="intervention">Description de l'intervention ou de l'exposition</label>
+                  <textarea
+                    id="intervention"
+                    className="form-textarea"
+                    placeholder="Décrivez précisément le traitement, le protocole de soin ou le paramètre évalué..."
+                    value={intervention}
+                    onChange={(e) => setIntervention(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {activeTab === 'endpoints' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="pop">Population cible</label>
+                  <input
+                    id="pop"
+                    type="text"
+                    className="form-input"
+                    placeholder="ex. Patients adultes atteints de diabète de type 2..."
+                    value={population}
+                    onChange={(e) => setPopulation(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="primary">Critère de Jugement Principal *</label>
+                  <input
+                    id="primary"
+                    type="text"
+                    className="form-input"
+                    placeholder="Mesure clé (ex. Taux d'HbA1c à 6 mois)"
+                    value={primaryEndpoint}
+                    onChange={(e) => setPrimaryEndpoint(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="secondary">Critères de Jugement Secondaires</label>
+                  <input
+                    id="secondary"
+                    type="text"
+                    className="form-input"
+                    placeholder="ex. Tolérance biologique, qualité de vie, coûts"
+                    value={secondaryEndpoints}
+                    onChange={(e) => setSecondaryEndpoints(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="inclusion">Critères d'inclusion principaux (un par ligne)</label>
+                  <textarea
+                    id="inclusion"
+                    className="form-textarea"
+                    placeholder="ex. Âge >= 18 ans&#10;Diagnostic confirmé depuis > 1 an"
+                    value={inclusion}
+                    onChange={(e) => setInclusion(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="exclusion">Critères d'exclusion (un par ligne)</label>
+                  <textarea
+                    id="exclusion"
+                    className="form-textarea"
+                    placeholder="ex. Insuffisance rénale sévère&#10;Grossesse ou allaitement"
+                    value={exclusion}
+                    onChange={(e) => setExclusion(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className={styles.navButtons}>
+            {activeTab === 'info' && (
+              <button className="btn btn-secondary" style={{ visibility: 'hidden' }}>Précédent</button>
+            )}
+            {activeTab === 'methodo' && (
+              <button className="btn btn-secondary" onClick={() => setActiveTab('info')}>Précédent</button>
+            )}
+            {activeTab === 'endpoints' && (
+              <button className="btn btn-secondary" onClick={() => setActiveTab('methodo')}>Précédent</button>
+            )}
+
+            {activeTab !== 'endpoints' ? (
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  if (activeTab === 'info') setActiveTab('methodo');
+                  else if (activeTab === 'methodo') setActiveTab('endpoints');
+                }}
+              >
+                Suivant
+              </button>
+            ) : (
+              <button
+                className="btn btn-primary"
+                onClick={handleGenerate}
+                disabled={loading || !title.trim() || !question.trim()}
+              >
+                {loading ? 'Génération en cours...' : 'Générer le Protocole'}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Prévisualisation de droite */}
+        <div className={`${styles.previewCard} glass-card`}>
+          <div className={styles.previewHeader}>
+            <span className={styles.previewTitle}>Prévisualisation du Protocole</span>
+            {generatedProtocol && (
+              <div className={styles.previewActions}>
+                <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleCopy}>
+                  Copier
+                </button>
+                <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleDownload('md')}>
+                  Télécharger .md
+                </button>
+                <button className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleExportPDF}>
+                  Exporter en PDF
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.previewBody}>
+            {loading ? (
+              <div className={styles.emptyPreview}>
+                <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                  <svg className="animate-pulse" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 2s linear infinite' }}>
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  <span>L'IA de Méthodo Clinique rédige votre protocole méthodologique...</span>
+                </div>
+              </div>
+            ) : generatedProtocol ? (
+              <div dangerouslySetInnerHTML={{ __html: formatProtocolMarkdown(generatedProtocol) }} />
+            ) : (
+              <div className={styles.emptyPreview}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                <span>Remplissez le formulaire de gauche et cliquez sur "Générer" pour obtenir un protocole de recherche complet et structuré.</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Historique des protocoles récents */}
+        {history.length > 0 && (
+          <section className={styles.historySection}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Protocoles sauvegardés</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Sélectionnez un protocole pour le recharger dans la fenêtre de prévisualisation.</p>
+            <div className={styles.historyList}>
+              {history.map((h) => (
+                <div
+                  key={h.id}
+                  className={`${styles.historyItem} glass-card`}
+                  onClick={() => handleSelectHistory(h.content, h.title, h.acronym)}
+                >
+                  <div className={styles.historyMeta}>
+                    <span>{h.acronym}</span>
+                    <span>{new Date(h.date).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                  <h4 className={styles.historyTitle}>{h.title.length > 40 ? h.title.substring(0, 40) + '...' : h.title}</h4>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}} />
+    </div>
+  );
+}

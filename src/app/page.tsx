@@ -1,65 +1,213 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { getProgress, resetProgress, saveProgress, LocalStats } from '@/utils/storage';
+import { useAuth } from '@/context/AuthContext';
+import { loadUserProfile, loadFirestoreProtocols, syncUserProfile, deleteFirestoreProtocol } from '@/utils/firestore';
+import styles from './page.module.css';
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [stats, setStats] = useState<LocalStats | null>(null);
+
+  const fetchStats = async () => {
+    if (user) {
+      try {
+        const profile = await loadUserProfile(user.uid);
+        const firestoreProtos = await loadFirestoreProtocols(user.uid);
+        if (profile?.stats) {
+          const updated = {
+            ...getProgress(),
+            ...profile.stats,
+            recentProtocols: firestoreProtos
+          };
+          saveProgress(updated);
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération des stats Firestore:", err);
+      }
+    }
+    setStats(getProgress());
+  };
+
+  useEffect(() => {
+    fetchStats();
+    window.addEventListener('progress_changed', fetchStats);
+    return () => {
+      window.removeEventListener('progress_changed', fetchStats);
+    };
+  }, [user]);
+
+  const handleReset = async () => {
+    if (confirm('Voulez-vous vraiment réinitialiser tout votre parcours d\'apprentissage ? Vos protocoles générés et vos scores seront effacés.')) {
+      resetProgress();
+      if (user) {
+        try {
+          const DEFAULT_STATS = {
+            questionsAsked: 0,
+            protocolsGenerated: 0,
+            quizCorrect: 0,
+            quizTotal: 0,
+            flashcardsMastered: [],
+            recentQuestions: [],
+            recentProtocols: []
+          };
+          await syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, DEFAULT_STATS);
+          
+          const protos = await loadFirestoreProtocols(user.uid);
+          for (const p of protos) {
+            await deleteFirestoreProtocol(user.uid, p.id);
+          }
+        } catch (e) {
+          console.error("Erreur de réinitialisation sur Firestore:", e);
+        }
+      }
+      fetchStats();
+    }
+  };
+
+  if (!stats) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Chargement du tableau de bord...</p>
+      </div>
+    );
+  }
+
+  // Calculs statistiques
+  const quizPct = stats.quizTotal > 0 ? Math.round((stats.quizCorrect / stats.quizTotal) * 100) : 0;
+  const flashcardsPct = Math.round((stats.flashcardsMastered.length / 12) * 100);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className={styles.dashboard}>
+      <header className={styles.header}>
+        <h1 className={styles.title}>Méthodologie de Recherche Clinique</h1>
+        <p className={styles.subtitle}>
+          Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
+        </p>
+      </header>
+
+      {/* Grid de Statistiques */}
+      <section className={styles.statsGrid}>
+        <div className={`${styles.statCard} glass-card`}>
+          <div className={styles.statIcon}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </div>
+          <span className={styles.statLabel}>Tuteur RECIF</span>
+          <span className={styles.statValue}>{stats.questionsAsked}</span>
+          <span className={styles.statProgress}>Questions posées</span>
+          <Link href="/tuteur" style={{ marginTop: 'auto', paddingTop: '1rem', fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: '600' }}>
+            Poser une question &rarr;
+          </Link>
+        </div>
+
+        <div className={`${styles.statCard} glass-card`}>
+          <div className={styles.statIcon} style={{ color: 'var(--accent-secondary)' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <span className={styles.statLabel}>Protocoles générés</span>
+          <span className={styles.statValue}>{stats.protocolsGenerated}</span>
+          <span className={styles.statProgress} style={{ color: 'var(--accent-secondary)' }}>Fiches prêtes</span>
+          <Link href="/protocole" style={{ marginTop: 'auto', paddingTop: '1rem', fontSize: '0.85rem', color: 'var(--accent-secondary)', fontWeight: '600' }}>
+            Nouveau protocole &rarr;
+          </Link>
+        </div>
+
+        <div className={`${styles.statCard} glass-card`}>
+          <div className={styles.statIcon} style={{ color: 'var(--accent-success)' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m9 11 3 3L22 4" />
+              <path d="M22 12a10 10 0 1 1-5.93-9.14" />
+            </svg>
+          </div>
+          <span className={styles.statLabel}>Score aux Quiz</span>
+          <span className={styles.statValue}>{quizPct}%</span>
+          <span className={styles.statProgress} style={{ color: 'var(--accent-success)' }}>
+            {stats.quizCorrect}/{stats.quizTotal} réponses correctes
+          </span>
+          <Link href="/quiz" style={{ marginTop: 'auto', paddingTop: '1rem', fontSize: '0.85rem', color: 'var(--accent-success)', fontWeight: '600' }}>
+            Lancer un quiz &rarr;
+          </Link>
+        </div>
+
+        <div className={`${styles.statCard} glass-card`}>
+          <div className={styles.statIcon} style={{ color: 'var(--accent-warning)' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+          <span className={styles.statLabel}>Flashcards maîtrisées</span>
+          <span className={styles.statValue}>{flashcardsPct}%</span>
+          <span className={styles.statProgress} style={{ color: 'var(--accent-warning)' }}>
+            {stats.flashcardsMastered.length}/12 cartes acquises
+          </span>
+          <Link href="/quiz" style={{ marginTop: 'auto', paddingTop: '1rem', fontSize: '0.85rem', color: 'var(--accent-warning)', fontWeight: '600' }}>
+            Réviser les cartes &rarr;
+          </Link>
+        </div>
+      </section>
+
+      {/* Section actions rapides */}
+      <section className={styles.quickActions}>
+        <div className={`${styles.actionCard} glass-card`}>
+          <h3 className={styles.cardTitle}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20V10" />
+              <path d="M18 20V4" />
+              <path d="M6 20v-4" />
+            </svg>
+            Votre Parcours & Rapport de Suivi
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+            L'IA peut générer un bilan pédagogique complet de vos compétences en méthodologie clinique en analysant votre progression (scores des quiz, concepts de flashcards acquis et protocoles rédigés).
           </p>
+          <Link href="/rapport" className="btn btn-primary">
+            Consulter mon Rapport Pédagogique
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className={`${styles.actionCard} glass-card`}>
+          <h3 className={styles.cardTitle}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            Protocoles récents
+          </h3>
+          {stats.recentProtocols.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic', marginTop: '1rem' }}>
+              Aucun protocole généré pour le moment.
+            </p>
+          ) : (
+            <ul className={styles.recentProtocolsList}>
+              {stats.recentProtocols.slice(0, 3).map((p) => (
+                <li key={p.id} className={styles.protocolItem}>
+                  <div className={styles.protocolMeta}>
+                    <h5>[{p.acronym}] {p.title.length > 25 ? p.title.substring(0, 25) + '...' : p.title}</h5>
+                    <span>{new Date(p.date).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                  <Link href="/protocole" style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '600' }}>
+                    Voir &rarr;
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      </main>
+      </section>
+
+      {/* Réinitialisation */}
+      <div className={styles.resetContainer}>
+        <button className={styles.resetBtn} onClick={handleReset}>
+          Réinitialiser toutes mes statistiques
+        </button>
+      </div>
     </div>
   );
 }

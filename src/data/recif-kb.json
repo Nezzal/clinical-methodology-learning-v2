@@ -1,0 +1,222 @@
+{
+  "manual_title": "La Recherche Clinique : Penser, Réaliser, Publier",
+  "editor": "Editions Abatos",
+  "organization": "Sous la direction du RECIF (Réseau d'Épidémiologie Clinique International Francophone)",
+  "structure": {
+    "part_1": {
+      "title": "Première Partie : Justification et Formulation de la question de recherche",
+      "chapters": [
+        {
+          "number": 1,
+          "title": "Question de recherche, hypothèse, différents types d'études",
+          "authors": "Roland Chapurlat"
+        },
+        {
+          "number": 2,
+          "title": "La revue de la littérature",
+          "authors": "Gilles Landrivon, Pierre Duhaut, Hélène Pellet"
+        },
+        {
+          "number": 3,
+          "title": "Ethique de la recherche impliquant des êtres humains",
+          "authors": "Marie-Charlotte Bouësseau, Gilles Landrivon"
+        }
+      ]
+    },
+    "part_2": {
+      "title": "Deuxième partie : Différents Types d'Etudes",
+      "chapters": [
+        {
+          "number": 4,
+          "title": "Les études transversales",
+          "authors": "Pierre Duhaut, Jean Schmidt"
+        },
+        {
+          "number": 5,
+          "title": "Les études cas-témoins",
+          "authors": "Pierre Duhaut, Jean Schmidt"
+        },
+        {
+          "number": 6,
+          "title": "Les études de cohorte",
+          "authors": "Pierre Duhaut, Jean Schmidt"
+        },
+        {
+          "number": 7,
+          "title": "Les essais cliniques",
+          "authors": "François Delahaye"
+        },
+        {
+          "number": 8,
+          "title": "La méta-analyse",
+          "authors": "François Delahaye"
+        },
+        {
+          "number": 9,
+          "title": "Les études de stratégies diagnostiques",
+          "authors": "Muriel Rabilloud, René Ecochard, Gilles Landrivon"
+        },
+        {
+          "number": 10,
+          "title": "Les études économiques",
+          "authors": "Isabelle Jaisson-Hot, Catherine Buron, Jean-Paul Moatti, Cyrille Colin"
+        },
+        {
+          "number": 11,
+          "title": "Les analyses de décision",
+          "authors": "A Termoz, C Buron, I Jaisson-Hot, C Colin"
+        }
+      ]
+    },
+    "part_3": {
+      "title": "Troisième partie : L'Elaboration du Protocole",
+      "chapters": [
+        {
+          "number": 12,
+          "title": "Les points clé de la validité interne d'une étude : biais et facteurs confondants",
+          "authors": "P Duhaut, J Schmidt"
+        },
+        {
+          "number": 13,
+          "title": "La rédaction du protocole",
+          "authors": "Gilles Landrivon, François Delahaye"
+        },
+        {
+          "number": 14,
+          "title": "Les outils de mesure : instruments et questionnaires",
+          "authors": "Anne-Marie Schott, François Chapuis, Gilles Landrivon, Eric-Nicolas Bory, François Delahaye"
+        },
+        {
+          "number": 15,
+          "title": "La mesure de la qualité de vie en recherche clinique",
+          "authors": "Carole Vuillerot, Isabelle Hodgkinson"
+        },
+        {
+          "number": 16,
+          "title": "Notions de statistiques pour le clinicien",
+          "authors": "Pierre Duhaut, Claire Andréjak"
+        },
+        {
+          "number": 17,
+          "title": "Budget et recherche de financements",
+          "authors": "Pierre Duhaut, Jean Schmidt, Claire Andréjak, Jean-Pierre Ducroix"
+        }
+      ]
+    },
+    "part_4": {
+      "title": "Quatrième Partie : L'Exécution du Protocole et la Présentation des Résultats",
+      "chapters": [
+        {
+          "number": 18,
+          "title": "La rédaction médicale",
+          "authors": "H Maisonneuve"
+        },
+        {
+          "number": 19,
+          "title": "Applicabilité des résultats et valorisation de la recherche",
+          "authors": "P Duhaut, R Chapurlat, J-P Ducroix"
+        },
+        {
+          "number": 20,
+          "title": "La synthèse de l'information scientifique",
+          "authors": "Yves Matillon"
+        }
+      ]
+    }
+  },
+  "fine_criteria": {
+    "name": "Critères FINE pour concevoir la bonne question de recherche",
+    "faisable": "Nombre de sujets suffisant, aspects techniques maîtrisés, coût supportable, temps disponible.",
+    "interessante": "La question doit intéresser le chercheur, ses pairs, faire progresser la connaissance ou guider les pratiques.",
+    "nouvelle": "Apporter une contribution nouvelle dans la littérature, éviter de 'réinventer la poudre'.",
+    "ethique": "Minimiser les risques physiques et psychologiques, respecter la vie privée et obtenir le consentement écrit."
+  },
+  "protocol_19_sections": [
+    "1. Le titre (conforme aux exigences de précision du RECIF)",
+    "2. Le(s) objectif(s) (objectif principal unique et objectifs secondaires)",
+    "3. La justification de l'étude (état de l'art dans la littérature et rationnel)",
+    "4. La (les) hypothèse(s) (hypothèse nulle H0 et alternative H1)",
+    "5. Le type d'étude (transversale, cas-témoins, cohorte, essai contrôlé)",
+    "6. Le(s) facteur(s) étudié(s) (description précise de l'intervention ou exposition)",
+    "7. Le(s) critère(s) de jugement (endpoint principal unique objectivement mesurable et secondaires)",
+    "8. Les causes d'erreur : biais et facteurs de confusion (biais de sélection, observation, confusion)",
+    "9. Les sujets (représentativité, critères d'inclusion et d'éligibilité)",
+    "10. La taille de l'échantillon (calcul du NSN selon la variance et les risques alpha/bêta)",
+    "11. La récolte et la gestion des données (matériel, codage et sécurité des données)",
+    "12. L'analyse des données (plan statistique descriptif et comparatif prévu)",
+    "13. Une éventuelle étude pilote (entraînement, acceptabilité et taux de réponse)",
+    "14. Les implications éthiques et réglementaires (Loi 18-11, Comité d'Éthique, Ministère de la Santé)",
+    "15. Le personnel (investigateur principal, statisticien, attachés de recherche)",
+    "16. Le budget (personnel, petit matériel, analyses biologiques)",
+    "17. Le calendrier (durée, jalons et calendrier de suivi)",
+    "18. Les annexes éventuelles (lettre d'information et formulaire de consentement éclairé)",
+    "19. Les références (bibliographie aux formats de Vancouver ou Harvard)"
+  ],
+  "reading_grid_annexe_1": {
+    "title": "Annexe 1 : La grille de lecture critique (8 étapes)",
+    "criteria": [
+      {
+        "step": 1,
+        "name": "Objectif",
+        "question": "L'information existe-t-elle pour l'objectif ? Y a-t-il une hypothèse ?"
+      },
+      {
+        "step": 2,
+        "name": "Type d'étude",
+        "question": "Le type de l'étude (transversale, cohorte, essai...) est-il approprié à la question posée ?"
+      },
+      {
+        "step": 3,
+        "name": "Facteur(s) étudié(s)",
+        "question": "Sont-ils bien décrits ? Même méthode de mesure ? Méthode à l'aveugle ?"
+      },
+      {
+        "step": 4,
+        "name": "Critère(s) de jugement",
+        "question": "Comment sont-ils mesurés ? Même méthode ? Mesurés à l'aveugle (insu) ?"
+      },
+      {
+        "step": 5,
+        "name": "Population source et sujets étudiés",
+        "question": "Sélection correcte ? Randomisation ? Proportion de sujets atteignant la fin du suivi ?"
+      },
+      {
+        "step": 6,
+        "name": "Facteurs de confusion potentiels et biais",
+        "question": "Sont-ils tous envisagés et bien contrôlés ?"
+      },
+      {
+        "step": 7,
+        "name": "Analyses statistiques et résultats",
+        "question": "Taille d'échantillon suffisante ? Puissance ? Intervalle de confiance 95% ? Significativité ?"
+      },
+      {
+        "step": 8,
+        "name": "Conclusions des auteurs",
+        "question": "Les conclusions répondent-elles à l'objectif ? Validité et applicabilité en pratique clinique ?"
+      }
+    ]
+  },
+  "algerian_regulation": {
+    "law_reference": "Loi n° 18-11 du 2 juillet 2018 relative à la santé (République Algérienne)",
+    "ethics_committee": "Comité d'éthique médicale pour les études cliniques (Art. 382, avis obligatoire avant le début de toute étude)",
+    "ministry_authorization": "Ministère de la Santé (Décide de l'autorisation d'étude clinique dans un délai de 3 mois, Art. 381)",
+    "study_categories": {
+      "interventional": "Étude clinique interventionnelle (Art. 377, évalue des actes diagnostiques, préventifs ou thérapeutiques avec intervention, bioéquivalence ou biodisponibilité)",
+      "observational": "Étude clinique observationnelle (Art. 377, épidémiologique et pharmaco-épidémiologique pure, sans intervention)",
+      "sbid": "Étude sans bénéfice individuel direct (Art. 391, SBID, recherches sans risque prévisible sérieux, indemnisation compensatoire possible)",
+      "bid": "Étude avec bénéfice individuel direct (Art. 388, avec bénéfice direct pour la santé du participant)"
+    },
+    "key_requirements": [
+      "Consentement libre, exprès et éclairé recueilli par écrit (Art. 386)",
+      "Interdiction de prêter son concours à plusieurs études simultanément (Art. 387)",
+      "Déclaration de tout EIG dans les 7 jours au Ministère et au Comité d'éthique (Art. 395)",
+      "Transfert d'échantillons biologiques hors d'Algérie soumis à attestation du ministre (Art. 390)",
+      "Assurance responsabilité civile obligatoire pour le promoteur en interventionnel (Art. 397)"
+    ],
+    "penalties": {
+      "unauthorized_study": "Lancement d'une étude sans autorisation du Ministère : 2 à 5 ans d'emprisonnement et 5 000 000 DA à 10 000 000 DA d'amende (Art. 438)",
+      "no_consent": "Réalisation d'une étude sans consentement écrit : 2 à 5 ans d'emprisonnement et 100 000 DA à 500 000 DA d'amende (Art. 439)"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Vérifie si l'utilisateur est bien connecté via Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Vérifie si l'utilisateur connecté est le propriétaire du dossier (son UID correspond à l'ID du document)
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Vérifie si le propriétaire est actif (non suspendu)
+    function isOwnerAndActive(userId) {
+      return isOwner(userId) && (
+        !exists(/databases/$(database)/documents/users/$(userId)) ||
+        get(/databases/$(database)/documents/users/$(userId)).data.get('status', 'active') != 'suspended'
+      );
+    }
+
+    // Vérifie si l'utilisateur connecté est un enseignant/superviseur
+    // (adresse email se terminant par @recif.dz, ou email égal à admin@recif.dz ou enseignant@recif.dz)
+    function isSupervisor() {
+      return isAuthenticated() && 
+        request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'admin@recif.dz' ||
+          request.auth.token.email.lower() == 'enseignant@recif.dz' ||
+          request.auth.token.email.lower().endsWith('@recif.dz')
+        );
+    }
+
+    // Vérifie si l'utilisateur connecté est un super-administrateur
+    // (email commençant par 'admin' et se terminant par '@recif.dz')
+    function isSuperAdmin() {
+      return isSupervisor() && (
+        request.auth.token.email.lower() == 'admin@recif.dz' ||
+        request.auth.token.email.lower().matches('^admin.*')
+      );
+    }
+
+
+    // Règles pour les profils et données des utilisateurs
+    match /users/{userId} {
+      // Le propriétaire ou l'enseignant peut lire le profil (nécessaire pour lire le statut de suspension)
+      allow read: if isOwner(userId) || isSupervisor();
+      // Seul le propriétaire actif ou le super-administrateur peut écrire sur le profil (suspendre, créer, modifier)
+      allow write: if isOwnerAndActive(userId) || isSuperAdmin();
+      
+      // Les discussions (totalement bloquées pour les étudiants suspendus)
+      match /chats/{chatId} {
+        allow read: if isOwnerAndActive(userId) || isSupervisor();
+        allow write: if isOwnerAndActive(userId) || isSuperAdmin();
+      }
+      
+      // Les protocoles cliniques rédigés (totalement bloqués pour les étudiants suspendus)
+      match /protocols/{protocolId} {
+        allow read: if isOwnerAndActive(userId) || isSupervisor();
+        allow write: if isOwnerAndActive(userId) || isSuperAdmin();
+      }
+    }
+
+    // Règles pour les demandes d'accès
+    match /access_requests/{requestId} {
+      // Tout le monde peut créer une demande
+      allow create: if true;
+      // Les superviseurs peuvent lire toutes les demandes ; les utilisateurs peuvent lire la leur
+      allow read: if isSupervisor() || (isAuthenticated() && request.auth.token.email.lower() == resource.data.email.lower());
+      // Les super-administrateurs peuvent supprimer les demandes ; les utilisateurs peuvent supprimer la leur
+      allow delete: if isSuperAdmin() || (isAuthenticated() && request.auth.token.email.lower() == resource.data.email.lower());
+      // Pas de modification autorisée
+      allow update: if false;
+    }
+  }
+}
+
