@@ -354,17 +354,6 @@ export default function Login() {
                     </div>
                   )}
                 </div>
-                
-                <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-                  <button 
-                    type="button" 
-                    className={styles.guestLink} 
-                    onClick={() => router.push('/')}
-                    disabled={submitting}
-                  >
-                    Accéder sans compte (Mode Invité Local)
-                  </button>
-                </div>
               </>
             )}
           </div>
