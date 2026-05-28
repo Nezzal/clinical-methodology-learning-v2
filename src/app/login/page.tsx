@@ -144,7 +144,7 @@ export default function Login() {
           <div className={styles.presentationContent}>
             <span className={styles.presentationTag}>Plateforme Académique</span>
             <h2 className={styles.presentationTitle}>
-              RECIF <span className={styles.glowText}>Méthodologie</span>
+              MÉTHODOLOGIE <span className={styles.glowText}>de recherche clinique</span>
             </h2>
             <p className={styles.presentationDesc}>
               L'outil de référence pour maîtriser la méthodologie de recherche clinique et concevoir des projets conformes aux exigences de la <strong>Loi n° 18-11 relative à la santé (Algérie)</strong>.
@@ -202,7 +202,7 @@ export default function Login() {
                 <span className={styles.logoText}>Méthodo Clinique</span>
               </div>
               <h1 className={styles.title}>
-                {isRequestAccess ? 'Demander un Accès' : 'Connexion Étudiant'}
+                {isRequestAccess ? 'Demander un Accès' : 'Connexion Utilisateur'}
               </h1>
               <p className={styles.subtitle}>
                 {isRequestAccess 
