@@ -309,8 +309,39 @@ Votre superviseur RECIF`;
       const data = await getAllUsers();
       // Filtrer pour exclure les administrateurs et enseignants de la liste des élèves et des statistiques collectives
       const onlyStudents = data.filter(u => {
-        const email = u.email?.toLowerCase() || '';
-        return !email.endsWith('@recif.dz');
+        const email = (u.email || '').toLowerCase();
+        const displayName = (u.displayName || '').toLowerCase();
+        
+        // Exclure les domaines recif.dz (enseignants et admins officiels)
+        if (email.endsWith('@recif.dz') || displayName.endsWith('@recif.dz')) {
+          return false;
+        }
+        
+        // Exclure les comptes contenant 'admin', 'enseignant' ou 'superviseur' dans l'email ou le nom d'affichage
+        if (
+          email.includes('admin') || 
+          email.includes('enseignant') || 
+          email.includes('superviseur') ||
+          email.includes('supervisor')
+        ) {
+          return false;
+        }
+        
+        if (
+          displayName.includes('admin') || 
+          displayName.includes('enseignant') || 
+          displayName.includes('superviseur') ||
+          displayName.includes('supervisor')
+        ) {
+          return false;
+        }
+        
+        // Exclure également le superviseur connecté en cours
+        if (user && (email === user.email?.toLowerCase() || u.uid === user.uid)) {
+          return false;
+        }
+        
+        return true;
       });
       setStudents(onlyStudents);
     } catch (e) {
