@@ -328,7 +328,7 @@ export default function Tuteur() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && !data.error) {
         const assistantMessage: Message = {
           role: 'assistant',
           content: data.text,

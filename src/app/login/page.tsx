@@ -7,7 +7,7 @@ import { submitAccessRequest } from '@/utils/firestore';
 import styles from './page.module.css';
 
 export default function Login() {
-  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail } = useAuth();
+  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, guestMode, enableGuestMode } = useAuth();
   const router = useRouter();
 
   const [isRequestAccess, setIsRequestAccess] = useState(false);
@@ -19,12 +19,12 @@ export default function Login() {
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Redirection automatique si déjà connecté
+  // Redirection automatique si déjà connecté ou en mode invité
   useEffect(() => {
-    if (user) {
+    if (user || guestMode) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, guestMode, router]);
 
   if (loading) {
     return (
@@ -50,12 +50,16 @@ export default function Login() {
       await signInWithEmail(email, password);
       setSuccessMsg('Connexion réussie ! Redirection en cours...');
     } catch (error: any) {
-      console.error(error);
+      console.warn("Erreur d'authentification:", error.code || error.message);
       let friendlyError = 'Une erreur est survenue lors de l\'authentification.';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         friendlyError = 'Adresse e-mail ou mot de passe incorrect.';
       } else if (error.code === 'auth/invalid-email') {
         friendlyError = 'Format d\'adresse e-mail invalide.';
+      } else if (error.code === 'auth/network-request-failed') {
+        friendlyError = 'Connexion impossible : les serveurs d\'authentification sont injoignables. Veuillez vérifier votre connexion Internet.';
+      } else if (error.message) {
+        friendlyError = error.message;
       }
       setErrorMsg(friendlyError);
     } finally {
@@ -112,7 +116,7 @@ export default function Login() {
         setSuccessMsg('');
       }, 5000);
     } catch (error: any) {
-      console.error(error);
+      console.warn("Erreur soumission demande d'accès:", error.code || error.message);
       setErrorMsg('Impossible de soumettre la demande d\'accès. Il se peut qu\'une demande existe déjà pour cet e-mail.');
     } finally {
       setSubmitting(false);
@@ -126,13 +130,23 @@ export default function Login() {
       await signInWithGoogle();
       setSuccessMsg('Connexion Google réussie ! Redirection...');
     } catch (error: any) {
-      console.error(error);
-      if (error.code !== 'auth/popup-closed-by-user') {
+      console.warn("Erreur connexion Google:", error.code || error.message);
+      if (error.code === 'auth/network-request-failed') {
+        setErrorMsg('Connexion impossible : les serveurs d\'authentification sont injoignables. Veuillez vérifier votre connexion Internet.');
+      } else if (error.code !== 'auth/popup-closed-by-user') {
         setErrorMsg('Échec de la connexion avec Google. Veuillez réessayer.');
       }
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleGuestMode = () => {
+    enableGuestMode();
+    setSuccessMsg('Accès hors-ligne activé (Mode Invité). Redirection...');
+    setTimeout(() => {
+      router.push('/');
+    }, 500);
   };
 
   return (
@@ -323,6 +337,15 @@ export default function Login() {
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
                       </svg>
                       Se connecter avec Google
+                    </button>
+
+                    <button 
+                      type="button" 
+                      className={styles.offlineBtn} 
+                      onClick={handleGuestMode}
+                      disabled={submitting}
+                    >
+                      📡 Accéder hors-ligne (Mode Invité)
                     </button>
                   </>
                 )}

@@ -1,50 +1,113 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-
-export async function POST(req: Request) {
+async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
-    const data = await req.json();
-    const {
-      questionsAsked = 0,
-      protocolsGenerated = 0,
-      quizScore = { correct: 0, total: 0 },
-      flashcardsMastered = { mastered: 0, total: 0 },
-      recentQuestions = [],
-      recentProtocols = [],
-    } = data;
+    const res = await fetch(`${ollamaUrl}/api/tags`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const models = data.models || [];
+    if (models.length === 0) return null;
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const hasRequested = models.some((m: any) => m.name === requestedModel || m.name.split(':')[0] === requestedModel.split(':')[0]);
+    if (hasRequested) return requestedModel;
 
-    // Calculs de base
-    const totalQuiz = quizScore.total || 0;
-    const correctQuiz = quizScore.correct || 0;
-    const quizPct = totalQuiz > 0 ? Math.round((correctQuiz / totalQuiz) * 100) : 0;
+    const chatModels = models.filter((m: any) => {
+      const name = m.name.toLowerCase();
+      return !name.includes('embed') && !name.includes('minilm');
+    });
 
-    const fcMastered = flashcardsMastered.mastered || 0;
-    const fcTotal = flashcardsMastered.total || 12; // Valeur par défaut
-    const fcPct = Math.round((fcMastered / fcTotal) * 100);
+    if (chatModels.length === 0) return null;
 
-    // Fallback Mock si la clé API n'est pas configurée
-    if (!apiKey) {
-      // Détermination du niveau
-      let level = "Débutant";
-      let focusArea = "Réglementation et Principes Fondamentaux";
-      let recommendation = "Nous vous conseillons de continuer à explorer les concepts de base en lisant la section Réglementation Algérienne (Loi 18-11) et de poser davantage de questions à votre Tuteur virtuel.";
+    const gemmaModel = chatModels.find((m: any) => m.name.toLowerCase().includes('gemma'));
+    if (gemmaModel) return gemmaModel.name;
 
-      if (quizPct >= 80 && fcPct >= 80) {
-        level = "Avancé / Autonome";
-        focusArea = "Raisonnement Statistique et Calculs de Taille d'Échantillon";
-        recommendation = "Excellent niveau ! Vous maîtrisez les concepts clés. Nous vous suggérons de vous concentrer sur la partie statistique avancée et la conception de protocoles cliniques complexes selon la réglementation algérienne.";
-      } else if (quizPct >= 50 || fcPct >= 50 || protocolsGenerated > 0) {
-        level = "Intermédiaire";
-        focusArea = "Choix des Critères de Jugement et Éligibilité";
-        recommendation = "Niveau intermédiaire solide. Travaillez sur la cohérence logique entre votre objectif principal et votre critère de jugement principal. Entraînez-vous avec d'autres thématiques de protocole.";
-      }
+    return chatModels[0].name;
+  } catch (err) {
+    console.warn("⚠️ Impossible de lister les modèles Ollama:", err);
+    return null;
+  }
+}
 
-      const mockReport = `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
+async function tryOllamaGenerateReport(
+  prompt: string,
+  ollamaUrl: string,
+  ollamaModel: string
+): Promise<string | null> {
+  try {
+    console.log(`🤖 [Rapport Pédagogique] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondes de timeout
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ollamaModel,
+        messages: [
+          { 
+            role: 'system', 
+            content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé et constructif en français sous forme de Markdown, sans préambule ni conclusion de type 'Voici votre rapport'." 
+          },
+          { role: 'user', content: prompt }
+        ],
+        stream: false,
+        options: {
+          temperature: 0.6
+        }
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`⚠️ Ollama a retourné un statut d'erreur : ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.message?.content || null;
+  } catch (error: any) {
+    console.warn('⚠️ Échec de la génération locale de rapport par Ollama:', error.message || error);
+    return null;
+  }
+}
+
+function getStaticFallbackReport(
+  questionsAsked: number,
+  protocolsGenerated: number,
+  quizScore: { correct: number; total: number },
+  flashcardsMastered: { mastered: number; total: number }
+): string {
+  const totalQuiz = quizScore.total || 0;
+  const correctQuiz = quizScore.correct || 0;
+  const quizPct = totalQuiz > 0 ? Math.round((correctQuiz / totalQuiz) * 100) : 0;
+
+  const fcMastered = flashcardsMastered.mastered || 0;
+  const fcTotal = flashcardsMastered.total || 12;
+  const fcPct = Math.round((fcMastered / fcTotal) * 100);
+
+  let level = "Débutant";
+  let focusArea = "Réglementation et Principes Fondamentaux";
+  let recommendation = "Nous vous conseillons de continuer à explorer les concepts de base en lisant la section Réglementation Algérienne (Loi 18-11) et de poser davantage de questions à votre Tuteur virtuel.";
+
+  if (quizPct >= 80 && fcPct >= 80) {
+    level = "Avancé / Autonome";
+    focusArea = "Raisonnement Statistique et Calculs de Taille d'Échantillon";
+    recommendation = "Excellent niveau ! Vous maîtrisez les concepts clés. Nous vous suggérons de vous concentrer sur la partie statistique avancée et la conception de protocoles cliniques complexes selon la réglementation algérienne.";
+  } else if (quizPct >= 50 || fcPct >= 50 || protocolsGenerated > 0) {
+    level = "Intermédiaire";
+    focusArea = "Choix des Critères de Jugement et Éligibilité";
+    recommendation = "Niveau intermédiaire solide. Travaillez sur la cohérence logique entre votre objectif principal et votre critère de jugement principal. Entraînez-vous avec d'autres thématiques de protocole.";
+  }
+
+  return `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
 *Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique*
 
-⚠️ *Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée). Configurez votre clé pour obtenir une analyse personnalisée approfondie par l'IA.*
+⚠️ *Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée ou indisponible). Vous pouvez configurer votre clé ou activer Ollama localement pour une analyse personnalisée approfondie.*
 
 ---
 
@@ -75,7 +138,71 @@ Il est crucial d'harmoniser la rigueur réglementaire avec la cohérence de vos 
 2. **Entraînement Quiz :** Tentez de refaire les quiz pour atteindre un score minimal de 80% sur toutes les catégories.
 3. **Approfondissement :** ${recommendation}
 `;
+}
 
+export async function POST(req: Request) {
+  let questionsAsked = 0;
+  let protocolsGenerated = 0;
+  let quizScore = { correct: 0, total: 0 };
+  let flashcardsMastered = { mastered: 0, total: 0 };
+  let recentQuestions: string[] = [];
+  let recentProtocols: string[] = [];
+
+  try {
+    const data = await req.json();
+    questionsAsked = data.questionsAsked ?? 0;
+    protocolsGenerated = data.protocolsGenerated ?? 0;
+    quizScore = data.quizScore ?? { correct: 0, total: 0 };
+    flashcardsMastered = data.flashcardsMastered ?? { mastered: 0, total: 0 };
+    recentQuestions = data.recentQuestions ?? [];
+    recentProtocols = data.recentProtocols ?? [];
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    // Calculs de base
+    const totalQuiz = quizScore.total || 0;
+    const correctQuiz = quizScore.correct || 0;
+    const quizPct = totalQuiz > 0 ? Math.round((correctQuiz / totalQuiz) * 100) : 0;
+
+    const fcMastered = flashcardsMastered.mastered || 0;
+    const fcTotal = flashcardsMastered.total || 12; // Valeur par défaut
+    const fcPct = Math.round((fcMastered / fcTotal) * 100);
+
+    // Fallback si la clé API n'est pas configurée
+    if (!apiKey) {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
+
+Voici les statistiques d'activité de l'utilisateur :
+- Questions posées au tuteur virtuel : ${questionsAsked}
+- Protocoles générés : ${protocolsGenerated}
+- Score aux quiz : ${correctQuiz}/${totalQuiz} (${quizPct}%)
+- Flashcards maîtrisées : ${fcMastered}/${fcTotal} (${fcPct}%)
+- Dernières questions posées : ${recentQuestions.length > 0 ? recentQuestions.join(', ') : 'Aucune'}
+- Protocoles initiés : ${recentProtocols.length > 0 ? recentProtocols.join(', ') : 'Aucun'}
+
+Instructions pour le rapport :
+1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
+2. Divise le rapport en sections claires :
+   - Bilan général de progression
+   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
+   - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
+   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
+3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.`;
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateReport(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply) {
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Ce bilan a été généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          return NextResponse.json({ report: formattedOllamaReply });
+        }
+      }
+
+      // Repli ultime sur mock statique
+      const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered);
       return NextResponse.json({ report: mockReport });
     }
 
@@ -127,18 +254,69 @@ Instructions pour le rapport :
     return NextResponse.json({ report: reportText });
 
   } catch (error: any) {
-    console.error('Erreur API Rapport Pédagogique:', error);
-    const status = error.status || error.statusCode || 500;
-    let userMessage = 'Erreur interne du serveur lors de la génération du rapport.';
+    console.error('Erreur API Rapport Pédagogique, bascule vers le secours local:', error);
+    
+    // 1. Tenter d'utiliser Ollama en secours local
+    try {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
 
-    if (status === 429) {
-      userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
-    } else if (status === 503 || status === 504) {
-      userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
-    } else if (error.message) {
-      userMessage = `Erreur : ${error.message}`;
+      const totalQuiz = quizScore.total || 0;
+      const correctQuiz = quizScore.correct || 0;
+      const quizPct = totalQuiz > 0 ? Math.round((correctQuiz / totalQuiz) * 100) : 0;
+
+      const fcMastered = flashcardsMastered.mastered || 0;
+      const fcTotal = flashcardsMastered.total || 12;
+      const fcPct = Math.round((fcMastered / fcTotal) * 100);
+
+      const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
+
+Voici les statistiques d'activité de l'utilisateur :
+- Questions posées au tuteur virtuel : ${questionsAsked}
+- Protocoles générés : ${protocolsGenerated}
+- Score aux quiz : ${correctQuiz}/${totalQuiz} (${quizPct}%)
+- Flashcards maîtrisées : ${fcMastered}/${fcTotal} (${fcPct}%)
+- Dernières questions posées : ${recentQuestions.length > 0 ? recentQuestions.join(', ') : 'Aucune'}
+- Protocoles initiés : ${recentProtocols.length > 0 ? recentProtocols.join(', ') : 'Aucun'}
+
+Instructions pour le rapport :
+1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
+2. Divise le rapport en sections claires :
+   - Bilan général de progression
+   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
+   - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
+   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
+3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.`;
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateReport(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply) {
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. Bilan généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          return NextResponse.json({ report: formattedOllamaReply });
+        }
+      }
+    } catch (ollamaErr) {
+      console.warn("⚠️ Échec du secours Ollama pour le rapport pédagogique:", ollamaErr);
     }
 
-    return NextResponse.json({ error: userMessage }, { status });
+    // 2. Repli ultime sur mock statique
+    try {
+      const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered);
+      return NextResponse.json({ report: mockReport });
+    } catch (fallbackErr) {
+      const status = error.status || error.statusCode || 500;
+      let userMessage = 'Erreur interne du serveur lors de la génération du rapport.';
+      
+      if (status === 429) {
+        userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
+      } else if (status === 503 || status === 504) {
+        userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
+      } else if (error.message) {
+        userMessage = `Erreur : ${error.message}`;
+      }
+      
+      return NextResponse.json({ error: userMessage }, { status });
+    }
   }
 }

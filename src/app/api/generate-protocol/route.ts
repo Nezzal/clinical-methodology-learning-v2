@@ -2,35 +2,105 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import recifKb from '@/data/recif-kb.json';
 
-export async function POST(req: Request) {
+async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
-    const data = await req.json();
-    const {
-      title,
-      acronym,
-      question,
-      design,
-      population,
-      inclusion,
-      exclusion,
-      primaryEndpoint,
-      secondaryEndpoints,
-      intervention,
-      riphCategory, // can be 'interventional' | 'observational' | 'sbid' | 'bid'
-    } = data;
+    const res = await fetch(`${ollamaUrl}/api/tags`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const models = data.models || [];
+    if (models.length === 0) return null;
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const hasRequested = models.some((m: any) => m.name === requestedModel || m.name.split(':')[0] === requestedModel.split(':')[0]);
+    if (hasRequested) return requestedModel;
 
-    // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
-    const studyCategories = recifKb.algerian_regulation.study_categories;
-    const categoryName = studyCategories[riphCategory as keyof typeof studyCategories] || 'Non spécifiée';
+    const chatModels = models.filter((m: any) => {
+      const name = m.name.toLowerCase();
+      return !name.includes('embed') && !name.includes('minilm');
+    });
 
-    // Fallback Mock si la clé API n'est pas configurée
-    if (!apiKey) {
-      const mockProtocol = `# PROTOCOLE DE RECHERCHE CLINIQUE (PROVISOIRE)
+    if (chatModels.length === 0) return null;
+
+    const gemmaModel = chatModels.find((m: any) => m.name.toLowerCase().includes('gemma'));
+    if (gemmaModel) return gemmaModel.name;
+
+    return chatModels[0].name;
+  } catch (err) {
+    console.warn("⚠️ Impossible de lister les modèles Ollama :", err);
+    return null;
+  }
+}
+
+async function tryOllamaGenerateProtocol(
+  prompt: string,
+  ollamaUrl: string,
+  ollamaModel: string
+): Promise<string | null> {
+  try {
+    console.log(`🤖 [Générateur de Protocole] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 secondes de timeout
+
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ollamaModel,
+        messages: [
+          { 
+            role: 'system', 
+            content: "Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11)." 
+          },
+          { role: 'user', content: prompt }
+        ],
+        stream: false,
+        options: {
+          temperature: 0.5
+        }
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`⚠️ Ollama a retourné un statut d'erreur : ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.message?.content || null;
+  } catch (error: any) {
+    console.warn('⚠️ Échec de la génération locale de protocole par Ollama :', error.message || error);
+    return null;
+  }
+}
+
+function getStaticFallbackProtocol(
+  title: string,
+  acronym: string,
+  question: string,
+  design: string,
+  population: string,
+  inclusion: string,
+  exclusion: string,
+  primaryEndpoint: string,
+  secondaryEndpoints: string,
+  intervention: string,
+  categoryName: string,
+  isOfflineNotice = false
+): string {
+  const notice = isOfflineNotice 
+    ? `⚠️ *Note : Ce protocole a été généré localement car le service d'IA (appareil hors-ligne ou quota d'API de Google atteint) est indisponible. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé ou vérifiez votre connexion.*`
+    : `⚠️ *Note : Ce protocole a été généré localement car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
+
+  return `# PROTOCOLE DE RECHERCHE CLINIQUE (PROVISOIRE)
 *Généré selon les recommandations méthodologiques du manuel RECIF & Loi algérienne n° 18-11*
 
-⚠️ *Note : Ce protocole a été généré localement car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*
+${notice}
 
 ---
 
@@ -96,12 +166,41 @@ ${intervention || 'L\'intervention sera menée conformément au standard de soin
 * **Effets Indésirables Graves (Art. 395) :** Toute notification d'effet indésirable grave (EIG) sera transmise immédiatement (sous 7 jours maximum) au Ministère de la Santé et au Comité d'éthique.
 * **Taille d'échantillon (Règle RECIF) :** Le calcul du nombre de sujets nécessaires (NSN) devra être effectué par un biostatisticien en fonction de la variance estimée du critère principal et d'un risque d'erreur alpha de 5% avec une puissance de 80%.
 `;
+}
 
-      return NextResponse.json({ protocol: mockProtocol });
-    }
+export async function POST(req: Request) {
+  let title = '';
+  let acronym = '';
+  let question = '';
+  let design = '';
+  let population = '';
+  let inclusion = '';
+  let exclusion = '';
+  let primaryEndpoint = '';
+  let secondaryEndpoints = '';
+  let intervention = '';
+  let riphCategory = 'observational';
+  let categoryName = 'Non spécifiée';
 
-    // Initialisation du client Google GenAI
-    const ai = new GoogleGenAI({ apiKey });
+  try {
+    const data = await req.json();
+    title = data.title || '';
+    acronym = data.acronym || '';
+    question = data.question || '';
+    design = data.design || '';
+    population = data.population || '';
+    inclusion = data.inclusion || '';
+    exclusion = data.exclusion || '';
+    primaryEndpoint = data.primaryEndpoint || '';
+    secondaryEndpoints = data.secondaryEndpoints || '';
+    intervention = data.intervention || '';
+    riphCategory = data.riphCategory || 'observational';
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
+    const studyCategories = recifKb.algerian_regulation.study_categories;
+    categoryName = studyCategories[riphCategory as keyof typeof studyCategories] || 'Non spécifiée';
 
     const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et détaillé, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
 
@@ -124,6 +223,27 @@ Instructions de rédaction :
 3. Mentionne l'obligation légale de recueillir le consentement libre, exprès et éclairé par écrit (Art. 386), ainsi que les sanctions pénales strictes (Art. 438 et 439) en cas d'infraction.
 4. Donne des conseils précis sur la méthodologie statistique requise pour ce type de protocole (par exemple, le calcul de la taille de l'échantillon ou les tests à envisager pour le critère principal).
 5. Le style doit être hautement professionnel, médical, académique et rédigé exclusivement en français.`;
+
+    // Fallback si la clé API n'est pas configurée
+    if (!apiKey) {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateProtocol(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply) {
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Ce protocole a été généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          return NextResponse.json({ protocol: formattedOllamaReply });
+        }
+      }
+
+      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, categoryName, false);
+      return NextResponse.json({ protocol: mockProtocol });
+    }
+
+    // Initialisation du client Google GenAI
+    const ai = new GoogleGenAI({ apiKey });
 
     let response;
     let attempt = 0;
@@ -151,18 +271,67 @@ Instructions de rédaction :
     return NextResponse.json({ protocol: protocolText });
 
   } catch (error: any) {
-    console.error('Erreur API Générateur de Protocole:', error);
-    const status = error.status || error.statusCode || 500;
-    let userMessage = 'Erreur interne du serveur lors de la génération du protocole.';
+    console.error('Erreur API Générateur de Protocole, bascule vers le secours local:', error);
 
-    if (status === 429) {
-      userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
-    } else if (status === 503 || status === 504) {
-      userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
-    } else if (error.message) {
-      userMessage = `Erreur : ${error.message}`;
+    // Tente de basculer vers Ollama local en cas d'erreur de Gemini (offline / rate limit)
+    try {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const studyCategories = recifKb.algerian_regulation.study_categories;
+      const resolvedCategoryName = categoryName !== 'Non spécifiée' ? categoryName : (studyCategories[riphCategory as keyof typeof studyCategories] || 'Non spécifiée');
+
+      const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et détaillé, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
+
+Voici les données soumises par le chercheur :
+- Titre : ${title}
+- Acronyme : ${acronym}
+- Question de recherche : ${question}
+- Schéma d'étude : ${design}
+- Catégorie de recherche (Loi 18-11) : ${riphCategory} (${resolvedCategoryName})
+- Population cible : ${population}
+- Critères d'inclusion : ${inclusion}
+- Critères d'exclusion : ${exclusion}
+- Critère de jugement principal (Endpoint) : ${primaryEndpoint}
+- Critères de jugement secondaires : ${secondaryEndpoints}
+- Description de l'intervention : ${intervention}
+
+Instructions de rédaction :
+1. Rédige un protocole complet au format Markdown avec les sections standardisées recommandées par le RECIF.
+2. Écris une section réglementaire spécifique à l'Algérie détaillant la soumission au Ministère de la Santé (décision sous 3 mois selon l'Art. 381) et l'obtention de l'avis du Comité d'éthique médicale (Art. 382/383).
+3. Mentionne l'obligation légale de recueillir le consentement libre, exprès et éclairé par écrit (Art. 386), ainsi que les sanctions pénales strictes (Art. 438 et 439) en cas d'infraction.
+4. Donne des conseils précis sur la méthodologie statistique requise pour ce type de protocole (par exemple, le calcul de la taille de l'échantillon ou les tests à envisager pour le critère principal).
+5. Le style doit être hautement professionnel, médical, académique et rédigé exclusivement en français.`;
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateProtocol(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply) {
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. Protocole généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          return NextResponse.json({ protocol: formattedOllamaReply });
+        }
+      }
+    } catch (ollamaErr) {
+      console.warn("⚠️ Échec du secours Ollama pour le protocole:", ollamaErr);
     }
 
-    return NextResponse.json({ error: userMessage }, { status });
+    // Repli ultime sur mock statique
+    try {
+      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, categoryName, true);
+      return NextResponse.json({ protocol: mockProtocol });
+    } catch (fallbackErr) {
+      const status = error.status || error.statusCode || 500;
+      let userMessage = 'Erreur interne du serveur lors de la génération du protocole.';
+
+      if (status === 429) {
+        userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
+      } else if (status === 503 || status === 504) {
+        userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
+      } else if (error.message) {
+        userMessage = `Erreur : ${error.message}`;
+      }
+
+      return NextResponse.json({ error: userMessage }, { status });
+    }
   }
 }

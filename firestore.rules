@@ -28,7 +28,7 @@ service cloud.firestore {
         request.auth.token.email != null && (
           request.auth.token.email.lower() == 'admin@recif.dz' ||
           request.auth.token.email.lower() == 'enseignant@recif.dz' ||
-          request.auth.token.email.lower().endsWith('@recif.dz')
+          request.auth.token.email.lower().matches('.*@recif\\.dz$')
         );
     }
 

@@ -1,10 +1,180 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import recifKb from '@/data/recif-kb.json';
+import glossaryData from '@/data/glossary.json';
+
+function getStaticFallbackMaterial(type: string, topic: string) {
+  if (type === 'quiz') {
+    return [
+      {
+        question: `Dans le cadre de : "${topic}", quel est l'enjeu méthodologique principal selon les recommandations du manuel RECIF ?`,
+        options: [
+          "Garantir la validité interne en contrôlant les biais et facteurs de confusion",
+          "Maximiser le nombre de patients sans calcul statistique préalable",
+          "Publier les résultats uniquement s'ils confirment l'hypothèse H1",
+          "Ignorer les critères d'éligibilité pour accélérer les inclusions"
+        ],
+        answerIndex: 0,
+        explanation: `Pour toute thématique liée à "${topic}", le manuel RECIF insiste sur la rigueur de la validité interne, notamment le contrôle strict des biais et des variables de confusion.`
+      },
+      {
+        question: `Selon la loi algérienne n° 18-11 relative à la santé, comment s'applique l'obligation éthique majeure sur le sujet traité par : "${topic}" ?`,
+        options: [
+          "Par une simple information verbale donnée au patient",
+          "Par le recueil obligatoire par écrit du consentement libre et éclairé du patient",
+          "Par une décision unilatérale de l'investigateur principal",
+          "Aucune obligation éthique ne s'applique aux études observationnelles"
+        ],
+        answerIndex: 1,
+        explanation: "L'article 386 de la loi 18-11 exige que tout participant à une étude clinique donne son consentement par écrit après avoir été clairement informé."
+      },
+      {
+        question: `Quel schéma d'étude clinique est le plus robuste pour explorer le sujet "${topic}" avec le niveau de preuve le plus élevé ?`,
+        options: [
+          "Une série de cas descriptifs",
+          "Une étude transversale de prévalence",
+          "Une étude de cohorte rétrospective",
+          "Un essai clinique contrôlé randomisé en double insu"
+        ],
+        answerIndex: 3,
+        explanation: "L'essai clinique randomisé contrôlé en double insu offre le niveau de preuve le plus élevé (grade A) d'après le classement du RECIF et de la HAS."
+      },
+      {
+        question: `Comment définir le critère de jugement principal pour évaluer "${topic}" ?`,
+        options: [
+          "Il doit être multiple et défini après l'analyse des données",
+          "Il doit être subjectif pour s'adapter à chaque patient",
+          "Il doit être unique, cliniquement pertinent, mesurable objectivement et défini a priori",
+          "Il correspond toujours à la mortalité toutes causes confondues"
+        ],
+        answerIndex: 2,
+        explanation: "Le critère de jugement principal (endpoint) doit être unique, mesurable de manière objective et reproductible, et fixé dans le protocole avant le début de l'étude."
+      },
+      {
+        question: `Si l'on souhaite analyser statistiquement les résultats d'une étude sur "${topic}", quelle est la règle d'or concernant le risque alpha (type I) ?`,
+        options: [
+          "Il doit être supérieur à 20% pour garantir la significativité",
+          "Il est classiquement fixé à 5% (p < 0.05) pour rejeter l'hypothèse nulle H0 à raison",
+          "Il n'est calculé que pour les études de petite taille",
+          "Il correspond à la probabilité de ne pas détecter une différence réelle"
+        ],
+        answerIndex: 1,
+        explanation: "Le risque d'erreur alpha (rejeter l'hypothèse nulle H0 alors qu'elle est vraie) est traditionnellement fixé à 5% en recherche clinique."
+      }
+    ];
+  } else {
+    return [
+      {
+        question: `Concept clé de : ${topic}`,
+        answer: `Rappel méthodologique RECIF : le concept lié à "${topic}" exige de définir clairement les objectifs de l'étude et d'adapter le plan d'analyse en conséquence.`
+      },
+      {
+        question: `Réglementation Algérienne (Loi 18-11) & ${topic}`,
+        answer: `Tout protocole portant sur "${topic}" doit être soumis pour avis obligatoire au Comité d'éthique médicale (Art. 382) et requiert l'autorisation du Ministère de la Santé (Art. 381).`
+      },
+      {
+        question: `Biais potentiel à éviter sur ${topic}`,
+        answer: `Veiller aux biais de sélection (population non représentative) et aux biais d'information (erreurs de mesure ou disparité de souvenir).`
+      },
+      {
+        question: `Critère de jugement & ${topic}`,
+        answer: `Pour évaluer "${topic}", il faut un critère de jugement principal unique, pertinent, mesurable objectivement et fixé a priori.`
+      },
+      {
+        question: `Puissance statistique & ${topic}`,
+        answer: `La puissance (1 - bêta) représente la capacité à mettre en évidence une différence sur "${topic}". Elle augmente avec la taille de l'échantillon.`
+      }
+    ];
+  }
+}
+
+async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${ollamaUrl}/api/tags`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const models = data.models || [];
+    if (models.length === 0) return null;
+
+    const hasRequested = models.some((m: any) => m.name === requestedModel || m.name.split(':')[0] === requestedModel.split(':')[0]);
+    if (hasRequested) return requestedModel;
+
+    const chatModels = models.filter((m: any) => {
+      const name = m.name.toLowerCase();
+      return !name.includes('embed') && !name.includes('minilm');
+    });
+
+    if (chatModels.length === 0) return null;
+
+    const gemmaModel = chatModels.find((m: any) => m.name.toLowerCase().includes('gemma'));
+    if (gemmaModel) return gemmaModel.name;
+
+    return chatModels[0].name;
+  } catch (err) {
+    console.warn("⚠️ Impossible de lister les modèles Ollama:", err);
+    return null;
+  }
+}
+
+async function tryOllamaGenerateMaterial(
+  prompt: string,
+  ollamaUrl: string,
+  ollamaModel: string
+): Promise<any[] | null> {
+  try {
+    console.log(`🤖 [Matériel Pédagogique] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000); // 90 secondes de timeout (la génération locale de QCM/Flashcards prend du temps)
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ollamaModel,
+        messages: [
+          { 
+            role: 'system', 
+            content: "Tu es un tuteur expert en méthodologie de recherche clinique RECIF. Tu dois formuler tes réponses uniquement sous la forme d'un tableau JSON d'objets, sans aucune phrase de présentation ou de conclusion." 
+          },
+          { role: 'user', content: prompt }
+        ],
+        format: 'json',
+        stream: false,
+        options: {
+          temperature: 0.7
+        }
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`⚠️ Ollama a retourné un statut d'erreur : ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const text = data.message?.content || '';
+    
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : (parsed.items || null);
+  } catch (error: any) {
+    console.warn('⚠️ Échec de la génération locale de matériel par Ollama:', error.message || error);
+    return null;
+  }
+}
 
 export async function POST(req: Request) {
+  let type = '';
+  let topic = '';
   try {
-    const { type, topic } = await req.json();
+    const body = await req.json();
+    type = body.type;
+    topic = body.topic;
 
     if (!type || !topic) {
       return NextResponse.json({ error: 'Type (quiz/flashcards) et Topic requis.' }, { status: 400 });
@@ -12,92 +182,48 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Fallback Mock si la clé API n'est pas configurée
+    // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
-      if (type === 'quiz') {
-        const mockQuestions = [
-          {
-            question: `Dans le cadre de : "${topic}", quel est l'enjeu méthodologique principal selon les recommandations du manuel RECIF ?`,
-            options: [
-              "Garantir la validité interne en contrôlant les biais et facteurs de confusion",
-              "Maximiser le nombre de patients sans calcul statistique préalable",
-              "Publier les résultats uniquement s'ils confirment l'hypothèse H1",
-              "Ignorer les critères d'éligibilité pour accélérer les inclusions"
-            ],
-            answerIndex: 0,
-            explanation: `Pour toute thématique liée à "${topic}", le manuel RECIF insiste sur la rigueur de la validité interne, notamment le contrôle strict des biais et des variables de confusion.`
-          },
-          {
-            question: `Selon la loi algérienne n° 18-11 relative à la santé, comment s'applique l'obligation éthique majeure sur le sujet traité par : "${topic}" ?`,
-            options: [
-              "Par une simple information verbale donnée au patient",
-              "Par le recueil obligatoire par écrit du consentement libre et éclairé du patient",
-              "Par une décision unilatérale de l'investigateur principal",
-              "Aucune obligation éthique ne s'applique aux études observationnelles"
-            ],
-            answerIndex: 1,
-            explanation: "L'article 386 de la loi 18-11 exige que tout participant à une étude clinique donne son consentement par écrit après avoir été clairement informé."
-          },
-          {
-            question: `Quel schéma d'étude clinique est le plus robuste pour explorer le sujet "${topic}" avec le niveau de preuve le plus élevé ?`,
-            options: [
-              "Une série de cas descriptifs",
-              "Une étude transversale de prévalence",
-              "Une étude de cohorte rétrospective",
-              "Un essai clinique contrôlé randomisé en double insu"
-            ],
-            answerIndex: 3,
-            explanation: "L'essai clinique randomisé contrôlé en double insu offre le niveau de preuve le plus élevé (grade A) d'après le classement du RECIF et de la HAS."
-          },
-          {
-            question: `Comment définir le critère de jugement principal pour évaluer "${topic}" ?`,
-            options: [
-              "Il doit être multiple et défini après l'analyse des données",
-              "Il doit être subjectif pour s'adapter à chaque patient",
-              "Il doit être unique, cliniquement pertinent, mesurable objectivement et défini a priori",
-              "Il correspond toujours à la mortalité toutes causes confondues"
-            ],
-            answerIndex: 2,
-            explanation: "Le critère de jugement principal (endpoint) doit être unique, mesurable de manière objective et reproductible, et fixé dans le protocole avant le début de l'étude."
-          },
-          {
-            question: `Si l'on souhaite analyser statistiquement les résultats d'une étude sur "${topic}", quelle est la règle d'or concernant le risque alpha (type I) ?`,
-            options: [
-              "Il doit être supérieur à 20% pour garantir la significativité",
-              "Il est classiquement fixé à 5% (p < 0.05) pour rejeter l'hypothèse nulle H0 à raison",
-              "Il n'est calculé que pour les études de petite taille",
-              "Il correspond à la probabilité de ne pas détecter une différence réelle"
-            ],
-            answerIndex: 1,
-            explanation: "Le risque d'erreur alpha (rejeter l'hypothèse nulle H0 alors qu'elle est vraie) est traditionnellement fixé à 5% en recherche clinique."
-          }
-        ];
-        return NextResponse.json({ items: mockQuestions });
-      } else {
-        const mockCards = [
-          {
-            question: `Concept clé de : ${topic}`,
-            answer: `Rappel méthodologique RECIF : le concept lié à "${topic}" exige de définir clairement les objectifs de l'étude et d'adapter le plan d'analyse en conséquence.`
-          },
-          {
-            question: `Réglementation Algérienne (Loi 18-11) & ${topic}`,
-            answer: `Tout protocole portant sur "${topic}" doit être soumis pour avis obligatoire au Comité d'éthique médicale (Art. 382) et requiert l'autorisation du Ministère de la Santé (Art. 381).`
-          },
-          {
-            question: `Biais potentiel à éviter sur ${topic}`,
-            answer: `Veiller aux biais de sélection (population non représentative) et aux biais d'information (erreurs de mesure ou disparité de souvenir).`
-          },
-          {
-            question: `Critère de jugement & ${topic}`,
-            answer: `Pour évaluer "${topic}", il faut un critère de jugement principal unique, pertinent, mesurable objectivement et fixé a priori.`
-          },
-          {
-            question: `Puissance statistique & ${topic}`,
-            answer: `La puissance (1 - bêta) représente la capacité à mettre en évidence une différence sur "${topic}". Elle augmente avec la taille de l'échantillon.`
-          }
-        ];
-        return NextResponse.json({ items: mockCards });
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const prompt = type === 'quiz' ? 
+        `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
+Génère un questionnaire d'évaluation (QCM) de 3 questions uniques et réalistes sur le sujet suivant : "${topic}".
+Les questions doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+
+Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
+[
+  {
+    "question": "Texte de la question...",
+    "options": ["Choix 0", "Choix 1", "Choix 2", "Choix 3"],
+    "answerIndex": 0,
+    "explanation": "Explication..."
+  }
+]` : 
+        `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
+Génère 3 flashcards d'apprentissage (recto-verso) sur le sujet suivant : "${topic}".
+Les flashcards doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+
+Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
+[
+  {
+    "question": "La question ou concept au recto...",
+    "answer": "La réponse ou définition au verso..."
+  }
+]`;
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateMaterial(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply && Array.isArray(ollamaReply) && ollamaReply.length > 0) {
+          return NextResponse.json({ items: ollamaReply });
+        }
       }
+
+      // Repli ultime sur mock statique
+      const mockItems = getStaticFallbackMaterial(type, topic);
+      return NextResponse.json({ items: mockItems });
     }
 
     // Initialisation du client Google GenAI
@@ -194,18 +320,67 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
     return NextResponse.json({ items: replyJson });
 
   } catch (error: any) {
-    console.error('Erreur API Générateur de matériel pédagogique:', error);
-    const status = error.status || error.statusCode || 500;
-    let userMessage = 'Erreur lors de la génération du contenu pédagogique.';
+    console.error('Erreur API Générateur de matériel pédagogique, bascule vers le secours local:', error);
     
-    if (status === 429) {
-      userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
-    } else if (status === 503 || status === 504) {
-      userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
-    } else if (error.message) {
-      userMessage = `Erreur : ${error.message}`;
+    // 1. Tenter d'utiliser Ollama en secours local
+    try {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const prompt = type === 'quiz' ? 
+        `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
+Génère un questionnaire d'évaluation (QCM) de 3 questions uniques et réalistes sur le sujet suivant : "${topic}".
+Les questions doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+
+Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
+[
+  {
+    "question": "Texte de la question...",
+    "options": ["Choix 0", "Choix 1", "Choix 2", "Choix 3"],
+    "answerIndex": 0,
+    "explanation": "Explication..."
+  }
+]` : 
+        `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
+Génère 3 flashcards d'apprentissage (recto-verso) sur le sujet suivant : "${topic}".
+Les flashcards doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+
+Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
+[
+  {
+    "question": "La question ou concept au recto...",
+    "answer": "La réponse ou définition au verso..."
+  }
+]`;
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateMaterial(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply && Array.isArray(ollamaReply) && ollamaReply.length > 0) {
+          return NextResponse.json({ items: ollamaReply });
+        }
+      }
+    } catch (ollamaErr) {
+      console.warn("⚠️ Échec du secours Ollama pour le matériel:", ollamaErr);
     }
-    
-    return NextResponse.json({ error: userMessage }, { status });
+
+    // 2. Repli ultime sur mock statique
+    try {
+      const mockItems = getStaticFallbackMaterial(type, topic);
+      return NextResponse.json({ items: mockItems });
+    } catch (fallbackErr) {
+      const status = error.status || error.statusCode || 500;
+      let userMessage = 'Erreur lors de la génération du contenu pédagogique.';
+      
+      if (status === 429) {
+        userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
+      } else if (status === 503 || status === 504) {
+        userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
+      } else if (error.message) {
+        userMessage = `Erreur : ${error.message}`;
+      }
+      
+      return NextResponse.json({ error: userMessage }, { status });
+    }
   }
 }

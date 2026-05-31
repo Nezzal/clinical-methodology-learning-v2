@@ -82,10 +82,27 @@ export default function Dashboard() {
   return (
     <div className={styles.dashboard}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Méthodologie de Recherche Clinique</h1>
-        <p className={styles.subtitle}>
-          Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
-        </p>
+        <div className={styles.headerMain}>
+          <div className={styles.headerText}>
+            <h1 className={styles.title}>Méthodologie de Recherche Clinique</h1>
+            <p className={styles.subtitle}>
+              Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
+            </p>
+          </div>
+          <div className={styles.profileCard}>
+            <div className={styles.profileImageContainer}>
+              <img 
+                src="/pr_nezzal.png" 
+                alt="Pr Nezzal Abdelmalek" 
+                className={styles.profileImage}
+              />
+            </div>
+            <div className={styles.profileInfo}>
+              <span className={styles.profileRole}>Superviseur Scientifique</span>
+              <h4 className={styles.profileName}>Pr Nezzal Abdelmalek</h4>
+            </div>
+          </div>
+        </div>
       </header>
 
       {/* Grid de Statistiques */}

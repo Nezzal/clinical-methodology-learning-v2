@@ -32,11 +32,14 @@ interface AuthContextType {
   isFirebaseConfigured: boolean;
   isSuspended: boolean;
   requirePasswordChange: boolean;
+  guestMode: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
   changePassword: (newPassword: string) => Promise<void>;
+  enableGuestMode: () => void;
+  disableGuestMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -46,11 +49,14 @@ const AuthContext = createContext<AuthContextType>({
   isFirebaseConfigured: false,
   isSuspended: false,
   requirePasswordChange: false,
+  guestMode: false,
   signInWithGoogle: async () => {},
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
   logout: async () => {},
   changePassword: async () => {},
+  enableGuestMode: () => {},
+  disableGuestMode: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -59,6 +65,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isSuspended, setIsSuspended] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
+  const [guestMode, setGuestMode] = useState(false);
+
+  // Charger le mode invité depuis localStorage au montage (côté client)
+  useEffect(() => {
+    const saved = localStorage.getItem('guest_mode_active') === 'true';
+    if (saved) {
+      setGuestMode(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!isFirebaseEnabled || !auth) {
@@ -68,7 +83,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
-      if (!currentUser) {
+      if (currentUser) {
+        // Si un utilisateur Firebase se connecte, désactiver le mode invité
+        setGuestMode(false);
+        localStorage.removeItem('guest_mode_active');
+      } else {
         setProfile(null);
         setIsSuspended(false);
         setRequirePasswordChange(false);
@@ -192,9 +211,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const enableGuestMode = () => {
+    setGuestMode(true);
+    localStorage.setItem('guest_mode_active', 'true');
+  };
+
+  const disableGuestMode = () => {
+    setGuestMode(false);
+    localStorage.removeItem('guest_mode_active');
+  };
+
   const logout = async () => {
-    if (!isFirebaseEnabled || !auth) return;
-    await signOut(auth);
+    setGuestMode(false);
+    localStorage.removeItem('guest_mode_active');
+    
+    if (isFirebaseEnabled && auth) {
+      try {
+        await signOut(auth);
+      } catch (err) {
+        console.warn("Erreur signOut:", err);
+      }
+    }
+    
     setIsSuspended(false);
     setRequirePasswordChange(false);
     resetProgress();
@@ -221,11 +259,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isFirebaseConfigured: isFirebaseEnabled,
       isSuspended,
       requirePasswordChange,
+      guestMode,
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,
       logout,
-      changePassword
+      changePassword,
+      enableGuestMode,
+      disableGuestMode
     }}>
       {children}
     </AuthContext.Provider>

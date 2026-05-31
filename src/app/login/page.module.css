@@ -316,6 +316,35 @@
   transform: none;
 }
 
+.offlineBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: rgba(13, 148, 136, 0.1);
+  color: #2dd4bf;
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  border-radius: 10px;
+  padding: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  margin-top: 1rem;
+}
+
+.offlineBtn:hover {
+  background: rgba(45, 212, 191, 0.2);
+  border-color: #2dd4bf;
+  transform: translateY(-1px);
+}
+
+.offlineBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .toggleMode {
   margin-top: 1.5rem;
   text-align: center;

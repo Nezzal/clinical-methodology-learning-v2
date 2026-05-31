@@ -1,0 +1,189 @@
+{
+  "biais_de_confusion": {
+    "title": "Biais de confusion (Confounding bias)",
+    "definition": "Le biais de confusion survient lorsqu'une relation apparente entre une exposition (facteur étudié) et un critère de jugement (maladie ou événement) est déformée par la présence d'un troisième facteur indépendant, appelé **facteur de confusion**.",
+    "details": [
+      "**Critères d'un facteur de confusion :**",
+      "1. Il doit être associé à l'exposition (sans en être une conséquence).",
+      "2. Il doit être un facteur de risque indépendant du critère de jugement (de la maladie).",
+      "3. Il ne doit pas être un intermédiaire de liaison (étape intermédiaire) dans la chaîne causale entre l'exposition et la maladie.",
+      "",
+      "**Exemple clinique :**",
+      "Si une étude montre une forte association entre la consommation de café et l'infarctus du myocarde, le tabagisme est un facteur de confusion majeur. Les buveurs de café fument souvent davantage (association avec l'exposition), et le tabac augmente directement le risque d'infarctus (facteur de risque indépendant). Si l'on n'ajuste pas sur le tabac, l'effet du café sera artificiellement surestimé.",
+      "",
+      "**Comment le contrôler ?**",
+      "* **À la conception (a priori) :**",
+      "  - *Randomisation :* Distribue équitablement les facteurs confondants connus et inconnus entre les groupes (uniquement dans les essais comparatifs).",
+      "  - *Restriction :* Limiter l'inclusion à une seule catégorie du facteur confondant (ex: inclure uniquement des non-fumeurs).",
+      "  - *Appariement :* Recruter pour chaque sujet exposé un sujet non-exposé ayant le même profil (ex: même âge, même sexe).",
+      "* **À l'analyse (a posteriori) :**",
+      "  - *Stratification :* Analyser l'association séparément dans chaque sous-groupe (ex: chez les fumeurs puis chez les non-fumeurs).",
+      "  - *Modélisation multivariée :* Utiliser des régressions (logistique, Cox) pour ajuster mathématiquement sur les facteurs de confusion et obtenir un Risque Relatif (RR) ou un Odds Ratio (OR) ajusté."
+    ]
+  },
+  "biais_de_selection": {
+    "title": "Biais de sélection (Selection bias)",
+    "definition": "Le biais de sélection se produit lors de la constitution de l'échantillon, lorsque la probabilité d'inclusion dans l'étude dépend à la fois de l'exposition et de la survenue du critère de jugement (de la maladie), rendant l'échantillon non représentatif de la population cible.",
+    "details": [
+      "**Formes fréquentes de biais de sélection :**",
+      "* **Biais de l'autosélection / Volontariat :** Les volontaires qui participent à une étude ont souvent des caractéristiques de santé ou des comportements différents de la population générale.",
+      "* **Biais de survie sélective (biais de Neyman) :** Se produit dans les études cas-témoins sur des cas prévalents (anciens) au lieu de cas incidents (nouveaux). Les sujets décédés rapidement ou guéris précocement sont exclus de fait.",
+      "* **Biais des perdus de vue :** Dans les cohortes, si la probabilité de sortie de l'étude est liée au facteur d'exposition ou à la survenue de l'événement.",
+      "* **Biais de Berkson :** Fréquent en milieu hospitalier, lié au fait que la probabilité d'hospitalisation d'un sujet exposé et malade diffère de celle de la population générale.",
+      "",
+      "**Comment le contrôler ?**",
+      "- Utiliser un échantillonnage aléatoire représentatif.",
+      "- Définir des critères d'éligibilité (inclusion/exclusion) clairs et identiques pour tous les groupes.",
+      "- Dans les études cas-témoins, n'inclure que des **cas incidents** (nouveaux diagnostics).",
+      "- Assurer un suivi maximal des sujets pour minimiser le taux de perdus de vue (viser < 10%)."
+    ]
+  },
+  "biais_de_mesure": {
+    "title": "Biais de mesure ou d'information (Measurement / Classification bias)",
+    "definition": "Le biais de mesure ou d'information survient lorsque la classification du statut d'exposition ou de maladie est erronée ou mesurée différemment entre les groupes comparés.",
+    "details": [
+      "**Types principaux :**",
+      "* **Biais de mémorisation (Recall bias) :** Fréquent dans les études cas-témoins. Les patients malades (cas) ont tendance à se souvenir plus précisément de leurs expositions passées que les témoins sains.",
+      "* **Biais d'observation / de l'enquêteur :** L'enquêteur connaît le statut du patient (malade ou exposé) et pose les questions de manière plus insistante ou mesure le critère avec plus d'attention dans un groupe.",
+      "* **Biais de classification non différentiel :** L'erreur de mesure est aléatoire et identique dans les deux groupes (atténue généralement l'association, rapprochant le risque relatif de 1.0).",
+      "* **Biais de classification différentiel :** L'erreur de mesure diffère entre les deux groupes (peut surestimer ou sous-estimer l'association de manière imprévisible).",
+      "",
+      "**Comment le contrôler ?**",
+      "- Utiliser des questionnaires standardisés et validés.",
+      "- Utiliser des outils de mesure calibrés et objectifs (ex: dosages biologiques plutôt que questionnaires déclaratifs).",
+      "- Réaliser l'étude en **insu (aveugle)** : l'enquêteur (et idéalement le patient) ne doit pas connaître le groupe ou le statut d'exposition."
+    ]
+  },
+  "erreur_alpha": {
+    "title": "Erreur alpha ou Risque de première espèce (Type I Error)",
+    "definition": "L'erreur alpha est le risque de conclure à tort à l'existence d'une différence significative entre les groupes (rejeter l'hypothèse nulle H0) alors qu'en réalité, il n'y a aucune différence dans la population.",
+    "details": [
+      "**Points clés :**",
+      "- C'est le risque de déclarer un traitement efficace alors qu'il ne l'est pas (faux positif).",
+      "- Il est fixé a priori par le chercheur (le seuil de significativité p).",
+      "- En recherche clinique, il est classiquement fixé à **5% (alpha = 0,05)**.",
+      "- Un risque alpha bilatéral signifie qu'on recherche une différence dans les deux sens (supériorité ou infériorité), tandis qu'un risque unilatéral ne teste que dans un seul sens."
+    ]
+  },
+  "erreur_beta": {
+    "title": "Erreur bêta ou Risque de deuxième espèce (Type II Error)",
+    "definition": "L'erreur bêta est le risque de ne pas mettre en évidence une différence significative qui existe pourtant réellement dans la population (ne pas rejeter H0 alors qu'elle est fausse).",
+    "details": [
+      "**Points clés :**",
+      "- C'est le risque de déclarer un traitement inefficace alors qu'il apporte un bénéfice réel (faux négatif).",
+      "- Ce risque est généralement toléré entre **10% et 20% (bêta = 0,10 ou 0,20)**.",
+      "- Le risque bêta est directement lié à la **puissance statistique** de l'étude (Puissance = 1 - bêta). Si bêta est de 20%, la puissance est de 80%."
+    ]
+  },
+  "puissance_statistique": {
+    "title": "Puissance statistique (Statistical Power)",
+    "definition": "La puissance statistique (1 - bêta) est la probabilité de détecter une différence cliniquement significative entre les groupes comparés si cette différence existe réellement dans la population générale.",
+    "details": [
+      "**Points clés :**",
+      "- C'est la capacité d'une étude à mettre en évidence une efficacité réelle (vrai positif).",
+      "- Une puissance de **80% ou 90%** est exigée dans la rédaction de tout protocole clinique.",
+      "- **De quoi dépend la puissance ?**",
+      "  1. *De la taille de l'échantillon :* Plus le nombre de sujets est élevé, plus la puissance augmente.",
+      "  2. *De la taille de l'effet attendu :* Plus la différence attendue entre les groupes est grande, plus l'étude a de puissance pour la détecter.",
+      "  3. *De la variabilité (écart-type) :* Plus la dispersion des mesures est faible, plus la puissance est élevée.",
+      "  4. *Du risque d'erreur alpha :* Diminuer le risque alpha (ex: de 5% à 1%) diminue la puissance statistique."
+    ]
+  },
+  "nsn": {
+    "title": "Nombre de sujets nécessaires (NSN) / Calcul de la taille d'échantillon",
+    "definition": "Le calcul du Nombre de Sujets Nécessaires (NSN) est l'estimation statistique du nombre minimal de patients à inclure dans l'étude pour démontrer une différence clinique attendue avec les risques alpha et bêta fixés.",
+    "details": [
+      "**Paramètres requis pour le calcul :**",
+      "1. **Le risque d'erreur alpha (seuil p) :** Généralement fixé à 5% (0,05).",
+      "2. **La puissance statistique (1 - bêta) :** Classiquement fixée à 80% ou 90%.",
+      "3. **La taille de l'effet clinique :** La différence minimale que le chercheur considère comme médicalement pertinente à détecter.",
+      "4. **La variabilité du critère de jugement :** L'écart-type (pour un critère quantitatif) ou la proportion attendue dans le groupe témoin (pour un critère qualitatif).",
+      "5. **Le type d'hypothèse :** Bilatérale (le plus fréquent) ou unilatérale.",
+      "",
+      "**Ajustement de sécurité :**",
+      "Il est recommandé de majorer le NSN de **10% à 20%** pour compenser le taux attendu de patients perdus de vue ou inexploitables en fin d'étude (sujets non-observants, exclusions secondaires)."
+    ]
+  },
+  "randomisation": {
+    "title": "Randomisation (Randomization)",
+    "definition": "La randomisation est le processus d'attribution aléatoire (par tirage au sort informatique) des participants d'une étude clinique dans les différents bras de traitement.",
+    "details": [
+      "**Objectifs méthodologiques :**",
+      "- Garantir la comparabilité initiale des groupes (bras de traitement).",
+      "- Éliminer les biais de sélection en empêchant l'investigateur de choisir le traitement affecté à chaque patient.",
+      "- Distribuer équitablement les facteurs de confusion connus et inconnus entre les groupes de comparaison.",
+      "",
+      "**Types de randomisation :**",
+      "* *Simple :* Équivalent d'un lancer de pièce pour chaque patient.",
+      "* *Par blocs :* Assure des effectifs égaux ou proches dans chaque groupe tout au long de l'inclusion.",
+      "* *Stratifiée :* Équilibre des facteurs pronostiques importants (ex: âge, gravité) entre les groupes en randomisant indépendamment dans chaque sous-groupe."
+    ]
+  },
+  "insu": {
+    "title": "Méthode de l'insu ou Aveugle (Blinding)",
+    "definition": "La méthode de l'insu consiste à masquer l'identité du traitement reçu (médicament actif vs placebo/comparateur) à une ou plusieurs catégories de personnes impliquées dans l'étude clinique.",
+    "details": [
+      "**Objectif principal :**",
+      "Prévenir les biais d'information (biais d'observation et biais de mesure) qui surviennent lorsque la connaissance du traitement influence le comportement du patient, de l'investigateur ou de l'analyse.",
+      "",
+      "**Niveaux d'insu :**",
+      "* **Simple insu (Simple blind) :** Seul le patient ignore la nature du traitement qu'il reçoit.",
+      "* **Double insu (Double blind) :** Le patient ET l'investigateur/médecin traitant ignorent la nature du traitement.",
+      "* **Triple insu (Triple blind) :** Le patient, l'investigateur ET le statisticien qui analyse les données ignorent l'identité des groupes (codés sous forme de groupes A et B) jusqu'au verrouillage complet des données."
+    ]
+  },
+  "essai_clinique": {
+    "title": "Essai Clinique Randomisé Contrôlé (ECR)",
+    "definition": "L'Essai Clinique Randomisé Contrôlé est le schéma d'étude interventionnel de référence (Gold Standard) pour évaluer l'efficacité et la tolérance d'une intervention thérapeutique, diagnostique ou préventive.",
+    "details": [
+      "**Caractéristiques majeures :**",
+      "1. **Interventionnel :** Le médecin décide de l'affectation du traitement selon le protocole de l'étude (et non selon la pratique courante).",
+      "2. **Contrôlé :** Comporte au moins un groupe de comparaison (groupe témoin recevant un placebo ou le traitement de référence).",
+      "3. **Randomisé :** Les sujets sont répartis de manière aléatoire dans les groupes pour assurer leur comparabilité initiale."
+    ]
+  },
+  "cohorte": {
+    "title": "Étude de cohorte (Cohort Study)",
+    "definition": "L'étude de cohorte est une étude observationnelle (non-interventionnelle) dans laquelle un groupe de sujets sains (la cohorte) est classé selon leur exposition à un facteur d'exposition, puis suivi dans le temps pour mesurer l'apparition du critère de jugement (de la maladie).",
+    "details": [
+      "**Caractéristiques :**",
+      "- Généralement **prospective** (le suivi démarre après la classification des sujets exposés/non-exposés), mais peut être rétrospective (reconstitution historique à partir de dossiers médicaux).",
+      "- Permet de calculer directement l'incidence de la maladie et le **Risque Relatif (RR)**.",
+      "- Adaptée à l'étude d'expositions rares.",
+      "- Coûteuse et de longue durée, exposée au biais des perdus de vue."
+    ]
+  },
+  "cas_temoins": {
+    "title": "Étude Cas-Témoins (Case-Control Study)",
+    "definition": "L'étude cas-témoins est une étude observationnelle rétrospective dans laquelle on compare un groupe de sujets malades (les Cas) à un groupe de sujets sains (les Témoins) pour évaluer l'exposition antérieure à un ou plusieurs facteurs de risque suspectés.",
+    "details": [
+      "**Caractéristiques :**",
+      "- Toujours **rétrospective** : on part de la maladie pour rechercher l'exposition passée.",
+      "- Ne permet pas de calculer d'incidence (car l'effectif des cas et témoins est fixé par le chercheur).",
+      "- Mesure de l'association par le calcul de l'**Odds Ratio (OR)** (rapport des cotes).",
+      "- Idéale pour l'étude des maladies rares ou à long délai de latence.",
+      "- Particulièrement exposée aux biais de sélection et aux biais de mémorisation."
+    ]
+  },
+  "transversale": {
+    "title": "Étude transversale (Cross-sectional Study)",
+    "definition": "L'étude transversale est une étude observationnelle dans laquelle l'exposition et la maladie sont mesurées simultanément à un instant donné (une 'photographie' à un instant T) au sein d'une population définie.",
+    "details": [
+      "**Caractéristiques :**",
+      "- Permet de mesurer la **prévalence** d'une maladie ou d'une exposition.",
+      "- Rapide et peu coûteuse.",
+      "- **Limite majeure :** Ne permet pas de prouver la séquence temporelle (est-ce que l'exposition a précédé la maladie ?), empêchant d'établir un lien de causalité."
+    ]
+  },
+  "critere_jugement": {
+    "title": "Critère de jugement principal (Primary Endpoint)",
+    "definition": "Le critère de jugement principal est la variable unique, objectivement mesurable et cliniquement pertinente choisie pour évaluer l'efficacité de l'intervention principale de l'étude.",
+    "details": [
+      "**Règles de formulation :**",
+      "- Il doit être **unique** (on ne peut pas avoir deux critères principaux car cela multiplierait le risque de fausses conclusions statistiques).",
+      "- Il doit être défini précisément a priori dans le protocole.",
+      "- Il doit être directement lié à l'objectif principal de la recherche.",
+      "- Exemple : La baisse de la pression artérielle systolique en mmHg à 3 mois (quantitatif), ou la survenue d'un infarctus (qualitatif/binaire)."
+    ]
+  }
+}

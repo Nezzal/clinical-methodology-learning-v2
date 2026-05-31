@@ -13,7 +13,8 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
     isSuspended, 
     requirePasswordChange, 
     changePassword, 
-    logout 
+    logout,
+    guestMode
   } = useAuth();
   
   const pathname = usePathname();
@@ -56,10 +57,10 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
 
   // Redirection automatique pour les utilisateurs non connectés en production (Firebase activé)
   useEffect(() => {
-    if (!loading && isFirebaseConfigured && !user && pathname !== '/login') {
+    if (!loading && isFirebaseConfigured && !user && !guestMode && pathname !== '/login') {
       router.push('/login');
     }
-  }, [user, loading, isFirebaseConfigured, pathname, router]);
+  }, [user, loading, isFirebaseConfigured, guestMode, pathname, router]);
 
   // Écran de chargement initial pendant la vérification de la session ou le montage initial (SSR)
   if (!hasMounted || (loading && isFirebaseConfigured)) {
@@ -96,7 +97,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   const isLoginPage = pathname === '/login';
 
   // Bloquer le rendu le temps de rediriger vers la page de connexion
-  if (!loading && isFirebaseConfigured && !user && !isLoginPage) {
+  if (!loading && isFirebaseConfigured && !user && !guestMode && !isLoginPage) {
     return null;
   }
 
