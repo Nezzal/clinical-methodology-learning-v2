@@ -10,6 +10,8 @@ import styles from './page.module.css';
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<LocalStats | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const fetchStats = async () => {
     if (user) {
@@ -39,8 +41,13 @@ export default function Dashboard() {
     };
   }, [user]);
 
-  const handleReset = async () => {
-    if (confirm('Voulez-vous vraiment réinitialiser tout votre parcours d\'apprentissage ? Vos protocoles générés et vos scores seront effacés.')) {
+  const handleResetClick = () => {
+    setShowResetModal(true);
+  };
+
+  const handleExecuteReset = async () => {
+    setIsResetting(true);
+    try {
       resetProgress();
       if (user) {
         try {
@@ -64,6 +71,9 @@ export default function Dashboard() {
         }
       }
       fetchStats();
+    } finally {
+      setIsResetting(false);
+      setShowResetModal(false);
     }
   };
 
@@ -221,10 +231,39 @@ export default function Dashboard() {
 
       {/* Réinitialisation */}
       <div className={styles.resetContainer}>
-        <button className={styles.resetBtn} onClick={handleReset}>
+        <button className={styles.resetBtn} onClick={handleResetClick}>
           Réinitialiser toutes mes statistiques
         </button>
       </div>
+
+      {/* Modal de Confirmation Personnalisé (Résout l'INP Issue de confirm() bloquant) */}
+      {showResetModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalIcon}>⚠️</div>
+            <h3 className={styles.modalTitle}>Confirmer la Réinitialisation</h3>
+            <p className={styles.modalDescription}>
+              Voulez-vous vraiment réinitialiser tout votre parcours d'apprentissage ? Vos protocoles générés et vos scores seront définitivement effacés de la base de données.
+            </p>
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelBtn} 
+                onClick={() => setShowResetModal(false)}
+                disabled={isResetting}
+              >
+                Annuler
+              </button>
+              <button 
+                className={styles.confirmDeleteBtn} 
+                onClick={handleExecuteReset}
+                disabled={isResetting}
+              >
+                {isResetting ? 'Réinitialisation...' : 'Oui, réinitialiser'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
