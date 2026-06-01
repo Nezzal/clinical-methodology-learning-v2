@@ -168,6 +168,22 @@ ${intervention || 'L\'intervention sera menée conformément au standard de soin
 `;
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error('TIMEOUT_EXCEEDED'));
+    }, timeoutMs);
+  });
+  
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    return result;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function POST(req: Request) {
   let title = '';
   let acronym = '';
@@ -245,24 +261,49 @@ Instructions de rédaction :
     // Initialisation du client Google GenAI
     const ai = new GoogleGenAI({ apiKey });
 
+    const checkIsOffline = (err: any) => {
+      const errMsg = err.message?.toLowerCase() || '';
+      const errCode = err.code || '';
+      return errMsg.includes('fetch failed') || 
+             errMsg.includes('getaddrinfo') || 
+             errMsg.includes('enotfound') || 
+             errMsg.includes('eai_again') || 
+             errMsg.includes('connect timed out') ||
+             errCode === 'ENOTFOUND' || 
+             errCode === 'EAI_AGAIN';
+    };
+
+    const checkIsQuotaOrRateLimit = (err: any) => {
+      const status = err.status || err.statusCode;
+      const errMsg = err.message?.toLowerCase() || '';
+      return status === 429 || 
+             errMsg.includes('quota') || 
+             errMsg.includes('rate limit') || 
+             errMsg.includes('resource_exhausted') ||
+             errMsg.includes('exceeded your current quota');
+    };
+
     let response;
     let attempt = 0;
     const maxAttempts = 3;
 
     while (attempt < maxAttempts) {
       try {
-        response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          config: {
-            temperature: 0.5,
-          }
-        });
+        response = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            config: {
+              temperature: 0.5,
+            }
+          }),
+          20000 // 20 secondes de timeout pour les protocoles longs
+        );
         break; // Succès
       } catch (err: any) {
         attempt++;
         console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (Protocol):`, err.message || err);
-        if (attempt >= maxAttempts) throw err;
+        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) throw err;
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
       }
     }

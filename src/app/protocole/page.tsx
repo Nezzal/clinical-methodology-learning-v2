@@ -131,15 +131,13 @@ export default function ProtocoleGenerator() {
           };
         });
 
-        // Si connecté, synchroniser avec Firestore
+        // Si connecté, synchroniser avec Firestore en arrière-plan sans bloquer l'UI
         if (user) {
-          try {
-            await saveFirestoreProtocol(user.uid, newProtocolItem);
-            const currentStats = getProgress();
-            await syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, currentStats);
-          } catch (e) {
-            console.error("Erreur de sauvegarde du protocole sur Firestore:", e);
-          }
+          saveFirestoreProtocol(user.uid, newProtocolItem)
+            .catch(e => console.error("Erreur de sauvegarde du protocole sur Firestore:", e));
+          
+          syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, getProgress())
+            .catch(e => console.error("Erreur de synchronisation du profil sur Firestore:", e));
         }
 
         // Mettre à jour l'état local de l'historique

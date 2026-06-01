@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getProgress, updateProgress, QuizAttempt } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { syncUserProfile } from '@/utils/firestore';
@@ -296,6 +296,69 @@ export default function QuizPage() {
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
   const [quizAnswered, setQuizAnswered] = useState(false);
 
+  // Timer & start state
+  const [quizStarted, setQuizStarted] = useState(false);
+  const [isTimerEnabled, setIsTimerEnabled] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  // References to keep timer callback updated with fresh state without interval restarts
+  const correctAnswersCountRef = useRef(correctAnswersCount);
+  const questionsListRef = useRef(questionsList);
+  const isDynamicRef = useRef(isDynamic);
+  const currentDynamicTopicRef = useRef(currentDynamicTopic);
+
+  useEffect(() => {
+    correctAnswersCountRef.current = correctAnswersCount;
+  }, [correctAnswersCount]);
+
+  useEffect(() => {
+    questionsListRef.current = questionsList;
+  }, [questionsList]);
+
+  useEffect(() => {
+    isDynamicRef.current = isDynamic;
+  }, [isDynamic]);
+
+  useEffect(() => {
+    currentDynamicTopicRef.current = currentDynamicTopic;
+  }, [currentDynamicTopic]);
+
+  const handleFinishQuizDueToTimeout = () => {
+    setQuizFinished(true);
+    
+    const finalCorrect = correctAnswersCountRef.current;
+    const totalQ = questionsListRef.current.length;
+    const newAttempt: QuizAttempt = {
+      id: Math.random().toString(36).substring(7),
+      date: new Date().toISOString(),
+      topic: (isDynamicRef.current ? currentDynamicTopicRef.current : "Quiz d'Évaluation Officiel") + " (Temps écoulé)",
+      correct: finalCorrect,
+      total: totalQ,
+      scorePct: Math.round((finalCorrect / totalQ) * 100)
+    };
+
+    handleUpdateProgress((stats) => {
+      const updatedHistory = stats.quizHistory ? [newAttempt, ...stats.quizHistory] : [newAttempt];
+      return {
+        quizCorrect: stats.quizCorrect + finalCorrect,
+        quizTotal: stats.quizTotal + totalQ,
+        quizHistory: updatedHistory.slice(0, 50)
+      };
+    });
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (quizStarted && isTimerEnabled && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && quizStarted && isTimerEnabled) {
+      handleFinishQuizDueToTimeout();
+    }
+    return () => clearInterval(timer);
+  }, [quizStarted, isTimerEnabled, timeLeft]);
+
   useEffect(() => {
     const handleProgressChange = () => {
       const progress = getProgress();
@@ -339,6 +402,7 @@ export default function QuizPage() {
           setCorrectAnswersCount(0);
           setQuizAnswered(false);
           setQuizFinished(false);
+          setQuizStarted(false);
           setActiveMode('quiz');
         } else {
           const formattedCards = data.items.map((c: any, index: number) => ({
@@ -377,6 +441,7 @@ export default function QuizPage() {
     setCorrectAnswersCount(0);
     setQuizAnswered(false);
     setQuizFinished(false);
+    setQuizStarted(false);
     setFlippedCards({});
   };
 
@@ -457,6 +522,18 @@ export default function QuizPage() {
     setCorrectAnswersCount(0);
     setQuizAnswered(false);
     setQuizFinished(false);
+    setQuizStarted(false);
+  };
+
+  const handleStartQuiz = () => {
+    setTimeLeft(questionsList.length * 30);
+    setQuizStarted(true);
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleClearGlobalQuizStats = () => {
@@ -632,18 +709,76 @@ export default function QuizPage() {
       {/* Contenu du mode Quiz */}
       {activeMode === 'quiz' && (
         <div className="animate-fade-in">
-          {!quizFinished ? (
+          {!quizStarted ? (
+            <div className={`${styles.preQuizCard} glass-card`}>
+              <h2 className={styles.preQuizTitle}>
+                {isDynamic ? `Quiz personnalisé : ${currentDynamicTopic}` : "Quiz d'Évaluation Officiel"}
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+                Testez vos connaissances sur la méthodologie de recherche clinique RECIF et la législation algérienne.
+              </p>
+              
+              <div className={styles.preQuizDetails}>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Questions</span>
+                  <span className={styles.detailVal}>{questionsList.length}</span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Format</span>
+                  <span className={styles.detailVal}>QCM</span>
+                </div>
+                <div className={styles.detailItem}>
+                  <span className={styles.detailLabel}>Barème</span>
+                  <span className={styles.detailVal}>+1 / 0</span>
+                </div>
+              </div>
+
+              {/* Toggle Switch Premium */}
+              <div className={styles.switchContainer}>
+                <div className={styles.switchText}>
+                  <label htmlFor="timer-toggle" className={styles.switchLabel}>Mode Chronométré</label>
+                  <p className={styles.switchSubtext}>
+                    30 secondes par question (Total : {Math.floor((questionsList.length * 30) / 60)}m {(questionsList.length * 30) % 60}s)
+                  </p>
+                </div>
+                <label className={styles.switch}>
+                  <input 
+                    id="timer-toggle"
+                    type="checkbox" 
+                    checked={isTimerEnabled} 
+                    onChange={(e) => setIsTimerEnabled(e.target.checked)}
+                  />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+
+              <button className="btn btn-primary" onClick={handleStartQuiz} style={{ width: '100%', padding: '1rem', fontWeight: 600 }}>
+                Démarrer le Quiz
+              </button>
+            </div>
+          ) : !quizFinished ? (
             <div className={`${styles.quizCard} glass-card`}>
               {/* Indicateur de progression */}
               <div className={styles.progressContainer}>
                 <div className={styles.progressBar}>
                   <div
-                    className={styles.progressFill}
-                    style={{ width: `${((currentQuestionIdx + 1) / questionsList.length) * 100}%` }}
+                     className={styles.progressFill}
+                     style={{ width: `${((currentQuestionIdx + 1) / questionsList.length) * 100}%` }}
                   />
                 </div>
                 <div className={styles.progressText}>
                   <span>Catégorie : <strong>{questionsList[currentQuestionIdx].category}</strong></span>
+                  
+                  {isTimerEnabled && (
+                    <div className={`${styles.timerDisplay} ${timeLeft < 15 ? styles.timerUrgent : ''}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.35rem' }}>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      <span>{formatTime(timeLeft)}</span>
+                    </div>
+                  )}
+                  
                   <span>Question {currentQuestionIdx + 1} sur {questionsList.length}</span>
                 </div>
               </div>
@@ -710,7 +845,7 @@ export default function QuizPage() {
             </div>
           ) : (
             /* Ecran de résultats */
-            <div className={`${styles.quizCard} glass-card styles.resultScreen`} style={{ textAlign: 'center' }}>
+            <div className={`${styles.quizCard} glass-card ${styles.resultScreen}`} style={{ textAlign: 'center' }}>
               <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-primary)', marginBottom: '1rem' }}>Quiz terminé !</h2>
               <p style={{ color: 'var(--text-secondary)' }}>Voici votre bilan d'évaluation méthodologique :</p>
               

@@ -4,7 +4,9 @@ import {
   initializeFirestore, 
   persistentLocalCache, 
   persistentMultipleTabManager,
-  Firestore 
+  Firestore,
+  disableNetwork,
+  enableNetwork
 } from 'firebase/firestore';
 
 export const firebaseConfig = {
@@ -38,6 +40,34 @@ if (isFirebaseEnabled) {
         tabManager: persistentMultipleTabManager()
       })
     });
+
+    // Gérer l'état réseau de Firestore de manière transparente pour éviter le spam de connexion en console
+    if (typeof window !== 'undefined') {
+      const handleOnline = () => {
+        if (db) {
+          enableNetwork(db)
+            .then(() => console.log('⚡ Connexion Firestore restaurée (Online)'))
+            .catch(err => console.warn('⚠️ Erreur enableNetwork Firestore:', err));
+        }
+      };
+      const handleOffline = () => {
+        if (db) {
+          disableNetwork(db)
+            .then(() => console.log('🔌 Firestore configuré en mode déconnecté (Offline)'))
+            .catch(err => console.warn('⚠️ Erreur disableNetwork Firestore:', err));
+        }
+      };
+
+      // Si le navigateur est déjà hors-ligne au chargement
+      if (!navigator.onLine) {
+        disableNetwork(db)
+          .then(() => console.log('🔌 Firestore démarré en mode déconnecté (Offline)'))
+          .catch(err => console.warn('⚠️ Erreur disableNetwork initial:', err));
+      }
+
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
   } catch (error) {
     console.error('❌ Échec de l\'initialisation de Firebase client:', error);
   }

@@ -7,12 +7,70 @@ import {
   query, 
   orderBy, 
   deleteDoc, 
-  serverTimestamp 
+  serverTimestamp,
+  getDocsFromCache,
+  getDocFromCache,
+  QuerySnapshot,
+  DocumentSnapshot
 } from 'firebase/firestore';
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, isFirebaseEnabled, auth, firebaseConfig } from './firebase';
 import { LocalStats } from './storage';
+
+// Fonction utilitaire pour récupérer des documents Firestore avec repli immédiat sur le cache s'il est offline
+async function getDocsWithCacheFallback(q: any): Promise<QuerySnapshot<any, any>> {
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    try {
+      return await getDocsFromCache(q);
+    } catch (e) {
+      console.warn("⚠️ Échec de la récupération des documents depuis le cache Firestore:", e);
+      throw e;
+    }
+  }
+  try {
+    const serverPromise = getDocs(q);
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('TIMEOUT')), 1500)
+    );
+    return await Promise.race([serverPromise, timeoutPromise]);
+  } catch (error) {
+    console.warn("⚠️ Échec ou timeout de la connexion serveur Firestore, bascule vers le cache local...", error);
+    try {
+      return await getDocsFromCache(q);
+    } catch (cacheError) {
+      console.error("❌ Impossible de lire les documents Firestore (Serveur & Cache):", cacheError);
+      throw cacheError;
+    }
+  }
+}
+
+// Fonction utilitaire pour récupérer un document unique Firestore avec repli immédiat sur le cache s'il est offline
+async function getDocWithCacheFallback(docRef: any): Promise<DocumentSnapshot<any, any>> {
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    try {
+      return await getDocFromCache(docRef);
+    } catch (e) {
+      console.warn("⚠️ Échec de la récupération du document depuis le cache Firestore:", e);
+      throw e;
+    }
+  }
+  try {
+    const serverPromise = getDoc(docRef);
+    const timeoutPromise = new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error('TIMEOUT')), 1500)
+    );
+    return await Promise.race([serverPromise, timeoutPromise]);
+  } catch (error) {
+    console.warn("⚠️ Échec ou timeout de la connexion serveur Firestore pour le document, bascule vers le cache local...", error);
+    try {
+      return await getDocFromCache(docRef);
+    } catch (cacheError) {
+      console.error("❌ Impossible de lire le document Firestore (Serveur & Cache):", cacheError);
+      throw cacheError;
+    }
+  }
+}
 
 export interface FirestoreUser {
   uid: string;
@@ -105,8 +163,8 @@ export async function loadUserProfile(uid: string): Promise<FirestoreUser | null
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return null;
   try {
     const userDocRef = doc(db, 'users', uid);
-    const snap = await getDoc(userDocRef);
-    if (snap.exists()) {
+    const snap = await getDocWithCacheFallback(userDocRef);
+    if (snap && snap.exists()) {
       return snap.data() as FirestoreUser;
     }
   } catch (error) {
@@ -154,7 +212,7 @@ export async function loadFirestoreChats(uid: string): Promise<any[]> {
   try {
     const chatsRef = collection(db, 'users', uid, 'chats');
     const q = query(chatsRef, orderBy('updatedAt', 'desc'));
-    const snap = await getDocs(q);
+    const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => d.data());
   } catch (error) {
     console.error('❌ Erreur loadFirestoreChats:', error);
@@ -191,7 +249,7 @@ export async function loadFirestoreProtocols(uid: string): Promise<FirestoreProt
   try {
     const protosRef = collection(db, 'users', uid, 'protocols');
     const q = query(protosRef, orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
+    const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => d.data() as FirestoreProtocol);
   } catch (error) {
     console.error('❌ Erreur loadFirestoreProtocols:', error);
@@ -214,7 +272,7 @@ export async function getAllUsers(): Promise<FirestoreUser[]> {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return [];
   try {
     const usersRef = collection(db, 'users');
-    const snap = await getDocs(usersRef);
+    const snap = await getDocsWithCacheFallback(usersRef);
     return snap.docs.map(d => d.data() as FirestoreUser);
   } catch (error) {
     console.error('❌ Erreur getAllUsers:', error);
@@ -239,14 +297,14 @@ export async function deleteUserFully(uid: string) {
   try {
     // 1. Supprimer tous les documents de chat de l'utilisateur
     const chatsRef = collection(db, 'users', uid, 'chats');
-    const chatsSnap = await getDocs(chatsRef);
+    const chatsSnap = await getDocsWithCacheFallback(chatsRef);
     for (const chatDoc of chatsSnap.docs) {
       await deleteDoc(doc(db, 'users', uid, 'chats', chatDoc.id));
     }
 
     // 2. Supprimer tous les protocoles de l'utilisateur
     const protosRef = collection(db, 'users', uid, 'protocols');
-    const protosSnap = await getDocs(protosRef);
+    const protosSnap = await getDocsWithCacheFallback(protosRef);
     for (const protoDoc of protosSnap.docs) {
       await deleteDoc(doc(db, 'users', uid, 'protocols', protoDoc.id));
     }
@@ -298,7 +356,7 @@ export async function getAccessRequests(): Promise<AccessRequest[]> {
   try {
     const requestsRef = collection(db, 'access_requests');
     const q = query(requestsRef, orderBy('createdAt', 'desc'));
-    const snap = await getDocs(q);
+    const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as AccessRequest));
   } catch (error) {
     console.error('❌ Erreur getAccessRequests:', error);
@@ -311,8 +369,8 @@ export async function findAccessRequestByEmail(email: string): Promise<AccessReq
   try {
     const docId = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const docRef = doc(db, 'access_requests', docId);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
+    const snap = await getDocWithCacheFallback(docRef);
+    if (snap && snap.exists()) {
       return { id: snap.id, ...snap.data() } as AccessRequest;
     }
   } catch (error) {

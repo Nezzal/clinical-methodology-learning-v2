@@ -4,6 +4,36 @@ import recifKb from '@/data/recif-kb.json';
 import glossaryData from '@/data/glossary.json';
 import fs from 'fs';
 import path from 'path';
+import { pipeline, env } from '@xenova/transformers';
+
+// Désactiver le chargement à distance depuis les serveurs Hugging Face (empêche le gel hors-ligne)
+env.allowRemoteModels = false;
+
+class EmbeddingPipeline {
+  static task = 'feature-extraction' as const;
+  static model = 'Xenova/multilingual-e5-base';
+  static instance: any = null;
+
+  static async getInstance() {
+    if (this.instance === null) {
+      this.instance = await pipeline(this.task, this.model);
+    }
+    return this.instance;
+  }
+}
+
+async function getLocalQueryEmbedding(query: string): Promise<number[] | null> {
+  try {
+    const extractor = await EmbeddingPipeline.getInstance();
+    // Le modèle E5 requiert le préfixe "query: " pour les requêtes
+    const textToEmbed = `query: ${query}`;
+    const output = await extractor(textToEmbed, { pooling: 'mean', normalize: true });
+    return Array.from(output.data);
+  } catch (err) {
+    console.warn("⚠️ Échec du calcul de l'embedding local :", err);
+    return null;
+  }
+}
 
 // Interface pour les paragraphes indexés
 interface EmbeddedChunk {
@@ -212,7 +242,7 @@ async function tryOllamaChat(
     console.log(`🤖 Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondes de timeout (permet le chargement initial du modèle et la génération complète)
+    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 secondes de timeout (permet le chargement initial du modèle lourd et la génération complète)
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -249,7 +279,7 @@ async function tryOllamaChat(
   }
 }
 
-function getLocalContextForLLM(queryText: string): { context: string; source: string } {
+async function getLocalContextForLLM(queryText: string): Promise<{ context: string; source: string }> {
   let context = '';
   let source = '';
   const queryLower = queryText.toLowerCase();
@@ -327,30 +357,42 @@ function getLocalContextForLLM(queryText: string): { context: string; source: st
     source = source ? `${source} + Réglementation` : 'Réglementation Algérienne';
   }
 
-  let matchedChunks: any[] = [];
+  let matchedChunks: { page: number; text: string; similarity: number }[] = [];
+  let usedSemanticSearch = false;
+
   if (recifEmbeddings && recifEmbeddings.length > 0) {
-    matchedChunks = searchOfflineChunks(queryText, recifEmbeddings);
+    const queryVector = await getLocalQueryEmbedding(queryText);
+    if (queryVector) {
+      const scoredChunks = recifEmbeddings.map(chunk => ({
+        page: chunk.page,
+        text: chunk.text,
+        similarity: getCosineSimilarity(queryVector, chunk.embedding)
+      }));
+
+      matchedChunks = scoredChunks
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 4);
+      usedSemanticSearch = true;
+    } else {
+      const kwMatches = searchOfflineChunks(queryText, recifEmbeddings);
+      matchedChunks = kwMatches.slice(0, 4).map(c => ({
+        page: c.page,
+        text: c.text,
+        similarity: c.score
+      }));
+    }
   }
 
   if (matchedChunks.length > 0) {
-    // Extraire les mots-clés de la requête pour faire les snippets
-    const cleanQuery = queryText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, ' ');
-    const rawWords = cleanQuery.split(/\s+/);
-    const stopWords = new Set([
-      'le', 'la', 'les', 'de', 'des', 'du', 'un', 'une', 'et', 'en', 'est', 'sont', 
-      'pour', 'dans', 'sur', 'par', 'avec', 'qui', 'que', 'comment', 'pourquoi', 
-      'quelles', 'quels', 'quelle', 'quel', 'est-ce', 'ce', 'ces', 'cette', 'je', 
-      'tu', 'il', 'nous', 'vous', 'ils', 'elles', 'se', 'sa', 'son', 'ses', 'a', 'au', 'aux'
-    ]);
-    const keywords = rawWords.filter(w => w.length > 1 && !stopWords.has(w));
-
     context += `[Extraits pertinents du manuel RECIF]\n`;
-    const topPassages = matchedChunks.slice(0, 2); // 2 passages suffisent pour limiter le contexte du LLM local
+    // E5 sémantique local est précis, on prend les 3 meilleurs blocs (au lieu de 2 de 450 chars) et on fournit le bloc entier (tranché)
+    const topPassages = matchedChunks.slice(0, 3);
     topPassages.forEach((chunk) => {
-      const snippet = getSnippet(chunk.text, keywords, 450);
-      context += `Page ${chunk.page} : "${snippet}"\n\n`;
+      context += `Page ${chunk.page} : "${chunk.text}"\n\n`;
     });
-    source = source ? `${source} + Extraits du manuel` : 'Extraits du manuel RECIF';
+    source = source 
+      ? `${source} + Extraits du manuel (${usedSemanticSearch ? 'sémantique' : 'mots-clés'})` 
+      : `Extraits du manuel RECIF (${usedSemanticSearch ? 'sémantique' : 'mots-clés'})`;
   }
 
   if (!context) {
@@ -565,6 +607,22 @@ function buildOfflineResponse(queryText: string, notePrefix: string): string {
   return reply;
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error('TIMEOUT_EXCEEDED'));
+    }, timeoutMs);
+  });
+  
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    return result;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function POST(req: Request) {
   let messages: any[] = [];
   try {
@@ -585,7 +643,7 @@ export async function POST(req: Request) {
     // Fallback Mock si la clé API n'est pas configurée
     if (!apiKey) {
       // 1. Tenter d'utiliser Ollama
-      const localContext = getLocalContextForLLM(lastUserMessage);
+      const localContext = await getLocalContextForLLM(lastUserMessage);
       const systemInstruction = `Tu es un tuteur expert en méthodologie de recherche clinique en Algérie, basé sur le manuel français "RECIF" et la réglementation algérienne (Loi n° 18-11 relative à la santé).
 Ton but est d'aider les étudiants, chercheurs et cliniciens à concevoir et rédiger leurs protocoles de recherche.
 
@@ -644,38 +702,21 @@ Instructions de réponse :
              errCode === 'EAI_AGAIN';
     };
 
-    // Effectuer la recherche vectorielle si le fichier d'embeddings est chargé et la requête est valide
+    const checkIsQuotaOrRateLimit = (err: any) => {
+      const status = err.status || err.statusCode;
+      const errMsg = err.message?.toLowerCase() || '';
+      return status === 429 || 
+             errMsg.includes('quota') || 
+             errMsg.includes('rate limit') || 
+             errMsg.includes('resource_exhausted') ||
+             errMsg.includes('exceeded your current quota');
+    };
+
+    // Effectuer la recherche sémantique vectorielle locale (avec le modèle E5 local)
     if (recifEmbeddings.length > 0 && userQuery) {
       try {
-        console.log(`🔍 Génération de l'embedding pour la requête : "${userQuery.substring(0, 50)}..."`);
-        
-        // Appeler l'API Gemini pour générer l'embedding de la question de l'utilisateur (avec tentatives de repli)
-        let embedResponse;
-        let embedAttempt = 0;
-        const maxEmbedAttempts = 3;
-        while (embedAttempt < maxEmbedAttempts) {
-          try {
-            embedResponse = await ai.models.embedContent({
-              model: 'gemini-embedding-2',
-              contents: userQuery,
-              config: {
-                outputDimensionality: 768
-              }
-            });
-            break;
-          } catch (err: any) {
-            embedAttempt++;
-            console.warn(`⚠️ Tentative d'embedding ${embedAttempt}/${maxEmbedAttempts} échouée:`, err.message || err);
-            
-            // Si on est hors-ligne, inutile d'attendre et de réessayer
-            if (checkIsOffline(err) || embedAttempt >= maxEmbedAttempts) {
-              throw err;
-            }
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, embedAttempt) * 1000));
-          }
-        }
-
-        const queryVector = embedResponse?.embeddings?.[0]?.values;
+        console.log(`🔍 Génération de l'embedding local pour la requête : "${userQuery.substring(0, 50)}..."`);
+        const queryVector = await getLocalQueryEmbedding(userQuery);
 
         if (queryVector) {
           // Calculer les similitudes avec tous les segments
@@ -690,7 +731,7 @@ Instructions de réponse :
             .sort((a, b) => b.similarity - a.similarity)
             .slice(0, 4);
 
-          console.log(`🎯 Top 4 segments trouvés (Similitudes max: ${topChunks[0]?.similarity.toFixed(4)}) :`);
+          console.log(`🎯 [RAG Local] Top 4 segments trouvés (Similitudes max: ${topChunks[0]?.similarity.toFixed(4)}) :`);
           topChunks.forEach((c, idx) => {
             console.log(`   [${idx + 1}] Page ${c.page} (Sim: ${c.similarity.toFixed(4)}) : "${c.text.substring(0, 60)}..."`);
           });
@@ -755,21 +796,24 @@ Instructions de réponse :
 
     while (attempt < maxAttempts) {
       try {
-        response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: contents,
-          config: {
-            systemInstruction: systemInstruction,
-            temperature: 0.5, // Plus bas pour plus de fidélité et moins d'hallucinations
-          }
-        });
+        response = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: contents,
+            config: {
+              systemInstruction: systemInstruction,
+              temperature: 0.5, // Plus bas pour plus de fidélité et moins d'hallucinations
+            }
+          }),
+          10000 // 10 secondes de timeout
+        );
         break; // Succès
       } catch (err: any) {
         attempt++;
         console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (Chat):`, err.message || err);
         
-        // Si on est hors-ligne, inutile d'attendre et de réessayer
-        if (checkIsOffline(err) || attempt >= maxAttempts) {
+        // Si on est hors-ligne, si le quota est dépassé, ou en cas de timeout, inutile de réessayer
+        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) {
           throw err;
         }
         await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
@@ -791,7 +835,7 @@ Instructions de réponse :
       const ollamaModel = process.env.OLLAMA_MODEL || 'gemma2:2b';
 
       // 1. Tenter d'utiliser Ollama
-      const localContext = getLocalContextForLLM(userQuery);
+      const localContext = await getLocalContextForLLM(userQuery);
       const systemInstruction = `Tu es un tuteur expert en méthodologie de recherche clinique en Algérie, basé sur le manuel français "RECIF" et la réglementation algérienne (Loi n° 18-11 relative à la santé).
 Ton but est d'aider les étudiants, chercheurs et cliniciens à concevoir et rédiger leurs protocoles de recherche.
 
@@ -823,9 +867,9 @@ Instructions de réponse :
       return NextResponse.json({ text: mockReply });
     } catch (fallbackErr) {
       let numericStatus = 500;
-      if (typeof error.status === 'number' && error.status >= 400 && error.status < 600) {
+      if (error && typeof error.status === 'number' && error.status >= 400 && error.status < 600) {
         numericStatus = error.status;
-      } else if (typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600) {
+      } else if (error && typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600) {
         numericStatus = error.statusCode;
       }
       
@@ -834,7 +878,7 @@ Instructions de réponse :
         userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
       } else if (numericStatus === 503 || numericStatus === 504) {
         userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
-      } else if (error.message) {
+      } else if (error && error.message) {
         userMessage = `Erreur : ${error.message}`;
       }
 

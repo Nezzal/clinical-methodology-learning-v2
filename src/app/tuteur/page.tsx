@@ -189,22 +189,21 @@ export default function Tuteur() {
     e.stopPropagation();
     if (!user) return;
     if (confirm('Voulez-vous vraiment supprimer cette discussion ?')) {
-      try {
-        await deleteFirestoreChat(user.uid, sessionId);
-        const updatedList = sessions.filter(s => s.id !== sessionId);
-        setSessions(updatedList);
-        
-        if (activeSessionId === sessionId) {
-          if (updatedList.length > 0) {
-            setActiveSessionId(updatedList[0].id);
-            setMessages(updatedList[0].messages || []);
-          } else {
-            startNewSession();
-          }
+      const updatedList = sessions.filter(s => s.id !== sessionId);
+      setSessions(updatedList);
+      
+      if (activeSessionId === sessionId) {
+        if (updatedList.length > 0) {
+          setActiveSessionId(updatedList[0].id);
+          setMessages(updatedList[0].messages || []);
+        } else {
+          startNewSession();
         }
-      } catch (err) {
-        console.error("Erreur suppression session:", err);
       }
+      
+      // Supprimer en arrière-plan
+      deleteFirestoreChat(user.uid, sessionId)
+        .catch(err => console.error("Erreur suppression session:", err));
     }
   };
 
@@ -302,16 +301,16 @@ export default function Tuteur() {
     });
 
     if (user) {
-      try {
-        const titleText = textToSend.length > 25 ? textToSend.substring(0, 25) + '...' : textToSend;
-        // Si c'est le premier message de l'utilisateur, utiliser son titre, sinon garder le titre de la session si elle existe déjà
-        const existingSession = sessions.find(s => s.id === currentSessionId);
-        const title = existingSession?.title || titleText;
-        await saveFirestoreChat(user.uid, currentSessionId, title, updatedMessages);
-        await syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, getProgress());
-      } catch (e) {
-        console.error("Erreur de sauvegarde de la question sur Firestore:", e);
-      }
+      const titleText = textToSend.length > 25 ? textToSend.substring(0, 25) + '...' : textToSend;
+      const existingSession = sessions.find(s => s.id === currentSessionId);
+      const title = existingSession?.title || titleText;
+      
+      // Lancer la sauvegarde et la synchronisation en arrière-plan sans bloquer l'appel de l'API
+      saveFirestoreChat(user.uid, currentSessionId, title, updatedMessages)
+        .catch(e => console.error("Erreur de sauvegarde de la question sur Firestore:", e));
+      
+      syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, getProgress())
+        .catch(e => console.error("Erreur de synchronisation du profil sur Firestore:", e));
     }
 
     try {
@@ -339,21 +338,34 @@ export default function Tuteur() {
         setMessages(finalMessages);
 
         if (user) {
-          try {
-            // Trouver ou générer le titre
-            const firstUserMessage = finalMessages.find(m => m.role === 'user');
-            const titleText = firstUserMessage ? (firstUserMessage.content.length > 25 ? firstUserMessage.content.substring(0, 25) + '...' : firstUserMessage.content) : 'Discussion';
-            const existingSession = sessions.find(s => s.id === currentSessionId);
-            const title = existingSession?.title || titleText;
-            
-            await saveFirestoreChat(user.uid, currentSessionId, title, finalMessages);
-            
-            // Recharger la liste des sessions
-            const list = await loadFirestoreChats(user.uid);
-            setSessions(list);
-          } catch (e) {
-            console.error("Erreur de sauvegarde de la réponse sur Firestore:", e);
+          // Trouver ou générer le titre
+          const firstUserMessage = finalMessages.find(m => m.role === 'user');
+          const titleText = firstUserMessage ? (firstUserMessage.content.length > 25 ? firstUserMessage.content.substring(0, 25) + '...' : firstUserMessage.content) : 'Discussion';
+          const existingSession = sessions.find(s => s.id === currentSessionId);
+          const title = existingSession?.title || titleText;
+
+          // Mettre à jour l'état local immédiatement pour afficher le titre dans la barre latérale sans attendre Firestore
+          const updatedList = sessions.map(s => {
+            if (s.id === currentSessionId) {
+              return { ...s, title, messages: finalMessages, updatedAt: new Date().toISOString() };
+            }
+            return s;
+          });
+          const hasSession = sessions.some(s => s.id === currentSessionId);
+          if (!hasSession) {
+            updatedList.unshift({
+              id: currentSessionId,
+              title,
+              messages: finalMessages,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            });
           }
+          setSessions(updatedList);
+
+          // Sauvegarder en tâche de fond
+          saveFirestoreChat(user.uid, currentSessionId, title, finalMessages)
+            .catch(e => console.error("Erreur de sauvegarde de la réponse sur Firestore:", e));
         }
       } else {
         throw new Error(data.error || 'Erreur lors de la communication avec le tuteur.');
