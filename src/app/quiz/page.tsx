@@ -298,7 +298,7 @@ export default function QuizPage() {
 
   // Timer & start state
   const [quizStarted, setQuizStarted] = useState(false);
-  const [isTimerEnabled, setIsTimerEnabled] = useState(false);
+  const [isTimerEnabled, setIsTimerEnabled] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
 
   // References to keep timer callback updated with fresh state without interval restarts
