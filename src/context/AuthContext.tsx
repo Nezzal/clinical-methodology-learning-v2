@@ -155,6 +155,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             });
           }
         } else {
+          // Vérification de sécurité : si le document n'existe pas et que le compte est ancien (plus de 10 minutes),
+          // cela signifie que le compte a été supprimé par l'administrateur de la base de données.
+          const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : 0;
+          const isNewAccount = (Date.now() - creationTime) < 10 * 60 * 1000; // 10 minutes
+          
+          if (!isNewAccount) {
+            console.warn("🚫 Compte Firebase Auth actif mais profil Firestore inexistant -> Compte supprimé par l'administrateur.");
+            alert("Votre compte a été supprimé par l'administrateur de la plateforme.");
+            if (auth) {
+              await signOut(auth);
+            }
+            return;
+          }
+
           // Nouvel utilisateur sur Firestore -> Tenter de récupérer son nom d'affichage à partir d'une demande d'accès
           let finalDisplayName = user.displayName;
           let reqPassChange = false;

@@ -129,7 +129,7 @@ export default function AdminDashboard() {
       // Supprimer de la liste locale
       setStudents(prev => prev.filter(s => s.uid !== uid));
       
-      alert("Les données de l'étudiant ont été supprimées avec succès.");
+      alert("Les données de l'étudiant (Firestore) ont été supprimées avec succès.\n\n⚠️ IMPORTANT : En raison des limitations de sécurité de Firebase client, vous devez également supprimer manuellement ce compte dans votre Console Firebase (onglet Authentication) pour libérer définitivement son adresse e-mail et lui retirer tout accès.");
     } catch (e) {
       alert("Erreur lors de la suppression des données : " + (e as Error).message);
     } finally {
@@ -914,51 +914,56 @@ Votre superviseur RECIF`;
               <div className={styles.adminActions}>
                 <span className={styles.adminActionsTitle}>Actions de supervision :</span>
                 {isSuperAdmin ? (
-                  <div className={styles.adminButtons}>
-                    {selectedStudent.status === 'suspended' ? (
-                      <button 
-                        className="btn btn-primary" 
-                        style={{ 
-                          background: 'linear-gradient(135deg, #0d9488 0%, #0b7a70 100%)', 
-                          borderColor: 'var(--accent-primary)',
-                          fontSize: '0.8rem', 
-                          padding: '0.4rem 0.8rem' 
-                        }}
-                        onClick={() => handleToggleSuspension(selectedStudent.uid, 'active')}
-                        disabled={actionPending}
-                      >
-                        {actionPending ? 'Action...' : 'Réactiver l\'élève'}
-                      </button>
-                    ) : (
+                  <>
+                    <div className={styles.adminButtons}>
+                      {selectedStudent.status === 'suspended' ? (
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ 
+                            background: 'linear-gradient(135deg, #0d9488 0%, #0b7a70 100%)', 
+                            borderColor: 'var(--accent-primary)',
+                            fontSize: '0.8rem', 
+                            padding: '0.4rem 0.8rem' 
+                          }}
+                          onClick={() => handleToggleSuspension(selectedStudent.uid, 'active')}
+                          disabled={actionPending}
+                        >
+                          {actionPending ? 'Action...' : 'Réactiver l\'élève'}
+                        </button>
+                      ) : (
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ 
+                            borderColor: 'var(--accent-danger)', 
+                            color: 'var(--accent-danger)', 
+                            fontSize: '0.8rem', 
+                            padding: '0.4rem 0.8rem' 
+                          }}
+                          onClick={() => handleToggleSuspension(selectedStudent.uid, 'suspended')}
+                          disabled={actionPending}
+                        >
+                          {actionPending ? 'Action...' : 'Suspendre l\'élève'}
+                        </button>
+                      )}
+                      
                       <button 
                         className="btn btn-secondary" 
                         style={{ 
-                          borderColor: 'var(--accent-danger)', 
-                          color: 'var(--accent-danger)', 
+                          borderColor: 'rgba(239, 68, 68, 0.4)', 
+                          color: 'rgba(239, 68, 68, 0.8)', 
                           fontSize: '0.8rem', 
                           padding: '0.4rem 0.8rem' 
                         }}
-                        onClick={() => handleToggleSuspension(selectedStudent.uid, 'suspended')}
+                        onClick={() => handleDeleteStudentData(selectedStudent.uid)}
                         disabled={actionPending}
                       >
-                        {actionPending ? 'Action...' : 'Suspendre l\'élève'}
+                        {actionPending ? 'Suppression...' : 'Supprimer toutes les données'}
                       </button>
-                    )}
-                    
-                    <button 
-                      className="btn btn-secondary" 
-                      style={{ 
-                        borderColor: 'rgba(239, 68, 68, 0.4)', 
-                        color: 'rgba(239, 68, 68, 0.8)', 
-                        fontSize: '0.8rem', 
-                        padding: '0.4rem 0.8rem' 
-                      }}
-                      onClick={() => handleDeleteStudentData(selectedStudent.uid)}
-                      disabled={actionPending}
-                    >
-                      {actionPending ? 'Suppression...' : 'Supprimer toutes les données'}
-                    </button>
-                  </div>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.75rem', lineHeight: '1.4', borderTop: '1px solid var(--border-glass)', paddingTop: '0.75rem' }}>
+                      ⚠️ <strong>Note d'administration</strong> : La suppression retire les données Firestore (stats, chats, protocoles), mais ne supprime pas le compte d'authentification Firebase. Pensez à supprimer le compte dans votre <strong>Console Firebase (onglet Authentication)</strong> pour bloquer l'accès définitivement.
+                    </p>
+                  </>
                 ) : (
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic' }}>
                     🔒 Les actions de suspension et de suppression de données sont réservées aux administrateurs. En tant qu'enseignant, votre accès est en lecture seule.

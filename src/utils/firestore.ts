@@ -169,6 +169,7 @@ export async function loadUserProfile(uid: string): Promise<FirestoreUser | null
     }
   } catch (error) {
     console.error('❌ Erreur loadUserProfile:', error);
+    throw error;
   }
   return null;
 }

@@ -46,11 +46,15 @@ export default function Sidebar() {
       }
 
       if (user) {
-        // Tenter de lire depuis Firestore
-        const profileData = await loadUserProfile(user.uid);
-        if (profileData?.level) {
-          setLevel(profileData.level);
-          return;
+        try {
+          // Tenter de lire depuis Firestore
+          const profileData = await loadUserProfile(user.uid);
+          if (profileData?.level) {
+            setLevel(profileData.level);
+            return;
+          }
+        } catch (e) {
+          console.warn("Sidebar: loadUserProfile error, using local fallback...", e);
         }
       }
       
