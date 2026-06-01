@@ -148,11 +148,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           saveProgress(mergedStats);
 
           const firestoreProtos = await loadFirestoreProtocols(user.uid);
-          if (firestoreProtos.length > 0) {
-            saveProgress({
-              ...mergedStats,
-              recentProtocols: firestoreProtos
-            });
+          const finalStats = firestoreProtos.length > 0 ? {
+            ...mergedStats,
+            recentProtocols: firestoreProtos
+          } : mergedStats;
+          
+          saveProgress(finalStats);
+
+          // Si l'e-mail enregistré dans Firestore est différent de l'e-mail Firebase Auth (ex: e-mail changé dans la console)
+          if (user.email && profileData.email !== user.email) {
+            console.log(`🔄 Mise à jour de l'e-mail Firestore (${profileData.email} -> ${user.email})`);
+            await syncUserProfile(user.uid, user.email, profileData.displayName, profileData.photoURL, finalStats, profileData.requirePasswordChange);
           }
         } else {
           // Vérification de sécurité : si le document n'existe pas et que le compte est ancien (plus de 10 minutes),
