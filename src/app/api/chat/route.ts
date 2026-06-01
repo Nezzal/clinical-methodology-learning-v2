@@ -4,11 +4,6 @@ import recifKb from '@/data/recif-kb.json';
 import glossaryData from '@/data/glossary.json';
 import fs from 'fs';
 import path from 'path';
-import { pipeline, env } from '@xenova/transformers';
-
-// Désactiver le chargement à distance depuis les serveurs Hugging Face (empêche le gel hors-ligne)
-env.allowRemoteModels = false;
-
 class EmbeddingPipeline {
   static task = 'feature-extraction' as const;
   static model = 'Xenova/multilingual-e5-base';
@@ -16,7 +11,20 @@ class EmbeddingPipeline {
 
   static async getInstance() {
     if (this.instance === null) {
-      this.instance = await pipeline(this.task, this.model);
+      // Pour éviter les plantages ou lenteurs sur Vercel, on n'utilise pas le pipeline de transformers locaux.
+      // Le code du tuteur basculera proprement sur la recherche par mots-clés offline.
+      if (process.env.VERCEL === '1') {
+        throw new Error("Recherche sémantique locale désactivée sur Vercel (production).");
+      }
+      try {
+        const { pipeline, env } = await import('@xenova/transformers');
+        // Désactiver le chargement à distance depuis les serveurs Hugging Face (empêche le gel hors-ligne)
+        env.allowRemoteModels = false;
+        this.instance = await pipeline(this.task, this.model);
+      } catch (err) {
+        console.error("⚠️ Impossible de charger @xenova/transformers :", err);
+        throw err;
+      }
     }
     return this.instance;
   }
