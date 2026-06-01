@@ -274,8 +274,8 @@ export default function QuizPage() {
   };
 
   // Flashcards & Quiz active lists (state-driven for dynamic generation)
-  const [questionsList, setQuestionsList] = useState<Question[]>(DEFAULT_QUESTIONS);
-  const [cardsList, setCardsList] = useState<Flashcard[]>(DEFAULT_FLASHCARDS);
+  const [questionsList, setQuestionsList] = useState<Question[]>([]);
+  const [cardsList, setCardsList] = useState<Flashcard[]>([]);
   const [isDynamic, setIsDynamic] = useState(false);
   const [currentDynamicTopic, setCurrentDynamicTopic] = useState('');
 
@@ -631,35 +631,53 @@ export default function QuizPage() {
         )}
       </section>
 
-      {/* Selecteur de mode */}
-      <div className={styles.toggleNav}>
-        <button
-          className={`${styles.toggleBtn} ${activeMode === 'flashcards' ? styles.activeToggle : ''}`}
-          onClick={() => setActiveMode('flashcards')}
-        >
-          {isDynamic ? 'Flashcards générées (5)' : `Flashcards Mémos (${cardsList.length})`}
-        </button>
-        <button
-          className={`${styles.toggleBtn} ${activeMode === 'quiz' ? styles.activeToggle : ''}`}
-          onClick={() => setActiveMode('quiz')}
-        >
-          {isDynamic ? 'Quiz généré (5)' : `Quiz d'Évaluation (${questionsList.length})`}
-        </button>
-      </div>
+      {/* Sésélectionner/Sélecteur de mode (affiché uniquement si des éléments sont chargés) */}
+      {cardsList.length === 0 && questionsList.length === 0 ? (
+        <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center', marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', border: '1px dashed var(--border-glass)' }}>
+          <div style={{ fontSize: '3.5rem', filter: 'drop-shadow(0 0 12px rgba(0, 229, 255, 0.2))', animation: 'bounce 2.5s infinite' }}>🎯</div>
+          <h3 style={{ fontSize: '1.4rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Prêt à vous entraîner ?</h3>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '540px', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
+            Sélectionnez un chapitre ou saisissez un thème de recherche clinique dans le générateur d'exercices ci-dessus, puis cliquez sur <strong>Générer des Cartes</strong> ou <strong>Générer un Quiz</strong> pour lancer votre session d'entraînement sur mesure.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className={styles.toggleNav}>
+            <button
+              className={`${styles.toggleBtn} ${activeMode === 'flashcards' ? styles.activeToggle : ''}`}
+              onClick={() => setActiveMode('flashcards')}
+            >
+              {isDynamic ? `Flashcards générées (${cardsList.length})` : `Flashcards Mémos (${cardsList.length})`}
+            </button>
+            <button
+              className={`${styles.toggleBtn} ${activeMode === 'quiz' ? styles.activeToggle : ''}`}
+              onClick={() => setActiveMode('quiz')}
+            >
+              {isDynamic ? `Quiz généré (${questionsList.length})` : `Quiz d'Évaluation (${questionsList.length})`}
+            </button>
+          </div>
 
       {/* Contenu du mode Flashcards */}
       {activeMode === 'flashcards' && (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              Cartes maîtrisées : <strong>{masteredCards.filter(id => cardsList.some(c => c.id === id)).length} / {cardsList.length}</strong> ({Math.round((masteredCards.filter(id => cardsList.some(c => c.id === id)).length / cardsList.length) * 100) || 0}%)
-            </span>
-            {masteredCards.length > 0 && (
-              <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleResetFlashcards}>
-                Réinitialiser les cartes
-              </button>
-            )}
-          </div>
+          {cardsList.length === 0 ? (
+            <div className="glass-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem', color: 'var(--text-secondary)' }}>
+              Aucune carte mémoire disponible pour ce thème.
+              <br />
+              Sélectionnez un chapitre ou saisissez un thème ci-dessus, puis cliquez sur <strong>Générer des Cartes</strong>.
+            </div>
+          ) : (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                  Cartes maîtrisées : <strong>{masteredCards.filter(id => cardsList.some(c => c.id === id)).length} / {cardsList.length}</strong> ({Math.round((masteredCards.filter(id => cardsList.some(c => c.id === id)).length / cardsList.length) * 100) || 0}%)
+                </span>
+                {masteredCards.length > 0 && (
+                  <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleResetFlashcards}>
+                    Réinitialiser les cartes
+                  </button>
+                )}
+              </div>
 
           <div className={styles.flashcardGrid}>
             {cardsList.map((card) => {
@@ -703,13 +721,21 @@ export default function QuizPage() {
               );
             })}
           </div>
+            </>
+          )}
         </>
       )}
 
       {/* Contenu du mode Quiz */}
       {activeMode === 'quiz' && (
         <div className="animate-fade-in">
-          {!quizStarted ? (
+          {questionsList.length === 0 ? (
+            <div className="glass-card" style={{ padding: '3rem 2rem', textAlign: 'center', marginTop: '1rem', color: 'var(--text-secondary)' }}>
+              Aucun quiz disponible pour ce thème.
+              <br />
+              Sélectionnez un chapitre ou saisissez un thème ci-dessus, puis cliquez sur <strong>Générer un Quiz</strong>.
+            </div>
+          ) : !quizStarted ? (
             <div className={`${styles.preQuizCard} glass-card`}>
               <h2 className={styles.preQuizTitle}>
                 {isDynamic ? `Quiz personnalisé : ${currentDynamicTopic}` : "Quiz d'Évaluation Officiel"}
@@ -936,6 +962,8 @@ export default function QuizPage() {
             </button>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
