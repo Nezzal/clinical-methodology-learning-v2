@@ -58,6 +58,15 @@ export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  const getCleanLoginUrl = () => {
+    if (typeof window === 'undefined') return 'https://clinical-methodology-learning.vercel.app/login';
+    const origin = window.location.origin;
+    if (origin.includes('clinical-methodology-learning') && origin.includes('vercel.app')) {
+      return 'https://clinical-methodology-learning.vercel.app/login';
+    }
+    return `${origin}/login`;
+  };
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [students, setStudents] = useState<FirestoreUser[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
@@ -191,7 +200,7 @@ export default function AdminDashboard() {
   const handleCopyInvitation = (data?: { name: string; email: string; tempPassword: string }) => {
     const modalData = data || successModalData;
     if (!modalData) return;
-    const loginUrl = `${window.location.origin}/login`;
+    const loginUrl = getCleanLoginUrl();
     const text = `Bonjour ${modalData.name},
 
 Votre demande d'inscription sur la plateforme RECIF Méthodologie a été validée par votre superviseur.
@@ -249,7 +258,7 @@ Votre superviseur RECIF`;
                 </div>
                 <p style="color: #e11d48; font-weight: bold;">⚠️ Important :</p>
                 <p>Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.</p>
-                <p>Vous pouvez vous connecter dès maintenant sur : <a href="${window.location.origin}/login" style="color: #0d9488; font-weight: bold; text-decoration: underline;">Se connecter à RECIF</a></p>
+                <p>Vous pouvez vous connecter dès maintenant sur : <a href="${getCleanLoginUrl()}" style="color: #0d9488; font-weight: bold; text-decoration: underline;">Se connecter à RECIF</a></p>
                 <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
                 <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Ce message a été envoyé automatiquement. Veuillez ne pas y répondre directement.</p>
               </div>
@@ -1089,7 +1098,7 @@ Voici vos identifiants de connexion provisoires :
 - E-mail : ${successModalData.email}
 - Mot de passe temporaire : ${successModalData.tempPassword}
 
-Vous pouvez vous connecter dès maintenant sur : ${typeof window !== 'undefined' ? window.location.origin : ''}/login
+Vous pouvez vous connecter dès maintenant sur : ${getCleanLoginUrl()}
 ⚠️ Important : Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.
 
 Cordialement,
