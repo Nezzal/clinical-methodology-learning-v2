@@ -148,6 +148,7 @@ export default function ProtocoleGenerator() {
   const [calendar, setCalendar] = useState('');
   const [ethics, setEthics] = useState('');
   const [references, setReferences] = useState('');
+  const [annexes, setAnnexes] = useState('');
 
   // App State
   const [generatedProtocol, setGeneratedProtocol] = useState<string | null>(null);
@@ -220,7 +221,8 @@ export default function ProtocoleGenerator() {
       budget,
       calendar,
       ethics,
-      references
+      references,
+      annexes
     };
 
     try {
@@ -798,13 +800,23 @@ export default function ProtocoleGenerator() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="references">Références bibliographiques & Annexes</label>
+                  <label className="form-label" htmlFor="references">Références bibliographiques</label>
                   <textarea
                     id="references"
                     className="form-textarea"
-                    placeholder="Conventions, études toxicologiques de référence, grilles d'inspection environnementale à joindre..."
+                    placeholder="Études de référence, articles scientifiques, recommandations ou directives réglementaires..."
                     value={references}
                     onChange={(e) => setReferences(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="annexes">Annexes (à lister ou citer)</label>
+                  <textarea
+                    id="annexes"
+                    className="form-textarea"
+                    placeholder="Listez les documents annexes (ex: Formulaire de consentement éclairé, Grille de recueil, Questionnaire, Fiche d'information)..."
+                    value={annexes}
+                    onChange={(e) => setAnnexes(e.target.value)}
                   />
                 </div>
               </>

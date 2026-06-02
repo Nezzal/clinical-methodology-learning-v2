@@ -213,6 +213,7 @@ export async function POST(req: Request) {
   let calendar = '';
   let ethics = '';
   let references = '';
+  let annexes = '';
 
   try {
     const data = await req.json();
@@ -240,6 +241,7 @@ export async function POST(req: Request) {
     calendar = data.calendar || '';
     ethics = data.ethics || '';
     references = data.references || '';
+    annexes = data.annexes || '';
 
     const requestHeaders = new Headers(req.headers);
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
@@ -276,10 +278,11 @@ Voici les données saisies par le chercheur :
 - Budget et Financement saisis : ${budget || 'Non spécifié'}
 - Calendrier et jalons saisis : ${calendar || 'Non spécifié'}
 - Considérations éthiques saisies : ${ethics || 'Non spécifiées'}
-- Références bibliographiques & Annexes saisies : ${references || 'Non spécifiées'}
+- Références bibliographiques saisies : ${references || 'Non spécifiées'}
+- Annexes saisies (à lister/citer) : ${annexes || 'Non spécifiées'}
 
 Instructions de rédaction :
-Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
+Si un parameter ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
 
 Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 
@@ -335,7 +338,7 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction). Incorpore le calendrier saisi.
 
 ### 18. Les annexes éventuelles
-* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.).
+* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.). Incorpore les annexes saisies par le chercheur (en les citant ou en dressant la liste de ce qui doit être fourni).
 
 ### 19. Les références
 * Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole. Incorpore les références bibliographiques saisies.
@@ -451,7 +454,8 @@ Voici les données saisies par le chercheur :
 - Budget et Financement saisis : ${budget || 'Non spécifié'}
 - Calendrier et jalons saisis : ${calendar || 'Non spécifié'}
 - Considérations éthiques saisies : ${ethics || 'Non spécifiées'}
-- Références bibliographiques & Annexes saisies : ${references || 'Non spécifiées'}
+- Références bibliographiques saisies : ${references || 'Non spécifiées'}
+- Annexes saisies (à lister/citer) : ${annexes || 'Non spécifiées'}
 
 Instructions de rédaction :
 Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
@@ -510,7 +514,7 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction). Incorpore le calendrier saisi.
 
 ### 18. Les annexes éventuelles
-* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.).
+* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.). Incorpore les annexes saisies par le chercheur (en les citant ou en dressant la liste de ce qui doit être fourni).
 
 ### 19. Les références
 * Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole. Incorpore les références bibliographiques saisies.
