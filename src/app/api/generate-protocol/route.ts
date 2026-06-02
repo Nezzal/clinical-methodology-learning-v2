@@ -222,10 +222,10 @@ export async function POST(req: Request) {
 
     const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
 
-Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche ci-dessous. Pour chaque section, applique les consignes de rédaction méthodologique et le contexte de l'étude (poly-intoxication clandestine sévère au mercure et cyanure chez les artisans bijoutiers/orpailleurs de Batna à partir d'amalgames importés de Tamanrasset).
+Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche RECIF ci-dessous. Pour chaque section, utilise les données soumises par le chercheur pour formuler une rédaction complète, rigoureuse et scientifiquement solide.
 
-Voici les données saisies par le chercheur à intégrer harmonieusement :
-- Titre initial proposé : ${title}
+Voici les données saisies par le chercheur :
+- Titre proposé : ${title}
 - Acronyme : ${acronym}
 - Question de recherche : ${question}
 - Schéma d'étude : ${design}
@@ -237,66 +237,66 @@ Voici les données saisies par le chercheur à intégrer harmonieusement :
 - Critères de jugement secondaires : ${secondaryEndpoints}
 - Description de l'intervention : ${intervention}
 
-Voici la structure en 19 sections avec le cadre contextuel et les enjeux méthodologiques à appliquer obligatoirement :
+Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 
 ### 1. Le titre
-* Mentionne la dynamique géographique (de Tamanrasset vers Batna), le caractère informel/clandestin de l'activité, la poly-intoxication (mercure et cyanure), le design méthodologique (ex: série de cas cliniques analytiques) et définis la population comme "orpailleurs/affineurs urbains".
+* Un titre précis, informatif et reflétant fidèlement l'étude. Intègre le titre proposé par le chercheur et son acronyme.
 
 ### 2. Le(s) objectif(s)
-* Définis l'objectif principal (évaluer la prévalence globale ou décrire les atteintes polyviscérales graves) et les objectifs secondaires (objectiver la co-exposition au cyanure, mesurer l'impact des techniques de brûlage de l'amalgame, évaluer l'efficacité des traitements chélatants).
+* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention.
 
 ### 3. La justification de l'étude
-* Justifie l'étude par la saisine récente des hôpitaux de Batna, le caractère unique du circuit clandestin du minerai en Algérie et le manque de données sur ces travailleurs pour améliorer leur prise en charge en médecine du travail.
+* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi").
 
 ### 4. La (les) hypothèse(s)
-* Formule les hypothèses : lien entre gravité inédite et synergie toxique (mercure + cyanure), composition de l'amalgame importé de Tamanrasset, impact du confinement des ateliers à domicile sur l'exposition passive des familles.
+* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats.
 
 ### 5. Le type d'étude
-* Détaille le design choisi (étude descriptive ou série de cas analytiques avec suivi prospectif, avec un volet rétrospectif), discute du niveau de preuve pour les autorités et de l'adaptation face à la méfiance d'une population clandestine.
+* Choix du design méthodologique (ex: descriptive, analytique, prospective, rétrospective, etc.) en adéquation avec le schéma d'étude choisi par le chercheur.
 
 ### 6. Le(s) facteur(s) étudié(s)
-* Décris comment quantifier l'exposition dans ce milieu non réglementé (fréquence, volume de l'espace de travail), les dosages des co-toxiques (cyanure, plomb), l'évaluation des équipements de protection et les facteurs de confusion (tabagisme, précarité).
+* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles.
 
 ### 7. Le(s) critère(s) de jugement
-* Définis le critère clinique majeur de sévérité (ex: encéphalopathie), les biomarqueurs d'effets précoces pour les asymptomatiques, et les tests neuropsychologiques ou d'imagerie (IRM, EMG) pour caractériser les lésions organiques.
+* Critères (cliniques, paracliniques ou biologiques) permettant de mesurer l'efficacité d'un traitement ou la sévérité d'une maladie. Reprend le critère de jugement principal et les critères secondaires définis par le chercheur.
 
 ### 8. Les causes d'erreur : biais et facteurs de confusion
-* Propose des solutions pour maîtriser le biais de sélection lié à la réticence des patients clandestins, isoler les symptômes du mercure de ceux du cyanure, pallier le biais de mémorisation, éviter la contamination externe des prélèvements (ex: cheveux) et surmonter la barrière linguistique/culturelle.
+* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser.
 
 ### 9. Les sujets
-* Précise les critères d'inclusion (résidence à Batna, brûlage avéré, transporteurs/intermédiaires, familles exposées passivement à domicile) et d'exclusion (comorbidités préexistantes).
+* Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur.
 
 ### 10. La taille de l'échantillon
-* Calcule/justifie la taille selon les cas recensés au CHU de Batna. Explique pourquoi la richesse clinique prime ici sur la puissance statistique pure (petite série de cas), anticipe un fort taux de perdus de vue et prévois des tests non paramétriques.
+* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude pour assurer une puissance statistique adéquate.
 
 ### 11. La récolte et la gestion des données
-* Détaille la logistique : disponibilité du matériel d'analyse au laboratoire (spectrométrie d'absorption atomique), chaîne du froid des prélèvements depuis les domiciles, codage de confidentialité absolue pour protéger ces travailleurs clandestins.
+* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation).
 
 ### 12. L'analyse des données
-* Décris le plan statistique : statistiques descriptives pour cartographier les syndromes, test de corrélation de Spearman (exposition vs déficit cognitif), modélisation de la poly-intoxication sur le pronostic vital, et ANOVA avant/après traitement chélatant.
+* Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés).
 
 ### 13. Une éventuelle étude pilote
-* Prévois une étude pilote sur 3 ou 4 artisans pour tester les questionnaires (méfiance), valider la logistique de prélèvement avec le CHU, chronométrer les tests neuropsychologiques, et adapter les méthodes en cas de refus de coopérer.
+* Description d'une phase préliminaire à petite échelle (si applicable) pour tester la faisabilité du protocole, des questionnaires ou de la logistique de prélèvement.
 
 ### 14. Les implications éthiques
-* Rédige les exigences éthiques : consentement éclairé écrit protégeant juridiquement les personnes exerçant cette activité illégale, anonymisation absolue vis-vis des autorités, soumission au Comité d'Éthique de la Recherche (CER) algérien sous les articles 377-399 de la loi 18-11, et gestion du dilemme d'éviction professionnelle sans autre source de revenus.
+* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11.
 
 ### 15. Le personnel
-* Identifie le personnel requis : un médiateur de confiance pour le milieu clandestin, équipe médicale formée aux chélations d'urgence, psychologue clinicien, et briefing des enquêteurs sur les risques d'exposition passive.
+* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.).
 
 ### 16. Le budget
-* Chiffre les dosages toxicologiques spécialisés, les traitements chélatants importés, les licences de tests psychométriques, et sollicite la participation de la wilaya de Batna.
+* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement.
 
 ### 17. Le calendrier
-* Planifie les étapes : phase de recrutement (flux irrégulier aux urgences), délais du CER, suivi post-thérapeutique, et saisonnalité des arrivées de minerai depuis Tamanrasset.
+* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction).
 
 ### 18. Les annexes éventuelles
-* Énumère les annexes : notice d'information vulgarisée, grilles d'inspection des ateliers, questionnaires, protocole de traitement antidotique, correspondances administratives.
+* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.).
 
 ### 19. Les références
-* Cite les références clés : Convention de Minamata sur le mercure, études sur la toxicité aiguë cyanure/métaux lourds, justification des milieux biologiques (sang, urine, cheveux) et publications socio-économiques sur l'orpaillage clandestin.
+* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole.
 
-Format du document final : Rédige le protocole complet en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown propres pour résumer les points clés de chaque section (ex: les objectifs, le calendrier, le budget), et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
+Format du document final : Rédige le protocole complet en français, hautement professionnel et académique, en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown pour résumer les données structurelles (par exemple pour le budget, le calendrier, ou les critères de jugement) et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
 
     // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
@@ -382,10 +382,10 @@ Format du document final : Rédige le protocole complet en utilisant des titres 
 
       const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
 
-Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche ci-dessous. Pour chaque section, applique les consignes de rédaction méthodologique et le contexte de l'étude (poly-intoxication clandestine sévère au mercure et cyanure chez les artisans bijoutiers/orpailleurs de Batna à partir d'amalgames importés de Tamanrasset).
+Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche RECIF ci-dessous. Pour chaque section, utilise les données soumises par le chercheur pour formuler une rédaction complète, rigoureuse et scientifiquement solide.
 
-Voici les données saisies par le chercheur à intégrer harmonieusement :
-- Titre initial proposé : ${title}
+Voici les données saisies par le chercheur :
+- Titre proposé : ${title}
 - Acronyme : ${acronym}
 - Question de recherche : ${question}
 - Schéma d'étude : ${design}
@@ -397,66 +397,66 @@ Voici les données saisies par le chercheur à intégrer harmonieusement :
 - Critères de jugement secondaires : ${secondaryEndpoints}
 - Description de l'intervention : ${intervention}
 
-Voici la structure en 19 sections avec le cadre contextuel et les enjeux méthodologiques à appliquer obligatoirement :
+Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 
 ### 1. Le titre
-* Mentionne la dynamique géographique (de Tamanrasset vers Batna), le caractère informel/clandestin de l'activité, la poly-intoxication (mercure et cyanure), le design méthodologique (ex: série de cas cliniques analytiques) et définis la population comme "orpailleurs/affineurs urbains".
+* Un titre précis, informatif et reflétant fidèlement l'étude. Intègre le titre proposé par le chercheur et son acronyme.
 
 ### 2. Le(s) objectif(s)
-* Définis l'objectif principal (évaluer la prévalence globale ou décrire les atteintes polyviscérales graves) et les objectifs secondaires (objectiver la co-exposition au cyanure, mesurer l'impact des techniques de brûlage de l'amalgame, évaluer l'efficacité des traitements chélatants).
+* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention.
 
 ### 3. La justification de l'étude
-* Justifie l'étude par la saisine récente des hôpitaux de Batna, le caractère unique du circuit clandestin du minerai en Algérie et le manque de données sur ces travailleurs pour améliorer leur prise en charge en médecine du travail.
+* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi").
 
 ### 4. La (les) hypothèse(s)
-* Formule les hypothèses : lien entre gravité inédite et synergie toxique (mercure + cyanure), composition de l'amalgame importé de Tamanrasset, impact du confinement des ateliers à domicile sur l'exposition passive des familles.
+* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats.
 
 ### 5. Le type d'étude
-* Détaille le design choisi (étude descriptive ou série de cas analytiques avec suivi prospectif, avec un volet rétrospectif), discute du niveau de preuve pour les autorités et de l'adaptation face à la méfiance d'une population clandestine.
+* Choix du design méthodologique (ex: descriptive, analytique, prospective, rétrospective, etc.) en adéquation avec le schéma d'étude choisi par le chercheur.
 
 ### 6. Le(s) facteur(s) étudié(s)
-* Décris comment quantifier l'exposition dans ce milieu non réglementé (fréquence, volume de l'espace de travail), les dosages des co-toxiques (cyanure, plomb), l'évaluation des équipements de protection et les facteurs de confusion (tabagisme, précarité).
+* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles.
 
 ### 7. Le(s) critère(s) de jugement
-* Définis le critère clinique majeur de sévérité (ex: encéphalopathie), les biomarqueurs d'effets précoces pour les asymptomatiques, et les tests neuropsychologiques ou d'imagerie (IRM, EMG) pour caractériser les lésions organiques.
+* Critères (cliniques, paracliniques ou biologiques) permettant de mesurer l'efficacité d'un traitement ou la sévérité d'une maladie. Reprend le critère de jugement principal et les critères secondaires définis par le chercheur.
 
 ### 8. Les causes d'erreur : biais et facteurs de confusion
-* Propose des solutions pour maîtriser le biais de sélection lié à la réticence des patients clandestins, isoler les symptômes du mercure de ceux du cyanure, pallier le biais de mémorisation, éviter la contamination externe des prélèvements (ex: cheveux) et surmonter la barrière linguistique/culturelle.
+* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser.
 
 ### 9. Les sujets
-* Précise les critères d'inclusion (résidence à Batna, brûlage avéré, transporteurs/intermédiaires, familles exposées passivement à domicile) et d'exclusion (comorbidités préexistantes).
+* Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur.
 
 ### 10. La taille de l'échantillon
-* Calcule/justifie la taille selon les cas recensés au CHU de Batna. Explique pourquoi la richesse clinique prime ici sur la puissance statistique pure (petite série de cas), anticipe un fort taux de perdus de vue et prévois des tests non paramétriques.
+* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude pour assurer une puissance statistique adéquate.
 
 ### 11. La récolte et la gestion des données
-* Détaille la logistique : disponibilité du matériel d'analyse au laboratoire (spectrométrie d'absorption atomique), chaîne du froid des prélèvements depuis les domiciles, codage de confidentialité absolue pour protéger ces travailleurs clandestins.
+* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation).
 
 ### 12. L'analyse des données
-* Décris le plan statistique : statistiques descriptives pour cartographier les syndromes, test de corrélation de Spearman (exposition vs déficit cognitif), modélisation de la poly-intoxication sur le pronostic vital, et ANOVA avant/après traitement chélatant.
+* Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés).
 
 ### 13. Une éventuelle étude pilote
-* Prévois une étude pilote sur 3 ou 4 artisans pour tester les questionnaires (méfiance), valider la logistique de prélèvement avec le CHU, chronométrer les tests neuropsychologiques, et adapter les méthodes en cas de refus de coopérer.
+* Description d'une phase préliminaire à petite échelle (si applicable) pour tester la faisabilité du protocole, des questionnaires ou de la logistique de prélèvement.
 
 ### 14. Les implications éthiques
-* Rédige les exigences éthiques : consentement éclairé écrit protégeant juridiquement les personnes exerçant cette activité illégale, anonymisation absolue vis-à-vis des autorités, soumission au Comité d'Éthique de la Recherche (CER) algérien sous les articles 377-399 de la loi 18-11, et gestion du dilemme d'éviction professionnelle sans autre source de revenus.
+* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11.
 
 ### 15. Le personnel
-* Identifie le personnel requis : un médiateur de confiance pour le milieu clandestin, équipe médicale formée aux chélations d'urgence, psychologue clinicien, et briefing des enquêteurs sur les risques d'exposition passive.
+* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.).
 
 ### 16. Le budget
-* Chiffre les dosages toxicologiques spécialisés, les traitements chélatants importés, les licences de tests psychométriques, et sollicite la participation de la wilaya de Batna.
+* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement.
 
 ### 17. Le calendrier
-* Planifie les étapes : phase de recrutement (flux irrégulier aux urgences), délais du CER, suivi post-thérapeutique, et saisonnalité des arrivées de minerai depuis Tamanrasset.
+* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction).
 
 ### 18. Les annexes éventuelles
-* Énumère les annexes : notice d'information vulgarisée, grilles d'inspection des ateliers, questionnaires, protocole de traitement antidotique, correspondances administratives.
+* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.).
 
 ### 19. Les références
-* Cite les références clés : Convention de Minamata sur le mercure, études sur la toxicité aiguë cyanure/métaux lourds, justification des milieux biologiques (sang, urine, cheveux) et publications socio-économiques sur l'orpaillage clandestin.
+* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole.
 
-Format du document final : Rédige le protocole complet en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown propres pour résumer les points clés de chaque section (ex: les objectifs, le calendrier, le budget), et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
+Format du document final : Rédige le protocole complet en français, hautement professionnel et académique, en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown pour résumer les données structurelles (par exemple pour le budget, le calendrier, ou les critères de jugement) et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
