@@ -4,12 +4,89 @@ import React, { useState, useEffect } from 'react';
 import { getProgress, LocalStats } from '@/utils/storage';
 import styles from './page.module.css';
 
+// Simple table rendering helper for report
+function renderReportHtmlTable(rows: string[]): string {
+  if (rows.length === 0) return '';
+  
+  let html = '<div style="overflow-x: auto; margin: 1rem 0; width: 100%;"><table style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-glass); font-size: 0.9rem; background-color: rgba(255, 255, 255, 0.01);">';
+  
+  // Parse rows
+  let parsedRows = rows.map(row => {
+    let cells = row.split('|').map(c => c.trim());
+    if (row.startsWith('|')) cells.shift();
+    if (row.endsWith('|')) cells.pop();
+    return cells;
+  });
+  
+  let separatorIndex = -1;
+  if (parsedRows.length > 1) {
+    const secondRow = parsedRows[1];
+    const isSeparator = secondRow.every(cell => /^:?-+:?$/.test(cell));
+    if (isSeparator) {
+      separatorIndex = 1;
+    }
+  }
+  
+  for (let i = 0; i < parsedRows.length; i++) {
+    if (i === separatorIndex) continue;
+    
+    const isHeader = (i === 0 && separatorIndex !== -1);
+    html += `<tr style="${isHeader ? 'background-color: rgba(255, 255, 255, 0.05); border-bottom: 2px solid var(--border-glass); font-weight: 600;' : 'border-bottom: 1px solid var(--border-glass);'}">`;
+    
+    const cells = parsedRows[i];
+    for (let j = 0; j < cells.length; j++) {
+      const cellContent = cells[j];
+      const tag = isHeader ? 'th' : 'td';
+      const padding = isHeader ? '0.75rem 1rem' : '0.65rem 1rem';
+      
+      html += `<${tag} style="padding: ${padding}; text-align: left; border: 1px solid var(--border-glass);">${cellContent}</${tag}>`;
+    }
+    html += '</tr>';
+  }
+  
+  html += '</table></div>';
+  return html;
+}
+
 // Markdown parser helper for report rendering
 function formatReportMarkdown(text: string): string {
   let formatted = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+
+  // Convert markdown tables to HTML tables
+  let lines = formatted.split('\n');
+  let inTable = false;
+  let tableRows: string[] = [];
+  let processedLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const isTableRow = line.startsWith('|') && line.endsWith('|');
+    
+    if (isTableRow) {
+      if (!inTable) {
+        inTable = true;
+        tableRows = [];
+      }
+      tableRows.push(lines[i]);
+    } else {
+      if (inTable) {
+        const htmlTable = renderReportHtmlTable(tableRows);
+        processedLines.push(htmlTable);
+        inTable = false;
+      }
+      processedLines.push(lines[i]);
+    }
+  }
+  
+  if (inTable) {
+    const htmlTable = renderReportHtmlTable(tableRows);
+    processedLines.push(htmlTable);
+  }
+
+  formatted = processedLines.join('\n');
 
   // Bold: **text**
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -18,9 +95,12 @@ function formatReportMarkdown(text: string): string {
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
   
   // Headers
-  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.25rem; margin-bottom: 0.5rem; color: var(--accent-secondary); font-size:1.1rem;">$1</h3>');
-  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.75rem; margin-bottom: 0.75rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.3rem;">$1</h2>');
-  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size:1.6rem; text-align:center;">$1</h1>');
+  formatted = formatted.replace(/^###### (.*?)$/gm, '<h6 style="margin-top: 0.6rem; margin-bottom: 0.2rem; color: var(--text-muted); font-size:0.9rem;">$1</h6>');
+  formatted = formatted.replace(/^##### (.*?)$/gm, '<h5 style="margin-top: 0.7rem; margin-bottom: 0.25rem; color: var(--text-secondary); font-size:0.95rem;">$1</h5>');
+  formatted = formatted.replace(/^#### (.*?)$/gm, '<h4 style="margin-top: 0.85rem; margin-bottom: 0.3rem; color: var(--text-primary); font-size:1rem; font-weight:600;">$1</h4>');
+  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.1rem; margin-bottom: 0.4rem; color: var(--accent-secondary); font-size:1.1rem;">$1</h3>');
+  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.5rem; margin-bottom: 0.6rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.25rem;">$1</h2>');
+  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 1.8rem; margin-bottom: 0.8rem; color: var(--text-primary); font-size:1.5rem; text-align:center;">$1</h1>');
 
   // Horizontal rules
   formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
@@ -32,7 +112,7 @@ function formatReportMarkdown(text: string): string {
   formatted = formatted.split('\n').join('<br />');
 
   // Cleanup redundant br tags
-  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/li>|<hr \/>)<br \/>/g, '$1');
+  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/h4>|<\/h5>|<\/h6>|<\/li>|<hr \/>)<br \/>/g, '$1');
 
   return formatted;
 }
