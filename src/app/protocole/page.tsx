@@ -6,12 +6,88 @@ import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile } from '@/utils/firestore';
 import styles from './page.module.css';
 
+function renderProtocolHtmlTable(rows: string[]): string {
+  if (rows.length === 0) return '';
+  
+  let html = '<div style="overflow-x: auto; margin: 1rem 0; width: 100%;"><table style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-glass); font-size: 0.9rem; background-color: rgba(255, 255, 255, 0.01);">';
+  
+  // Parse rows
+  let parsedRows = rows.map(row => {
+    let cells = row.split('|').map(c => c.trim());
+    if (row.startsWith('|')) cells.shift();
+    if (row.endsWith('|')) cells.pop();
+    return cells;
+  });
+  
+  let separatorIndex = -1;
+  if (parsedRows.length > 1) {
+    const secondRow = parsedRows[1];
+    const isSeparator = secondRow.every(cell => /^:?-+:?$/.test(cell));
+    if (isSeparator) {
+      separatorIndex = 1;
+    }
+  }
+  
+  for (let i = 0; i < parsedRows.length; i++) {
+    if (i === separatorIndex) continue;
+    
+    const isHeader = (i === 0 && separatorIndex !== -1);
+    html += `<tr style="${isHeader ? 'background-color: rgba(255, 255, 255, 0.05); border-bottom: 2px solid var(--border-glass); font-weight: 600;' : 'border-bottom: 1px solid var(--border-glass);'}">`;
+    
+    const cells = parsedRows[i];
+    for (let j = 0; j < cells.length; j++) {
+      const cellContent = cells[j];
+      const tag = isHeader ? 'th' : 'td';
+      const padding = isHeader ? '0.75rem 1rem' : '0.65rem 1rem';
+      
+      html += `<${tag} style="padding: ${padding}; text-align: left; border: 1px solid var(--border-glass);">${cellContent}</${tag}>`;
+    }
+    html += '</tr>';
+  }
+  
+  html += '</table></div>';
+  return html;
+}
+
 // Simple markdown formatter helper for protocol preview
 function formatProtocolMarkdown(text: string): string {
   let formatted = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+
+  // Convert markdown tables to HTML tables
+  let lines = formatted.split('\n');
+  let inTable = false;
+  let tableRows: string[] = [];
+  let processedLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const isTableRow = line.startsWith('|') && line.endsWith('|');
+    
+    if (isTableRow) {
+      if (!inTable) {
+        inTable = true;
+        tableRows = [];
+      }
+      tableRows.push(lines[i]);
+    } else {
+      if (inTable) {
+        const htmlTable = renderProtocolHtmlTable(tableRows);
+        processedLines.push(htmlTable);
+        inTable = false;
+      }
+      processedLines.push(lines[i]);
+    }
+  }
+  
+  if (inTable) {
+    const htmlTable = renderProtocolHtmlTable(tableRows);
+    processedLines.push(htmlTable);
+  }
+
+  formatted = processedLines.join('\n');
 
   // Bold: **text**
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
