@@ -280,6 +280,7 @@ export default function QuizPage() {
   const [currentDynamicTopic, setCurrentDynamicTopic] = useState('');
 
   // Generation state
+  const [generationSource, setGenerationSource] = useState<'chapter' | 'custom'>('chapter');
   const [selectedChapter, setSelectedChapter] = useState(RECIF_CHAPTERS[0]);
   const [customTopic, setCustomTopic] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -374,7 +375,11 @@ export default function QuizPage() {
 
   // Handler for custom dynamic material generation
   const handleGenerateMaterial = async (typeToGen: 'quiz' | 'flashcards') => {
-    const topic = customTopic.trim() || selectedChapter;
+    const topic = generationSource === 'custom' ? customTopic.trim() : selectedChapter;
+    if (generationSource === 'custom' && !topic) {
+      alert("⚠️ Veuillez saisir un thème de recherche ou sujet personnalisé.");
+      return;
+    }
     setGenerating(true);
 
     try {
@@ -568,39 +573,91 @@ export default function QuizPage() {
           Générez de nouveaux exercices à l'infini en choisissant un chapitre du livre RECIF/loi algérienne ou en saisissant votre propre thématique clinique.
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Sélectionner un chapitre RECIF</label>
-            <select 
-              className="form-select" 
-              value={selectedChapter} 
-              onChange={(e) => setSelectedChapter(e.target.value)}
-              disabled={generating}
-            >
-              {RECIF_CHAPTERS.map((chap, i) => (
-                <option key={i} value={chap}>{chap}</option>
-              ))}
-            </select>
-          </div>
+        {/* Source Switcher Tabs */}
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
+          <button 
+            type="button"
+            onClick={() => setGenerationSource('chapter')}
+            disabled={generating}
+            style={{
+              background: generationSource === 'chapter' ? 'rgba(13, 148, 136, 0.12)' : 'transparent',
+              color: generationSource === 'chapter' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              border: '1px solid',
+              borderColor: generationSource === 'chapter' ? 'var(--accent-primary)' : 'transparent',
+              borderRadius: 'var(--radius-sm)',
+              padding: '0.5rem 1.25rem',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+          >
+            📖 Chapitres officiels RECIF
+          </button>
+          <button 
+            type="button"
+            onClick={() => setGenerationSource('custom')}
+            disabled={generating}
+            style={{
+              background: generationSource === 'custom' ? 'rgba(13, 148, 136, 0.12)' : 'transparent',
+              color: generationSource === 'custom' ? 'var(--accent-primary)' : 'var(--text-secondary)',
+              border: '1px solid',
+              borderColor: generationSource === 'custom' ? 'var(--accent-primary)' : 'transparent',
+              borderRadius: 'var(--radius-sm)',
+              padding: '0.5rem 1.25rem',
+              fontSize: '0.85rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all var(--transition-fast)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}
+          >
+            ✏️ Sujet ou thème personnalisé
+          </button>
+        </div>
 
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Ou saisir un thème personnalisé</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="ex. Les biais de sélection dans les cohortes..." 
-              value={customTopic}
-              onChange={(e) => setCustomTopic(e.target.value)}
-              disabled={generating}
-            />
-          </div>
+        <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          {generationSource === 'chapter' ? (
+            <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '260px' }}>
+              <label className="form-label">Sélectionner un chapitre RECIF</label>
+              <select 
+                className="form-select" 
+                value={selectedChapter} 
+                onChange={(e) => setSelectedChapter(e.target.value)}
+                disabled={generating}
+                style={{ width: '100%' }}
+              >
+                {RECIF_CHAPTERS.map((chap, i) => (
+                  <option key={i} value={chap}>{chap}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '260px' }}>
+              <label className="form-label">Rédiger votre propre sujet d'étude</label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="ex. Diabète de type 2 chez l'enfant algérien, risque cardiovasculaire..." 
+                value={customTopic}
+                onChange={(e) => setCustomTopic(e.target.value)}
+                disabled={generating}
+                style={{ width: '100%' }}
+              />
+            </div>
+          )}
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
             <button 
               className="btn btn-secondary" 
               onClick={() => handleGenerateMaterial('flashcards')}
               disabled={generating}
-              style={{ fontSize: '0.85rem', padding: '0.7rem 1rem' }}
+              style={{ fontSize: '0.85rem', padding: '0.75rem 1.25rem' }}
             >
               Générer des Cartes
             </button>
@@ -608,7 +665,7 @@ export default function QuizPage() {
               className="btn btn-primary" 
               onClick={() => handleGenerateMaterial('quiz')}
               disabled={generating}
-              style={{ fontSize: '0.85rem', padding: '0.7rem 1rem' }}
+              style={{ fontSize: '0.85rem', padding: '0.75rem 1.25rem' }}
             >
               {generating ? 'Génération...' : 'Générer un Quiz'}
             </button>
