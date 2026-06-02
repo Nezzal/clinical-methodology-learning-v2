@@ -61,6 +61,7 @@ export default function ProtocoleGenerator() {
   const [generatedProtocol, setGeneratedProtocol] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<LocalStats['recentProtocols']>([]);
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -78,6 +79,23 @@ export default function ProtocoleGenerator() {
     };
     fetchHistory();
   }, [user]);
+
+  // Load protocol from URL query param if present
+  useEffect(() => {
+    if (history.length > 0 && !hasLoadedFromUrl) {
+      const params = new URLSearchParams(window.location.search);
+      const protocolId = params.get('id');
+      if (protocolId) {
+        const selectedProto = history.find((h) => h.id === protocolId);
+        if (selectedProto) {
+          setGeneratedProtocol(selectedProto.content);
+          setTitle(selectedProto.title);
+          setAcronym(selectedProto.acronym);
+        }
+      }
+      setHasLoadedFromUrl(true);
+    }
+  }, [history, hasLoadedFromUrl]);
 
   const handleGenerate = async () => {
     if (!title.trim() || !question.trim()) {
