@@ -105,9 +105,12 @@ function formatMarkdown(text: string): string {
   formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
   
   // Headers
-  formatted = formatted.replace(/^### (.*?)$/gm, '<h4 style="margin: 0.75rem 0 0.25rem 0; color: var(--text-primary);">$1</h4>');
-  formatted = formatted.replace(/^## (.*?)$/gm, '<h3 style="margin: 1rem 0 0.35rem 0; color: var(--accent-primary);">$1</h3>');
-  formatted = formatted.replace(/^# (.*?)$/gm, '<h2 style="margin: 1.25rem 0 0.5rem 0; color: var(--accent-primary);">$1</h2>');
+  formatted = formatted.replace(/^###### (.*?)$/gm, '<h6 style="margin: 0.5rem 0 0.2rem 0; color: var(--text-muted); font-size: 0.85rem;">$1</h6>');
+  formatted = formatted.replace(/^##### (.*?)$/gm, '<h5 style="margin: 0.6rem 0 0.25rem 0; color: var(--text-secondary); font-size: 0.9rem;">$1</h5>');
+  formatted = formatted.replace(/^#### (.*?)$/gm, '<h4 style="margin: 0.7rem 0 0.25rem 0; color: var(--text-primary); font-size: 0.95rem; font-weight: 600;">$1</h4>');
+  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin: 0.85rem 0 0.3rem 0; color: var(--accent-secondary); font-size: 1.05rem;">$1</h3>');
+  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin: 1rem 0 0.35rem 0; color: var(--accent-primary); font-size: 1.2rem;">$1</h2>');
+  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin: 1.25rem 0 0.5rem 0; color: var(--text-primary); font-size: 1.4rem;">$1</h1>');
 
   // List items
   formatted = formatted.replace(/^\s*[-*]\s+(.*?)$/gm, '<li style="margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.25rem;">$1</li>');
@@ -116,7 +119,7 @@ function formatMarkdown(text: string): string {
   formatted = formatted.split('\n').join('<br />');
 
   // Cleanup redundant br tags
-  formatted = formatted.replace(/(<\/h2>|<\/h3>|<\/h4>|<\/li>)<br \/>/g, '$1');
+  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/h4>|<\/h5>|<\/h6>|<\/li>)<br \/>/g, '$1');
   
   return formatted;
 }

@@ -97,9 +97,12 @@ function formatProtocolMarkdown(text: string): string {
 
   
   // Headers
-  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.25rem; margin-bottom: 0.5rem; color: var(--accent-secondary); font-size:1.15rem;">$1</h3>');
-  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.75rem; margin-bottom: 0.75rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.35rem;">$1</h2>');
-  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size:1.75rem; text-align:center;">$1</h1>');
+  formatted = formatted.replace(/^###### (.*?)$/gm, '<h6 style="margin-top: 0.6rem; margin-bottom: 0.2rem; color: var(--text-muted); font-size:0.9rem;">$1</h6>');
+  formatted = formatted.replace(/^##### (.*?)$/gm, '<h5 style="margin-top: 0.7rem; margin-bottom: 0.25rem; color: var(--text-secondary); font-size:0.95rem;">$1</h5>');
+  formatted = formatted.replace(/^#### (.*?)$/gm, '<h4 style="margin-top: 0.85rem; margin-bottom: 0.3rem; color: var(--text-primary); font-size:1rem; font-weight:600;">$1</h4>');
+  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.1rem; margin-bottom: 0.4rem; color: var(--accent-secondary); font-size:1.1rem;">$1</h3>');
+  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.5rem; margin-bottom: 0.6rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.25rem;">$1</h2>');
+  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 1.8rem; margin-bottom: 0.8rem; color: var(--text-primary); font-size:1.5rem; text-align:center;">$1</h1>');
 
   // Horizontal rules
   formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
@@ -111,7 +114,7 @@ function formatProtocolMarkdown(text: string): string {
   formatted = formatted.split('\n').join('<br />');
 
   // Cleanup redundant br tags
-  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/li>|<hr \/>)<br \/>/g, '$1');
+  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/h4>|<\/h5>|<\/h6>|<\/li>|<hr \/>)<br \/>/g, '$1');
 
   return formatted;
 }
