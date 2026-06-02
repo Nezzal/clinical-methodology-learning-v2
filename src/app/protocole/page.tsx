@@ -580,7 +580,7 @@ export default function ProtocoleGenerator() {
         <div class="doc-header">
           <div>
             <h3>${docTitle}</h3>
-            <p>Conforme aux recommandations RECIF & Loi n° 18-11 Santé (Algérie)</p>
+            <p>MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready</p>
           </div>
           <div class="doc-header-date">
             Généré le ${new Date().toLocaleDateString('fr-FR')}
@@ -597,8 +597,8 @@ export default function ProtocoleGenerator() {
         </div>
 
         <div class="doc-footer">
-          <span>Plateforme RECIF Éducation - Formation en Méthodologie</span>
-          <span>Algérie • Ministère de la Santé</span>
+          <span>MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready</span>
+          <span>Algérie • Ministère de la Santé • RECIF & Loi n° 18-11</span>
         </div>
 
         <script>

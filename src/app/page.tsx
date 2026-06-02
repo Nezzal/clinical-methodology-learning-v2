@@ -95,6 +95,11 @@ export default function Dashboard() {
         <div className={styles.headerMain}>
           <div className={styles.headerText}>
             <h1 className={styles.title}>Méthodologie de Recherche Clinique</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(13, 148, 136, 0.12)', color: 'var(--accent-primary)', border: '1px solid rgba(13, 148, 136, 0.25)', padding: '0.25rem 0.65rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready
+              </span>
+            </div>
             <p className={styles.subtitle}>
               Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
             </p>

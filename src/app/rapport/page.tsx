@@ -273,8 +273,27 @@ export default function RapportPage() {
           </div>
 
           <div className={styles.reportPaper}>
+            <div className="print-only-header" style={{ display: 'none', borderBottom: '2px solid #005a70', paddingBottom: '0.5rem', marginBottom: '2rem', fontFamily: "'Outfit', sans-serif" }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '13pt', color: '#005a70', fontWeight: 700 }}>BILAN PÉDAGOGIQUE ET SUIVI</h3>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '9pt', color: '#6b7280' }}>MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready</p>
+                </div>
+                <div style={{ fontSize: '9pt', color: '#6b7280' }}>
+                  Généré le {new Date().toLocaleDateString('fr-FR')}
+                </div>
+              </div>
+            </div>
             <div dangerouslySetInnerHTML={{ __html: formatReportMarkdown(report) }} />
           </div>
+          
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              .print-only-header {
+                display: block !important;
+              }
+            }
+          `}} />
           
           <div className={`${styles.reportActions} no-print`} style={{ justifyContent: 'center', marginTop: '2rem' }}>
             <button className="btn btn-secondary" onClick={() => setReport(null)}>
