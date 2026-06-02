@@ -550,6 +550,22 @@ export default function Tuteur() {
           return placeholder;
         });
 
+        // Fonction auxiliaire pour le markdown en ligne (gras, italique, code, badges de pages)
+        const parseInline = (str: string): string => {
+          let s = str;
+          // Badges pour les pages : [Page X] ou [Page X, Page Y] ou [Pages X-Y]
+          s = s.replace(/\[Page\s*(\d+)\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>p. $1</span>');
+          s = s.replace(/\[Pages\s*(\d+)(?:-(\d+))?\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>pp. $1-$2</span>');
+          s = s.replace(/\[Page\s*(\d+),\s*Page\s*(\d+)\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>pp. $1, $2</span>');
+
+          s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+          s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+          s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+          s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+          s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+          return s;
+        };
+
         // 2. Parser les tableaux Markdown
         const parseTable = (tableMd: string): string => {
           const lines = tableMd.trim().split('\n');
@@ -568,22 +584,6 @@ export default function Tuteur() {
         };
 
         text = text.replace(/(?:^\|.+$[\n\r]*)+/gm, (match) => parseTable(match));
-
-        // Fonction auxiliaire pour le markdown en ligne (gras, italique, code, badges de pages)
-        const parseInline = (str: string): string => {
-          let s = str;
-          // Badges pour les pages : [Page X] ou [Page X, Page Y] ou [Pages X-Y]
-          s = s.replace(/\[Page\s*(\d+)\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>p. $1</span>');
-          s = s.replace(/\[Pages\s*(\d+)(?:-(\d+))?\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>pp. $1-$2</span>');
-          s = s.replace(/\[Page\s*(\d+),\s*Page\s*(\d+)\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>pp. $1, $2</span>');
-
-          s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-          s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-          s = s.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-          s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
-          s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
-          return s;
-        };
 
         // 3. Découpage en blocs par double retour à la ligne
         const blocks = text.split(/\n\n+/);
