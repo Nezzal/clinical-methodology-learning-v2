@@ -634,6 +634,9 @@ export default function ProtocoleGenerator() {
                     <option value="Étude de Cohorte rétrospective">Étude de Cohorte rétrospective</option>
                     <option value="Étude Cas-Témoins">Étude Cas-Témoins</option>
                     <option value="Étude Transversale">Étude Transversale</option>
+                    <option value="Série de cas cliniques">Série de cas cliniques (Descriptive pure)</option>
+                    <option value="Étude d'évaluation diagnostique">Étude d'évaluation diagnostique (Sensibilité, spécificité, Gold Standard)</option>
+                    <option value="Méta-analyse">Méta-analyse (Revue systématique quantitative)</option>
                   </select>
                 </div>
                 <div className="form-group">
