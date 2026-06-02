@@ -612,6 +612,16 @@ export default function ProtocoleGenerator() {
                   />
                 </div>
                 <div className="form-group">
+                  <label className="form-label" htmlFor="justification">Justification de l'étude (Le "Pourquoi")</label>
+                  <textarea
+                    id="justification"
+                    className="form-textarea"
+                    placeholder="Pourquoi cette étude est-elle importante ? Originalité, urgence ou saisine d'hôpitaux..."
+                    value={justification}
+                    onChange={(e) => setJustification(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
                   <label className="form-label" htmlFor="objectives">Objectifs secondaires</label>
                   <textarea
                     id="objectives"
@@ -619,6 +629,16 @@ export default function ProtocoleGenerator() {
                     placeholder="Décrivez les objectifs secondaires ou intermédiaires..."
                     value={objectives}
                     onChange={(e) => setObjectives(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="hypothesis">Hypothèse(s) de recherche</label>
+                  <textarea
+                    id="hypothesis"
+                    className="form-textarea"
+                    placeholder="Quelle est la réponse théorique ou l'hypothèse principale à valider ?"
+                    value={hypothesis}
+                    onChange={(e) => setHypothesis(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
@@ -722,26 +742,6 @@ export default function ProtocoleGenerator() {
 
             {activeTab === 'logistics' && (
               <>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="justification">Justification de l'étude (Le "Pourquoi")</label>
-                  <textarea
-                    id="justification"
-                    className="form-textarea"
-                    placeholder="Pourquoi cette étude est-elle importante ? Originalité, urgence ou saisine d'hôpitaux..."
-                    value={justification}
-                    onChange={(e) => setJustification(e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="hypothesis">Hypothèse(s) de recherche</label>
-                  <textarea
-                    id="hypothesis"
-                    className="form-textarea"
-                    placeholder="Quelle est la réponse théorique ou l'hypothèse principale à valider ?"
-                    value={hypothesis}
-                    onChange={(e) => setHypothesis(e.target.value)}
-                  />
-                </div>
                 <div className="form-group">
                   <label className="form-label" htmlFor="logistics">Récolte des données & Étude pilote</label>
                   <textarea
