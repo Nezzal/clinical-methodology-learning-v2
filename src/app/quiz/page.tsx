@@ -5,6 +5,8 @@ import { getProgress, updateProgress, QuizAttempt } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { syncUserProfile } from '@/utils/firestore';
 import styles from './page.module.css';
+import pregeneratedExercises from '@/data/pregenerated-exercises.json';
+
 
 interface Flashcard {
   id: string;
@@ -380,6 +382,50 @@ export default function QuizPage() {
       alert("⚠️ Veuillez saisir un thème de recherche ou sujet personnalisé.");
       return;
     }
+
+    // Solution hybride (éco-responsable) : charger depuis la base locale si disponible pour les chapitres officiels
+    if (generationSource === 'chapter') {
+      const chapterData = (pregeneratedExercises as any)[topic];
+      if (chapterData) {
+        if (typeToGen === 'quiz' && chapterData.quiz && chapterData.quiz.length > 0) {
+          const formattedQuestions = chapterData.quiz.map((q: any, index: number) => ({
+            id: index + 1,
+            category: topic,
+            question: q.question,
+            options: q.options,
+            answerIndex: q.answerIndex,
+            explanation: q.explanation
+          }));
+          setQuestionsList(formattedQuestions);
+          setCurrentQuestionIdx(0);
+          setSelectedOption(null);
+          setCorrectAnswersCount(0);
+          setQuizAnswered(false);
+          setQuizFinished(false);
+          setQuizStarted(false);
+          setActiveMode('quiz');
+          setIsDynamic(true);
+          setCurrentDynamicTopic(topic);
+          setCustomTopic('');
+          return; // Sortie immédiate sans appel API ni attente !
+        } else if (typeToGen === 'flashcards' && chapterData.flashcards && chapterData.flashcards.length > 0) {
+          const formattedCards = chapterData.flashcards.map((c: any, index: number) => ({
+            id: `local_fc_${index}_${Math.random()}`,
+            category: topic,
+            question: c.question,
+            answer: c.answer
+          }));
+          setCardsList(formattedCards);
+          setFlippedCards({});
+          setActiveMode('flashcards');
+          setIsDynamic(true);
+          setCurrentDynamicTopic(topic);
+          setCustomTopic('');
+          return; // Sortie immédiate sans appel API ni attente !
+        }
+      }
+    }
+
     setGenerating(true);
 
     try {
