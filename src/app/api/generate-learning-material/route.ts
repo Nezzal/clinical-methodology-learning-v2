@@ -205,8 +205,13 @@ export async function POST(req: Request) {
 
       const prompt = type === 'quiz' ? 
         `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
-Génère un questionnaire d'évaluation (QCM) de 3 questions uniques et réalistes sur le sujet suivant : "${topic}".
-Les questions doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+Génère un questionnaire d'évaluation (QCM) de 3 questions uniques, réalistes et spécifiquement adaptées au sujet suivant : "${topic}".
+Les questions ne doivent pas être génériques ou répétitives, mais doivent prendre la forme de scénarios cliniques ou de dilemmes pratiques de recherche concrets liés au sujet.
+
+Structure des 3 questions :
+- Question 1 : Choix du schéma d'étude ou critère de jugement principal le plus adapté et pertinent pour étudier "${topic}".
+- Question 2 : Identification ou contrôle d'un biais méthodologique spécifique (sélection, mesure, confusion) inhérent à l'étude de "${topic}".
+- Question 3 : Aspect réglementaire (loi algérienne 18-11 relative à la santé, consentement, comité d'éthique) appliqué à une recherche sur "${topic}".
 
 Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
 [
@@ -218,8 +223,13 @@ Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec 
   }
 ]` : 
         `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
-Génère 3 flashcards d'apprentissage (recto-verso) sur le sujet suivant : "${topic}".
-Les flashcards doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+Génère 3 flashcards d'apprentissage (recto-verso) uniques et stimulantes spécifiquement adaptées au sujet suivant : "${topic}".
+Chaque flashcard doit interroger un enjeu méthodologique ou réglementaire concret lié à ce sujet.
+
+Structure des 3 flashcards :
+- Flashcard 1 : Définition d'un concept clé méthodologique RECIF appliqué à l'étude de "${topic}".
+- Flashcard 2 : Un biais majeur à éviter spécifiquement lors d'une recherche sur "${topic}".
+- Flashcard 3 : Une obligation réglementaire éthique (Loi algérienne 18-11) liée à un projet sur "${topic}".
 
 Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
 [
@@ -252,10 +262,18 @@ Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec 
     let responseSchema: any = null;
 
     if (type === 'quiz') {
-      prompt = `Génère un questionnaire d'évaluation (QCM) de 5 questions uniques et réalistes sur le sujet suivant : "${topic}".
-Les questions doivent être basées sur la méthodologie de recherche clinique du manuel RECIF et la réglementation algérienne (Loi n° 18-11 relative à la santé, Ministère de la Santé, Comité d'éthique).
+      prompt = `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
+Génère un questionnaire d'évaluation (QCM) de 5 questions uniques, réalistes et intimement liées au sujet médical ou méthodologique suivant : "${topic}".
+Les questions ne doivent pas être génériques (éviter les simples "remplacements de mots" dans un patron fixe), mais doivent s'apparenter à de petits cas cliniques ou scénarios pratiques de recherche clinique.
 
-Pour chaque question, fournis 4 options de réponse (dont une seule est correcte), l'index de la réponse correcte (0 à 3) et une explication méthodologique claire faisant référence aux principes du RECIF ou de la loi algérienne 18-11.
+Répartition thématique des 5 questions (à respecter impérativement) :
+1. **Objectif & Critère de jugement** : Choix ou formulation du critère de jugement principal (endpoint) le plus pertinent et mesurable objectivement pour évaluer "${topic}".
+2. **Schéma d'étude** : Sélection du design de l'étude (essai randomisé, cohorte, cas-témoins, transversale) le plus adapté aux contraintes éthiques et scientifiques de l'étude de "${topic}".
+3. **Biais de recherche** : Scénario décrivant un biais potentiel spécifique (biais de sélection, de mesure, d'attrition, de confusion) inhérent à "${topic}" et comment le minimiser.
+4. **Dimensionnement & Statistique** : Aspect statistique lié à "${topic}" (choix de la puissance, ajustement sur variables de confusion, calcul du NSN ou test statistique).
+5. **Réglementation & Éthique (Algérie)** : Mise en situation éthique ou administrative régie par la Loi algérienne n° 18-11 relative à la santé (consentement écrit, comité d'éthique médicale locale, pénalités) dans le cadre de "${topic}".
+
+Pour chaque question, fournis 4 options de réponse réalistes (dont une seule est correcte), l'index de la réponse correcte (0 à 3) et une explication méthodologique claire faisant référence aux principes du RECIF ou de la loi algérienne 18-11.
 
 Base de connaissances RECIF & Loi algérienne :
 ${kbString}
@@ -282,9 +300,16 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
       };
 
     } else {
-      prompt = `Génère 5 flashcards d'apprentissage (recto-verso) sur le sujet suivant : "${topic}".
-Chaque flashcard doit contenir une question (ou concept clé à définir) au recto, et une explication claire et concise au verso.
-Les explications doivent être basées sur le manuel RECIF et la réglementation algérienne Loi n° 18-11.
+      prompt = `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
+Génère 5 flashcards d'apprentissage (recto-verso) uniques, structurées et stimulantes spécifiquement adaptées au sujet suivant : "${topic}".
+Les flashcards ne doivent pas être répétitives et doivent forcer la réflexion de l'étudiant sur des situations concrètes liées à "${topic}".
+
+Répartition thématique des 5 flashcards :
+1. **Concept & Schéma** : Un concept clé de méthodologie RECIF (ex: randomisation, insu, critère PICOT) appliqué à l'étude de "${topic}".
+2. **Biais méthodologique** : Un biais spécifique redoutable à éviter lors de la conception d'un protocole sur "${topic}".
+3. **Dimensionnement** : Un paramètre d'estimation ou de calcul statistique (NSN, erreur alpha, puissance) adapté au sujet "${topic}".
+4. **Réglementation éthique** : Une obligation légale ou administrative spécifique (Loi algérienne n° 18-11 relative à la santé) à respecter pour étudier "${topic}".
+5. **Hypothèse de recherche** : La manière de structurer l'hypothèse clinique principale ou l'objectif sur "${topic}".
 
 Base de connaissances :
 ${kbString}
@@ -370,8 +395,13 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
 
       const prompt = type === 'quiz' ? 
         `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
-Génère un questionnaire d'évaluation (QCM) de 3 questions uniques et réalistes sur le sujet suivant : "${topic}".
-Les questions doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+Génère un questionnaire d'évaluation (QCM) de 3 questions uniques, réalistes et spécifiquement adaptées au sujet suivant : "${topic}".
+Les questions ne doivent pas être génériques ou répétitives, mais doivent prendre la forme de scénarios cliniques ou de dilemmes pratiques de recherche concrets liés au sujet.
+
+Structure des 3 questions :
+- Question 1 : Choix du schéma d'étude ou critère de jugement principal le plus adapté et pertinent pour étudier "${topic}".
+- Question 2 : Identification ou contrôle d'un biais méthodologique spécifique (sélection, mesure, confusion) inhérent à l'étude de "${topic}".
+- Question 3 : Aspect réglementaire (loi algérienne 18-11 relative à la santé, consentement, comité d'éthique) appliqué à une recherche sur "${topic}".
 
 Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
 [
@@ -383,8 +413,13 @@ Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec 
   }
 ]` : 
         `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
-Génère 3 flashcards d'apprentissage (recto-verso) sur le sujet suivant : "${topic}".
-Les flashcards doivent être basées sur les principes du manuel RECIF et la loi algérienne 18-11.
+Génère 3 flashcards d'apprentissage (recto-verso) uniques et stimulantes spécifiquement adaptées au sujet suivant : "${topic}".
+Chaque flashcard doit interroger un enjeu méthodologique ou réglementaire concret lié à ce sujet.
+
+Structure des 3 flashcards :
+- Flashcard 1 : Définition d'un concept clé méthodologique RECIF appliqué à l'étude de "${topic}".
+- Flashcard 2 : Un biais majeur à éviter spécifiquement lors d'une recherche sur "${topic}".
+- Flashcard 3 : Une obligation réglementaire éthique (Loi algérienne 18-11) liée à un projet sur "${topic}".
 
 Tu DOIS retourner UNIQUEMENT un tableau JSON contenant exactement 3 objets avec la structure suivante :
 [
