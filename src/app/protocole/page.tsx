@@ -121,20 +121,32 @@ function formatProtocolMarkdown(text: string): string {
 
 export default function ProtocoleGenerator() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'info' | 'methodo' | 'endpoints'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'methodo' | 'endpoints' | 'logistics' | 'finance'>('info');
   
   // Form State
   const [title, setTitle] = useState('');
   const [acronym, setAcronym] = useState('');
   const [riphCategory, setRiphCategory] = useState('observational');
   const [question, setQuestion] = useState('');
-  const [design, setDesign] = useState('Étude de Cohorte');
+  const [design, setDesign] = useState('Essai Clinique Randomisé Contrôlé (ECR)');
   const [intervention, setIntervention] = useState('');
   const [population, setPopulation] = useState('');
   const [inclusion, setInclusion] = useState('');
   const [exclusion, setExclusion] = useState('');
   const [primaryEndpoint, setPrimaryEndpoint] = useState('');
   const [secondaryEndpoints, setSecondaryEndpoints] = useState('');
+
+  // New Form State for 19 steps (Approche B)
+  const [objectives, setObjectives] = useState('');
+  const [bias, setBias] = useState('');
+  const [justification, setJustification] = useState('');
+  const [hypothesis, setHypothesis] = useState('');
+  const [logistics, setLogistics] = useState('');
+  const [personnel, setPersonnel] = useState('');
+  const [budget, setBudget] = useState('');
+  const [calendar, setCalendar] = useState('');
+  const [ethics, setEthics] = useState('');
+  const [references, setReferences] = useState('');
 
   // App State
   const [generatedProtocol, setGeneratedProtocol] = useState<string | null>(null);
@@ -196,7 +208,17 @@ export default function ProtocoleGenerator() {
       inclusion,
       exclusion,
       primaryEndpoint,
-      secondaryEndpoints
+      secondaryEndpoints,
+      objectives,
+      bias,
+      justification,
+      hypothesis,
+      logistics,
+      personnel,
+      budget,
+      calendar,
+      ethics,
+      references
     };
 
     try {
@@ -495,19 +517,31 @@ export default function ProtocoleGenerator() {
               className={`${styles.tabBtn} ${activeTab === 'info' ? styles.activeTab : ''}`}
               onClick={() => setActiveTab('info')}
             >
-              1. Identité & Réglementation
+              1. Identité & Régles
             </button>
             <button
               className={`${styles.tabBtn} ${activeTab === 'methodo' ? styles.activeTab : ''}`}
               onClick={() => setActiveTab('methodo')}
             >
-              2. Question & Schéma
+              2. Objectifs & Schéma
             </button>
             <button
               className={`${styles.tabBtn} ${activeTab === 'endpoints' ? styles.activeTab : ''}`}
               onClick={() => setActiveTab('endpoints')}
             >
               3. Critères & Population
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'logistics' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('logistics')}
+            >
+              4. Logistique & Personnel
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'finance' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('finance')}
+            >
+              5. Budget & Calendrier
             </button>
           </div>
 
@@ -563,6 +597,16 @@ export default function ProtocoleGenerator() {
                     placeholder="Quelle est la question clinique précise à laquelle l'étude doit répondre ?"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="objectives">Objectifs secondaires</label>
+                  <textarea
+                    id="objectives"
+                    className="form-textarea"
+                    placeholder="Décrivez les objectifs secondaires ou intermédiaires..."
+                    value={objectives}
+                    onChange={(e) => setObjectives(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
@@ -648,6 +692,106 @@ export default function ProtocoleGenerator() {
                     onChange={(e) => setExclusion(e.target.value)}
                   />
                 </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="bias">Biais de recherche et facteurs de confusion</label>
+                  <textarea
+                    id="bias"
+                    className="form-textarea"
+                    placeholder="ex. Biais de mémorisation, biais de sélection lié à la clandestinité..."
+                    value={bias}
+                    onChange={(e) => setBias(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {activeTab === 'logistics' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="justification">Justification de l'étude (Le "Pourquoi")</label>
+                  <textarea
+                    id="justification"
+                    className="form-textarea"
+                    placeholder="Pourquoi cette étude est-elle importante ? Originalité, urgence ou saisine d'hôpitaux..."
+                    value={justification}
+                    onChange={(e) => setJustification(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="hypothesis">Hypothèse(s) de recherche</label>
+                  <textarea
+                    id="hypothesis"
+                    className="form-textarea"
+                    placeholder="Quelle est la réponse théorique ou l'hypothèse principale à valider ?"
+                    value={hypothesis}
+                    onChange={(e) => setHypothesis(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="logistics">Récolte des données & Étude pilote</label>
+                  <textarea
+                    id="logistics"
+                    className="form-textarea"
+                    placeholder="Logistique pratique, chaîne du froid, stockage, validation des questionnaires via une étude pilote..."
+                    value={logistics}
+                    onChange={(e) => setLogistics(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="personnel">Personnel et rôles requis</label>
+                  <textarea
+                    id="personnel"
+                    className="form-textarea"
+                    placeholder="Qui participe (ARC, statisticiens, enquêteurs, psychologue clinicien...) et quels sont leurs rôles ?"
+                    value={personnel}
+                    onChange={(e) => setPersonnel(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {activeTab === 'finance' && (
+              <>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="budget">Budget et Financement</label>
+                  <textarea
+                    id="budget"
+                    className="form-textarea"
+                    placeholder="Chiffrage estimé (dosages, chélatants, licences de tests, promoteurs) et sources de financement..."
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="calendar">Calendrier prévisionnel</label>
+                  <textarea
+                    id="calendar"
+                    className="form-textarea"
+                    placeholder="Jalons principaux, recrutement, délais éthiques, soumissions et rédaction..."
+                    value={calendar}
+                    onChange={(e) => setCalendar(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="ethics">Considérations éthiques supplémentaires</label>
+                  <textarea
+                    id="ethics"
+                    className="form-textarea"
+                    placeholder="Détails sur l'anonymisation, la notice d'information ou les dilemmes éthiques spécifiques..."
+                    value={ethics}
+                    onChange={(e) => setEthics(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="references">Références bibliographiques & Annexes</label>
+                  <textarea
+                    id="references"
+                    className="form-textarea"
+                    placeholder="Conventions, études toxicologiques de référence, grilles d'inspection environnementale à joindre..."
+                    value={references}
+                    onChange={(e) => setReferences(e.target.value)}
+                  />
+                </div>
               </>
             )}
           </div>
@@ -662,13 +806,21 @@ export default function ProtocoleGenerator() {
             {activeTab === 'endpoints' && (
               <button className="btn btn-secondary" onClick={() => setActiveTab('methodo')}>Précédent</button>
             )}
+            {activeTab === 'logistics' && (
+              <button className="btn btn-secondary" onClick={() => setActiveTab('endpoints')}>Précédent</button>
+            )}
+            {activeTab === 'finance' && (
+              <button className="btn btn-secondary" onClick={() => setActiveTab('logistics')}>Précédent</button>
+            )}
 
-            {activeTab !== 'endpoints' ? (
+            {activeTab !== 'finance' ? (
               <button
                 className="btn btn-secondary"
                 onClick={() => {
                   if (activeTab === 'info') setActiveTab('methodo');
                   else if (activeTab === 'methodo') setActiveTab('endpoints');
+                  else if (activeTab === 'endpoints') setActiveTab('logistics');
+                  else if (activeTab === 'logistics') setActiveTab('finance');
                 }}
               >
                 Suivant

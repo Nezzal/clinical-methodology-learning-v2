@@ -198,6 +198,18 @@ export async function POST(req: Request) {
   let riphCategory = 'observational';
   let categoryName = 'Non spécifiée';
 
+  // New variables for Approche B
+  let objectives = '';
+  let bias = '';
+  let justification = '';
+  let hypothesis = '';
+  let logistics = '';
+  let personnel = '';
+  let budget = '';
+  let calendar = '';
+  let ethics = '';
+  let references = '';
+
   try {
     const data = await req.json();
     title = data.title || '';
@@ -211,6 +223,18 @@ export async function POST(req: Request) {
     secondaryEndpoints = data.secondaryEndpoints || '';
     intervention = data.intervention || '';
     riphCategory = data.riphCategory || 'observational';
+    
+    // Parse new fields
+    objectives = data.objectives || '';
+    bias = data.bias || '';
+    justification = data.justification || '';
+    hypothesis = data.hypothesis || '';
+    logistics = data.logistics || '';
+    personnel = data.personnel || '';
+    budget = data.budget || '';
+    calendar = data.calendar || '';
+    ethics = data.ethics || '';
+    references = data.references || '';
 
     const requestHeaders = new Headers(req.headers);
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
@@ -228,14 +252,27 @@ Voici les données saisies par le chercheur :
 - Titre proposé : ${title}
 - Acronyme : ${acronym}
 - Question de recherche : ${question}
+- Objectifs secondaires saisis : ${objectives || 'Non spécifiés'}
 - Schéma d'étude : ${design}
 - Catégorie de recherche (Loi 18-11) : ${riphCategory} (${categoryName})
-- Population cible : ${population}
-- Critères d'inclusion : ${inclusion}
-- Critères d'exclusion : ${exclusion}
+- Description de l'intervention : ${intervention || 'Non spécifiée'}
+- Population cible : ${population || 'Non spécifiée'}
+- Critères d'inclusion : ${inclusion || 'Non spécifiés'}
+- Critères d'exclusion : ${exclusion || 'Non spécifiés'}
 - Critère de jugement principal (Endpoint) : ${primaryEndpoint}
-- Critères de jugement secondaires : ${secondaryEndpoints}
-- Description de l'intervention : ${intervention}
+- Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
+- Biais et facteurs de confusion saisis : ${bias || 'Non spécifiés'}
+- Justification saisie : ${justification || 'Non spécifiée'}
+- Hypothèse(s) saisie(s) : ${hypothesis || 'Non spécifiée(s)'}
+- Logistique, récolte & étude pilote saisies : ${logistics || 'Non spécifiées'}
+- Personnel et rôles saisis : ${personnel || 'Non spécifiés'}
+- Budget et Financement saisis : ${budget || 'Non spécifié'}
+- Calendrier et jalons saisis : ${calendar || 'Non spécifié'}
+- Considérations éthiques saisies : ${ethics || 'Non spécifiées'}
+- Références bibliographiques & Annexes saisies : ${references || 'Non spécifiées'}
+
+Instructions de rédaction :
+Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
 
 Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 
@@ -243,34 +280,34 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Un titre précis, informatif et reflétant fidèlement l'étude. Intègre le titre proposé par le chercheur et son acronyme.
 
 ### 2. Le(s) objectif(s)
-* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention.
+* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention. Utilise les objectifs secondaires saisis s'ils sont fournis.
 
 ### 3. La justification de l'étude
-* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi").
+* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi"). Incorpore la justification saisie par le chercheur.
 
 ### 4. La (les) hypothèse(s)
-* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats.
+* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats. Incorpore l'hypothèse saisie par le chercheur.
 
 ### 5. Le type d'étude
 * Choix du design méthodologique (ex: descriptive, analytique, prospective, rétrospective, etc.) en adéquation avec le schéma d'étude choisi par le chercheur.
 
 ### 6. Le(s) facteur(s) étudié(s)
-* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles.
+* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles. Incorpore la description de l'intervention ou de l'exposition.
 
 ### 7. Le(s) critère(s) de jugement
 * Critères (cliniques, paracliniques ou biologiques) permettant de mesurer l'efficacité d'un traitement ou la sévérité d'une maladie. Reprend le critère de jugement principal et les critères secondaires définis par le chercheur.
 
 ### 8. Les causes d'erreur : biais et facteurs de confusion
-* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser.
+* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser. Incorpore le texte sur les biais saisi par le chercheur.
 
 ### 9. Les sujets
 * Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur.
 
 ### 10. La taille de l'échantillon
-* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude pour assurer une puissance statistique adéquate.
+* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude. Si des précisions statistiques ne sont pas fournies, propose une formule mathématique adaptée au schéma d'étude (ex: Schwartz pour les proportions ou comparaison de deux moyennes).
 
 ### 11. La récolte et la gestion des données
-* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation).
+* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation). Incorpore la logistique saisie par le chercheur.
 
 ### 12. L'analyse des données
 * Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés).
@@ -279,22 +316,22 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Description d'une phase préliminaire à petite échelle (si applicable) pour tester la faisabilité du protocole, des questionnaires ou de la logistique de prélèvement.
 
 ### 14. Les implications éthiques
-* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11.
+* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11. Incorpore les considérations éthiques saisies.
 
 ### 15. Le personnel
-* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.).
+* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.). Incorpore le personnel saisi.
 
 ### 16. Le budget
-* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement.
+* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement. Incorpore le budget saisi.
 
 ### 17. Le calendrier
-* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction).
+* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction). Incorpore le calendrier saisi.
 
 ### 18. Les annexes éventuelles
 * Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.).
 
 ### 19. Les références
-* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole.
+* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole. Incorpore les références bibliographiques saisies.
 
 Format du document final : Rédige le protocole complet en français, hautement professionnel et académique, en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown pour résumer les données structurelles (par exemple pour le budget, le calendrier, ou les critères de jugement) et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
 
@@ -388,14 +425,27 @@ Voici les données saisies par le chercheur :
 - Titre proposé : ${title}
 - Acronyme : ${acronym}
 - Question de recherche : ${question}
+- Objectifs secondaires saisis : ${objectives || 'Non spécifiés'}
 - Schéma d'étude : ${design}
 - Catégorie de recherche (Loi 18-11) : ${riphCategory} (${resolvedCategoryName})
-- Population cible : ${population}
-- Critères d'inclusion : ${inclusion}
-- Critères d'exclusion : ${exclusion}
+- Description de l'intervention : ${intervention || 'Non spécifiée'}
+- Population cible : ${population || 'Non spécifiée'}
+- Critères d'inclusion : ${inclusion || 'Non spécifiés'}
+- Critères d'exclusion : ${exclusion || 'Non spécifiés'}
 - Critère de jugement principal (Endpoint) : ${primaryEndpoint}
-- Critères de jugement secondaires : ${secondaryEndpoints}
-- Description de l'intervention : ${intervention}
+- Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
+- Biais et facteurs de confusion saisis : ${bias || 'Non spécifiés'}
+- Justification saisie : ${justification || 'Non spécifiée'}
+- Hypothèse(s) saisie(s) : ${hypothesis || 'Non spécifiée(s)'}
+- Logistique, récolte & étude pilote saisies : ${logistics || 'Non spécifiées'}
+- Personnel et rôles saisis : ${personnel || 'Non spécifiés'}
+- Budget et Financement saisis : ${budget || 'Non spécifié'}
+- Calendrier et jalons saisis : ${calendar || 'Non spécifié'}
+- Considérations éthiques saisies : ${ethics || 'Non spécifiées'}
+- Références bibliographiques & Annexes saisies : ${references || 'Non spécifiées'}
+
+Instructions de rédaction :
+Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
 
 Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 
@@ -403,34 +453,34 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Un titre précis, informatif et reflétant fidèlement l'étude. Intègre le titre proposé par le chercheur et son acronyme.
 
 ### 2. Le(s) objectif(s)
-* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention.
+* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention. Utilise les objectifs secondaires saisis s'ils sont fournis.
 
 ### 3. La justification de l'étude
-* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi").
+* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi"). Incorpore la justification saisie par le chercheur.
 
 ### 4. La (les) hypothèse(s)
-* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats.
+* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats. Incorpore l'hypothèse saisie par le chercheur.
 
 ### 5. Le type d'étude
 * Choix du design méthodologique (ex: descriptive, analytique, prospective, rétrospective, etc.) en adéquation avec le schéma d'étude choisi par le chercheur.
 
 ### 6. Le(s) facteur(s) étudié(s)
-* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles.
+* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles. Incorpore la description de l'intervention ou de l'exposition.
 
 ### 7. Le(s) critère(s) de jugement
 * Critères (cliniques, paracliniques ou biologiques) permettant de mesurer l'efficacité d'un traitement ou la sévérité d'une maladie. Reprend le critère de jugement principal et les critères secondaires définis par le chercheur.
 
 ### 8. Les causes d'erreur : biais et facteurs de confusion
-* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser.
+* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser. Incorpore le texte sur les biais saisi par le chercheur.
 
 ### 9. Les sujets
 * Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur.
 
 ### 10. La taille de l'échantillon
-* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude pour assurer une puissance statistique adéquate.
+* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude. Si des précisions statistiques ne sont pas fournies, propose une formule mathématique adaptée au schéma d'étude (ex: Schwartz pour les proportions ou comparaison de deux moyennes).
 
 ### 11. La récolte et la gestion des données
-* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation).
+* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation). Incorpore la logistique saisie par le chercheur.
 
 ### 12. L'analyse des données
 * Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés).
@@ -439,22 +489,22 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Description d'une phase préliminaire à petite échelle (si applicable) pour tester la faisabilité du protocole, des questionnaires ou de la logistique de prélèvement.
 
 ### 14. Les implications éthiques
-* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11.
+* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11. Incorpore les considérations éthiques saisies.
 
 ### 15. Le personnel
-* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.).
+* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.). Incorpore le personnel saisi.
 
 ### 16. Le budget
-* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement.
+* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement. Incorpore le budget saisi.
 
 ### 17. Le calendrier
-* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction).
+* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction). Incorpore le calendrier saisi.
 
 ### 18. Les annexes éventuelles
 * Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.).
 
 ### 19. Les références
-* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole.
+* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole. Incorpore les références bibliographiques saisies.
 
 Format du document final : Rédige le protocole complet en français, hautement professionnel et académique, en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown pour résumer les données structurelles (par exemple pour le budget, le calendrier, ou les critères de jugement) et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
 
