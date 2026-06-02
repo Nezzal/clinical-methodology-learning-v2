@@ -539,13 +539,13 @@ export default function ProtocoleGenerator() {
               className={`${styles.tabBtn} ${activeTab === 'logistics' ? styles.activeTab : ''}`}
               onClick={() => setActiveTab('logistics')}
             >
-              4. Logistique & Personnel
+              4. Logistique, Budget & Calendrier
             </button>
             <button
               className={`${styles.tabBtn} ${activeTab === 'finance' ? styles.activeTab : ''}`}
               onClick={() => setActiveTab('finance')}
             >
-              5. Budget & Calendrier
+              5. Éthique & Références
             </button>
           </div>
 
@@ -764,11 +764,6 @@ export default function ProtocoleGenerator() {
                     onChange={(e) => setPersonnel(e.target.value)}
                   />
                 </div>
-              </>
-            )}
-
-            {activeTab === 'finance' && (
-              <>
                 <div className="form-group">
                   <label className="form-label" htmlFor="budget">Budget et Financement</label>
                   <textarea
@@ -789,6 +784,11 @@ export default function ProtocoleGenerator() {
                     onChange={(e) => setCalendar(e.target.value)}
                   />
                 </div>
+              </>
+            )}
+
+            {activeTab === 'finance' && (
+              <>
                 <div className="form-group">
                   <label className="form-label" htmlFor="ethics">Considérations éthiques supplémentaires</label>
                   <textarea
