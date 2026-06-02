@@ -126,7 +126,8 @@ export default function ProtocoleGenerator() {
   // Form State
   const [title, setTitle] = useState('');
   const [acronym, setAcronym] = useState('');
-  const [riphCategory, setRiphCategory] = useState('observational');
+  const [methodology, setMethodology] = useState<'interventional' | 'observational'>('observational');
+  const [benefitType, setBenefitType] = useState<'bid' | 'sbid'>('sbid');
   const [question, setQuestion] = useState('');
   const [design, setDesign] = useState('Essai Clinique Randomisé Contrôlé (ECR)');
   const [intervention, setIntervention] = useState('');
@@ -200,7 +201,8 @@ export default function ProtocoleGenerator() {
     const formData = {
       title,
       acronym,
-      riphCategory,
+      methodology,
+      benefitType,
       question,
       design,
       intervention,
@@ -571,15 +573,25 @@ export default function ProtocoleGenerator() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="riph">Catégorie d'Étude (Loi n° 18-11 Santé)</label>
+                  <label className="form-label" htmlFor="methodology">Type de Recherche (Méthodologie)</label>
                   <select
-                    id="riph"
+                    id="methodology"
                     className="form-select"
-                    value={riphCategory}
-                    onChange={(e) => setRiphCategory(e.target.value)}
+                    value={methodology}
+                    onChange={(e) => setMethodology(e.target.value as 'interventional' | 'observational')}
                   >
-                    <option value="interventional">Étude clinique interventionnelle (Essai thérapeutique/diagnostique/préventif)</option>
-                    <option value="observational">Étude clinique observationnelle (Épidémiologique/Pharmaco-épidémiologique)</option>
+                    <option value="observational">Étude clinique observationnelle (Épidémiologique ou pharmaco-épidémiologique)</option>
+                    <option value="interventional">Étude clinique interventionnelle (Essai thérapeutique, diagnostique ou préventif)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="benefitType">Bénéfice individuel attendu (Loi n° 18-11)</label>
+                  <select
+                    id="benefitType"
+                    className="form-select"
+                    value={benefitType}
+                    onChange={(e) => setBenefitType(e.target.value as 'bid' | 'sbid')}
+                  >
                     <option value="sbid">Étude sans bénéfice individuel direct (SBID, Art. 391)</option>
                     <option value="bid">Étude avec bénéfice individuel direct (Art. 388)</option>
                   </select>

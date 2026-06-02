@@ -90,7 +90,8 @@ function getStaticFallbackProtocol(
   primaryEndpoint: string,
   secondaryEndpoints: string,
   intervention: string,
-  categoryName: string,
+  methodologyName: string,
+  benefitTypeName: string,
   isOfflineNotice = false
 ): string {
   const notice = isOfflineNotice 
@@ -108,7 +109,8 @@ ${notice}
 * **Titre de l'étude :** ${title || '[Non spécifié]'}
 * **Acronyme :** ${acronym || '[Non spécifié]'}
 * **Cadre Réglementaire :** Loi n° 18-11 relative à la santé (Algérie)
-* **Catégorie d'étude :** ${categoryName}
+* **Type de Recherche (Méthodologie) :** ${methodologyName}
+* **Bénéfice individuel attendu (Loi 18-11) :** ${benefitTypeName}
 * **Schéma d'étude :** ${design || 'Non spécifié'}
 
 ---
@@ -195,8 +197,10 @@ export async function POST(req: Request) {
   let primaryEndpoint = '';
   let secondaryEndpoints = '';
   let intervention = '';
-  let riphCategory = 'observational';
-  let categoryName = 'Non spécifiée';
+  let methodology = 'observational';
+  let benefitType = 'sbid';
+  let methodologyName = 'Non spécifiée';
+  let benefitTypeName = 'Non spécifié';
 
   // New variables for Approche B
   let objectives = '';
@@ -222,7 +226,8 @@ export async function POST(req: Request) {
     primaryEndpoint = data.primaryEndpoint || '';
     secondaryEndpoints = data.secondaryEndpoints || '';
     intervention = data.intervention || '';
-    riphCategory = data.riphCategory || 'observational';
+    methodology = data.methodology || 'observational';
+    benefitType = data.benefitType || 'sbid';
     
     // Parse new fields
     objectives = data.objectives || '';
@@ -242,7 +247,8 @@ export async function POST(req: Request) {
 
     // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
     const studyCategories = recifKb.algerian_regulation.study_categories;
-    categoryName = studyCategories[riphCategory as keyof typeof studyCategories] || 'Non spécifiée';
+    methodologyName = studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée';
+    benefitTypeName = studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié';
 
     const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
 
@@ -254,7 +260,8 @@ Voici les données saisies par le chercheur :
 - Question de recherche : ${question}
 - Objectifs secondaires saisis : ${objectives || 'Non spécifiés'}
 - Schéma d'étude : ${design}
-- Catégorie de recherche (Loi 18-11) : ${riphCategory} (${categoryName})
+- Type de recherche (Méthodologie) : ${methodology} (${methodologyName})
+- Bénéfice individuel attendu (Loi 18-11) : ${benefitType} (${benefitTypeName})
 - Description de l'intervention : ${intervention || 'Non spécifiée'}
 - Population cible : ${population || 'Non spécifiée'}
 - Critères d'inclusion : ${inclusion || 'Non spécifiés'}
@@ -349,7 +356,7 @@ Format du document final : Rédige le protocole complet en français, hautement 
         }
       }
 
-      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, categoryName, false);
+      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, false);
       return NextResponse.json({ protocol: mockProtocol });
     }
 
@@ -415,7 +422,8 @@ Format du document final : Rédige le protocole complet en français, hautement 
       const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const studyCategories = recifKb.algerian_regulation.study_categories;
-      const resolvedCategoryName = categoryName !== 'Non spécifiée' ? categoryName : (studyCategories[riphCategory as keyof typeof studyCategories] || 'Non spécifiée');
+      const resolvedMethodologyName = methodologyName !== 'Non spécifiée' ? methodologyName : (studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée');
+      const resolvedBenefitTypeName = benefitTypeName !== 'Non spécifié' ? benefitTypeName : (studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié');
 
       const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
 
@@ -427,7 +435,8 @@ Voici les données saisies par le chercheur :
 - Question de recherche : ${question}
 - Objectifs secondaires saisis : ${objectives || 'Non spécifiés'}
 - Schéma d'étude : ${design}
-- Catégorie de recherche (Loi 18-11) : ${riphCategory} (${resolvedCategoryName})
+- Type de recherche (Méthodologie) : ${methodology} (${resolvedMethodologyName})
+- Bénéfice individuel attendu (Loi 18-11) : ${benefitType} (${resolvedBenefitTypeName})
 - Description de l'intervention : ${intervention || 'Non spécifiée'}
 - Population cible : ${population || 'Non spécifiée'}
 - Critères d'inclusion : ${inclusion || 'Non spécifiés'}
@@ -522,7 +531,7 @@ Format du document final : Rédige le protocole complet en français, hautement 
 
     // Repli ultime sur mock statique
     try {
-      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, categoryName, true);
+      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, true);
       return NextResponse.json({ protocol: mockProtocol });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;
