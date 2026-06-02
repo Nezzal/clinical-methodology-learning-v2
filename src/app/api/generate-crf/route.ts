@@ -1,0 +1,469 @@
+import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
+import recifKb from '@/data/recif-kb.json';
+
+async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${ollamaUrl}/api/tags`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const models = data.models || [];
+    if (models.length === 0) return null;
+
+    const hasRequested = models.some((m: any) => m.name === requestedModel || m.name.split(':')[0] === requestedModel.split(':')[0]);
+    if (hasRequested) return requestedModel;
+
+    const chatModels = models.filter((m: any) => {
+      const name = m.name.toLowerCase();
+      return !name.includes('embed') && !name.includes('minilm');
+    });
+
+    if (chatModels.length === 0) return null;
+
+    const gemmaModel = chatModels.find((m: any) => m.name.toLowerCase().includes('gemma'));
+    if (gemmaModel) return gemmaModel.name;
+
+    return chatModels[0].name;
+  } catch (err) {
+    console.warn("⚠️ [CRF API] Impossible de lister les modèles Ollama :", err);
+    return null;
+  }
+}
+
+async function tryOllamaGenerateCrf(
+  prompt: string,
+  ollamaUrl: string,
+  ollamaModel: string
+): Promise<string | null> {
+  try {
+    console.log(`🤖 [Générateur de CRF] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 secondes
+
+    const response = await fetch(`${ollamaUrl}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: ollamaModel,
+        messages: [
+          { 
+            role: 'system', 
+            content: "Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois rédiger un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, prêt pour l'impression ou l'encodage en français sous forme de Markdown, en te basant sur le manuel de référence RECIF." 
+          },
+          { role: 'user', content: prompt }
+        ],
+        stream: false,
+        options: {
+          temperature: 0.3 // Faible température pour plus de structure
+        }
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.warn(`⚠️ [CRF API] Ollama a retourné un statut d'erreur : ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.message?.content || null;
+  } catch (error: any) {
+    console.warn('⚠️ [CRF API] Échec de la génération locale de CRF par Ollama :', error.message || error);
+    return null;
+  }
+}
+
+function getStaticFallbackCrf(
+  title: string,
+  acronym: string,
+  question: string,
+  design: string,
+  population: string,
+  inclusion: string,
+  exclusion: string,
+  primaryEndpoint: string,
+  secondaryEndpoints: string,
+  intervention: string,
+  methodologyName: string,
+  benefitTypeName: string,
+  isOfflineNotice = false
+): string {
+  const notice = isOfflineNotice 
+    ? `⚠️ *Note : Ce CRF a été généré localement car le service d'IA est indisponible.*`
+    : `⚠️ *Note : Ce CRF a été généré localement (clé API non configurée).*`;
+
+  const parsedInclusion = inclusion 
+    ? inclusion.split('\n').map((line: string) => `[ ] ${line.trim()}`).join('\n')
+    : '[ ] Patient âgé de plus de 18 ans\n[ ] Signature du consentement écrit libre et éclairé\n[ ] Patient suivi dans la structure sanitaire d\'étude';
+
+  const parsedExclusion = exclusion
+    ? exclusion.split('\n').map((line: string) => `[ ] ${line.trim()}`).join('\n')
+    : '[ ] Contre-indication médicale majeure à l\'intervention\n[ ] Femme enceinte ou allaitante\n[ ] Incapables majeurs ou sujets sous tutelle';
+
+  return `# CAHIER D'OBSERVATION CLINIQUE (CRF) - PROTOCOLE DE RECHERCHE
+*Généré selon les directives méthodologiques du manuel RECIF & Loi algérienne n° 18-11*
+
+${notice}
+
+---
+
+## 📋 INFORMATIONS GÉNÉRALES
+* **Titre de l'étude :** ${title || '[Non spécifié]'}
+* **Acronyme :** ${acronym || '[Non spécifié]'}
+* **Type de Recherche / Statut :** ${methodologyName} • ${benefitTypeName}
+* **Schéma d'étude :** ${design || 'Non spécifié'}
+* **Numéro du Centre :** [____]  •  **Numéro du Patient :** [____]  •  **Initiales du Patient :** [__][__]
+
+---
+
+## 📑 FICHE 1 : CRITÈRES D'ÉLIGIBILITÉ (INCLUSION / NON-INCLUSION)
+
+### Critères d'inclusion (Tous doivent être cochés "OUI" pour inclure le patient) :
+${parsedInclusion}
+
+### Critères de non-inclusion (Tous doivent être cochés "NON" / non cochés pour inclure le patient) :
+${parsedExclusion}
+
+**DÉCISION D'ÉLIGIBILITÉ :**
+* Le patient remplit-il tous les critères d'éligibilité ?   **[ ] OUI**   **[ ] NON**
+* Le consentement écrit a-t-il été signé ?   **[ ] OUI** (Date de signature : [__]/[__]/[____])   **[ ] NON**
+* **Le patient est-il inclus dans l'étude ?**   **[ ] OUI**   **[ ] NON**
+
+---
+
+## 📑 FICHE 2 : DONNÉES DÉMOGRAPHIQUES & ANTÉCÉDENTS
+
+* **Date de naissance :** [__]/[__]/[____]  •  **Âge :** [____] ans
+* **Sexe :**  **[ ] Masculin**   **[ ] Féminin**
+* **Date d'inclusion :** [__]/[__]/[____]
+* **Données d'exposition / Facteur étudié :**
+  - Type d'exposition : ${intervention || 'Saisir les données d\'exposition du patient'}
+  - Niveau ou durée d'exposition : [____________________]
+* **Principaux antécédents médicaux :**
+  * Cardiovasculaire :  **[ ] NON**  **[ ] OUI** (précisez : _________________)
+  * Rénal :             **[ ] NON**  **[ ] OUI** (précisez : _________________)
+  * Hépatique :          **[ ] NON**  **[ ] OUI** (précisez : _________________)
+  * Autre :             **[ ] NON**  **[ ] OUI** (précisez : _________________)
+
+---
+
+## 📑 FICHE 3 : EXAMEN CLINIQUE ET DOSAGES VITAUX (BASELINE)
+
+* **Poids :** [____] kg  •  **Taille :** [____] cm  •  **IMC :** [____] kg/m²
+* **Pression Artérielle :** [____]/[____] mmHg  •  **Fréquence Cardiaque :** [____] bpm
+* **Examens cliniques spécifiques en lien avec la population d'étude (${population || 'Patients inclus'}) :**
+  - Signe clinique 1 :  **[ ] Normal**  **[ ] Anormal** (Détails : _________________)
+  - Signe clinique 2 :  **[ ] Normal**  **[ ] Anormal** (Détails : _________________)
+* **Examens paracliniques ou dosages biologiques initiaux :**
+  - Paramètre biologique 1 : [________]  (Unité : ______)
+  - Paramètre biologique 2 : [________]  (Unité : ______)
+
+---
+
+## 📑 FICHE 4 : CRITÈRES D'ÉVALUATION ET DE SUIVI (ENDPOINTS)
+
+### Évaluation du Critère de Jugement Principal :
+* **Critère évalué :** ${primaryEndpoint || 'Critère de jugement principal'}
+* Valeur ou résultat mesuré : [____________________] (Unité : ______)
+* Date de la mesure : [__]/[__]/[____]
+
+### Évaluation des Critères de Jugement Secondaires :
+* **Critères évalués :** ${secondaryEndpoints || 'Critères secondaires'}
+* 1. Critère secondaire A : [____________________] (Unité : ______)
+* 2. Critère secondaire B : [____________________] (Unité : ______)
+* 3. Tolérance clinique générale : **[ ] Excellente**  **[ ] Moyenne**  **[ ] Mauvaise**
+
+---
+
+## 📑 FICHE 5 : ÉVÉNEMENTS INDÉSIRABLES ET TOLÉRANCE
+
+* **Survenue d'un effet indésirable au cours de l'étude ?**  **[ ] NON**  **[ ] OUI**
+* Si OUI, complétez le tableau ci-dessous pour chaque événement :
+
+| Description de l'Événement | Date de Début | Gravité (EIG ?)* | Lien avec l'étude (Imputabilité)** | Action prise |
+| :--- | :--- | :--- | :--- | :--- |
+| | | **[ ] OUI [ ] NON** | **[ ] Nul [ ] Possible [ ] Fort** | |
+| | | **[ ] OUI [ ] NON** | **[ ] Nul [ ] Possible [ ] Fort** | |
+
+*\* Un Événement Indésirable Grave (EIG) désigne tout événement entraînant la mort, mettant en jeu le pronostic vital, nécessitant une hospitalisation ou entraînant une invalidité.*
+*\*\* Conformément à la Loi n° 18-11 relative à la santé, tout EIG doit être notifié immédiatement (sous 7 jours) au Ministère de la Santé et au Comité d'éthique.*
+
+---
+
+**Signature de l'Investigateur :** ___________________________    **Date :** [__]/[__]/[____]
+`;
+}
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: any;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error('TIMEOUT_EXCEEDED'));
+    }, timeoutMs);
+  });
+  
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    return result;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function POST(req: Request) {
+  let title = '';
+  let acronym = '';
+  let question = '';
+  let design = '';
+  let population = '';
+  let inclusion = '';
+  let exclusion = '';
+  let primaryEndpoint = '';
+  let secondaryEndpoints = '';
+  let intervention = '';
+  let methodology = 'observational';
+  let benefitType = 'sbid';
+  let methodologyName = 'Non spécifiée';
+  let benefitTypeName = 'Non spécifié';
+
+  let objectives = '';
+  let bias = '';
+  let justification = '';
+  let hypothesis = '';
+  let logistics = '';
+  let personnel = '';
+  let budget = '';
+  let calendar = '';
+  let ethics = '';
+  let references = '';
+  let annexes = '';
+
+  try {
+    const data = await req.json();
+    title = data.title || '';
+    acronym = data.acronym || '';
+    question = data.question || '';
+    design = data.design || '';
+    population = data.population || '';
+    inclusion = data.inclusion || '';
+    exclusion = data.exclusion || '';
+    primaryEndpoint = data.primaryEndpoint || '';
+    secondaryEndpoints = data.secondaryEndpoints || '';
+    intervention = data.intervention || '';
+    methodology = data.methodology || 'observational';
+    benefitType = data.benefitType || 'sbid';
+    
+    objectives = data.objectives || '';
+    bias = data.bias || '';
+    justification = data.justification || '';
+    hypothesis = data.hypothesis || '';
+    logistics = data.logistics || '';
+    personnel = data.personnel || '';
+    budget = data.budget || '';
+    calendar = data.calendar || '';
+    ethics = data.ethics || '';
+    references = data.references || '';
+    annexes = data.annexes || '';
+
+    const requestHeaders = new Headers(req.headers);
+    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
+
+    const studyCategories = recifKb.algerian_regulation.study_categories;
+    methodologyName = studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée';
+    benefitTypeName = studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié';
+
+    const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails du protocole de recherche clinique ci-dessous.
+
+Le CRF final doit être composé de 5 fiches distinctes, structurées avec des cases à cocher [ ] et des lignes de saisie vide [____] pour permettre un recueil propre.
+
+Données du protocole de recherche clinique :
+- Titre : ${title}
+- Acronyme : ${acronym}
+- Question de recherche : ${question}
+- Schéma d'étude : ${design}
+- Type de recherche (Méthodologie) : ${methodology} (${methodologyName})
+- Bénéfice individuel (Loi 18-11) : ${benefitType} (${benefitTypeName})
+- Description de l'intervention ou exposition : ${intervention || 'Non spécifiée'}
+- Population cible : ${population || 'Non spécifiée'}
+- Critères d'inclusion : ${inclusion || 'Non spécifiés'}
+- Critères d'exclusion : ${exclusion || 'Non spécifiés'}
+- Critère de jugement principal (Endpoint) : ${primaryEndpoint}
+- Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
+- Biais à contrôler : ${bias || 'Non spécifiés'}
+
+Structure obligatoire du CRF en 5 fiches :
+
+### Fiche 1 : Éligibilité et Inclusion
+* Génère une checklist exhaustive de TOUS les critères d'inclusion (le clinicien coche OUI) et d'exclusion (le clinicien coche NON) saisis par le chercheur.
+* Ajoute des sections pour la signature du consentement écrit (requis par l'Art. 386 de la Loi 18-11), la date de signature et la validation de l'éligibilité finale (Patient inclus OUI / NON).
+
+### Fiche 2 : Caractéristiques Démographiques et Exposition
+* Recueil de l'âge, sexe, date d'inclusion.
+* Section spécifique pour quantifier et qualifier l'exposition ou l'intervention (ex. durée d'exposition, doses, facteurs confondants, antécédents médicaux majeurs à consigner).
+
+### Fiche 3 : État Initial (Baseline)
+* Relevé des constantes cliniques initiales (Poids, taille, PA, FC, température).
+* Relevé des examens cliniques spécifiques à la pathologie ou population de l'étude.
+* Tableau ou liste pour inscrire les résultats des examens biologiques de référence ou dosages toxicologiques initiaux en lien avec la recherche.
+
+### Fiche 4 : Évaluation des Critères de Jugement (Endpoints)
+* Grille de recueil précise pour enregistrer le résultat de la mesure du critère principal (endpoint principal) à l'échéance voulue.
+* Grille de recueil pour enregistrer les critères secondaires (tolérance biologique, scores cliniques, événements spécifiques).
+
+### Fiche 5 : Pharmacovigilance et Tolérance (Événements Indésirables)
+* Question binaire sur la survenue d'un effet indésirable.
+* Tableau structuré de déclaration contenant : description de l'événement, date de début, gravité (Événement Indésirable Grave ? OUI/NON), imputabilité (lien avec l'étude : nul, possible, fort) et action prise.
+* Ajoute une note de rappel sur l'obligation légale de déclarer tout EIG sous 7 jours maximum au Ministère de la Santé (Algérie, Loi 18-11).
+
+Rédige le CRF complet en français, avec une mise en page très soignée et académique, en utilisant des tableaux Markdown et des champs vides [____] facilitant l'usage pratique en clinique.`;
+
+    if (!apiKey) {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateCrf(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply) {
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Ce CRF a été généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          return NextResponse.json({ crf: formattedOllamaReply });
+        }
+      }
+
+      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, false);
+      return NextResponse.json({ crf: mockCrf });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const checkIsOffline = (err: any) => {
+      const errMsg = err.message?.toLowerCase() || '';
+      const errCode = err.code || '';
+      return errMsg.includes('fetch failed') || 
+             errMsg.includes('getaddrinfo') || 
+             errMsg.includes('enotfound') || 
+             errMsg.includes('eai_again') || 
+             errMsg.includes('connect timed out') ||
+             errCode === 'ENOTFOUND' || 
+             errCode === 'EAI_AGAIN';
+    };
+
+    const checkIsQuotaOrRateLimit = (err: any) => {
+      const status = err.status || err.statusCode;
+      const errMsg = err.message?.toLowerCase() || '';
+      return status === 429 || 
+             errMsg.includes('quota') || 
+             errMsg.includes('rate limit') || 
+             errMsg.includes('resource_exhausted') ||
+             errMsg.includes('exceeded your current quota');
+    };
+
+    let response;
+    let attempt = 0;
+    const maxAttempts = 3;
+
+    while (attempt < maxAttempts) {
+      try {
+        response = await withTimeout(
+          ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            config: {
+              temperature: 0.3,
+            }
+          }),
+          20000 // 20 secondes
+        );
+        break;
+      } catch (err: any) {
+        attempt++;
+        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (CRF):`, err.message || err);
+        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) throw err;
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      }
+    }
+
+    const crfText = response?.text || "La génération du CRF a échoué.";
+    return NextResponse.json({ crf: crfText });
+
+  } catch (error: any) {
+    console.error('Erreur API Générateur de CRF, bascule vers le secours local:', error);
+
+    try {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+
+      const studyCategories = recifKb.algerian_regulation.study_categories;
+      const resolvedMethodologyName = methodologyName !== 'Non spécifiée' ? methodologyName : (studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée');
+      const resolvedBenefitTypeName = benefitTypeName !== 'Non spécifié' ? benefitTypeName : (studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié');
+
+      const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu devez concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails du protocole de recherche clinique ci-dessous.
+
+Le CRF final doit être composé de 5 fiches distinctes, structurées avec des cases à cocher [ ] et des lignes de saisie vide [____] pour permettre un recueil propre.
+
+Données du protocole de recherche clinique :
+- Titre : ${title}
+- Acronyme : ${acronym}
+- Question de recherche : ${question}
+- Schéma d'étude : ${design}
+- Type de recherche (Méthodologie) : ${methodology} (${resolvedMethodologyName})
+- Bénéfice individuel (Loi 18-11) : ${benefitType} (${resolvedBenefitTypeName})
+- Description de l'intervention ou exposition : ${intervention || 'Non spécifiée'}
+- Population cible : ${population || 'Non spécifiée'}
+- Critères d'inclusion : ${inclusion || 'Non spécifiés'}
+- Critères d'exclusion : ${exclusion || 'Non spécifiés'}
+- Critère de jugement principal (Endpoint) : ${primaryEndpoint}
+- Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
+- Biais à contrôler : ${bias || 'Non spécifiés'}
+
+Structure obligatoire du CRF en 5 fiches :
+
+### Fiche 1 : Éligibilité et Inclusion
+* Génère une checklist de critères d'inclusion et d'exclusion saisis par le chercheur.
+* Consentement écrit, signature et validation de l'éligibilité finale.
+
+### Fiche 2 : Caractéristiques Démographiques et Exposition
+* Âge, sexe, date d'inclusion.
+* Section pour quantifier l'exposition ou l'intervention.
+
+### Fiche 3 : État Initial (Baseline)
+* Constantes cliniques initiales.
+* Relevé des examens cliniques et dosages biologiques initiaux.
+
+### Fiche 4 : Évaluation des Critères de Jugement (Endpoints)
+* Grille de recueil pour le critère principal et les critères secondaires.
+
+### Fiche 5 : Pharmacovigilance et Tolérance (Événements Indésirables)
+* Déclaration des EI, tableau de gravité/imputabilité.
+* Rappel de l'obligation de déclaration de tout EIG sous 7 jours au Ministère (Algérie, Loi 18-11).
+
+Rédige le CRF en français en Markdown, hautement structuré et professionnel.`;
+
+      const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+      if (resolvedModel) {
+        const ollamaReply = await tryOllamaGenerateCrf(prompt, ollamaUrl, resolvedModel);
+        if (ollamaReply) {
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. CRF généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          return NextResponse.json({ crf: formattedOllamaReply });
+        }
+      }
+    } catch (ollamaErr) {
+      console.warn("⚠️ Échec du secours Ollama pour le CRF:", ollamaErr);
+    }
+
+    try {
+      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, true);
+      return NextResponse.json({ crf: mockCrf });
+    } catch (fallbackErr) {
+      const status = error.status || error.statusCode || 500;
+      let userMessage = 'Erreur lors de la génération du Cahier d\'Observation (CRF).';
+      return NextResponse.json({ error: userMessage }, { status });
+    }
+  }
+}

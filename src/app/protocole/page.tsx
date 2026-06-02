@@ -152,8 +152,12 @@ export default function ProtocoleGenerator() {
 
   // App State
   const [generatedProtocol, setGeneratedProtocol] = useState<string | null>(null);
+  const [generatedCrf, setGeneratedCrf] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [history, setHistory] = useState<LocalStats['recentProtocols']>([]);
+  const [loadingCrf, setLoadingCrf] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'protocol' | 'crf'>('protocol');
+  const [activeProtocolId, setActiveProtocolId] = useState<string | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
   useEffect(() => {
@@ -181,7 +185,9 @@ export default function ProtocoleGenerator() {
       if (protocolId) {
         const selectedProto = history.find((h) => h.id === protocolId);
         if (selectedProto) {
+          setActiveProtocolId(selectedProto.id);
           setGeneratedProtocol(selectedProto.content);
+          setGeneratedCrf(selectedProto.crfContent || null);
           setTitle(selectedProto.title);
           setAcronym(selectedProto.acronym);
         }
@@ -239,14 +245,19 @@ export default function ProtocoleGenerator() {
 
       if (response.ok) {
         setGeneratedProtocol(data.protocol);
+        setGeneratedCrf(null);
+        setPreviewMode('protocol');
+        const protocolId = Math.random().toString(36).substring(7);
+        setActiveProtocolId(protocolId);
         
         // Sauvegarder dans l'historique local
         const newProtocolItem = {
-          id: Math.random().toString(36).substring(7),
+          id: protocolId,
           title: title,
           acronym: acronym || 'SANS ACRONYME',
           date: new Date().toISOString(),
-          content: data.protocol
+          content: data.protocol,
+          crfContent: null
         };
 
         updateProgress((stats) => {
@@ -278,25 +289,127 @@ export default function ProtocoleGenerator() {
     }
   };
 
+  const handleGenerateCrf = async () => {
+    if (!activeProtocolId || !generatedProtocol) {
+      alert("Veuillez d'abord générer le protocole de recherche.");
+      return;
+    }
+
+    setLoadingCrf(true);
+    setGeneratedCrf(null);
+    setPreviewMode('crf');
+
+    const formData = {
+      title,
+      acronym,
+      methodology,
+      benefitType,
+      question,
+      design,
+      intervention,
+      population,
+      inclusion,
+      exclusion,
+      primaryEndpoint,
+      secondaryEndpoints,
+      objectives,
+      bias,
+      justification,
+      hypothesis,
+      logistics,
+      personnel,
+      budget,
+      calendar,
+      ethics,
+      references,
+      annexes
+    };
+
+    try {
+      const response = await fetch('/api/generate-crf', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setGeneratedCrf(data.crf);
+        
+        // Mettre à jour l'historique local avec le crfContent
+        updateProgress((stats) => {
+          const updatedHistory = stats.recentProtocols.map((proto: any) => {
+            if (proto.id === activeProtocolId) {
+              return { ...proto, crfContent: data.crf };
+            }
+            return proto;
+          });
+          return {
+            ...stats,
+            recentProtocols: updatedHistory
+          };
+        });
+
+        // Mettre à jour l'état local de l'historique
+        setHistory((prev) => 
+          prev.map((proto: any) => {
+            if (proto.id === activeProtocolId) {
+              return { ...proto, crfContent: data.crf };
+            }
+            return proto;
+          })
+        );
+
+        // Si connecté, synchroniser avec Firestore en arrière-plan
+        if (user) {
+          const updatedProtocolItem = {
+            id: activeProtocolId,
+            title,
+            acronym: acronym || 'SANS ACRONYME',
+            date: new Date().toISOString(),
+            content: generatedProtocol,
+            crfContent: data.crf
+          };
+          saveFirestoreProtocol(user.uid, updatedProtocolItem)
+            .catch(e => console.error("Erreur de sauvegarde du CRF sur Firestore:", e));
+        }
+      } else {
+        throw new Error(data.error || 'Erreur lors de la génération du CRF.');
+      }
+    } catch (error: any) {
+      alert(`⚠️ Échec de la génération du CRF : ${error.message || 'Le serveur n\'a pas pu répondre.'}`);
+      setPreviewMode('protocol');
+    } finally {
+      setLoadingCrf(false);
+    }
+  };
+
   const handleCopy = () => {
-    if (!generatedProtocol) return;
-    navigator.clipboard.writeText(generatedProtocol);
-    alert('Protocole copié dans le presse-papiers !');
+    const textToCopy = previewMode === 'protocol' ? generatedProtocol : generatedCrf;
+    if (!textToCopy) return;
+    navigator.clipboard.writeText(textToCopy);
+    alert(`${previewMode === 'protocol' ? 'Protocole' : 'Cahier d\'observation'} copié dans le presse-papiers !`);
   };
 
   const handleDownload = (format: 'md' | 'txt') => {
-    if (!generatedProtocol) return;
-    const blob = new Blob([generatedProtocol], { type: 'text/plain;charset=utf-8' });
+    const textToDownload = previewMode === 'protocol' ? generatedProtocol : generatedCrf;
+    if (!textToDownload) return;
+    const blob = new Blob([textToDownload], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `protocole_${acronym || 'recherche'}.${format}`;
+    link.download = `${previewMode === 'protocol' ? 'protocole' : 'cahier_observation'}_${acronym || 'recherche'}.${format}`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
   const handleExportPDF = () => {
-    if (!generatedProtocol) return;
+    const textToExport = previewMode === 'protocol' ? generatedProtocol : generatedCrf;
+    if (!textToExport) return;
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -304,14 +417,21 @@ export default function ProtocoleGenerator() {
       return;
     }
 
-    const formattedHtml = formatProtocolMarkdown(generatedProtocol);
+    const formattedHtml = formatProtocolMarkdown(textToExport);
+    const docTitle = previewMode === 'protocol' ? 'PROTOCOLE DE RECHERCHE CLINIQUE' : 'CAHIER D\'OBSERVATION CLINIQUE (CRF)';
+    const filenameTitle = previewMode === 'protocol' ? `Protocole [${acronym || 'SANS ACRONYME'}]` : `CRF [${acronym || 'SANS ACRONYME'}]`;
+    const patientFields = previewMode === 'crf' ? `
+      <div style="border: 1px solid #e5e7eb; padding: 0.5rem; margin-bottom: 2rem; font-size: 10pt; background: #f9fafb; font-family: 'Inter', sans-serif;">
+        <strong>Numéro de Centre :</strong> ______________  &nbsp;&nbsp;&nbsp;&nbsp;  <strong>Numéro de Patient :</strong> ______________  &nbsp;&nbsp;&nbsp;&nbsp;  <strong>Initiales :</strong> [___][___]
+      </div>
+    ` : '';
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html lang="fr">
       <head>
         <meta charset="UTF-8">
-        <title>Protocole [${acronym || 'SANS ACRONYME'}] - ${title || 'Sans titre'}</title>
+        <title>${filenameTitle} - ${title || 'Sans titre'}</title>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
           :root {
@@ -323,7 +443,6 @@ export default function ProtocoleGenerator() {
             --text-primary: #111827;
           }
 
-          
           body {
             font-family: var(--font-body);
             color: #1f2937;
@@ -338,7 +457,6 @@ export default function ProtocoleGenerator() {
             margin: 2cm;
           }
 
-          /* En-tête */
           .doc-header {
             border-bottom: 2px solid #005a70;
             padding-bottom: 0.5rem;
@@ -367,7 +485,6 @@ export default function ProtocoleGenerator() {
             color: #6b7280;
           }
 
-          /* Titre */
           h1 {
             font-family: var(--font-title);
             font-size: 20pt;
@@ -395,7 +512,6 @@ export default function ProtocoleGenerator() {
             letter-spacing: 0.05em;
           }
 
-          /* Sections */
           h2 {
             font-family: var(--font-title);
             font-size: 14pt;
@@ -434,7 +550,6 @@ export default function ProtocoleGenerator() {
             margin-bottom: 0.35rem;
           }
 
-          /* Bas de page */
           .doc-footer {
             position: fixed;
             bottom: 0;
@@ -464,7 +579,7 @@ export default function ProtocoleGenerator() {
       <body>
         <div class="doc-header">
           <div>
-            <h3>PROTOCOLE DE RECHERCHE CLINIQUE</h3>
+            <h3>${docTitle}</h3>
             <p>Conforme aux recommandations RECIF & Loi n° 18-11 Santé (Algérie)</p>
           </div>
           <div class="doc-header-date">
@@ -474,6 +589,8 @@ export default function ProtocoleGenerator() {
 
         <h1>${title}</h1>
         ${acronym ? `<div class="acronym-badge">${acronym}</div>` : ''}
+
+        ${patientFields}
 
         <div class="doc-body">
           ${formattedHtml}
@@ -498,10 +615,13 @@ export default function ProtocoleGenerator() {
     printWindow.document.close();
   };
 
-  const handleSelectHistory = (content: string, histTitle: string, histAcronym: string) => {
-    setGeneratedProtocol(content);
-    setTitle(histTitle);
-    setAcronym(histAcronym);
+  const handleSelectHistory = (item: any) => {
+    setActiveProtocolId(item.id);
+    setGeneratedProtocol(item.content);
+    setGeneratedCrf(item.crfContent || null);
+    setTitle(item.title);
+    setAcronym(item.acronym);
+    setPreviewMode('protocol');
   };
 
   return (
@@ -866,9 +986,25 @@ export default function ProtocoleGenerator() {
 
         {/* Prévisualisation de droite */}
         <div className={`${styles.previewCard} glass-card`}>
-          <div className={styles.previewHeader}>
-            <span className={styles.previewTitle}>Prévisualisation du Protocole</span>
-            {generatedProtocol && (
+          <div className={styles.previewHeader} style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid transparent' }}>
+              <button
+                className={`${styles.tabBtn} ${previewMode === 'protocol' ? styles.activeTab : ''}`}
+                style={{ padding: '0.25rem 0.75rem', fontSize: '0.9rem', borderBottomWidth: '2px', borderBottomStyle: 'solid' }}
+                onClick={() => setPreviewMode('protocol')}
+              >
+                Protocole
+              </button>
+              <button
+                className={`${styles.tabBtn} ${previewMode === 'crf' ? styles.activeTab : ''}`}
+                style={{ padding: '0.25rem 0.75rem', fontSize: '0.9rem', borderBottomWidth: '2px', borderBottomStyle: 'solid' }}
+                onClick={() => setPreviewMode('crf')}
+              >
+                Cahier d'Observation (CRF)
+              </button>
+            </div>
+
+            {((previewMode === 'protocol' && generatedProtocol) || (previewMode === 'crf' && generatedCrf)) && (
               <div className={styles.previewActions}>
                 <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleCopy}>
                   Copier
@@ -884,27 +1020,70 @@ export default function ProtocoleGenerator() {
           </div>
 
           <div className={styles.previewBody}>
-            {loading ? (
-              <div className={styles.emptyPreview}>
-                <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                  <svg className="animate-pulse" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 2s linear infinite' }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                  <span>L'IA de Méthodo Clinique rédige votre protocole méthodologique...</span>
+            {previewMode === 'protocol' ? (
+              loading ? (
+                <div className={styles.emptyPreview}>
+                  <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <svg className="animate-pulse" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 2s linear infinite' }}>
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    <span>L'IA de Méthodo Clinique rédige votre protocole méthodologique...</span>
+                  </div>
                 </div>
-              </div>
-            ) : generatedProtocol ? (
-              <div dangerouslySetInnerHTML={{ __html: formatProtocolMarkdown(generatedProtocol) }} />
+              ) : generatedProtocol ? (
+                <div dangerouslySetInnerHTML={{ __html: formatProtocolMarkdown(generatedProtocol) }} />
+              ) : (
+                <div className={styles.emptyPreview}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  <span>Remplissez le formulaire de gauche et cliquez sur "Générer" pour obtenir un protocole de recherche complet et structuré.</span>
+                </div>
+              )
             ) : (
-              <div className={styles.emptyPreview}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="16" y1="13" x2="8" y2="13" />
-                  <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-                <span>Remplissez le formulaire de gauche et cliquez sur "Générer" pour obtenir un protocole de recherche complet et structuré.</span>
-              </div>
+              loadingCrf ? (
+                <div className={styles.emptyPreview}>
+                  <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                    <svg className="animate-pulse" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 2s linear infinite' }}>
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                    </svg>
+                    <span>L'IA de Méthodo Clinique rédige votre cahier d'observation clinique (CRF)...</span>
+                  </div>
+                </div>
+              ) : generatedCrf ? (
+                <div dangerouslySetInnerHTML={{ __html: formatProtocolMarkdown(generatedCrf) }} />
+              ) : !generatedProtocol ? (
+                <div className={styles.emptyPreview}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="9" y1="9" x2="15" y2="9" />
+                    <line x1="9" y1="13" x2="15" y2="13" />
+                    <line x1="9" y1="17" x2="15" y2="17" />
+                  </svg>
+                  <span>Veuillez d'abord remplir le formulaire de gauche et générer un protocole de recherche pour pouvoir créer son Cahier d'Observation (CRF).</span>
+                </div>
+              ) : (
+                <div className={styles.emptyPreview} style={{ padding: '2rem 3rem' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '0.5rem', opacity: 0.85 }}>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="9" y1="15" x2="10" y2="15" />
+                    <line x1="13" y1="15" x2="15" y2="15" />
+                    <line x1="9" y1="11" x2="10" y2="11" />
+                    <line x1="13" y1="11" x2="15" y2="11" />
+                  </svg>
+                  <h4 style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1.05rem', marginBottom: '0.25rem' }}>Générer le Cahier d'Observation (CRF)</h4>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto 1.5rem auto', lineHeight: '1.4' }}>
+                    Le protocole de recherche clinique est prêt. Vous pouvez maintenant générer automatiquement le Cahier d'Observation Clinique (CRF) associé, structuré selon les 5 sections standards (Éligibilité, Démographie, Examen de base, Suivi & Fin de l'étude, Sécurité & Pharmacovigilance) avec des champs vides prêts à être imprimés ou codés.
+                  </p>
+                  <button className="btn btn-primary" onClick={handleGenerateCrf}>
+                    Générer le CRF
+                  </button>
+                </div>
+              )
             )}
           </div>
         </div>
@@ -919,7 +1098,7 @@ export default function ProtocoleGenerator() {
                 <div
                   key={h.id}
                   className={`${styles.historyItem} glass-card`}
-                  onClick={() => handleSelectHistory(h.content, h.title, h.acronym)}
+                  onClick={() => handleSelectHistory(h)}
                 >
                   <div className={styles.historyMeta}>
                     <span>{h.acronym}</span>
