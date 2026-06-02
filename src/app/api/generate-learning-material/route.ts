@@ -196,7 +196,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Type (quiz/flashcards) et Topic requis.' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const requestHeaders = new Headers(req.headers);
+    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Fallback si la clé API n'est pas configurée
     if (!apiKey) {

@@ -316,7 +316,10 @@ export default function Tuteur() {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+        },
         body: JSON.stringify({
           messages: updatedMessages.map((m) => ({
             role: m.role,

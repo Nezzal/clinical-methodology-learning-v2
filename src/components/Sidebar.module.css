@@ -243,3 +243,68 @@
   background: var(--accent-primary);
   color: #0b0f19;
 }
+
+.aiToggleSection {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aiToggleLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.aiToggleBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  border: 1px solid var(--border-glass);
+}
+
+.aiToggleIcon {
+  font-size: 1rem;
+}
+
+.aiToggleText {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.geminiActive {
+  background-color: rgba(13, 148, 136, 0.08);
+  border-color: rgba(13, 148, 136, 0.3);
+  color: #14b8a6;
+  box-shadow: 0 0 10px rgba(13, 148, 136, 0.1);
+}
+
+.geminiActive:hover {
+  background-color: rgba(13, 148, 136, 0.15);
+  border-color: rgba(13, 148, 136, 0.5);
+  box-shadow: 0 0 12px rgba(13, 148, 136, 0.15);
+}
+
+.ollamaActive {
+  background-color: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.1);
+}
+
+.ollamaActive:hover {
+  background-color: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
+}

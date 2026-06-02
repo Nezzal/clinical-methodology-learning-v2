@@ -385,7 +385,10 @@ export default function QuizPage() {
     try {
       const response = await fetch('/api/generate-learning-material', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+        },
         body: JSON.stringify({ type: typeToGen, topic })
       });
 

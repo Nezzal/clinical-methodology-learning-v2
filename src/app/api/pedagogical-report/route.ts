@@ -173,7 +173,9 @@ export async function POST(req: Request) {
     recentQuestions = data.recentQuestions ?? [];
     recentProtocols = data.recentProtocols ?? [];
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const requestHeaders = new Headers(req.headers);
+    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Calculs de base
     const totalQuiz = quizScore.total || 0;

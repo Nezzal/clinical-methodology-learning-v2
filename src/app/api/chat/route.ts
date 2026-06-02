@@ -641,7 +641,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Messages format invalide.' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const requestHeaders = new Headers(req.headers);
+    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
     const lastUserMessage = messages[messages.length - 1]?.content || '';
 
     // Configuration LLM local Ollama

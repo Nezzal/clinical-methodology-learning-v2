@@ -71,7 +71,10 @@ export default function RapportPage() {
     try {
       const response = await fetch('/api/pedagogical-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+        },
         body: JSON.stringify(payload)
       });
 

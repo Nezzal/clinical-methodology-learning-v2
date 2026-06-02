@@ -17,6 +17,23 @@ export default function Sidebar() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [profileName, setProfileName] = useState('');
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'ollama'>('gemini');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('recif_ai_provider') as 'gemini' | 'ollama';
+      if (saved === 'ollama' || saved === 'gemini') {
+        setAiProvider(saved);
+      }
+    }
+  }, []);
+
+  const handleToggleAi = () => {
+    const next = aiProvider === 'gemini' ? 'ollama' : 'gemini';
+    setAiProvider(next);
+    localStorage.setItem('recif_ai_provider', next);
+    window.dispatchEvent(new Event('ai_provider_changed'));
+  };
 
   useEffect(() => {
     if (user && user.email) {
@@ -215,6 +232,22 @@ export default function Sidebar() {
           </ul>
         </nav>
 
+        {/* Commutateur de Fournisseur d'IA */}
+        <div className={styles.aiToggleSection}>
+          <span className={styles.aiToggleLabel}>Moteur d'IA :</span>
+          <button 
+            className={`${styles.aiToggleBtn} ${aiProvider === 'gemini' ? styles.geminiActive : styles.ollamaActive}`} 
+            onClick={handleToggleAi}
+            title={aiProvider === 'gemini' ? "Basculer sur Ollama Local (Gemma 4)" : "Basculer sur Google Gemini (Cloud)"}
+          >
+            <span className={styles.aiToggleIcon}>
+              {aiProvider === 'gemini' ? '☁️' : '🤖'}
+            </span>
+            <span className={styles.aiToggleText}>
+              {aiProvider === 'gemini' ? 'Gemini (Cloud)' : 'Ollama (Local)'}
+            </span>
+          </button>
+        </div>
 
         {/* Section Profil de l'utilisateur */}
         <div className={styles.profileSection}>

@@ -212,7 +212,9 @@ export async function POST(req: Request) {
     intervention = data.intervention || '';
     riphCategory = data.riphCategory || 'observational';
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const requestHeaders = new Headers(req.headers);
+    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
     const studyCategories = recifKb.algerian_regulation.study_categories;
