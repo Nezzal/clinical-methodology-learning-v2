@@ -666,7 +666,7 @@ Instructions de réponse :
 2. Utilise les informations du contexte local pour élaborer ta réponse et cite impérativement les sources ou les numéros de page fournis dans le contexte sous la forme "[Page X]" ou "[Glossaire]" pour chaque point important.
 3. Rédige ta réponse entièrement en français, claire et structurée en Markdown.
 4. Si les informations locales ne suffisent pas à répondre entièrement, tu peux faire appel à tes connaissances générales sur la recherche clinique, mais précise-le.
-5. N'utilise JAMAIS de syntaxe ou de formatage LaTeX (ex: \`$$...$$\`, \`\\frac{...}{...}\`, \`\\cdot\`) pour les formules mathématiques. Écris-les toujours en texte clair et de façon lisible (ex: "n = (Z² * p * (1-p)) / d²").`;
+5. N'utilise JAMAIS de syntaxe ou de formatage LaTeX, que ce soit en bloc (\`$$...$$\`) ou en ligne (comme des expressions entourées de \`$\` ou des balises comme \`\\(...\\)\`), pour les formules, variables ou symboles mathématiques. Écris-les TOUJOURS en texte brut clair et lisible avec des caractères standards (ex : écris "p" au lieu de "$p$", "±" au lieu de "$\\pm$", "(1-p)" au lieu de "$(1-p)$", "d = 0.05" au lieu de "$d = 0.05$", et "n = (Z² * p * (1-p)) / d²").`;
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       const activeModel = resolvedModel || ollamaModel;
@@ -776,7 +776,7 @@ Règles de comportement fondamentales :
 3. Si les extraits contiennent la réponse, base-toi dessus. Si les extraits ne sont pas suffisants pour répondre complètement, tu peux utiliser tes connaissances générales sur le RECIF, mais indique clairement quand une information ne provient pas directement du livre indexé.
 4. Intègre de manière transparente la réglementation algérienne (Loi n° 18-11 relative à la santé) si la question porte sur les aspects éthiques, de consentement ou administratifs. Rappelle que le Ministère de la Santé algérien et un comité d'éthique local sont compétents.
 5. Utilise le formatage Markdown pour structurer tes réponses (titres, listes à puces, caractères gras).
-6. N'utilise JAMAIS de syntaxe ou de formatage LaTeX (ex: \`$$...$$\`, \`\\frac{...}{...}\`, \`\\cdot\`) pour les formules mathématiques. Écris-les toujours en texte clair et lisible (ex: "n = (Z² * p * (1-p)) / d²").
+6. N'utilise JAMAIS de syntaxe ou de formatage LaTeX, que ce soit en bloc (\`$$...$$\`) ou en ligne (comme des expressions entourées de \`$\` ou des balises comme \`\\(...\\)\`), pour les formules, variables ou symboles mathématiques. Écris-les TOUJOURS en texte brut clair et lisible avec des caractères standards (ex : écris "p" au lieu de "$p$", "±" au lieu de "$\\pm$", "(1-p)" au lieu de "$(1-p)$", "d = 0.05" au lieu de "$d = 0.05$", et "n = (Z² * p * (1-p)) / d²").
 7. Réponds en français de manière bienveillante et professionnelle.`;
     } else {
       // Fallback sur la base de connaissances globale statique (recif-kb.json)
@@ -791,7 +791,7 @@ Instructions de réponse :
 1. Reste toujours rigoureux, professionnel et structuré.
 2. Utilise le formatage Markdown.
 3. Rappelle que pour les aspects éthiques et d'autorisation, c'est la réglementation algérienne (Loi 18-11) qui prévaut (Comité d'éthique médicale local et autorisation écrite du Ministère de la Santé).
-4. N'utilise JAMAIS de syntaxe ou de formatage LaTeX (ex: \`$$...$$\`, \`\\frac{...}{...}\`, \`\\cdot\`) pour les formules mathématiques. Écris-les toujours en texte clair et lisible (ex: "n = (Z² * p * (1-p)) / d²").
+4. N'utilise JAMAIS de syntaxe ou de formatage LaTeX, que ce soit en bloc (\`$$...$$\`) ou en ligne (comme des expressions entourées de \`$\` ou des balises comme \`\\(...\\)\`), pour les formules, variables ou symboles mathématiques. Écris-les TOUJOURS en texte brut clair et lisible avec des caractères standards (ex : écris "p" au lieu de "$p$", "±" au lieu de "$\\pm$", "(1-p)" au lieu de "$(1-p)$", "d = 0.05" au lieu de "$d = 0.05$", et "n = (Z² * p * (1-p)) / d²").
 5. Réponds en français.`;
     }
 
@@ -861,7 +861,7 @@ Instructions de réponse :
 2. Utilise les informations du contexte local pour élaborer ta réponse et cite impérativement les sources ou les numéros de page fournis dans le contexte sous la forme "[Page X]" ou "[Glossaire]" pour chaque point important.
 3. Rédige ta réponse entièrement en français, claire et structurée en Markdown.
 4. Si les informations locales ne suffisent pas à répondre entièrement, tu peux faire appel à tes connaissances générales sur la recherche clinique, mais précise-le.
-5. N'utilise JAMAIS de syntaxe ou de formatage LaTeX (ex: \`$$...$$\`, \`\\frac{...}{...}\`, \`\\cdot\`) pour les formules mathématiques. Écris-les toujours en texte clair et lisible (ex: "n = (Z² * p * (1-p)) / d²").`;
+5. N'utilise JAMAIS de syntaxe ou de formatage LaTeX, que ce soit en bloc (\`$$...$$\`) ou en ligne (comme des expressions entourées de \`$\` ou des balises comme \`\\(...\\)\`), pour les formules, variables ou symboles mathématiques. Écris-les TOUJOURS en texte brut clair et lisible avec des caractères standards (ex : écris "p" au lieu de "$p$", "±" au lieu de "$\\pm$", "(1-p)" au lieu de "$(1-p)$", "d = 0.05" au lieu de "$d = 0.05$", et "n = (Z² * p * (1-p)) / d²").`;
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       const activeModel = resolvedModel || ollamaModel;
