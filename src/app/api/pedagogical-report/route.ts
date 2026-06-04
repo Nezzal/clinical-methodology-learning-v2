@@ -282,7 +282,7 @@ Instructions pour le rapport :
               temperature: 0.6,
             }
           }),
-          12000 // 12 secondes de timeout
+          30000 // 30 secondes de timeout pour les analyses approfondies
         );
         break; // Succès
       } catch (err: any) {
