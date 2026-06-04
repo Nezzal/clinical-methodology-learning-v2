@@ -51,13 +51,15 @@ async function tryOllamaGenerateCrf(
         messages: [
           { 
             role: 'system', 
-            content: "Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois rédiger un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, prêt pour l'impression ou l'encodage en français sous forme de Markdown, en te basant sur le manuel de référence RECIF." 
+            content: "Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails du protocole de recherche clinique."
           },
           { role: 'user', content: prompt }
         ],
         stream: false,
         options: {
-          temperature: 0.3 // Faible température pour plus de structure
+          temperature: 0.3, // Faible température pour plus de structure
+          num_ctx: 16384,
+          num_predict: 4096
         }
       }),
       signal: controller.signal

@@ -20,12 +20,20 @@ export default function Sidebar() {
   const [aiProvider, setAiProvider] = useState<'gemini' | 'ollama'>('gemini');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('recif_ai_provider') as 'gemini' | 'ollama';
-      if (saved === 'ollama' || saved === 'gemini') {
-        setAiProvider(saved);
+    const handleProviderChange = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('recif_ai_provider') as 'gemini' | 'ollama';
+        if (saved === 'ollama' || saved === 'gemini') {
+          setAiProvider(saved);
+        }
       }
-    }
+    };
+
+    handleProviderChange();
+    window.addEventListener('ai_provider_changed', handleProviderChange);
+    return () => {
+      window.removeEventListener('ai_provider_changed', handleProviderChange);
+    };
   }, []);
 
   const handleToggleAi = () => {

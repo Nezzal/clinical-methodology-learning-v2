@@ -39,8 +39,7 @@ async function tryOllamaGenerateProtocol(
     console.log(`🤖 [Générateur de Protocole] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 secondes de timeout
-
+    const timeoutId = setTimeout(() => controller.abort(), 250000); // 250 secondes de timeout (plus tolérant)
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -58,7 +57,9 @@ async function tryOllamaGenerateProtocol(
         ],
         stream: false,
         options: {
-          temperature: 0.5
+          temperature: 0.5,
+          num_ctx: 16384,
+          num_predict: 4096
         }
       }),
       signal: controller.signal
@@ -80,93 +81,169 @@ async function tryOllamaGenerateProtocol(
 }
 
 function getStaticFallbackProtocol(
-  title: string,
-  acronym: string,
-  question: string,
-  design: string,
-  population: string,
-  inclusion: string,
-  exclusion: string,
-  primaryEndpoint: string,
-  secondaryEndpoints: string,
-  intervention: string,
-  methodologyName: string,
-  benefitTypeName: string,
+  params: {
+    title: string;
+    acronym: string;
+    question: string;
+    design: string;
+    population: string;
+    inclusion: string;
+    exclusion: string;
+    primaryEndpoint: string;
+    secondaryEndpoints: string;
+    intervention: string;
+    methodologyName: string;
+    benefitTypeName: string;
+    objectives: string;
+    bias: string;
+    justification: string;
+    hypothesis: string;
+    logistics: string;
+    personnel: string;
+    budget: string;
+    calendar: string;
+    ethics: string;
+    references: string;
+    annexes: string;
+  },
   isOfflineNotice = false
 ): string {
+  const {
+    title, acronym, question, design, population, inclusion, exclusion,
+    primaryEndpoint, secondaryEndpoints, intervention, methodologyName,
+    benefitTypeName, objectives, bias, justification, hypothesis, logistics,
+    personnel, budget, calendar, ethics, references, annexes
+  } = params;
+
   const notice = isOfflineNotice 
     ? `⚠️ *Note : Ce protocole a été généré localement car le service d'IA (appareil hors-ligne ou quota d'API de Google atteint) est indisponible. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé ou vérifiez votre connexion.*`
     : `⚠️ *Note : Ce protocole a été généré localement car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
 
-  return `# PROTOCOLE DE RECHERCHE CLINIQUE (PROVISOIRE)
-*Généré selon les recommandations méthodologiques du manuel RECIF & Loi algérienne n° 18-11*
+  // Parse list values for cleaner display in the table
+  const cleanInclusion = inclusion ? inclusion.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
+  const cleanExclusion = exclusion ? exclusion.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
+  const cleanObjectives = objectives ? objectives.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
+
+  return `# PROTOCOLE DE RECHERCHE CLINIQUE (MÉTHODOLOGIE RECIF & LOI 18-11)
+*Généré selon les 19 sections de la grille d'évaluation du manuel RECIF et la législation algérienne*
 
 ${notice}
 
 ---
 
-## 1. INFORMATIONS GÉNÉRALES
-* **Titre de l'étude :** ${title || '[Non spécifié]'}
-* **Acronyme :** ${acronym || '[Non spécifié]'}
+## SYNTHÈSE DES PARAMÈTRES DU PROTOCOLE (PLAN D'ÉTUDE)
+
+| Paramètre Méthodologique | Valeur / Statut dans ce Projet |
+| :--- | :--- |
+| **Titre de l'étude** | ${title || '[Non renseigné]'} |
+| **Acronyme** | ${acronym || '[Non renseigné]'} |
+| **Question de recherche** | ${question || '[Non renseignée]'} |
+| **Objectif principal** | Évaluer l'efficacité de l'intervention/exposition sur le critère de jugement principal |
+| **Objectifs secondaires** | ${cleanObjectives} |
+| **Justification de l'étude** | ${justification || '[Non renseignée]'} |
+| **Hypothèse(s) de recherche** | ${hypothesis || '[Non renseignée(s)]'} |
+| **Schéma d'étude (Design)** | ${design || '[Non renseigné]'} |
+| **Type de recherche (Méthodologie)** | ${methodologyName} |
+| **Bénéfice individuel attendu (Loi 18-11)** | ${benefitTypeName} |
+| **Description de l'intervention** | ${intervention || '[Non renseignée]'} |
+| **Population cible** | ${population || '[Non renseignée]'} |
+| **Critères d'inclusion** | ${cleanInclusion} |
+| **Critères d'exclusion** | ${cleanExclusion} |
+| **Critère de jugement principal** | ${primaryEndpoint || '[Non renseigné]'} |
+| **Critères de jugement secondaires** | ${secondaryEndpoints || '[Non renseigné]'} |
+| **Biais et facteurs de confusion** | ${bias || '[Non renseignés]'} |
+| **Taille de l'échantillon (NSN)** | Calcul statistique basé sur le critère principal |
+| **Récolte des données & Étude pilote** | ${logistics || '[Non renseignée]'} |
+| **Personnel et rôles requis** | ${personnel || '[Non renseigné]'} |
+| **Budget et Financement** | ${budget || '[Non renseigné]'} |
+| **Calendrier prévisionnel** | ${calendar || '[Non renseigné]'} |
+| **Considérations éthiques** | ${ethics || '[Non renseignées]'} |
+| **Références bibliographiques** | ${references || '[Non renseignées]'} |
+| **Annexes à joindre** | ${annexes || '[Non renseignées]'} |
+
+---
+
+### 1. Le titre
+* **Titre de l'étude :** ${title || '[Non renseigné / À compléter]'}
+* **Acronyme :** ${acronym || '[Non renseigné / À compléter]'}
 * **Cadre Réglementaire :** Loi n° 18-11 relative à la santé (Algérie)
 * **Type de Recherche (Méthodologie) :** ${methodologyName}
 * **Bénéfice individuel attendu (Loi 18-11) :** ${benefitTypeName}
-* **Schéma d'étude :** ${design || 'Non spécifié'}
 
----
+### 2. Le(s) objectif(s)
+* **Objectif Principal :** Évaluer l'impact et la tolérance de l'intervention/exposition sur le critère de jugement principal dans la population d'étude.
+* **Objectifs Secondaires :**
+${objectives ? objectives.split('\n').map((line: string) => `  * ${line.trim()}`).join('\n') : '  * Évaluer la tolérance clinique de l\'intervention.\n  * Analyser les critères de jugement secondaires.'}
 
-## 2. RATIONNEL SCIENTIFIQUE ET QUESTION DE RECHERCHE
-### Question de recherche :
-${question || 'Quelle est l\'efficacité et la tolérance de la nouvelle intervention par rapport au comparateur ?'}
+### 3. La justification de l'étude
+${justification || 'Cette étude vise à évaluer la faisabilité et l\'impact de l\'intervention dans la population cible. Elle répond à un besoin médical et méthodologique en accord avec le guide RECIF.'}
 
-### Justification :
-Cette étude se propose d'évaluer la faisabilité et l'impact de l'intervention dans la population cible. Elle répond à un besoin médical non satisfait et vise à optimiser la prise en charge clinique en accord avec les recommandations du RECIF et dans le respect de l'éthique médicale.
+### 4. La (les) hypothèse(s)
+${hypothesis || 'L\'intervention présente une efficacité supérieure ou une équivalence par rapport au standard de soins ou au groupe témoin.'}
 
----
+### 5. Le type d'étude
+* **Schéma d'étude :** ${design || '[Non renseigné / À compléter]'}
+* **Type de recherche (Méthodologie) :** ${methodologyName}
 
-## 3. OBJECTIFS DE L'ÉTUDE
-### Objectif Principal :
-Évaluer l'impact de l'intervention sur le critère de jugement principal.
-### Objectifs Secondaires :
-1. Évaluer la tolérance et la sécurité de l'intervention.
-2. Analyser l'impact sur la qualité de vie des participants.
+### 6. Le(s) facteur(s) étudié(s)
+* **Description de l'intervention ou de l'exposition :**
+${intervention || '[Non renseigné / À compléter]'}
 
----
+### 7. Le(s) critère(s) de jugement
+* **Critère de Jugement Principal (Endpoint) :** ${primaryEndpoint || '[Non renseigné / À compléter]'}
+* **Critères de Jugement Secondaires :**
+${secondaryEndpoints || '[Non renseigné / À compléter]'}
 
-## 4. CRITÈRES DE JUGEMENT (ENDPOINTS)
-### Critère de Jugement Principal :
-* **Critère :** ${primaryEndpoint || '[Non spécifié]'}
-* **Justification RECIF :** Ce critère est unique, mesurable de manière objective, cliniquement pertinent et reproductible.
-### Critères de Jugement Secondaires :
-* **Critères :** ${secondaryEndpoints || 'Tolérance clinique, survenue d\'effets indésirables, scores de qualité de vie.'}
+### 8. Les causes d'erreur : biais et facteurs de confusion
+* **Biais identifiés & Contrôle des facteurs de confusion :**
+${bias || 'Les biais de sélection, d\'information et de confusion seront minimisés par le respect strict des critères d\'éligibilité et une méthodologie rigoureuse.'}
 
----
+### 9. Les sujets
+* **Population cible :** ${population || '[Non renseigné / À compléter]'}
+* **Critères d'Inclusion :**
+${inclusion ? inclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Patient éligible\n* Consentement écrit signé'}
+* **Critères d'Exclusion :**
+${exclusion ? exclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Contre-indication médicale majeure\n* Refus de participer'}
 
-## 5. POPULATION ET ÉLIGIBILITÉ
-### Population cible :
-${population || 'Patients répondant aux critères d\'éligibilité.'}
+### 10. La taille de l'échantillon
+* Le calcul du nombre de sujets nécessaires (NSN) sera effectué par un biostatisticien selon la variance attendue du critère principal.
 
-### Critères d'Inclusion :
-${inclusion ? inclusion.split('\n').map((line: string) => `- ${line}`).join('\n') : '- Patient âgé de plus de 18 ans\n- Signature du consentement écrit libre et éclairé\n- Patient suivi dans la structure sanitaire d\'étude'}
+### 11. La récolte et la gestion des données
+* **Logistique, récolte & étude pilote :**
+${logistics || 'Anonymisation des données à la source, stockage sécurisé et respect de la confidentialité.'}
 
-### Critères d'Exclusion :
-${exclusion ? exclusion.split('\n').map((line: string) => `- ${line}`).join('\n') : '- Contre-indication médicale majeure à l\'intervention\n- Femme enceinte ou allaitante\n- Incapables majeurs ou sujets sous tutelle sans représentant légal'}
+### 12. L'analyse des données
+* Plan d'analyse : Statistiques descriptives pour décrire la population (moyennes, écarts-types, pourcentages) et tests comparatifs univariés et multivariés appropriés (test t, ANOVA, Chi-2) selon la nature des variables.
 
----
+### 13. Une éventuelle étude pilote
+* Une phase pilote pourra être initiée sur un nombre restreint de sujets afin de valider la faisabilité opérationnelle du circuit des données.
 
-## 6. INTERVENTION ET DÉROULEMENT
-### Description de l'intervention :
-${intervention || 'L\'intervention sera menée conformément au standard de soins ou au protocole spécifique.'}
+### 14. Les implications éthiques
+* **Considérations éthiques & Réglementation :**
+${ethics || 'Soumission au Comité de Protection des Personnes (CPP) ou Comité d\'éthique compétent. Recueil obligatoire du consentement éclairé écrit de chaque participant.'}
+* **Loi algérienne 18-11 :** Respect du secret médical (Art. 24), recueil du consentement exprès et éclairé écrit (Art. 386), et notification de tout EIG sous 7 jours (Art. 395).
 
----
+### 15. Le personnel
+* **Personnel et rôles requis :**
+${personnel || 'L\'investigateur principal, les cliniciens collaborateurs, le personnel infirmier et le biostatisticien.'}
 
-## 7. ASPECTS ÉTHIQUES, RÉGLEMENTAIRES ET STATISTIQUES (ALGERIE)
-* **Comité d'éthique médicale :** Un avis favorable obligatoire d'un Comité d'éthique médicale agréé (conformément à l'Art. 382 de la loi 18-11) sera sollicité avant le démarrage de l'étude.
-* **Autorisation Ministérielle :** Ce projet est subordonné à l'autorisation formelle du **Ministère de la Santé** (décision sous 3 mois, Art. 381).
-* **Consentement (Art. 386) :** Le consentement libre, exprès et éclairé des participants sera obligatoirement recueilli **par écrit** après information loyale.
-* **Données et Secret Médical (Art. 24) :** Respect strict du secret médical et de la vie privée des patients. Les données seront anonymisées (codification).
-* **Effets Indésirables Graves (Art. 395) :** Toute notification d'effet indésirable grave (EIG) sera transmise immédiatement (sous 7 jours maximum) au Ministère de la Santé et au Comité d'éthique.
-* **Taille d'échantillon (Règle RECIF) :** Le calcul du nombre de sujets nécessaires (NSN) devra être effectué par un biostatisticien en fonction de la variance estimée du critère principal et d'un risque d'erreur alpha de 5% avec une puissance de 80%.
+### 16. Le budget
+* **Budget et Financement :**
+${budget || 'Financement interne / Prise en charge par la structure hospitalière.'}
+
+### 17. Le calendrier
+* **Calendrier prévisionnel :**
+${calendar || 'Jalons prévisionnels à définir (soumissions réglementaires, phase active de recrutement, analyse et rédaction finale).'}
+
+### 18. Les annexes éventuelles
+* **Annexes à joindre :**
+${annexes || 'Cahier d\'observation clinique (CRF), Notice d\'information, Formulaire de consentement.'}
+
+### 19. Les références
+* **Références bibliographiques :**
+${references || 'Manuel RECIF de méthodologie de recherche clinique.\nLoi algérienne n° 18-11 relative à la santé.'}
+
+*(Fin du Protocole)*
 `;
 }
 
@@ -215,6 +292,8 @@ export async function POST(req: Request) {
   let references = '';
   let annexes = '';
 
+  let prompt = '';
+
   try {
     const data = await req.json();
     title = data.title || '';
@@ -252,9 +331,44 @@ export async function POST(req: Request) {
     methodologyName = studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée';
     benefitTypeName = studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié';
 
-    const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
+    prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
 
-Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche RECIF ci-dessous. Pour chaque section, utilise les données soumises par le chercheur pour formuler une rédaction complète, rigoureuse et scientifiquement solide.
+CONSIGNE DE CONCISION CRITIQUE : Afin de garantir que l'intégralité du document soit générée sans troncature et rapidement, sois extrêmement synthétique, concis et précis. Évite tout bavardage, préambule ou transition inutile. Pour chaque section, formule une rédaction claire de 3 à 8 lignes maximum, reprenant les données fournies par le chercheur et les complétant de manière succincte. L'ensemble du protocole (y compris le tableau de synthèse initial) doit pouvoir être rédigé en moins de 1500 mots.
+
+CONSIGNE CRITIQUE DE STRUCTURE : Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche RECIF ci-dessous, dans l'ordre, de la section 1 à la section 19. Ne saute aucune section, n'en regroupe aucune et ne t'arrête pas prématurément avant d'avoir entièrement rédigé les 19 sections. Il est obligatoire d'inclure les aspects logistiques, le personnel, le budget, le calendrier, les considérations éthiques, les annexes et les références.
+
+### DÉBUT DU DOCUMENT : PLAN DE SYNTHÈSE DES 23 PARAMÈTRES
+Génère obligatoirement au tout début du protocole (immédiatement sous le titre principal H1) un tableau Markdown de synthèse structuré exactement comme suit :
+
+| Paramètre Méthodologique | Valeur / Statut dans ce Projet |
+| :--- | :--- |
+| **Titre de l'étude** | [Insérer le titre] |
+| **Acronyme** | [Insérer l'acronyme] |
+| **Question de recherche** | [Insérer la question] |
+| **Objectif principal** | [Insérer l'objectif principal] |
+| **Objectifs secondaires** | [Insérer les objectifs secondaires] |
+| **Justification de l'étude** | [Insérer la justification] |
+| **Hypothèse(s) de recherche** | [Insérer l'hypothèse] |
+| **Schéma d'étude (Design)** | [Insérer le schéma] |
+| **Type de recherche (Méthodologie)** | [Insérer la méthodologie] |
+| **Bénéfice individuel attendu (Loi 18-11)** | [Insérer le bénéfice] |
+| **Description de l'intervention** | [Insérer l'intervention] |
+| **Population cible** | [Insérer la population] |
+| **Critères d'inclusion** | [Insérer les critères d'inclusion] |
+| **Critères d'exclusion** | [Insérer les critères d'exclusion] |
+| **Critère de jugement principal** | [Insérer le critère principal] |
+| **Critères de jugement secondaires** | [Insérer les critères secondaires] |
+| **Biais et facteurs de confusion** | [Insérer les biais] |
+| **Taille de l'échantillon (NSN)** | [Insérer la taille ou estimation] |
+| **Récolte des données & Étude pilote** | [Insérer la logistique] |
+| **Personnel et rôles requis** | [Insérer le personnel] |
+| **Budget et Financement** | [Insérer le budget] |
+| **Calendrier prévisionnel** | [Insérer le calendrier] |
+| **Considérations éthiques** | [Insérer l'éthique] |
+| **Références bibliographiques** | [Insérer les références] |
+| **Annexes à joindre** | [Insérer les annexes] |
+
+---
 
 Voici les données saisies par le chercheur :
 - Titre proposé : ${title}
@@ -282,7 +396,7 @@ Voici les données saisies par le chercheur :
 - Annexes saisies (à lister/citer) : ${annexes || 'Non spécifiées'}
 
 Instructions de rédaction :
-Si un parameter ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
+Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes, réalistes et structurées, adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
 
 Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 
@@ -343,7 +457,7 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 ### 19. Les références
 * Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole. Incorpore les références bibliographiques saisies.
 
-Format du document final : Rédige le protocole complet en français, hautement professionnel et académique, en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown pour résumer les données structurelles (par exemple pour le budget, le calendrier, ou les critères de jugement) et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
+Format du document final : Rédige le protocole complet en français, de manière hautement professionnelle et académique, en écrivant les 19 titres de section ci-dessus en Markdown H3. Rédige chaque section de manière exhaustive et rigoureuse sans abréger ou omettre les sections de la fin (logistique, personnel, budget, calendrier, éthique, annexes et références).`;
 
     // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
@@ -359,7 +473,12 @@ Format du document final : Rédige le protocole complet en français, hautement 
         }
       }
 
-      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, false);
+      const mockProtocol = getStaticFallbackProtocol({
+        title, acronym, question, design, population, inclusion, exclusion,
+        primaryEndpoint, secondaryEndpoints, intervention, methodologyName,
+        benefitTypeName, objectives, bias, justification, hypothesis, logistics,
+        personnel, budget, calendar, ethics, references, annexes
+      }, false);
       return NextResponse.json({ protocol: mockProtocol });
     }
 
@@ -424,103 +543,6 @@ Format du document final : Rédige le protocole complet en français, hautement 
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
       const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
 
-      const studyCategories = recifKb.algerian_regulation.study_categories;
-      const resolvedMethodologyName = methodologyName !== 'Non spécifiée' ? methodologyName : (studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée');
-      const resolvedBenefitTypeName = benefitTypeName !== 'Non spécifié' ? benefitTypeName : (studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié');
-
-      const prompt = `Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un protocole de recherche clinique formel, structuré et extrêmement détaillé en français sous forme de Markdown, en te basant sur le manuel de référence RECIF et la réglementation algérienne (Loi n° 18-11 du 2 juillet 2018 relative à la santé, Articles 377 à 399).
-
-Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche RECIF ci-dessous. Pour chaque section, utilise les données soumises par le chercheur pour formuler une rédaction complète, rigoureuse et scientifiquement solide.
-
-Voici les données saisies par le chercheur :
-- Titre proposé : ${title}
-- Acronyme : ${acronym}
-- Question de recherche : ${question}
-- Objectifs secondaires saisis : ${objectives || 'Non spécifiés'}
-- Schéma d'étude : ${design}
-- Type de recherche (Méthodologie) : ${methodology} (${resolvedMethodologyName})
-- Bénéfice individuel attendu (Loi 18-11) : ${benefitType} (${resolvedBenefitTypeName})
-- Description de l'intervention : ${intervention || 'Non spécifiée'}
-- Population cible : ${population || 'Non spécifiée'}
-- Critères d'inclusion : ${inclusion || 'Non spécifiés'}
-- Critères d'exclusion : ${exclusion || 'Non spécifiés'}
-- Critère de jugement principal (Endpoint) : ${primaryEndpoint}
-- Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
-- Biais et facteurs de confusion saisis : ${bias || 'Non spécifiés'}
-- Justification saisie : ${justification || 'Non spécifiée'}
-- Hypothèse(s) saisie(s) : ${hypothesis || 'Non spécifiée(s)'}
-- Logistique, récolte & étude pilote saisies : ${logistics || 'Non spécifiées'}
-- Personnel et rôles saisis : ${personnel || 'Non spécifiés'}
-- Budget et Financement saisis : ${budget || 'Non spécifié'}
-- Calendrier et jalons saisis : ${calendar || 'Non spécifié'}
-- Considérations éthiques saisies : ${ethics || 'Non spécifiées'}
-- Références bibliographiques saisies : ${references || 'Non spécifiées'}
-- Annexes saisies (à lister/citer) : ${annexes || 'Non spécifiées'}
-
-Instructions de rédaction :
-Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes et réalistes adaptées au type d'étude et à la question clinique pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les.
-
-Voici la structure obligatoire en 19 sections à respecter rigoureusement :
-
-### 1. Le titre
-* Un titre précis, informatif et reflétant fidèlement l'étude. Intègre le titre proposé par le chercheur et son acronyme.
-
-### 2. Le(s) objectif(s)
-* Définit le but principal (objectif principal) et les étapes intermédiaires (objectifs secondaires) de la recherche, en lien avec la question de recherche et l'intervention. Utilise les objectifs secondaires saisis s'ils sont fournis.
-
-### 3. La justification de l'étude
-* Démontre l'originalité, l'urgence, la pertinence médicale, scientifique et l'impact de l'étude (le "pourquoi"). Incorpore la justification saisie par le chercheur.
-
-### 4. La (les) hypothèse(s)
-* Propositions de réponses théoriques aux questions de recherche, qui seront infirmées ou confirmées par les résultats. Incorpore l'hypothèse saisie par le chercheur.
-
-### 5. Le type d'étude
-* Choix du design méthodologique (ex: descriptive, analytique, prospective, rétrospective, etc.) en adéquation avec le schéma d'étude choisi par le chercheur.
-
-### 6. Le(s) facteur(s) étudié(s)
-* Identification et mesure des variables d'exposition (causes suspectées) et des facteurs de confusion ou de co-exposition possibles. Incorpore la description de l'intervention ou de l'exposition.
-
-### 7. Le(s) critère(s) de jugement
-* Critères (cliniques, paracliniques ou biologiques) permettant de mesurer l'efficacité d'un traitement ou la sévérité d'une maladie. Reprend le critère de jugement principal et les critères secondaires définis par le chercheur.
-
-### 8. Les causes d'erreur : biais et facteurs de confusion
-* Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser. Incorpore le texte sur les biais saisi par le chercheur.
-
-### 9. Les sujets
-* Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur.
-
-### 10. La taille de l'échantillon
-* Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude. Si des précisions statistiques ne sont pas fournies, propose une formule mathématique adaptée au schéma d'étude (ex: Schwartz pour les proportions ou comparaison de deux moyennes).
-
-### 11. La récolte et la gestion des données
-* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation). Incorpore la logistique saisie par le chercheur.
-
-### 12. L'analyse des données
-* Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés).
-
-### 13. Une éventuelle étude pilote
-* Description d'une phase préliminaire à petite échelle (si applicable) pour tester la faisabilité du protocole, des questionnaires ou de la logistique de prélèvement.
-
-### 14. Les implications éthiques
-* Respect des règles morales et déontologiques vis-à-vis des participants (notice d'information, recueil obligatoire du consentement éclairé écrit, anonymisation des données) conformément aux exigences du Comité d'éthique et à la Loi algérienne n° 18-11. Incorpore les considérations éthiques saisies.
-
-### 15. Le personnel
-* Ressources humaines nécessaires à la réalisation de l'étude et rôle précis de chaque intervenant (investigateurs, attachés de recherche clinique, statisticiens, etc.). Incorpore le personnel saisi.
-
-### 16. Le budget
-* Évaluation financière détaillée des coûts de l'étude (frais de personnel, matériel, analyses de laboratoire, traitements) et recensement des sources de financement. Incorpore le budget saisi.
-
-### 17. Le calendrier
-* Calendrier prévisionnel des différentes étapes de la recherche (jalons de recrutement, soumissions réglementaires, suivi, analyse, rédaction). Incorpore le calendrier saisi.
-
-### 18. Les annexes éventuelles
-* Documents complémentaires indispensables à la compréhension ou à la réplication de l'étude (formulaire de consentement, grilles de recueil, questionnaires, etc.). Incorpore les annexes saisies par le chercheur (en les citant ou en dressant la liste de ce qui doit être fourni).
-
-### 19. Les références
-* Bibliographie scientifique rigoureuse soutenant les choix théoriques, physiopathologiques et méthodologiques du protocole. Incorpore les références bibliographiques saisies.
-
-Format du document final : Rédige le protocole complet en français, hautement professionnel et académique, en utilisant des titres Markdown H1 à H6 clairs, des tableaux Markdown pour résumer les données structurelles (par exemple pour le budget, le calendrier, ou les critères de jugement) et veille à ce que chaque section soit rédigée de manière exhaustive et rigoureuse.`;
-
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
         const ollamaReply = await tryOllamaGenerateProtocol(prompt, ollamaUrl, resolvedModel);
@@ -535,7 +557,12 @@ Format du document final : Rédige le protocole complet en français, hautement 
 
     // Repli ultime sur mock statique
     try {
-      const mockProtocol = getStaticFallbackProtocol(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, true);
+      const mockProtocol = getStaticFallbackProtocol({
+        title, acronym, question, design, population, inclusion, exclusion,
+        primaryEndpoint, secondaryEndpoints, intervention, methodologyName,
+        benefitTypeName, objectives, bias, justification, hypothesis, logistics,
+        personnel, budget, calendar, ethics, references, annexes
+      }, true);
       return NextResponse.json({ protocol: mockProtocol });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;

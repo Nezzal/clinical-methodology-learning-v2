@@ -277,7 +277,7 @@ export default function RapportPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '13pt', color: '#005a70', fontWeight: 700 }}>BILAN PÉDAGOGIQUE ET SUIVI</h3>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '9pt', color: '#6b7280' }}>MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready</p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '9pt', color: '#6b7280' }}>MMETHODO-CLINIQUE Édu v1.1.0 - Production Ready</p>
                 </div>
                 <div style={{ fontSize: '9pt', color: '#6b7280' }}>
                   Généré le {new Date().toLocaleDateString('fr-FR')}

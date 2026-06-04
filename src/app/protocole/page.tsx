@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getProgress, updateProgress, LocalStats } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
-import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile } from '@/utils/firestore';
+import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile, loadFirestoreChats, deleteFirestoreProtocol } from '@/utils/firestore';
 import styles from './page.module.css';
 
 function renderProtocolHtmlTable(rows: string[]): string {
@@ -160,6 +161,168 @@ export default function ProtocoleGenerator() {
   const [history, setHistory] = useState<any[]>([]);
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
 
+  // States for importing parameters from tutor chats
+  const [tutorChats, setTutorChats] = useState<any[]>([]);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractionSuccess, setExtractionSuccess] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTutorChats = async () => {
+      if (user) {
+        try {
+          const chats = await loadFirestoreChats(user.uid);
+          const activeChats = chats.filter(c => c.messages && c.messages.length > 1);
+          setTutorChats(activeChats);
+        } catch (err) {
+          console.error("Erreur lors de la récupération des chats du tuteur:", err);
+        }
+      }
+    };
+    fetchTutorChats();
+  }, [user]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('import') === 'direct') {
+        const stored = localStorage.getItem('recif_imported_params');
+        if (stored) {
+          try {
+            const params = JSON.parse(stored);
+            fillFormFields(params);
+            setExtractionSuccess(true);
+            setExtractionError(null);
+            
+            // Nettoyer la clé localStorage et purifier l'URL sans recharger la page
+            localStorage.removeItem('recif_imported_params');
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (e) {
+            console.error("Échec de la lecture des paramètres importés directement :", e);
+            setExtractionError("Erreur lors de la lecture des paramètres importés.");
+          }
+        }
+      }
+    }
+  }, []);
+
+  const fillFormFields = (p: any) => {
+    if (!p) return;
+    setTitle(p.title || '');
+    setAcronym(p.acronym || '');
+    setMethodology((p.methodology as 'interventional' | 'observational') || 'observational');
+    setBenefitType((p.benefitType as 'bid' | 'sbid') || 'sbid');
+    setQuestion(p.question || '');
+    setDesign(p.design || 'Essai Clinique Randomisé Contrôlé (ECR)');
+    setIntervention(p.intervention || '');
+    setPopulation(p.population || '');
+    setInclusion(p.inclusion || '');
+    setExclusion(p.exclusion || '');
+    setPrimaryEndpoint(p.primaryEndpoint || '');
+    setSecondaryEndpoints(p.secondaryEndpoints || '');
+    setObjectives(p.objectives || '');
+    setBias(p.bias || '');
+    setJustification(p.justification || '');
+    setHypothesis(p.hypothesis || '');
+    setLogistics(p.logistics || '');
+    setPersonnel(p.personnel || '');
+    setBudget(p.budget || '');
+    setCalendar(p.calendar || '');
+    setEthics(p.ethics || '');
+    setReferences(p.references || '');
+    setAnnexes(p.annexes || '');
+  };
+
+  const loadProtocolParameters = (item: any) => {
+    if (item.formData) {
+      fillFormFields(item.formData);
+    } else if (item.content) {
+      setExtractionError(null);
+      setExtracting(true);
+      fetch('/api/extract-protocol-params', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+        },
+        body: JSON.stringify({ protocolContent: item.content })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.params) {
+          fillFormFields(data.params);
+          
+          const updatedItem = { ...item, formData: data.params };
+          setHistory(prev => prev.map(h => h.id === item.id ? updatedItem : h));
+          
+          updateProgress((stats) => {
+            const updatedHistory = stats.recentProtocols.map((proto: any) => 
+              proto.id === item.id ? updatedItem : proto
+            );
+            return {
+              ...stats,
+              recentProtocols: updatedHistory
+            };
+          });
+
+          if (user) {
+            saveFirestoreProtocol(user.uid, updatedItem)
+              .catch(e => console.error("Erreur de mise à jour du protocole extrait sur Firestore:", e));
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Erreur lors de l'extraction des paramètres:", err);
+      })
+      .finally(() => {
+        setExtracting(false);
+      });
+    }
+  };
+
+  const handleImportFromChat = async () => {
+    if (!selectedChatId) return;
+    
+    const selectedChat = tutorChats.find(c => c.id === selectedChatId);
+    if (!selectedChat || !selectedChat.messages) {
+      setExtractionError("La discussion sélectionnée est introuvable ou vide.");
+      return;
+    }
+
+    setExtracting(true);
+    setExtractionSuccess(false);
+    setExtractionError(null);
+
+    try {
+      const response = await fetch('/api/extract-protocol-params', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+        },
+        body: JSON.stringify({ messages: selectedChat.messages })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.params) {
+        fillFormFields(data.params);
+        setExtractionSuccess(true);
+        if (data.notice) {
+          setExtractionError(data.notice);
+        }
+      } else {
+        throw new Error(data.error || "Impossible d'extraire les paramètres.");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setExtractionError(err.message || "Une erreur s'est produite lors de l'extraction des paramètres.");
+    } finally {
+      setExtracting(false);
+    }
+  };
+
   useEffect(() => {
     const fetchHistory = async () => {
       if (user) {
@@ -190,6 +353,7 @@ export default function ProtocoleGenerator() {
           setGeneratedCrf(selectedProto.crfContent || null);
           setTitle(selectedProto.title);
           setAcronym(selectedProto.acronym);
+          loadProtocolParameters(selectedProto);
         }
       }
       setHasLoadedFromUrl(true);
@@ -257,7 +421,8 @@ export default function ProtocoleGenerator() {
           acronym: acronym || 'SANS ACRONYME',
           date: new Date().toISOString(),
           content: data.protocol,
-          crfContent: null
+          crfContent: null,
+          formData: formData
         };
 
         updateProgress((stats) => {
@@ -371,8 +536,9 @@ export default function ProtocoleGenerator() {
             title,
             acronym: acronym || 'SANS ACRONYME',
             date: new Date().toISOString(),
-            content: generatedProtocol,
-            crfContent: data.crf
+            content: generatedProtocol || '',
+            crfContent: data.crf,
+            formData: formData
           };
           saveFirestoreProtocol(user.uid, updatedProtocolItem)
             .catch(e => console.error("Erreur de sauvegarde du CRF sur Firestore:", e));
@@ -580,7 +746,7 @@ export default function ProtocoleGenerator() {
         <div class="doc-header">
           <div>
             <h3>${docTitle}</h3>
-            <p>MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready</p>
+            <p>MMETHODO-CLINIQUE Édu v1.1.0 - Production Ready</p>
           </div>
           <div class="doc-header-date">
             Généré le ${new Date().toLocaleDateString('fr-FR')}
@@ -597,7 +763,7 @@ export default function ProtocoleGenerator() {
         </div>
 
         <div class="doc-footer">
-          <span>MMETHODO-CLINIQUE Édu v1.0.0 - Production Ready</span>
+          <span>MMETHODO-CLINIQUE Édu v1.1.0 - Production Ready</span>
           <span>Algérie • Ministère de la Santé • RECIF & Loi n° 18-11</span>
         </div>
 
@@ -622,6 +788,44 @@ export default function ProtocoleGenerator() {
     setTitle(item.title);
     setAcronym(item.acronym);
     setPreviewMode('protocol');
+    loadProtocolParameters(item);
+  };
+
+  const handleDeleteProtocol = async (e: React.MouseEvent, protocolId: string) => {
+    e.stopPropagation();
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce protocole ?")) {
+      return;
+    }
+
+    // Mettre à jour l'état local
+    setHistory((prev) => prev.filter((p) => p.id !== protocolId));
+
+    // Si le protocole supprimé était le protocole actif, réinitialiser la prévisualisation
+    if (activeProtocolId === protocolId) {
+      setActiveProtocolId(null);
+      setGeneratedProtocol(null);
+      setGeneratedCrf(null);
+    }
+
+    // Mettre à jour le localStorage
+    updateProgress((stats) => {
+      const updatedHistory = (stats.recentProtocols || []).filter((proto: any) => proto.id !== protocolId);
+      return {
+        ...stats,
+        recentProtocols: updatedHistory
+      };
+    });
+
+    // Supprimer sur Firestore si l'utilisateur est connecté
+    if (user) {
+      try {
+        await deleteFirestoreProtocol(user.uid, protocolId);
+        // Synchroniser le profil pour mettre à jour les statistiques
+        await syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, getProgress());
+      } catch (err) {
+        console.error("Erreur lors de la suppression du protocole sur Firestore :", err);
+      }
+    }
   };
 
   return (
@@ -669,9 +873,96 @@ export default function ProtocoleGenerator() {
             </button>
           </div>
 
+          {extracting && (
+            <div className={styles.extractionBanner}>
+              <div className={styles.spinner}></div>
+              <span>Extraction des 23 paramètres méthodologiques en cours...</span>
+            </div>
+          )}
+
           <div className={styles.stepContainer}>
             {activeTab === 'info' && (
               <>
+                {!user ? (
+                  <div className={styles.importPanelDisabled}>
+                    <h4 className={styles.importTitle}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', color: 'var(--text-muted)', verticalAlign: 'middle' }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Pré-remplissage via le Tuteur IA
+                    </h4>
+                    <p className={styles.importText}>
+                      Cette fonctionnalité de pré-remplissage automatique à partir de vos discussions avec le tuteur nécessite de vous connecter à votre compte.
+                    </p>
+                    <Link href="/login" className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', display: 'inline-block', textDecoration: 'none' }}>
+                      Se connecter
+                    </Link>
+                  </div>
+                ) : (
+                  <div className={styles.importPanel}>
+                    <h4 className={styles.importTitle}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', color: 'var(--accent-primary)', verticalAlign: 'middle' }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Pré-remplissage via le Tuteur IA
+                    </h4>
+                    <p className={styles.importText}>
+                      Vous pouvez pré-remplir automatiquement les 23 paramètres méthodologiques de ce protocole à partir de l'une de vos discussions enregistrées avec le tuteur.
+                    </p>
+                    
+                    <div className={styles.importRow}>
+                      <select 
+                        className="form-select" 
+                        value={selectedChatId || ''} 
+                        onChange={(e) => setSelectedChatId(e.target.value)}
+                        disabled={extracting}
+                        style={{ fontSize: '0.85rem', padding: '0.5rem' }}
+                      >
+                        <option value="">-- Sélectionner une discussion --</option>
+                        {tutorChats.length === 0 ? (
+                          <option value="" disabled>Aucune discussion enregistrée avec le tuteur</option>
+                        ) : (
+                          tutorChats.map((chat) => (
+                            <option key={chat.id} value={chat.id}>
+                              {chat.title || 'Discussion sans titre'} ({chat.messages?.length || 0} messages)
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      
+                      <button 
+                        type="button" 
+                        className="btn btn-secondary" 
+                        onClick={handleImportFromChat}
+                        disabled={!selectedChatId || extracting}
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                      >
+                        {extracting ? (
+                          <>
+                            <div className={styles.spinner}></div>
+                            Extraction...
+                          </>
+                        ) : "Importer"}
+                      </button>
+                    </div>
+
+                    {extractionSuccess && (
+                      <div className={styles.successNotice}>
+                        ✅ 23 paramètres méthodologiques ont été importés et complétés avec succès ! Veuillez relire les onglets pour vérifier les informations.
+                      </div>
+                    )}
+                    {extractionError && (
+                      <div className={styles.errorNotice}>
+                        ⚠️ {extractionError}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="form-group">
                   <label className="form-label" htmlFor="title">Titre Complet de l'étude *</label>
                   <input
@@ -1102,7 +1393,21 @@ export default function ProtocoleGenerator() {
                 >
                   <div className={styles.historyMeta}>
                     <span>{h.acronym}</span>
-                    <span>{new Date(h.date).toLocaleDateString('fr-FR')}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>{new Date(h.date).toLocaleDateString('fr-FR')}</span>
+                      <button
+                        className={styles.deleteBtn}
+                        onClick={(e) => handleDeleteProtocol(e, h.id)}
+                        title="Supprimer ce protocole"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <h4 className={styles.historyTitle}>{h.title.length > 40 ? h.title.substring(0, 40) + '...' : h.title}</h4>
                 </div>

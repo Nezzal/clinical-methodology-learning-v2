@@ -103,7 +103,9 @@ export interface FirestoreProtocol {
   acronym: string;
   date: string;
   content: string;
-  createdAt: any;
+  createdAt?: any;
+  crfContent?: string | null;
+  formData?: any;
 }
 
 // 1. Profil utilisateur et Statistiques
@@ -179,19 +181,25 @@ export async function saveFirestoreChat(
   uid: string, 
   chatId: string, 
   title: string, 
-  messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp?: string }>
+  messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp?: string }>,
+  mode?: 'free' | 'protocol'
 ) {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {
     const chatDocRef = doc(db, 'users', uid, 'chats', chatId);
     
-    // Enregistrer l'en-tête du chat
-    await setDoc(chatDocRef, {
+    const chatHeader: any = {
       id: chatId,
       title,
       updatedAt: serverTimestamp(),
       createdAt: serverTimestamp() // merge: true protégera la date de création
-    }, { merge: true });
+    };
+    if (mode) {
+      chatHeader.mode = mode;
+    }
+    
+    // Enregistrer l'en-tête du chat
+    await setDoc(chatDocRef, chatHeader, { merge: true });
 
     // Enregistrer les messages (nous écrasons ou ajoutons à une sous-collection de messages)
     // Pour rester simple et efficace, nous pouvons stocker les messages directement dans le document de chat sous forme de tableau, 
@@ -232,7 +240,7 @@ export async function deleteFirestoreChat(uid: string, chatId: string) {
 }
 
 // 3. Protocoles
-export async function saveFirestoreProtocol(uid: string, protocol: { id: string; title: string; acronym: string; date: string; content: string }) {
+export async function saveFirestoreProtocol(uid: string, protocol: { id: string; title: string; acronym: string; date: string; content: string; crfContent?: string | null; formData?: any }) {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {
     const protoDocRef = doc(db, 'users', uid, 'protocols', protocol.id);

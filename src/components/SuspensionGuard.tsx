@@ -26,8 +26,52 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   const [error, setError] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
 
+  // États pour le statut de connexion internet
+  const [isOnline, setIsOnline] = useState(true);
+  const [showNetworkBanner, setShowNetworkBanner] = useState(false);
+  const [bannerType, setBannerType] = useState<'offline' | 'online'>('online');
+
   useEffect(() => {
     setHasMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      setBannerType('online');
+      setShowNetworkBanner(true);
+      
+      // Cache automatique de la bannière verte après 4 secondes
+      const timer = setTimeout(() => {
+        setShowNetworkBanner(false);
+      }, 4000);
+      return () => clearTimeout(timer);
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setBannerType('offline');
+      setShowNetworkBanner(true);
+      
+      // Basculer automatiquement le fournisseur d'IA localement sur Ollama
+      const currentProvider = localStorage.getItem('recif_ai_provider');
+      if (currentProvider !== 'ollama') {
+        localStorage.setItem('recif_ai_provider', 'ollama');
+        window.dispatchEvent(new Event('ai_provider_changed'));
+      }
+    };
+
+    setIsOnline(navigator.onLine);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -413,6 +457,69 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
       }}>
         {children}
       </main>
+
+      {/* Bannière de notification réseau */}
+      {showNetworkBanner && (
+        <div style={{
+          position: 'fixed',
+          top: '1.5rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 999999,
+          padding: '0.85rem 1.5rem',
+          borderRadius: '10px',
+          background: bannerType === 'offline' 
+            ? 'rgba(239, 68, 68, 0.15)' 
+            : 'rgba(16, 185, 129, 0.15)',
+          backdropFilter: 'blur(20px)',
+          border: bannerType === 'offline'
+            ? '1px solid rgba(239, 68, 68, 0.3)'
+            : '1px solid rgba(16, 185, 129, 0.3)',
+          boxShadow: bannerType === 'offline'
+            ? '0 10px 40px rgba(239, 68, 68, 0.15)'
+            : '0 10px 40px rgba(16, 185, 129, 0.15)',
+          color: '#ffffff',
+          fontSize: '0.875rem',
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          animation: 'slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          fontFamily: 'Inter, sans-serif'
+        }}>
+          {bannerType === 'offline' ? (
+            <>
+              <span style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center' }}>⚠️</span>
+              <span><strong>Mode Hors-ligne :</strong> Connexion Internet perdue. Bascule automatique sur l'IA Ollama (Locale).</span>
+            </>
+          ) : (
+            <>
+              <span style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center' }}>🟢</span>
+              <span><strong>Connexion rétablie :</strong> Vous pouvez de nouveau utiliser Google Gemini (Cloud).</span>
+            </>
+          )}
+          <button 
+            onClick={() => setShowNetworkBanner(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#ffffff',
+              cursor: 'pointer',
+              opacity: 0.7,
+              fontSize: '1.1rem',
+              padding: 0,
+              marginLeft: '0.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              lineHeight: 1
+            }}
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
         @media (max-width: 768px) {
           main {
@@ -421,6 +528,10 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
             padding: 1.5rem !important;
             padding-top: 5rem !important;
           }
+        }
+        @keyframes slideDown {
+          from { transform: translate(-50%, -30px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
         }
       `}} />
     </div>

@@ -193,6 +193,30 @@
   transform: translateY(-2px);
 }
 
+.deleteBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+.historyItem:hover .deleteBtn {
+  opacity: 0.6;
+}
+
+.historyItem:hover .deleteBtn:hover {
+  opacity: 1;
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
 .historyMeta {
   display: flex;
   justify-content: space-between;
@@ -211,4 +235,104 @@
 .historyDesc {
   font-size: 0.85rem;
   color: var(--text-secondary);
+}
+
+.importPanel {
+  background: rgba(56, 189, 248, 0.03);
+  border: 1px dashed rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.importPanelDisabled {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.85;
+}
+
+.importTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  color: var(--text-primary);
+}
+
+.importText {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.importRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.importRow select {
+  flex: 1;
+}
+
+.successNotice {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background-color: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-success);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.errorNotice {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  background-color: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-danger);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.extractionBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 1rem 0 1rem;
+  padding: 0.65rem 0.85rem;
+  background-color: rgba(13, 148, 136, 0.1);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--accent-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.extractionBanner .spinner {
+  border-color: rgba(13, 148, 136, 0.3);
+  border-top-color: var(--accent-secondary);
+  width: 16px;
+  height: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

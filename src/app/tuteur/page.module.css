@@ -116,6 +116,36 @@
   margin-top: 0.25rem;
 }
 
+.sessionActions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.renameSessionBtn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  opacity: 0;
+}
+
+.sessionItem:hover .renameSessionBtn {
+  opacity: 1;
+}
+
+.renameSessionBtn:hover {
+  color: var(--accent-primary);
+  background: rgba(13, 148, 136, 0.15);
+}
+
 .deleteSessionBtn {
   background: none;
   border: none;
@@ -153,6 +183,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  position: relative;
 }
 
 .messagesList {
@@ -373,6 +404,26 @@
   background: rgba(0, 240, 255, 0.1) !important;
 }
 
+.deleteMsgBtn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  transition: all var(--transition-fast);
+  margin-left: 8px;
+  border-radius: 4px;
+}
+
+.deleteMsgBtn:hover {
+  color: var(--accent-error);
+  background: rgba(255, 75, 75, 0.1);
+}
+
 .exportMsgBtn {
   background: none;
   border: none;
@@ -438,5 +489,253 @@
   100% {
     box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
   }
+}
+
+/* Mode Selection Layout */
+.modeSelectionContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.modeSelectionHeader {
+  margin-bottom: 2.5rem;
+}
+
+.modeSelectionTitle {
+  font-family: var(--font-family-title);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.modeSelectionSubtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  max-width: 500px;
+}
+
+.modeCards {
+  display: flex;
+  gap: 2rem;
+  max-width: 800px;
+  width: 100%;
+  justify-content: center;
+}
+
+.modeCard {
+  flex: 1;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 2.5rem 2rem;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.modeCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  transition: background var(--transition-fast);
+}
+
+.modeCardFree::before {
+  background: var(--gradient-primary);
+}
+
+.modeCardProtocol::before {
+  background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%);
+}
+
+.modeCard:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-glass-active);
+  box-shadow: var(--shadow-lg);
+}
+
+.modeIcon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.modeCardFree:hover .modeIcon {
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--accent-primary);
+}
+
+.modeCardProtocol:hover .modeIcon {
+  background: rgba(2, 132, 199, 0.1);
+  color: #0284c7;
+}
+
+.modeCardTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.modeCardDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+/* Synthesis card styling */
+.synthesisContainer {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.1) 0%, rgba(2, 132, 199, 0.05) 100%);
+  border: 1px solid rgba(15, 118, 110, 0.3);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-self: flex-start;
+  max-width: 90%;
+  animation: slideUp var(--transition-normal) forwards;
+}
+
+.synthesisHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.synthesisDesc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.transferBtn {
+  align-self: flex-start;
+  background: var(--gradient-primary);
+  color: #070a13;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity var(--transition-fast);
+}
+
+.transferBtn:hover {
+  opacity: 0.9;
+}
+
+.transferHeaderBtn {
+  background: rgba(13, 148, 136, 0.12);
+  border: 1px solid rgba(13, 148, 136, 0.35);
+  color: var(--accent-primary);
+  font-size: 0.82rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.transferHeaderBtn:hover:not(:disabled) {
+  background: rgba(13, 148, 136, 0.22);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(13, 148, 136, 0.15);
+}
+
+.transferHeaderBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.transferHeaderBtn .spinner {
+  border-color: rgba(13, 148, 136, 0.3);
+  border-top-color: var(--accent-primary);
+  width: 14px;
+  height: 14px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.scrollNavContainer {
+  position: absolute;
+  bottom: 85px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.scrollNavBtn {
+  pointer-events: auto;
+  width: 34px;
+  height: 34px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(8px);
+}
+
+.scrollNavBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: var(--border-glass-active);
+  transform: translateY(-2px);
 }
 

@@ -20,6 +20,8 @@ export interface LocalStats {
     acronym: string;
     date: string;
     content: string;
+    crfContent?: string | null;
+    formData?: any;
   }>;
   quizHistory?: QuizAttempt[];
 }
