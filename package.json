@@ -2,11 +2,16 @@
   "name": "clinical-methodology-learning",
   "version": "1.1.0",
   "private": true,
+  "main": "electron-main.js",
   "scripts": {
     "dev": "next dev --webpack -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "electron:dev": "ELECTRON_DEV=1 electron .",
+    "electron:build": "npm run build && node scripts/copy-standalone-assets.js",
+    "electron:package": "electron-builder build --win --publish never",
+    "electron:package:mac": "electron-builder build --mac --publish never"
   },
   "dependencies": {
     "@google/genai": "^2.6.0",
@@ -22,8 +27,44 @@
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "typescript": "^5"
+  },
+  "build": {
+    "appId": "com.recif.methodoclinique",
+    "productName": "RECIF-MethodoClinique",
+    "copyright": "Copyright © 2026 RECIF",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron-main.js",
+      ".next/standalone/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/.next/standalone/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Plateforme RECIF"
+    }
   }
 }

@@ -1,0 +1,172 @@
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
+const { spawn } = require('child_process');
+const http = require('http');
+const net = require('net');
+
+let mainWindow = null;
+let nextServerProcess = null;
+const isDev = process.env.ELECTRON_DEV === '1';
+const DEFAULT_PORT = 3001;
+
+// Trouver un port réseau libre
+function findFreePort(startPort, callback) {
+  let port = startPort;
+  const server = net.createServer();
+  server.listen(port, () => {
+    server.once('close', () => {
+      callback(port);
+    });
+    server.close();
+  });
+  server.on('error', () => {
+    findFreePort(port + 1, callback);
+  });
+}
+
+// Vérifier si le serveur Next.js est prêt
+function checkServerReady(port, callback, attempts = 0) {
+  if (attempts > 150) { // 15 secondes max
+    console.error("❌ Timeout : Le serveur Next.js n'a pas démarré.");
+    callback(false);
+    return;
+  }
+
+  const req = http.get(`http://localhost:${port}/`, (res) => {
+    callback(true);
+  });
+
+  req.on('error', () => {
+    setTimeout(() => {
+      checkServerReady(port, callback, attempts + 1);
+    }, 100);
+  });
+}
+
+function startNextServer(port) {
+  if (isDev) {
+    console.log('🚀 Mode développement : Connexion au serveur de développement sur le port', port);
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    console.log('📦 Démarrage du serveur Next.js autonome...');
+    
+    // Résolution du chemin du serveur autonome Next.js
+    let serverPath = path.join(__dirname, '.next/standalone/server.js');
+    
+    // Si l'application est packagée sous forme d'ASAR, les ressources se trouvent dans app.asar.unpacked
+    if (serverPath.includes('app.asar')) {
+      serverPath = serverPath.replace('app.asar', 'app.asar.unpacked');
+    }
+
+    console.log(`- Chemin du serveur : ${serverPath}`);
+
+    // Lancement de server.js en utilisant l'exécutable d'Electron en mode interpréteur Node (ELECTRON_RUN_AS_NODE = 1)
+    nextServerProcess = spawn(process.execPath, [serverPath], {
+      env: {
+        ...process.env,
+        ELECTRON_RUN_AS_NODE: '1',
+        PORT: port.toString(),
+        HOSTNAME: 'localhost',
+        NODE_ENV: 'production'
+      },
+      stdio: 'pipe'
+    });
+
+    nextServerProcess.stdout.on('data', (data) => {
+      console.log(`[Next.js Server]: ${data.toString().trim()}`);
+    });
+
+    nextServerProcess.stderr.on('data', (data) => {
+      console.error(`[Next.js Server Error]: ${data.toString().trim()}`);
+    });
+
+    nextServerProcess.on('error', (err) => {
+      console.error('❌ Échec du démarrage du serveur Next.js :', err);
+      reject(err);
+    });
+
+    // Attendre que le serveur réponde
+    checkServerReady(port, (ready) => {
+      if (ready) {
+        console.log(`✅ Serveur Next.js démarré avec succès sur http://localhost:${port}`);
+        resolve();
+      } else {
+        reject(new Error("Le serveur Next.js n'a pas répondu à temps."));
+      }
+    });
+  });
+}
+
+function createWindow(port) {
+  mainWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 700,
+    title: 'Plateforme RECIF - Méthodo-Clinique',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true
+    },
+    // Design moderne
+    titleBarStyle: 'default',
+    autoHideMenuBar: true // Cache le menu sous Windows (accessible avec Alt)
+  });
+
+  const url = `http://localhost:${port}`;
+  mainWindow.loadURL(url);
+
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+}
+
+// Démarrage de l'application
+app.whenReady().then(() => {
+  const startPort = isDev ? DEFAULT_PORT : 0; // Utiliser un port aléatoire libre en production pour éviter les conflits
+  
+  if (isDev) {
+    createWindow(DEFAULT_PORT);
+  } else {
+    findFreePort(3001, (freePort) => {
+      startNextServer(freePort)
+        .then(() => {
+          createWindow(freePort);
+        })
+        .catch((err) => {
+          console.error("❌ Impossible de démarrer l'application :", err);
+          app.quit();
+        });
+    });
+  }
+});
+
+// Arrêt propre du processus enfant Next.js à la fermeture d'Electron
+function cleanUp() {
+  if (nextServerProcess) {
+    console.log('🛑 Arrêt du serveur Next.js...');
+    nextServerProcess.kill();
+    nextServerProcess = null;
+  }
+}
+
+app.on('window-all-closed', () => {
+  cleanUp();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('will-quit', () => {
+  cleanUp();
+});
+
+process.on('exit', () => {
+  cleanUp();
+});
