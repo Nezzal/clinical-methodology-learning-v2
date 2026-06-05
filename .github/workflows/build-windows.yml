@@ -1,0 +1,38 @@
+name: Build Windows App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch: # Permet de lancer le build manuellement depuis l'interface GitHub
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build Next.js & Copy Assets
+      run: npm run electron:build
+
+    - name: Package with Electron Builder
+      run: npx electron-builder build --win --publish never
+
+    - name: Upload Installer Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RECIF-MethodoClinique-Windows-Installer
+        path: dist/*.exe
+        if-no-files-found: error
