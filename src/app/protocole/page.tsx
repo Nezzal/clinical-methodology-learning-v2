@@ -151,6 +151,11 @@ export default function ProtocoleGenerator() {
   const [references, setReferences] = useState('');
   const [annexes, setAnnexes] = useState('');
 
+  // Nouveaux états méthodologiques
+  const [samplingStrategy, setSamplingStrategy] = useState('');
+  const [dataCollection, setDataCollection] = useState('');
+  const [dataAnalysis, setDataAnalysis] = useState('');
+
   // App State
   const [generatedProtocol, setGeneratedProtocol] = useState<string | null>(null);
   const [generatedCrf, setGeneratedCrf] = useState<string | null>(null);
@@ -232,6 +237,9 @@ export default function ProtocoleGenerator() {
     setEthics(p.ethics || '');
     setReferences(p.references || '');
     setAnnexes(p.annexes || '');
+    setSamplingStrategy(p.samplingStrategy || '');
+    setDataCollection(p.dataCollection || '');
+    setDataAnalysis(p.dataAnalysis || '');
   };
 
   const loadProtocolParameters = (item: any) => {
@@ -392,7 +400,10 @@ export default function ProtocoleGenerator() {
       calendar,
       ethics,
       references,
-      annexes
+      annexes,
+      samplingStrategy,
+      dataCollection,
+      dataAnalysis
     };
 
     try {
@@ -487,7 +498,10 @@ export default function ProtocoleGenerator() {
       calendar,
       ethics,
       references,
-      annexes
+      annexes,
+      samplingStrategy,
+      dataCollection,
+      dataAnalysis
     };
 
     try {
@@ -497,7 +511,10 @@ export default function ProtocoleGenerator() {
           'Content-Type': 'application/json',
           'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          protocolContent: generatedProtocol
+        })
       });
 
       const data = await response.json();
@@ -1141,6 +1158,16 @@ export default function ProtocoleGenerator() {
                   />
                 </div>
                 <div className="form-group">
+                  <label className="form-label" htmlFor="samplingStrategy">Stratégie d'échantillonnage</label>
+                  <textarea
+                    id="samplingStrategy"
+                    className="form-textarea"
+                    placeholder="ex. Échantillonnage aléatoire simple, échantillonnage consécutif, échantillonnage de convenance..."
+                    value={samplingStrategy}
+                    onChange={(e) => setSamplingStrategy(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
                   <label className="form-label" htmlFor="bias">Biais de recherche et facteurs de confusion</label>
                   <textarea
                     id="bias"
@@ -1156,6 +1183,16 @@ export default function ProtocoleGenerator() {
             {activeTab === 'logistics' && (
               <>
                 <div className="form-group">
+                  <label className="form-label" htmlFor="dataCollection">Collecte des données</label>
+                  <textarea
+                    id="dataCollection"
+                    className="form-textarea"
+                    placeholder="Méthode et outils de collecte (ex. questionnaires standardisés, dossiers médicaux électroniques, observations directes...)"
+                    value={dataCollection}
+                    onChange={(e) => setDataCollection(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
                   <label className="form-label" htmlFor="logistics">Récolte des données & Étude pilote</label>
                   <textarea
                     id="logistics"
@@ -1163,6 +1200,16 @@ export default function ProtocoleGenerator() {
                     placeholder="Logistique pratique, chaîne du froid, stockage, validation des questionnaires via une étude pilote..."
                     value={logistics}
                     onChange={(e) => setLogistics(e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="dataAnalysis">Analyse des données (Plan statistique)</label>
+                  <textarea
+                    id="dataAnalysis"
+                    className="form-textarea"
+                    placeholder="Méthodes d'analyse statistique prévues (ex. tests bilatéraux, régression logistique, seuil de significativité p < 0.05...)"
+                    value={dataAnalysis}
+                    onChange={(e) => setDataAnalysis(e.target.value)}
                   />
                 </div>
                 <div className="form-group">

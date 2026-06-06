@@ -83,6 +83,7 @@ export default function AdminDashboard() {
   const [activeProtocol, setActiveProtocol] = useState<FirestoreProtocol | null>(null);
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [actionPending, setActionPending] = useState(false);
+  const [modalPreviewMode, setModalPreviewMode] = useState<'protocol' | 'crf'>('protocol');
 
   // States pour les demandes d'accès et renommage
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
@@ -986,20 +987,55 @@ Votre superviseur RECIF`;
 
       {/* MODAL PREVIEW PROTOCOLE */}
       {activeProtocol && (
-        <div className={styles.modalOverlay} onClick={() => setActiveProtocol(null)}>
+        <div className={styles.modalOverlay} onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>
           <div className={`${styles.modalContent} glass-card`} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <div>
                 <h3>[{activeProtocol.acronym || 'SANS ACRONYME'}] - Rédigé par {selectedStudent?.displayName}</h3>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Date de création : {new Date(activeProtocol.date).toLocaleDateString('fr-FR')}</span>
               </div>
-              <button className={styles.closeBtn} onClick={() => setActiveProtocol(null)}>&times;</button>
+              <button className={styles.closeBtn} onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>&times;</button>
             </div>
+            
+            <div className={styles.tabs} style={{ borderBottom: '1px solid var(--border-glass)', padding: '0.5rem 1.5rem 0 1.5rem', background: 'rgba(255, 255, 255, 0.02)', display: 'flex', gap: '0.5rem' }}>
+              <button
+                className={`${styles.tabBtn} ${modalPreviewMode === 'protocol' ? styles.activeTab : ''}`}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                onClick={() => setModalPreviewMode('protocol')}
+              >
+                1. Protocole de recherche
+              </button>
+              <button
+                className={`${styles.tabBtn} ${modalPreviewMode === 'crf' ? styles.activeTab : ''}`}
+                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                onClick={() => setModalPreviewMode('crf')}
+              >
+                2. Cahier d'Observation (CRF) {activeProtocol.crfContent ? '✅' : '❌'}
+              </button>
+            </div>
+
             <div className={styles.modalBody}>
-              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeProtocol.content) }} />
+              {modalPreviewMode === 'protocol' ? (
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeProtocol.content) }} />
+              ) : (
+                activeProtocol.crfContent ? (
+                  <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeProtocol.crfContent) }} />
+                ) : (
+                  <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.6 }}>
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="9" y1="9" x2="15" y2="9" />
+                      <line x1="9" y1="13" x2="15" y2="13" />
+                      <line x1="9" y1="17" x2="15" y2="17" />
+                    </svg>
+                    <p style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--text-primary)' }}>CRF non généré</p>
+                    <p style={{ fontSize: '0.85rem' }}>Cet étudiant n'a pas encore généré de Cahier d'Observation Clinique (CRF) pour ce protocole.</p>
+                  </div>
+                )
+              )}
             </div>
             <div className={styles.modalFooter}>
-              <button className="btn btn-secondary" onClick={() => setActiveProtocol(null)}>Fermer</button>
+              <button className="btn btn-secondary" onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>Fermer</button>
             </div>
           </div>
         </div>

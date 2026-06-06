@@ -51,7 +51,7 @@ async function tryOllamaExtractParams(
         messages: [
           { 
             role: 'system', 
-            content: "Tu es un assistant d'extraction de données méthodologiques cliniques. Analyse la source fournie (discussion ou document) et renvoie UNIQUEMENT un objet JSON valide contenant les 23 paramètres méthodologiques demandés, sans texte introductif ou explicatif autour." 
+            content: "Tu es un assistant d'extraction de données méthodologiques cliniques. Analyse la source fournie (discussion ou document) et renvoie UNIQUEMENT un objet JSON valide contenant les 26 paramètres méthodologiques demandés, sans texte introductif ou explicatif autour." 
           },
           { role: 'user', content: prompt }
         ],
@@ -262,7 +262,8 @@ function cleanParams(params: any): any {
     "title", "acronym", "methodology", "benefitType", "question", "design", "intervention",
     "population", "inclusion", "exclusion", "primaryEndpoint", "secondaryEndpoints",
     "objectives", "bias", "justification", "hypothesis", "logistics", "personnel",
-    "budget", "calendar", "ethics", "references", "annexes"
+    "budget", "calendar", "ethics", "references", "annexes",
+    "samplingStrategy", "dataCollection", "dataAnalysis"
   ];
   
   for (const key of keys) {
@@ -295,7 +296,8 @@ function mergeParamsWithHeuristics(params: any, fullUnprunedChatText: string): a
     "title", "acronym", "methodology", "benefitType", "question", "design", "intervention",
     "population", "inclusion", "exclusion", "primaryEndpoint", "secondaryEndpoints",
     "objectives", "bias", "justification", "hypothesis", "logistics", "personnel",
-    "budget", "calendar", "ethics", "references", "annexes"
+    "budget", "calendar", "ethics", "references", "annexes",
+    "samplingStrategy", "dataCollection", "dataAnalysis"
   ];
   
   for (const key of keys) {
@@ -314,7 +316,8 @@ function mapCustomJsonToProtocolParams(obj: any, rawChatText?: string): any {
     question: "", design: "", intervention: "", population: "", inclusion: "",
     exclusion: "", primaryEndpoint: "", secondaryEndpoints: "", objectives: "",
     bias: "", justification: "", hypothesis: "", logistics: "", personnel: "",
-    budget: "", calendar: "", ethics: "", references: "", annexes: ""
+    budget: "", calendar: "", ethics: "", references: "", annexes: "",
+    samplingStrategy: "", dataCollection: "", dataAnalysis: ""
   };
 
   const flat: any = {};
@@ -383,6 +386,9 @@ function mapCustomJsonToProtocolParams(obj: any, rawChatText?: string): any {
   params.bias = mapKey(["bias", "biais", "biaisderecherche", "facteursdeconfusion", "controlebias", "biaisetfacteurs"]);
   params.justification = mapKey(["justification", "rationale", "justificationscientifique", "pourquoi", "importance", "interet", "interetdeletude", "justificationdeletude", "justificationdelétude"]);
   params.hypothesis = mapKey(["hypothesis", "hypothese", "hypotheses", "hypothesederecherche", "hypothesesderecherche", "h0", "h1", "hypothesedetravail"]);
+  params.samplingStrategy = mapKey(["samplingstrategy", "strategiedechantillonnage", "strategiedechantillonnage", "echantillonnage", "selectiondesujets", "sampling"]);
+  params.dataCollection = mapKey(["datacollection", "collectedesdonnees", "collectedesdonneescliniques", "recueildesdonnees", "recueil", "collecte"]);
+  params.dataAnalysis = mapKey(["dataanalysis", "analysedesdonnees", "analysestatistique", "planstatistique", "statistiques", "analyses"]);
   params.logistics = mapKey(["logistics", "logistique", "recoltedesdonnees", "gestiondesdonnees", "collecte", "datamanagement", "collectedesdonnees"]);
   params.personnel = mapKey(["personnel", "roles", "staff", "personnelrequis", "equipe", "equipederecherche"]);
   params.budget = mapKey(["budget", "financement", "couts", "coutsdeletude"]);
@@ -480,6 +486,19 @@ function mapCustomJsonToProtocolParams(obj: any, rawChatText?: string): any {
     if (!params.population || params.population === "Non renseigné") {
       const match = rawChatText.match(/(?:Population\s*(?:cible)?|Participants)\s*:\s*([^\n\r]+)/i);
       if (match && match[1]) params.population = match[1].trim();
+    }
+    // Heuristiques pour échantillonnage, collecte et analyse
+    if (!params.samplingStrategy || params.samplingStrategy === "Non renseigné") {
+      const match = rawChatText.match(/(?:Stratégie\s*d'échantillonnage|Échantillonnage|Sampling\s*strategy)\s*:\s*([^\n\r]+)/i);
+      if (match && match[1]) params.samplingStrategy = match[1].trim();
+    }
+    if (!params.dataCollection || params.dataCollection === "Non renseigné") {
+      const match = rawChatText.match(/(?:Collecte\s*des\s*données|Data\s*collection|Recueil\s*des\s*données)\s*:\s*([^\n\r]+)/i);
+      if (match && match[1]) params.dataCollection = match[1].trim();
+    }
+    if (!params.dataAnalysis || params.dataAnalysis === "Non renseigné") {
+      const match = rawChatText.match(/(?:Analyse\s*des\s*données|Data\s*analysis|Analyse\s*statistique)\s*:\s*([^\n\r]+)/i);
+      if (match && match[1]) params.dataAnalysis = match[1].trim();
     }
     // 11. Endpoints
     if (!params.primaryEndpoint || params.primaryEndpoint === "Non renseigné") {
@@ -613,7 +632,7 @@ ${textToAnalyze}
 ---
 
 [FORMAT DE SORTIE REQUIS]
-Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exactement ces 23 clés :
+Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exactement ces 26 clés :
 1. "title": Le titre complet de l'étude clinique.
 2. "acronym": L'acronyme de l'étude (ou "" si absent).
 3. "methodology": "interventional" (si essai thérapeutique ou intervention active) ou "observational" (pour cohortes, cas-témoins, transversales).
@@ -637,6 +656,9 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
 21. "ethics": Considérations éthiques supplémentaires (ex: CPP, consentement, anonymat).
 22. "references": Références bibliographiques clés.
 23. "annexes": Les documents annexes prévus.
+24. "samplingStrategy": La stratégie d'échantillonnage de la recherche.
+25. "dataCollection": Les méthodes de collecte des données.
+26. "dataAnalysis": Le plan d'analyse statistique et de traitement des données.
 
 [CONSIGNES JSON STRICTES]
 1. Si un paramètre n'a absolument pas été abordé dans les données, renvoie une chaîne vide "" pour ce champ. Ne l'invente pas.
@@ -671,13 +693,17 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
         calendar: { type: Type.STRING, description: "Calendrier et jalons de l'étude" },
         ethics: { type: Type.STRING, description: "Considérations éthiques et réglementaires" },
         references: { type: Type.STRING, description: "Références bibliographiques clés" },
-        annexes: { type: Type.STRING, description: "Les annexes prévues" }
+        annexes: { type: Type.STRING, description: "Les annexes prévues" },
+        samplingStrategy: { type: Type.STRING, description: "La stratégie d'échantillonnage de la recherche" },
+        dataCollection: { type: Type.STRING, description: "Les méthodes de collecte des données" },
+        dataAnalysis: { type: Type.STRING, description: "Le plan d'analyse statistique et de traitement des données" }
       },
       required: [
         "title", "acronym", "methodology", "benefitType", "question", "design", "intervention",
         "population", "inclusion", "exclusion", "primaryEndpoint", "secondaryEndpoints",
         "objectives", "bias", "justification", "hypothesis", "logistics", "personnel",
-        "budget", "calendar", "ethics", "references", "annexes"
+        "budget", "calendar", "ethics", "references", "annexes",
+        "samplingStrategy", "dataCollection", "dataAnalysis"
       ]
     };
 
@@ -764,13 +790,17 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
           calendar: { type: "string" },
           ethics: { type: "string" },
           references: { type: "string" },
-          annexes: { type: "string" }
+          annexes: { type: "string" },
+          samplingStrategy: { type: "string" },
+          dataCollection: { type: "string" },
+          dataAnalysis: { type: "string" }
         },
         required: [
           "title", "acronym", "methodology", "benefitType", "question", "design", "intervention",
           "population", "inclusion", "exclusion", "primaryEndpoint", "secondaryEndpoints",
           "objectives", "bias", "justification", "hypothesis", "logistics", "personnel",
-          "budget", "calendar", "ethics", "references", "annexes"
+          "budget", "calendar", "ethics", "references", "annexes",
+          "samplingStrategy", "dataCollection", "dataAnalysis"
         ]
       };
 
@@ -849,7 +879,10 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
         calendar: "Non renseigné",
         ethics: "Non renseigné",
         references: "Non renseigné",
-        annexes: "Non renseigné"
+        annexes: "Non renseigné",
+        samplingStrategy: "Non renseigné",
+        dataCollection: "Non renseigné",
+        dataAnalysis: "Non renseigné"
       },
       notice: "Le service d'extraction automatique (Cloud et Local) est indisponible. Veuillez remplir les champs manuellement.",
       error: "Tous les services d'extraction d'IA ont échoué.",
@@ -888,7 +921,10 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
         calendar: "Non renseigné",
         ethics: "Non renseigné",
         references: "Non renseigné",
-        annexes: "Non renseigné"
+        annexes: "Non renseigné",
+        samplingStrategy: "Non renseigné",
+        dataCollection: "Non renseigné",
+        dataAnalysis: "Non renseigné"
       },
       error: error.message || "Une erreur est survenue lors de l'extraction."
     });

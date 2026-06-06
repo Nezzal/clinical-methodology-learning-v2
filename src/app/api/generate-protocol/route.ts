@@ -105,6 +105,9 @@ function getStaticFallbackProtocol(
     ethics: string;
     references: string;
     annexes: string;
+    samplingStrategy: string;
+    dataCollection: string;
+    dataAnalysis: string;
   },
   isOfflineNotice = false
 ): string {
@@ -112,7 +115,8 @@ function getStaticFallbackProtocol(
     title, acronym, question, design, population, inclusion, exclusion,
     primaryEndpoint, secondaryEndpoints, intervention, methodologyName,
     benefitTypeName, objectives, bias, justification, hypothesis, logistics,
-    personnel, budget, calendar, ethics, references, annexes
+    personnel, budget, calendar, ethics, references, annexes,
+    samplingStrategy, dataCollection, dataAnalysis
   } = params;
 
   const notice = isOfflineNotice 
@@ -147,13 +151,15 @@ ${notice}
 | **Bénéfice individuel attendu (Loi 18-11)** | ${benefitTypeName} |
 | **Description de l'intervention** | ${intervention || '[Non renseignée]'} |
 | **Population cible** | ${population || '[Non renseignée]'} |
-| **Critères d'inclusion** | ${cleanInclusion} |
 | **Critères d'exclusion** | ${cleanExclusion} |
+| **Stratégie d'échantillonnage** | ${samplingStrategy || '[Non renseignée]'} |
 | **Critère de jugement principal** | ${primaryEndpoint || '[Non renseigné]'} |
 | **Critères de jugement secondaires** | ${secondaryEndpoints || '[Non renseigné]'} |
 | **Biais et facteurs de confusion** | ${bias || '[Non renseignés]'} |
 | **Taille de l'échantillon (NSN)** | Calcul statistique basé sur le critère principal |
 | **Récolte des données & Étude pilote** | ${logistics || '[Non renseignée]'} |
+| **Collecte des données** | ${dataCollection || '[Non renseignée]'} |
+| **Analyse des données** | ${dataAnalysis || '[Non renseignée]'} |
 | **Personnel et rôles requis** | ${personnel || '[Non renseigné]'} |
 | **Budget et Financement** | ${budget || '[Non renseigné]'} |
 | **Calendrier prévisionnel** | ${calendar || '[Non renseigné]'} |
@@ -200,6 +206,7 @@ ${bias || 'Les biais de sélection, d\'information et de confusion seront minimi
 
 ### 9. Les sujets
 * **Population cible :** ${population || '[Non renseigné / À compléter]'}
+* **Stratégie d'échantillonnage :** ${samplingStrategy || '[Non renseignée / À compléter]'}
 * **Critères d'Inclusion :**
 ${inclusion ? inclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Patient éligible\n* Consentement écrit signé'}
 * **Critères d'Exclusion :**
@@ -209,11 +216,14 @@ ${exclusion ? exclusion.split('\n').map((line: string) => `* ${line.trim()}`).jo
 * Le calcul du nombre de sujets nécessaires (NSN) sera effectué par un biostatisticien selon la variance attendue du critère principal.
 
 ### 11. La récolte et la gestion des données
+* **Collecte des données :**
+${dataCollection || 'Recueil d\'informations standardisé, stockage sécurisé et respect de la confidentialité.'}
 * **Logistique, récolte & étude pilote :**
-${logistics || 'Anonymisation des données à la source, stockage sécurisé et respect de la confidentialité.'}
+${logistics || 'Anonymisation des données à la source, stockage sécurisé.'}
 
 ### 12. L'analyse des données
-* Plan d'analyse : Statistiques descriptives pour décrire la population (moyennes, écarts-types, pourcentages) et tests comparatifs univariés et multivariés appropriés (test t, ANOVA, Chi-2) selon la nature des variables.
+* **Analyse statistique :**
+${dataAnalysis || 'Plan d\'analyse : Statistiques descriptives pour décrire la population (moyennes, écarts-types, pourcentages) et tests comparatifs univariés et multivariés appropriés (test t, ANOVA, Chi-2) selon la nature des variables.'}
 
 ### 13. Une éventuelle étude pilote
 * Une phase pilote pourra être initiée sur un nombre restreint de sujets afin de valider la faisabilité opérationnelle du circuit des données.
@@ -291,6 +301,9 @@ export async function POST(req: Request) {
   let ethics = '';
   let references = '';
   let annexes = '';
+  let samplingStrategy = '';
+  let dataCollection = '';
+  let dataAnalysis = '';
 
   let prompt = '';
 
@@ -321,6 +334,9 @@ export async function POST(req: Request) {
     ethics = data.ethics || '';
     references = data.references || '';
     annexes = data.annexes || '';
+    samplingStrategy = data.samplingStrategy || '';
+    dataCollection = data.dataCollection || '';
+    dataAnalysis = data.dataAnalysis || '';
 
     const requestHeaders = new Headers(req.headers);
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
@@ -356,11 +372,14 @@ Génère obligatoirement au tout début du protocole (immédiatement sous le tit
 | **Population cible** | [Insérer la population] |
 | **Critères d'inclusion** | [Insérer les critères d'inclusion] |
 | **Critères d'exclusion** | [Insérer les critères d'exclusion] |
+| **Stratégie d'échantillonnage** | [Insérer la stratégie d'échantillonnage] |
 | **Critère de jugement principal** | [Insérer le critère principal] |
 | **Critères de jugement secondaires** | [Insérer les critères secondaires] |
 | **Biais et facteurs de confusion** | [Insérer les biais] |
 | **Taille de l'échantillon (NSN)** | [Insérer la taille ou estimation] |
 | **Récolte des données & Étude pilote** | [Insérer la logistique] |
+| **Collecte des données** | [Insérer la collecte des données] |
+| **Analyse des données** | [Insérer l'analyse des données] |
 | **Personnel et rôles requis** | [Insérer le personnel] |
 | **Budget et Financement** | [Insérer le budget] |
 | **Calendrier prévisionnel** | [Insérer le calendrier] |
@@ -382,12 +401,15 @@ Voici les données saisies par le chercheur :
 - Population cible : ${population || 'Non spécifiée'}
 - Critères d'inclusion : ${inclusion || 'Non spécifiés'}
 - Critères d'exclusion : ${exclusion || 'Non spécifiés'}
+- Stratégie d'échantillonnage : ${samplingStrategy || 'Non spécifiée'}
 - Critère de jugement principal (Endpoint) : ${primaryEndpoint}
 - Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
 - Biais et facteurs de confusion saisis : ${bias || 'Non spécifiés'}
 - Justification saisie : ${justification || 'Non spécifiée'}
 - Hypothèse(s) saisie(s) : ${hypothesis || 'Non spécifiée(s)'}
 - Logistique, récolte & étude pilote saisies : ${logistics || 'Non spécifiées'}
+- Collecte des données saisie : ${dataCollection || 'Non spécifiée'}
+- Analyse des données saisie : ${dataAnalysis || 'Non spécifiée'}
 - Personnel et rôles saisis : ${personnel || 'Non spécifiés'}
 - Budget et Financement saisis : ${budget || 'Non spécifié'}
 - Calendrier et jalons saisis : ${calendar || 'Non spécifié'}
@@ -425,16 +447,16 @@ Voici la structure obligatoire en 19 sections à respecter rigoureusement :
 * Identification des limites méthodologiques potentielles (biais de sélection, biais d'information, facteurs de confusion) et les moyens prévus pour les minimiser. Incorpore le texte sur les biais saisi par le chercheur.
 
 ### 9. Les sujets
-* Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur.
+* Définition précise de la population cible, comprenant les critères d'inclusion, de non-inclusion et d'exclusion saisis par le chercheur, ainsi que la stratégie d'échantillonnage spécifiée.
 
 ### 10. La taille de l'échantillon
 * Calcul ou justification du nombre de sujets nécessaires (NSN) à l'étude. Si des précisions statistiques ne sont pas fournies, propose une formule mathématique adaptée au schéma d'étude (ex: Schwartz pour les proportions ou comparaison de deux moyennes).
 
 ### 11. La récolte et la gestion des données
-* Logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation). Incorpore la logistique saisie par le chercheur.
+* Outils de collecte des données et logistique pratique du recueil d'informations, de la manipulation ou du transport des prélèvements et de la protection des données (sécurisation, anonymisation). Incorpore la collecte et la logistique saisies par le chercheur.
 
 ### 12. L'analyse des données
-* Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés).
+* Le plan d'analyse statistique prévu pour exploiter les résultats (statistiques descriptives, tests d'hypothèse univariés et multivariés appropriés). Incorpore l'analyse des données saisie par le chercheur.
 
 ### 13. Une éventuelle étude pilote
 * Description d'une phase préliminaire à petite échelle (si applicable) pour tester la faisabilité du protocole, des questionnaires ou de la logistique de prélèvement.
@@ -477,7 +499,8 @@ Format du document final : Rédige le protocole complet en français, de manièr
         title, acronym, question, design, population, inclusion, exclusion,
         primaryEndpoint, secondaryEndpoints, intervention, methodologyName,
         benefitTypeName, objectives, bias, justification, hypothesis, logistics,
-        personnel, budget, calendar, ethics, references, annexes
+        personnel, budget, calendar, ethics, references, annexes,
+        samplingStrategy, dataCollection, dataAnalysis
       }, false);
       return NextResponse.json({ protocol: mockProtocol });
     }
@@ -561,7 +584,8 @@ Format du document final : Rédige le protocole complet en français, de manièr
         title, acronym, question, design, population, inclusion, exclusion,
         primaryEndpoint, secondaryEndpoints, intervention, methodologyName,
         benefitTypeName, objectives, bias, justification, hypothesis, logistics,
-        personnel, budget, calendar, ethics, references, annexes
+        personnel, budget, calendar, ethics, references, annexes,
+        samplingStrategy, dataCollection, dataAnalysis
       }, true);
       return NextResponse.json({ protocol: mockProtocol });
     } catch (fallbackErr) {

@@ -244,6 +244,10 @@ export async function POST(req: Request) {
   let ethics = '';
   let references = '';
   let annexes = '';
+  let samplingStrategy = '';
+  let dataCollection = '';
+  let dataAnalysis = '';
+  let protocolContent = '';
 
   try {
     const data = await req.json();
@@ -271,6 +275,10 @@ export async function POST(req: Request) {
     ethics = data.ethics || '';
     references = data.references || '';
     annexes = data.annexes || '';
+    samplingStrategy = data.samplingStrategy || '';
+    dataCollection = data.dataCollection || '';
+    dataAnalysis = data.dataAnalysis || '';
+    protocolContent = data.protocolContent || '';
 
     const requestHeaders = new Headers(req.headers);
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
@@ -280,11 +288,11 @@ export async function POST(req: Request) {
     methodologyName = studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée';
     benefitTypeName = studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié';
 
-    const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails du protocole de recherche clinique ci-dessous.
+    const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails et le contenu du protocole de recherche clinique ci-dessous.
 
 Le CRF final doit être composé de 5 fiches distinctes, structurées avec des cases à cocher [ ] et des lignes de saisie vide [____] pour permettre un recueil propre.
 
-Données du protocole de recherche clinique :
+Données simplifiées du projet :
 - Titre : ${title}
 - Acronyme : ${acronym}
 - Question de recherche : ${question}
@@ -295,9 +303,25 @@ Données du protocole de recherche clinique :
 - Population cible : ${population || 'Non spécifiée'}
 - Critères d'inclusion : ${inclusion || 'Non spécifiés'}
 - Critères d'exclusion : ${exclusion || 'Non spécifiés'}
+- Stratégie d'échantillonnage : ${samplingStrategy || 'Non spécifiée'}
 - Critère de jugement principal (Endpoint) : ${primaryEndpoint}
 - Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
 - Biais à contrôler : ${bias || 'Non spécifiés'}
+- Collecte des données : ${dataCollection || 'Non spécifiée'}
+- Analyse des données : ${dataAnalysis || 'Non spécifiée'}
+
+${protocolContent ? `
+[PROTOCOLE GÉNÉRÉ DE RÉFÉRENCE]
+---
+${protocolContent}
+---
+` : ''}
+
+CONSIGNES DE PERSONNALISATION CRITIQUES :
+1. Analyse très attentivement le protocole clinique complet ci-dessus. Le CRF doit correspondre PARFAITEMENT à ce protocole spécifique, sans être générique.
+2. Si le protocole étudie une pathologie spécifique (comme le diabète, la toxicité au plomb, etc.), adapte les questions de la Fiche 2 (Antécédents et caractéristiques démographiques spécifiques à cette population) et la Fiche 3 (Examen clinique et biologique baseline spécifique) pour inclure précisément les signes cliniques, examens biologiques, questionnaires ou scores et paramètres décrits dans le protocole.
+3. Les critères de jugement (Fiche 4) doivent mesurer EXACTEMENT le critère principal et les critères secondaires détaillés dans le protocole (ex. taux de plomb sanguin, HbA1c à 6 mois, scores cliniques réels, délais).
+4. L'intervention ou l'exposition (Fiche 2) doit refléter les bras de traitement ou le mode d'exposition réels décrits dans le protocole.
 
 Structure obligatoire du CRF en 5 fiches :
 
@@ -405,11 +429,11 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
       const resolvedMethodologyName = methodologyName !== 'Non spécifiée' ? methodologyName : (studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée');
       const resolvedBenefitTypeName = benefitTypeName !== 'Non spécifié' ? benefitTypeName : (studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié');
 
-      const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu devez concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails du protocole de recherche clinique ci-dessous.
+      const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu devez concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails et le contenu du protocole de recherche clinique ci-dessous.
 
 Le CRF final doit être composé de 5 fiches distinctes, structurées avec des cases à cocher [ ] et des lignes de saisie vide [____] pour permettre un recueil propre.
 
-Données du protocole de recherche clinique :
+Données simplifiées du projet :
 - Titre : ${title}
 - Acronyme : ${acronym}
 - Question de recherche : ${question}
@@ -420,9 +444,25 @@ Données du protocole de recherche clinique :
 - Population cible : ${population || 'Non spécifiée'}
 - Critères d'inclusion : ${inclusion || 'Non spécifiés'}
 - Critères d'exclusion : ${exclusion || 'Non spécifiés'}
+- Stratégie d'échantillonnage : ${samplingStrategy || 'Non spécifiée'}
 - Critère de jugement principal (Endpoint) : ${primaryEndpoint}
 - Critères de jugement secondaires : ${secondaryEndpoints || 'Non spécifiés'}
 - Biais à contrôler : ${bias || 'Non spécifiés'}
+- Collecte des données : ${dataCollection || 'Non spécifiée'}
+- Analyse des données : ${dataAnalysis || 'Non spécifiée'}
+
+${protocolContent ? `
+[PROTOCOLE GÉNÉRÉ DE RÉFÉRENCE]
+---
+${protocolContent}
+---
+` : ''}
+
+CONSIGNES DE PERSONNALISATION CRITIQUES :
+1. Analyse très attentivement le protocole clinique complet ci-dessus. Le CRF doit correspondre PARFAITEMENT à ce protocole spécifique, sans être générique.
+2. Si le protocole étudie une pathologie spécifique (comme le diabète, la toxicité au plomb, etc.), adapte les questions de la Fiche 2 (Antécédents et caractéristiques démographiques spécifiques à cette population) et la Fiche 3 (Examen clinique et biologique baseline spécifique) pour inclure précisément les signes cliniques, examens biologiques, questionnaires ou scores et paramètres décrits dans le protocole.
+3. Les critères de jugement (Fiche 4) doivent mesurer EXACTEMENT le critère principal et les critères secondaires détaillés dans le protocole (ex. taux de plomb sanguin, HbA1c à 6 mois, scores cliniques réels, délais).
+4. L'intervention ou l'exposition (Fiche 2) doit refléter les bras de traitement ou le mode d'exposition réels décrits dans le protocole.
 
 Structure obligatoire du CRF en 5 fiches :
 
