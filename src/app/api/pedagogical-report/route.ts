@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { loadEnvLocal } from '@/utils/env';
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
     const res = await fetch(`${ollamaUrl}/api/tags`);
@@ -37,7 +38,7 @@ async function tryOllamaGenerateReport(
     console.log(`🤖 [Rapport Pédagogique] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 secondes de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 secondes de timeout (la génération locale sur CPU/GPU peut être longue)
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -80,7 +81,8 @@ function getStaticFallbackReport(
   questionsAsked: number,
   protocolsGenerated: number,
   quizScore: { correct: number; total: number },
-  flashcardsMastered: { mastered: number; total: number }
+  flashcardsMastered: { mastered: number; total: number },
+  preferredProvider: string = 'gemini'
 ): string {
   const totalQuiz = quizScore.total || 0;
   const correctQuiz = quizScore.correct || 0;
@@ -104,10 +106,14 @@ function getStaticFallbackReport(
     recommendation = "Niveau intermédiaire solide. Travaillez sur la cohérence logique entre votre objectif principal et votre critère de jugement principal. Entraînez-vous avec d'autres thématiques de protocole.";
   }
 
+  const note = preferredProvider === 'ollama'
+    ? `⚠️ *Note : Ce bilan a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`
+    : `⚠️ *Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée ou indisponible). Vous pouvez configurer votre clé ou activer Ollama localement pour une analyse personnalisée approfondie.*`;
+
   return `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
 *Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique*
 
-⚠️ *Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée ou indisponible). Vous pouvez configurer votre clé ou activer Ollama localement pour une analyse personnalisée approfondie.*
+${note}
 
 ---
 
@@ -157,12 +163,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 }
 
 export async function POST(req: Request) {
+  loadEnvLocal();
   let questionsAsked = 0;
   let protocolsGenerated = 0;
   let quizScore = { correct: 0, total: 0 };
   let flashcardsMastered = { mastered: 0, total: 0 };
   let recentQuestions: string[] = [];
   let recentProtocols: string[] = [];
+  let preferredProvider = 'gemini';
 
   try {
     const data = await req.json();
@@ -174,7 +182,7 @@ export async function POST(req: Request) {
     recentProtocols = data.recentProtocols ?? [];
 
     const requestHeaders = new Headers(req.headers);
-    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Calculs de base
@@ -220,7 +228,7 @@ Instructions pour le rapport :
       }
 
       // Repli ultime sur mock statique
-      const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered);
+      const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered, preferredProvider);
       return NextResponse.json({ report: mockReport });
     }
 
@@ -282,7 +290,7 @@ Instructions pour le rapport :
               temperature: 0.6,
             }
           }),
-          30000 // 30 secondes de timeout pour les analyses approfondies
+          90000 // 90 secondes de timeout pour les analyses approfondies
         );
         break; // Succès
       } catch (err: any) {
@@ -345,7 +353,7 @@ Instructions pour le rapport :
 
     // 2. Repli ultime sur mock statique
     try {
-      const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered);
+      const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered, preferredProvider);
       return NextResponse.json({ report: mockReport });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;

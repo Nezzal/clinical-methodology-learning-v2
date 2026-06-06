@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { getProgress, LocalStats } from '@/utils/storage';
+import { APP_VERSION_LABEL } from '@/utils/constants';
 import styles from './page.module.css';
 
 // Simple table rendering helper for report
@@ -129,8 +130,15 @@ export default function RapportPage() {
   useEffect(() => {
     loadStats();
     window.addEventListener('progress_changed', loadStats);
+    
+    const handleProviderChange = () => {
+      setReport(null);
+    };
+    window.addEventListener('ai_provider_changed', handleProviderChange);
+
     return () => {
       window.removeEventListener('progress_changed', loadStats);
+      window.removeEventListener('ai_provider_changed', handleProviderChange);
     };
   }, []);
 
@@ -148,12 +156,85 @@ export default function RapportPage() {
       recentProtocols: stats.recentProtocols.map(p => `[${p.acronym}] ${p.title}`),
     };
 
+    const provider = localStorage.getItem('recif_ai_provider') || 'gemini';
+
+    // 1. Si Ollama est sélectionné, tenter d'abord un appel en direct depuis le navigateur pour l'application en ligne
+    if (provider === 'ollama') {
+      try {
+        console.log("🤖 Tentative d'appel direct à Ollama depuis le navigateur...");
+        const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
+
+Voici les statistiques d'activité de l'utilisateur :
+- Questions posées au tuteur virtuel : ${payload.questionsAsked}
+- Protocoles générés : ${payload.protocolsGenerated}
+- Score aux quiz : ${payload.quizScore.correct}/${payload.quizScore.total} (${payload.quizScore.total > 0 ? Math.round((payload.quizScore.correct / payload.quizScore.total) * 100) : 0}%)
+- Flashcards maîtrisées : ${payload.flashcardsMastered.mastered}/${payload.flashcardsMastered.total} (${Math.round((payload.flashcardsMastered.mastered / payload.flashcardsMastered.total) * 100)}%)
+- Dernières questions posées : ${payload.recentQuestions.length > 0 ? payload.recentQuestions.join(', ') : 'Aucune'}
+- Protocoles initiés : ${payload.recentProtocols.length > 0 ? payload.recentProtocols.join(', ') : 'Aucun'}
+
+Instructions pour le rapport :
+1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
+2. Divise le rapport en sections claires :
+   - Bilan général de progression
+   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
+   - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
+   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
+3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.`;
+
+        // Tenter d'interroger les tags pour voir si Ollama est actif et lister ses modèles
+        const tagsResponse = await fetch('http://127.0.0.1:11434/api/tags');
+        if (tagsResponse.ok) {
+          const tagsData = await tagsResponse.json();
+          const models = tagsData.models || [];
+          
+          if (models.length > 0) {
+            // Chercher gemma4 ou un modèle gemma en priorité
+            let activeModel = 'gemma4:latest';
+            const hasRequested = models.some((m: any) => m.name.includes('gemma4') || m.name.includes('gemma'));
+            if (!hasRequested) {
+              activeModel = models[0].name;
+            }
+
+            const chatResponse = await fetch('http://127.0.0.1:11434/api/chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: activeModel,
+                messages: [
+                  { 
+                    role: 'system', 
+                    content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé et constructif en français sous forme de Markdown, sans préambule ni conclusion." 
+                  },
+                  { role: 'user', content: prompt }
+                ],
+                stream: false,
+                options: { temperature: 0.6 }
+              })
+            });
+
+            if (chatResponse.ok) {
+              const chatData = await chatResponse.json();
+              const content = chatData.message?.content;
+              if (content) {
+                setReport(content + `\n\n---\n*Note : Ce bilan a été généré en direct de votre navigateur par votre IA locale (${activeModel}) via Ollama.*`);
+                setLoading(false);
+                return; // Succès !
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("⚠️ Impossible de contacter Ollama directement depuis le navigateur (CORS ou service éteint). Tentative via le serveur...", err);
+      }
+    }
+
+    // 2. Repli classique via l'API route du serveur
     try {
       const response = await fetch('/api/pedagogical-report', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': provider
         },
         body: JSON.stringify(payload)
       });
@@ -277,7 +358,7 @@ export default function RapportPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '13pt', color: '#005a70', fontWeight: 700 }}>BILAN PÉDAGOGIQUE ET SUIVI</h3>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '9pt', color: '#6b7280' }}>MMETHODO-CLINIQUE Édu v1.1.0 - Production Ready</p>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '9pt', color: '#6b7280' }}>{APP_VERSION_LABEL}</p>
                 </div>
                 <div style={{ fontSize: '9pt', color: '#6b7280' }}>
                   Généré le {new Date().toLocaleDateString('fr-FR')}

@@ -3,6 +3,53 @@ const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
 const net = require('net');
+const fs = require('fs');
+
+// Fonction pour charger .env.local dans process.env
+function loadEnv() {
+  const searchPaths = [
+    path.join(__dirname, '.env.local'),
+    path.join(process.cwd(), '.env.local'),
+    path.join(path.dirname(process.execPath), '.env.local')
+  ];
+
+  try {
+    if (app) {
+      searchPaths.push(path.join(app.getPath('userData'), '.env.local'));
+    }
+  } catch (e) {
+    // Électron n'est pas encore prêt ou app.getPath n'est pas disponible
+  }
+
+  for (const envPath of searchPaths) {
+    if (fs.existsSync(envPath)) {
+      console.log(`📝 [Electron] Chargement des variables d'environnement depuis : ${envPath}`);
+      try {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        envContent.split('\n').forEach(line => {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith('#')) {
+            const parts = trimmed.split('=');
+            if (parts.length >= 2) {
+              const key = parts[0].trim();
+              const val = parts.slice(1).join('=').trim();
+              // Ne pas écraser si déjà défini dans l'environnement système global
+              if (!process.env[key]) {
+                process.env[key] = val;
+              }
+            }
+          }
+        });
+        break; // Premier fichier trouvé et chargé
+      } catch (err) {
+        console.error(`❌ [Electron] Erreur de lecture de ${envPath}:`, err);
+      }
+    }
+  }
+}
+
+// Charger l'environnement
+loadEnv();
 
 let mainWindow = null;
 let nextServerProcess = null;

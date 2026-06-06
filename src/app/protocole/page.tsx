@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getProgress, updateProgress, LocalStats } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile, loadFirestoreChats, deleteFirestoreProtocol } from '@/utils/firestore';
+import { APP_VERSION_LABEL } from '@/utils/constants';
 import styles from './page.module.css';
 
 function renderProtocolHtmlTable(rows: string[]): string {
@@ -763,7 +764,7 @@ export default function ProtocoleGenerator() {
         <div class="doc-header">
           <div>
             <h3>${docTitle}</h3>
-            <p>MMETHODO-CLINIQUE Édu v1.1.0 - Production Ready</p>
+            <p>${APP_VERSION_LABEL}</p>
           </div>
           <div class="doc-header-date">
             Généré le ${new Date().toLocaleDateString('fr-FR')}
@@ -780,7 +781,7 @@ export default function ProtocoleGenerator() {
         </div>
 
         <div class="doc-footer">
-          <span>MMETHODO-CLINIQUE Édu v1.1.0 - Production Ready</span>
+          <span>${APP_VERSION_LABEL}</span>
           <span>Algérie • Ministère de la Santé • RECIF & Loi n° 18-11</span>
         </div>
 

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getProgress } from '@/utils/storage';
 import { loadUserProfile } from '@/utils/firestore';
+import { APP_VERSION } from '@/utils/constants';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -316,7 +317,7 @@ export default function Sidebar() {
         </div>
 
         <div className={styles.footer}>
-          <span>RECIF Éducation v1.0</span>
+          <span>RECIF Éducation v{APP_VERSION}</span>
         </div>
       </aside>
     </>

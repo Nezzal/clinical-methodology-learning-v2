@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { loadEnvLocal } from '@/utils/env';
 import recifKb from '@/data/recif-kb.json';
 import glossaryData from '@/data/glossary.json';
 import fs from 'fs';
@@ -701,6 +702,7 @@ Règles d'utilisation du contexte :
 }
 
 export async function POST(req: Request) {
+  loadEnvLocal();
   let messages: any[] = [];
   try {
     const body = await req.json();
@@ -831,16 +833,16 @@ export async function POST(req: Request) {
     while (attempt < maxAttempts) {
       try {
         response = await withTimeout(
-          ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: contents,
-            config: {
-              systemInstruction: systemInstruction,
-              temperature: 0.5, // Plus bas pour plus de fidélité et moins d'hallucinations
-            }
-          }),
-          10000 // 10 secondes de timeout
-        );
+           ai.models.generateContent({
+             model: 'gemini-2.5-flash',
+             contents: contents,
+             config: {
+               systemInstruction: systemInstruction,
+               temperature: 0.5, // Plus bas pour plus de fidélité et moins d'hallucinations
+             }
+           }),
+           60000 // 60 secondes de timeout
+         );
         break; // Succès
       } catch (err: any) {
         attempt++;

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { loadEnvLocal } from '@/utils/env';
 
 export async function POST(request: Request) {
+  loadEnvLocal();
   try {
     const { to, subject, html } = await request.json();
 

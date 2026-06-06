@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
+import { loadEnvLocal } from '@/utils/env';
 import recifKb from '@/data/recif-kb.json';
 import glossaryData from '@/data/glossary.json';
 
@@ -185,6 +186,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 }
 
 export async function POST(req: Request) {
+  loadEnvLocal();
   let type = '';
   let topic = '';
   try {
@@ -370,7 +372,7 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
               responseSchema: responseSchema
             }
           }),
-          12000 // 12 secondes de timeout
+          60000 // 60 secondes de timeout
         );
         break; // Succès
       } catch (err: any) {

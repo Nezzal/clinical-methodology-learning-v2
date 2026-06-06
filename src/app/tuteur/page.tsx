@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreChat, loadFirestoreChats, deleteFirestoreChat, syncUserProfile } from '@/utils/firestore';
+import { APP_VERSION, APP_VERSION_LABEL } from '@/utils/constants';
 import styles from './page.module.css';
 
 interface Message {
@@ -822,7 +823,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>\${chatTitle} - METHODO-CLINIQUE Édu</title>
+  <title>${chatTitle} - METHODO-CLINIQUE Édu</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
     
@@ -1209,17 +1210,17 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
         <p>Fil de discussion • Tuteur Virtuel RECIF</p>
       </div>
       <div class="header-right">
-        <span class="report-badge">v1.1.0 - Production Ready</span>
-        <p class="report-date">Exporté le \${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        <span class="report-badge">v${APP_VERSION} - Production Ready</span>
+        <p class="report-date">Exporté le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
     </header>
     
     <main class="discussion-container">
-      \${bodyContent}
+      ${bodyContent}
     </main>
     
     <footer class="report-footer">
-      Document officiel généré par METHODO-CLINIQUE Édu v1.1.0 - Production Ready<br>
+      Document officiel généré par ${APP_VERSION_LABEL}<br>
       Basé sur le Référentiel de Recherche Clinique et Épidémiologique RECIF et conforme aux articles 377-399 de la Loi n° 18-11 relative à la santé.
     </footer>
   </div>
@@ -1237,7 +1238,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
       const link = document.createElement('a');
       link.href = url;
       const cleanFileName = chatTitle.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-      link.download = `discussion_\${cleanFileName}_\${new Date().toISOString().slice(0, 10)}.html`;
+      link.download = `discussion_${cleanFileName}_${new Date().toISOString().slice(0, 10)}.html`;
       link.click();
       URL.revokeObjectURL(url);
     }

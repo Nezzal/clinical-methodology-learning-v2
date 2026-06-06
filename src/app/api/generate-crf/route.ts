@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { loadEnvLocal } from '@/utils/env';
 import recifKb from '@/data/recif-kb.json';
 
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
@@ -39,7 +40,7 @@ async function tryOllamaGenerateCrf(
     console.log(`🤖 [Générateur de CRF] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 secondes
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 secondes de timeout
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -93,11 +94,17 @@ function getStaticFallbackCrf(
   intervention: string,
   methodologyName: string,
   benefitTypeName: string,
-  isOfflineNotice = false
+  preferredProvider = 'gemini',
+  isError = false
 ): string {
-  const notice = isOfflineNotice 
-    ? `⚠️ *Note : Ce CRF a été généré localement car le service d'IA est indisponible.*`
-    : `⚠️ *Note : Ce CRF a été généré localement (clé API non configurée).*`;
+  let notice = '';
+  if (preferredProvider === 'ollama') {
+    notice = `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`;
+  } else {
+    notice = isError
+      ? `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible.*`
+      : `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
+  }
 
   const parsedInclusion = inclusion 
     ? inclusion.split('\n').map((line: string) => `[ ] ${line.trim()}`).join('\n')
@@ -218,6 +225,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 }
 
 export async function POST(req: Request) {
+  loadEnvLocal();
   let title = '';
   let acronym = '';
   let question = '';
@@ -232,6 +240,7 @@ export async function POST(req: Request) {
   let benefitType = 'sbid';
   let methodologyName = 'Non spécifiée';
   let benefitTypeName = 'Non spécifié';
+  let preferredProvider = 'gemini';
 
   let objectives = '';
   let bias = '';
@@ -281,7 +290,7 @@ export async function POST(req: Request) {
     protocolContent = data.protocolContent || '';
 
     const requestHeaders = new Headers(req.headers);
-    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     const studyCategories = recifKb.algerian_regulation.study_categories;
@@ -362,7 +371,7 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
         }
       }
 
-      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, false);
+      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, preferredProvider, false);
       return NextResponse.json({ crf: mockCrf });
     }
 
@@ -404,7 +413,7 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
               temperature: 0.3,
             }
           }),
-          20000 // 20 secondes
+          60000 // 60 secondes
         );
         break;
       } catch (err: any) {
@@ -500,7 +509,7 @@ Rédige le CRF en français en Markdown, hautement structuré et professionnel.`
     }
 
     try {
-      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, true);
+      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, preferredProvider, true);
       return NextResponse.json({ crf: mockCrf });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;

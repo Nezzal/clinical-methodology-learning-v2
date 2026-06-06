@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
+import { loadEnvLocal } from '@/utils/env';
 import recifKb from '@/data/recif-kb.json';
 
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
@@ -109,7 +110,8 @@ function getStaticFallbackProtocol(
     dataCollection: string;
     dataAnalysis: string;
   },
-  isOfflineNotice = false
+  preferredProvider: string = 'gemini',
+  isError = false
 ): string {
   const {
     title, acronym, question, design, population, inclusion, exclusion,
@@ -119,9 +121,14 @@ function getStaticFallbackProtocol(
     samplingStrategy, dataCollection, dataAnalysis
   } = params;
 
-  const notice = isOfflineNotice 
-    ? `⚠️ *Note : Ce protocole a été généré localement car le service d'IA (appareil hors-ligne ou quota d'API de Google atteint) est indisponible. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé ou vérifiez votre connexion.*`
-    : `⚠️ *Note : Ce protocole a été généré localement car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
+  let notice = '';
+  if (preferredProvider === 'ollama') {
+    notice = `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`;
+  } else {
+    notice = isError
+      ? `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible. Vous pouvez basculer sur Ollama localement ou réessayer.*`
+      : `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
+  }
 
   // Parse list values for cleaner display in the table
   const cleanInclusion = inclusion ? inclusion.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
@@ -274,6 +281,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 }
 
 export async function POST(req: Request) {
+  loadEnvLocal();
   let title = '';
   let acronym = '';
   let question = '';
@@ -288,6 +296,7 @@ export async function POST(req: Request) {
   let benefitType = 'sbid';
   let methodologyName = 'Non spécifiée';
   let benefitTypeName = 'Non spécifié';
+  let preferredProvider = 'gemini';
 
   // New variables for Approche B
   let objectives = '';
@@ -339,7 +348,7 @@ export async function POST(req: Request) {
     dataAnalysis = data.dataAnalysis || '';
 
     const requestHeaders = new Headers(req.headers);
-    const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
@@ -501,7 +510,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
         benefitTypeName, objectives, bias, justification, hypothesis, logistics,
         personnel, budget, calendar, ethics, references, annexes,
         samplingStrategy, dataCollection, dataAnalysis
-      }, false);
+      }, preferredProvider, false);
       return NextResponse.json({ protocol: mockProtocol });
     }
 
@@ -544,7 +553,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
               temperature: 0.5,
             }
           }),
-          20000 // 20 secondes de timeout pour les protocoles longs
+          90000 // 90 secondes de timeout pour les protocoles longs
         );
         break; // Succès
       } catch (err: any) {
@@ -586,7 +595,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
         benefitTypeName, objectives, bias, justification, hypothesis, logistics,
         personnel, budget, calendar, ethics, references, annexes,
         samplingStrategy, dataCollection, dataAnalysis
-      }, true);
+      }, preferredProvider, true);
       return NextResponse.json({ protocol: mockProtocol });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;

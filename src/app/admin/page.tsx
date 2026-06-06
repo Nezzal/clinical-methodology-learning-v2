@@ -71,6 +71,55 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState<FirestoreUser[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [presenceFilter, setPresenceFilter] = useState<'all' | 'online'>('all');
+
+  const isUserOnline = (lastActive: any): boolean => {
+    if (!lastActive) return false;
+    
+    let date: Date;
+    if (lastActive.seconds) {
+      date = new Date(lastActive.seconds * 1000);
+    } else if (lastActive instanceof Date) {
+      date = lastActive;
+    } else if (typeof lastActive === 'string') {
+      date = new Date(lastActive);
+    } else if (typeof lastActive === 'number') {
+      date = new Date(lastActive);
+    } else {
+      return false;
+    }
+    
+    const diffMs = Date.now() - date.getTime();
+    return diffMs < 3 * 60 * 1000; // 3 minutes
+  };
+
+  const formatLastActive = (lastActive: any): string => {
+    if (!lastActive) return 'Aucune activité récente';
+    
+    let date: Date;
+    if (lastActive.seconds) {
+      date = new Date(lastActive.seconds * 1000);
+    } else if (lastActive instanceof Date) {
+      date = lastActive;
+    } else if (typeof lastActive === 'string') {
+      date = new Date(lastActive);
+    } else if (typeof lastActive === 'number') {
+      date = new Date(lastActive);
+    } else {
+      return 'Activité inconnue';
+    }
+    
+    const diffMs = Date.now() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Actif à l\'instant';
+    if (diffMins < 60) return `Actif il y a ${diffMins} min`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `Actif il y a ${diffHours} h`;
+    
+    return `Actif le ${date.toLocaleDateString('fr-FR')}`;
+  };
 
   // Selected Student Detailed Supervision
   const [selectedStudent, setSelectedStudent] = useState<FirestoreUser | null>(null);
@@ -287,7 +336,7 @@ Votre superviseur RECIF`;
     }
   };
 
-  // Check admin rights
+  // Check admin rights & set up auto-refresh
   useEffect(() => {
     if (authLoading) return;
 
@@ -310,6 +359,13 @@ Votre superviseur RECIF`;
       setCheckingAdmin(false);
       fetchStudents();
       fetchRequests();
+
+      // Auto-refresh toutes les 30 secondes pour le statut en ligne/hors ligne
+      const interval = setInterval(() => {
+        fetchStudents();
+      }, 30000);
+
+      return () => clearInterval(interval);
     }
   }, [user, authLoading]);
 
@@ -386,12 +442,38 @@ Votre superviseur RECIF`;
   };
 
   // Filtrer les étudiants
-  const filteredStudents = students.filter(s => {
-    const name = (s.displayName || '').toLowerCase();
-    const email = (s.email || '').toLowerCase();
-    const query = searchQuery.toLowerCase();
-    return name.includes(query) || email.includes(query);
-  });
+  const filteredStudents = students
+    .filter(s => {
+      const name = (s.displayName || '').toLowerCase();
+      const email = (s.email || '').toLowerCase();
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = name.includes(query) || email.includes(query);
+      
+      if (presenceFilter === 'online') {
+        return matchesSearch && isUserOnline(s.lastActive);
+      }
+      return matchesSearch;
+    })
+    .sort((a, b) => {
+      const aOnline = isUserOnline(a.lastActive);
+      const bOnline = isUserOnline(b.lastActive);
+      
+      if (aOnline && !bOnline) return -1;
+      if (!aOnline && bOnline) return 1;
+      
+      // Si les deux sont en ligne ou hors ligne, trier par dernière activité (plus récent d'abord)
+      const aTime = a.lastActive?.seconds ? a.lastActive.seconds * 1000 : (a.lastActive ? new Date(a.lastActive).getTime() : 0);
+      const bTime = b.lastActive?.seconds ? b.lastActive.seconds * 1000 : (b.lastActive ? new Date(b.lastActive).getTime() : 0);
+      
+      if (bTime !== aTime) {
+        return bTime - aTime;
+      }
+      
+      // En dernier recours, par nom
+      const aName = a.displayName || '';
+      const bName = b.displayName || '';
+      return aName.localeCompare(bName);
+    });
 
   // Calculs statistiques collectifs
   const totalStudents = students.length;
@@ -490,14 +572,26 @@ Votre superviseur RECIF`;
 
           {leftTab === 'students' ? (
             <>
-              <div className={styles.searchBar}>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="Rechercher un étudiant par nom ou email..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className={styles.filterContainer}>
+                <div className={styles.searchBar} style={{ flex: 1 }}>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Rechercher un étudiant par nom ou email..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <select
+                    className={styles.presenceSelect}
+                    value={presenceFilter}
+                    onChange={(e) => setPresenceFilter(e.target.value as 'all' | 'online')}
+                  >
+                    <option value="all">Tous les élèves</option>
+                    <option value="online">En ligne uniquement 🟢</option>
+                  </select>
+                </div>
               </div>
 
               <div className={styles.tableContainer}>
@@ -530,17 +624,25 @@ Votre superviseur RECIF`;
                         if (level === 'Avancé') levelClass = styles.badgeAdv;
                         else if (level === 'Intermédiaire') levelClass = styles.badgeInt;
 
+                        const online = isUserOnline(student.lastActive);
+                        const lastActiveStr = formatLastActive(student.lastActive);
+
                         return (
                           <tr key={student.uid} className={isSelected ? styles.selectedRow : ''}>
                             <td>
                               <div className={styles.studentInfo}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                  <span className={`${styles.statusDot} ${online ? styles.statusDotOnline : styles.statusDotOffline}`} title={online ? "En ligne" : "Hors ligne"} />
                                   <span className={styles.studentName}>{student.displayName || 'Étudiant'}</span>
                                   {student.status === 'suspended' && (
                                     <span className={styles.miniSuspendedBadge}>Suspendu</span>
                                   )}
+                                  {online && (
+                                    <span className={styles.miniOnlineBadge}>En ligne</span>
+                                  )}
                                 </div>
                                 <span className={styles.studentEmail}>{student.email}</span>
+                                <span className={styles.lastActiveTime}>{lastActiveStr}</span>
                               </div>
                             </td>
                             <td>

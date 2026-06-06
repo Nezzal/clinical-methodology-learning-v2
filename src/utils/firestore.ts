@@ -82,6 +82,7 @@ export interface FirestoreUser {
   updatedAt: any;
   status?: 'active' | 'suspended';
   requirePasswordChange?: boolean;
+  lastActive?: any;
 }
 
 export interface FirestoreChat {
@@ -449,6 +450,16 @@ export async function createStudentAccountDirectly(name: string, email: string, 
   } catch (error) {
     console.error('❌ Erreur createStudentAccountDirectly:', error);
     throw error;
+  }
+}
+
+export async function updateUserLastActive(uid: string) {
+  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  try {
+    const userDocRef = doc(db, 'users', uid);
+    await setDoc(userDocRef, { lastActive: serverTimestamp() }, { merge: true });
+  } catch (error) {
+    console.error('❌ Erreur updateUserLastActive:', error);
   }
 }
 

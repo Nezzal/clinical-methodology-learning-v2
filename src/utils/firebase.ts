@@ -3,7 +3,6 @@ import { getAuth, Auth } from 'firebase/auth';
 import { 
   initializeFirestore, 
   persistentLocalCache, 
-  persistentMultipleTabManager,
   Firestore,
   disableNetwork,
   enableNetwork
@@ -25,6 +24,25 @@ export const isFirebaseEnabled = !!(
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
 );
 
+// Nettoyer les clés Firestore obsolètes de localStorage au démarrage pour libérer le quota (évite QuotaExceededError)
+if (typeof window !== 'undefined') {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (key && (key.startsWith('firestore_') || key.startsWith('@firebase/'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => window.localStorage.removeItem(key));
+    if (keysToRemove.length > 0) {
+      console.log(`🧹 Nettoyage de ${keysToRemove.length} clé(s) Firestore obsolète(s) dans localStorage.`);
+    }
+  } catch (e) {
+    console.warn('⚠️ Échec du nettoyage de localStorage:', e);
+  }
+}
+
 let app;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
@@ -34,11 +52,9 @@ if (isFirebaseEnabled) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     
-    // Initialise Firestore avec le cache persistant moderne (multi-onglets supporté)
+    // Initialise Firestore avec le cache persistant mono-onglet (optimal et robuste pour Desktop/Electron)
     db = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager()
-      })
+      localCache: persistentLocalCache({})
     });
 
     // Gérer l'état réseau de Firestore de manière transparente pour éviter le spam de connexion en console

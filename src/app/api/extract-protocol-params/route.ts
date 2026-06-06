@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
+import { loadEnvLocal } from '@/utils/env';
 
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
@@ -565,6 +566,7 @@ function mapCustomJsonToProtocolParams(obj: any, rawChatText?: string): any {
 }
 
 export async function POST(req: Request) {
+  loadEnvLocal();
   try {
     const { messages, protocolContent } = await req.json();
     console.log("📨 [Extracteur] Requête reçue :", { 
@@ -728,7 +730,7 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
                 responseSchema: responseSchema
               }
             }),
-            15000 // 15 secondes de timeout
+            60000 // 60 secondes de timeout
           );
           break; // Succès
         } catch (err: any) {
