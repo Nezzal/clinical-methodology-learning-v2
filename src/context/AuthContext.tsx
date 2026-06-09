@@ -10,7 +10,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  updatePassword
+  updatePassword,
+  deleteUser
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, isFirebaseEnabled, db } from '@/utils/firebase';
@@ -189,8 +190,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (!isOfficialEmail) {
             console.warn("🚫 Tentative d'accès non autorisée : Aucun profil Firestore trouvé et email non officiel.");
             alert("Accès refusé. Votre inscription n'a pas encore été validée par un administrateur.");
-            if (auth) {
-              await signOut(auth);
+            try {
+              // Supprime immédiatement le compte créé dans Firebase Auth pour éviter de laisser un compte orphelin
+              await deleteUser(user);
+              console.log("🗑️ Compte non autorisé supprimé de Firebase Authentication avec succès.");
+            } catch (deleteErr) {
+              console.error("Erreur lors de la suppression du compte Auth:", deleteErr);
+              if (auth) {
+                await signOut(auth);
+              }
             }
             return;
           }
