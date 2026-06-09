@@ -182,47 +182,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             await syncUserProfile(user.uid, user.email, profileData.displayName, profileData.photoURL, finalStats, profileData.requirePasswordChange);
           }
         } else {
-          // Vérification de sécurité : si le document n'existe pas et que le compte est ancien (plus de 10 minutes),
-          // cela signifie que le compte a été supprimé par l'administrateur de la base de données.
-          const creationTime = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : 0;
-          const isNewAccount = (Date.now() - creationTime) < 10 * 60 * 1000; // 10 minutes
-          
-          if (!isNewAccount) {
-            console.warn("🚫 Compte Firebase Auth actif mais profil Firestore inexistant -> Compte supprimé par l'administrateur.");
-            alert("Votre compte a été supprimé par l'administrateur de la plateforme.");
+          // Si le profil n'existe pas dans Firestore, on vérifie si l'e-mail se termine par @recif.dz (compte enseignant/admin officiel)
+          const email = (user.email || '').toLowerCase();
+          const isOfficialEmail = email.endsWith('@recif.dz');
+
+          if (!isOfficialEmail) {
+            console.warn("🚫 Tentative d'accès non autorisée : Aucun profil Firestore trouvé et email non officiel.");
+            alert("Accès refusé. Votre inscription n'a pas encore été validée par un administrateur.");
             if (auth) {
               await signOut(auth);
             }
             return;
           }
 
-          // Nouvel utilisateur sur Firestore -> Tenter de récupérer son nom d'affichage à partir d'une demande d'accès
-          let finalDisplayName = user.displayName;
-          let reqPassChange = false;
-          if (user.email) {
-            try {
-              const accessReq = await findAccessRequestByEmail(user.email);
-              if (accessReq) {
-                finalDisplayName = accessReq.name;
-                reqPassChange = true;
-                // Supprimer la demande d'accès puisqu'elle a été traitée avec succès
-                await deleteAccessRequest(accessReq.id);
-              }
-            } catch (err) {
-              console.error("Erreur récupération demande d'accès lors de l'initialisation:", err);
-            }
-          }
-
+          // Si c'est un compte officiel @recif.dz, on lui crée son profil Firestore automatiquement
           const currentLocalStats = getProgress();
-          await syncUserProfile(user.uid, user.email, finalDisplayName, user.photoURL, currentLocalStats, reqPassChange);
-
-          // Pousser également ses protocoles créés localement
-          if (currentLocalStats.recentProtocols && currentLocalStats.recentProtocols.length > 0) {
-            for (const proto of currentLocalStats.recentProtocols) {
-              await saveFirestoreProtocol(user.uid, proto);
-            }
-          }
+          await syncUserProfile(user.uid, user.email, user.displayName || 'Superviseur RECIF', user.photoURL, currentLocalStats, false);
         }
+
         // Déclencher un événement de mise à jour de l'UI
         window.dispatchEvent(new Event('progress_changed'));
       } catch (error) {
