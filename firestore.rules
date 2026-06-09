@@ -21,25 +21,19 @@ service cloud.firestore {
       );
     }
 
-    // Vérifie si l'utilisateur connecté est un enseignant/superviseur
-    // (adresse email se terminant par @recif.dz, ou email égal à admin@recif.dz ou enseignant@recif.dz)
+    // Vérifie si l'utilisateur connecté est un enseignant/superviseur via Custom Claims
     function isSupervisor() {
-      return isAuthenticated() && 
-        request.auth.token.email != null && (
-          request.auth.token.email.lower() == 'admin@recif.dz' ||
-          request.auth.token.email.lower() == 'enseignant@recif.dz' ||
-          request.auth.token.email.lower().matches('.*@recif\\.dz$')
-        );
-    }
-
-    // Vérifie si l'utilisateur connecté est un super-administrateur
-    // (email commençant par 'admin' et se terminant par '@recif.dz')
-    function isSuperAdmin() {
-      return isSupervisor() && (
-        request.auth.token.email.lower() == 'admin@recif.dz' ||
-        request.auth.token.email.lower().matches('^admin.*')
+      return isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        request.auth.token.role == 'teacher'
       );
     }
+
+    // Vérifie si l'utilisateur connecté est un super-administrateur via Custom Claims
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.role == 'admin';
+    }
+
 
 
     // Règles pour les profils et données des utilisateurs
@@ -62,10 +56,10 @@ service cloud.firestore {
       }
     }
 
-    // Règles pour les demandes d'accès
+    // Règles pour les demandes d'accès (Création gérée côté API serveur)
     match /access_requests/{requestId} {
-      // Tout le monde peut créer une demande
-      allow create: if true;
+      // Interdire la création directe côté client
+      allow create: if false;
       // Les superviseurs peuvent lire toutes les demandes ; les utilisateurs peuvent lire la leur
       allow read: if isSupervisor() || (isAuthenticated() && request.auth.token.email.lower() == resource.data.email.lower());
       // Les super-administrateurs peuvent supprimer les demandes ; les utilisateurs peuvent supprimer la leur

@@ -34,6 +34,8 @@ interface AuthContextType {
   isSuspended: boolean;
   requirePasswordChange: boolean;
   guestMode: boolean;
+  isAdmin: boolean;
+  role: 'admin' | 'teacher' | 'student' | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
@@ -51,6 +53,8 @@ const AuthContext = createContext<AuthContextType>({
   isSuspended: false,
   requirePasswordChange: false,
   guestMode: false,
+  isAdmin: false,
+  role: null,
   signInWithGoogle: async () => {},
   signInWithEmail: async () => {},
   signUpWithEmail: async () => {},
@@ -67,6 +71,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isSuspended, setIsSuspended] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
+  const [role, setRole] = useState<'admin' | 'teacher' | 'student' | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Charger le mode invité depuis localStorage au montage (côté client)
   useEffect(() => {
@@ -88,8 +94,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Si un utilisateur Firebase se connecte, désactiver le mode invité
         setGuestMode(false);
         localStorage.removeItem('guest_mode_active');
+
+        try {
+          // Force le rafraîchissement du token pour obtenir les derniers Custom Claims
+          const tokenResult = await currentUser.getIdTokenResult(true);
+          const claimRole = tokenResult.claims.role as 'admin' | 'teacher' | 'student' | null;
+          setRole(claimRole || 'student');
+          setIsAdmin(claimRole === 'admin' || claimRole === 'teacher');
+        } catch (err) {
+          console.error("❌ Erreur lors du chargement des Custom Claims:", err);
+          setRole('student');
+          setIsAdmin(false);
+        }
       } else {
         setProfile(null);
+        setRole(null);
+        setIsAdmin(false);
         setIsSuspended(false);
         setRequirePasswordChange(false);
         setLoading(false);
@@ -217,9 +237,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user || !profile) return;
 
-    const email = (user.email || '').toLowerCase();
-    const isTeacher = email === 'admin@recif.dz' || email === 'enseignant@recif.dz' || email.endsWith('@recif.dz');
-    if (isTeacher) return; // Ne pas tracker les administrateurs/enseignants
+    if (role === 'admin' || role === 'teacher') return; // Ne pas tracker les administrateurs/enseignants
 
     // Mettre à jour immédiatement
     updateUserLastActive(user.uid).catch(err => console.error("Heartbeat error:", err));
@@ -273,6 +291,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
     
+    setRole(null);
+    setIsAdmin(false);
     setIsSuspended(false);
     setRequirePasswordChange(false);
     resetProgress();
@@ -300,6 +320,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isSuspended,
       requirePasswordChange,
       guestMode,
+      isAdmin,
+      role,
       signInWithGoogle,
       signInWithEmail,
       signUpWithEmail,

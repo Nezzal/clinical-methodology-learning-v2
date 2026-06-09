@@ -12,11 +12,10 @@ import styles from './Sidebar.module.css';
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, profile, logout, isFirebaseConfigured, guestMode } = useAuth();
+  const { user, profile, logout, isFirebaseConfigured, guestMode, isAdmin, role } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [level, setLevel] = useState('Débutant');
 
-  const [isAdmin, setIsAdmin] = useState(false);
   const [profileName, setProfileName] = useState('');
   const [aiProvider, setAiProvider] = useState<'gemini' | 'ollama'>('gemini');
 
@@ -45,21 +44,16 @@ export default function Sidebar() {
   };
 
   useEffect(() => {
-    if (user && user.email) {
-      const email = user.email.toLowerCase();
-      const isTeacher = email === 'admin@recif.dz' || email === 'enseignant@recif.dz' || email.endsWith('@recif.dz');
-      setIsAdmin(isTeacher);
-      
-      if (email === 'admin@recif.dz' || email === 'enseignant@recif.dz') {
+    if (user) {
+      if (role === 'admin' || role === 'teacher') {
         setProfileName('Superviseur RECIF');
       } else {
         setProfileName(profile?.displayName || user.displayName || 'Utilisateur');
       }
     } else {
-      setIsAdmin(false);
       setProfileName('');
     }
-  }, [user, profile]);
+  }, [user, profile, role]);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 

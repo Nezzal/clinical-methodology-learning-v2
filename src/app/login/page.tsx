@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { submitAccessRequest } from '@/utils/firestore';
+
 import styles from './page.module.css';
 
 export default function Login() {
@@ -79,33 +79,15 @@ export default function Login() {
 
     setSubmitting(true);
     try {
-      await submitAccessRequest(requestName.trim(), requestEmail.trim());
+      const res = await fetch('/api/access-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: requestName.trim(), email: requestEmail.trim() })
+      });
       
-      // Envoyer un e-mail de notification à l'administrateur
-      try {
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: process.env.NEXT_PUBLIC_ADMIN_NOTIFICATION_EMAIL || 'admin@recif.dz',
-            subject: "Nouvelle demande d'accès - RECIF",
-            html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <h2 style="color: #0d9488; margin-top: 0;">Nouvelle demande d'accès</h2>
-                <p>Un nouvel étudiant a formulé une demande d'inscription sur la plateforme <strong>RECIF Méthodologie</strong> :</p>
-                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0;">
-                  <strong>Nom de l'étudiant :</strong> ${requestName.trim()}<br/>
-                  <strong>Adresse e-mail :</strong> <a href="mailto:${requestEmail.trim()}">${requestEmail.trim()}</a>
-                </div>
-                <p>Veuillez vous connecter à votre <strong>Espace Superviseur</strong> pour valider ou rejeter cette demande d'accès.</p>
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-                <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Ceci est une notification automatique de la Plateforme RECIF.</p>
-              </div>
-            `
-          })
-        });
-      } catch (mailErr) {
-        console.error("Erreur lors de l'envoi de la notification mail:", mailErr);
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Impossible de soumettre la demande d'accès.");
       }
 
       setSuccessMsg('Votre demande d\'accès a été soumise avec succès ! L\'administrateur créera votre compte prochainement.');
@@ -116,8 +98,8 @@ export default function Login() {
         setSuccessMsg('');
       }, 5000);
     } catch (error: any) {
-      console.warn("Erreur soumission demande d'accès:", error.code || error.message);
-      setErrorMsg('Impossible de soumettre la demande d\'accès. Il se peut qu\'une demande existe déjà pour cet e-mail.');
+      console.warn("Erreur soumission demande d'accès:", error.message);
+      setErrorMsg(error.message || 'Impossible de soumettre la demande d\'accès. Il se peut qu\'une demande existe déjà pour cet e-mail.');
     } finally {
       setSubmitting(false);
     }

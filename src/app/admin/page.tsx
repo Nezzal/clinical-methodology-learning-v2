@@ -7,12 +7,9 @@ import {
   getAllUsers, 
   loadFirestoreProtocols, 
   loadFirestoreChats, 
-  updateUserStatus,
-  deleteUserFully,
   updateUserDisplayName,
   getAccessRequests,
   deleteAccessRequest,
-  createStudentAccountDirectly,
   AccessRequest,
   FirestoreUser, 
   FirestoreProtocol
@@ -55,7 +52,7 @@ function renderMarkdown(text: string): string {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin: authIsAdmin, role } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -157,7 +154,22 @@ export default function AdminDashboard() {
 
     setActionPending(true);
     try {
-      await updateUserStatus(uid, newStatus);
+      if (!user) throw new Error("Utilisateur non connecté");
+      const idToken = await user.getIdToken();
+      
+      const res = await fetch(`/api/admin/users/${uid}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Erreur lors de la mise à jour du statut.");
+      }
       
       // Mettre à jour l'étudiant sélectionné
       setSelectedStudent(prev => prev ? { ...prev, status: newStatus } : null);
@@ -172,15 +184,28 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteStudentData = async (uid: string) => {
-    const confirm1 = window.confirm("ATTENTION : Cette action supprimera définitivement le profil, les statistiques de quiz, l'historique de chat et les protocoles de cet étudiant dans la base de données. Cette opération est IRRÉVERSIBLE. Voulez-vous continuer ?");
+    const confirm1 = window.confirm("ATTENTION : Cette action supprimera définitivement le profil, les statistiques de quiz, l'historique de chat et les protocoles de cet étudiant dans la base de données ainsi que son compte d'authentification. Cette opération est IRRÉVERSIBLE. Voulez-vous continuer ?");
     if (!confirm1) return;
 
-    const confirm2 = window.confirm("Confirmation finale de sécurité : Êtes-vous absolument sûr de vouloir détruire TOUTES les données de cet étudiant ?");
+    const confirm2 = window.confirm("Confirmation finale de sécurité : Êtes-vous absolument sûr de vouloir détruire TOUTES les données et le compte de cet étudiant ?");
     if (!confirm2) return;
 
     setActionPending(true);
     try {
-      await deleteUserFully(uid);
+      if (!user) throw new Error("Utilisateur non connecté");
+      const idToken = await user.getIdToken();
+
+      const res = await fetch(`/api/admin/users/${uid}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${idToken}`
+        }
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Erreur serveur lors de la suppression.");
+      }
       
       // Désélectionner l'étudiant
       setSelectedStudent(null);
@@ -188,7 +213,7 @@ export default function AdminDashboard() {
       // Supprimer de la liste locale
       setStudents(prev => prev.filter(s => s.uid !== uid));
       
-      alert("Les données de l'étudiant (Firestore) ont été supprimées avec succès.\n\n⚠️ IMPORTANT : En raison des limitations de sécurité de Firebase client, vous devez également supprimer manuellement ce compte dans votre Console Firebase (onglet Authentication) pour libérer définitivement son adresse e-mail et lui retirer tout accès.");
+      alert("Le compte de l'étudiant et toutes ses données associées (profil, discussions et protocoles) ont été supprimés définitivement.");
     } catch (e) {
       alert("Erreur lors de la suppression des données : " + (e as Error).message);
     } finally {
@@ -273,17 +298,31 @@ Votre superviseur RECIF`;
   };
 
   const handleAcceptRequest = async (req: AccessRequest) => {
-    if (!req.tempPassword) {
-      alert("Erreur: cette demande n'a pas de mot de passe temporaire.");
-      return;
-    }
-    const confirmMsg = `Voulez-vous créer le compte étudiant pour ${req.name} (${req.email}) ?\n\nLe compte sera créé dans Firebase Auth et pré-rempli dans la base. Le mot de passe temporaire sera : ${req.tempPassword}`;
+    const confirmMsg = `Voulez-vous créer le compte étudiant pour ${req.name} (${req.email}) ?\n\nLe compte sera créé dans Firebase Auth et pré-rempli dans la base. Le mot de passe temporaire sera généré automatiquement.`;
     if (!window.confirm(confirmMsg)) return;
 
     setActionPending(true);
     try {
-      // 1. Créer le compte directement (ceci crée aussi le profil Firestore et déconnecte l'instance temporaire)
-      await createStudentAccountDirectly(req.name, req.email, req.tempPassword);
+      if (!user) throw new Error("Utilisateur non connecté");
+      const idToken = await user.getIdToken();
+
+      // 1. Créer le compte via notre API serveur sécurisée
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ name: req.name, email: req.email })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Erreur serveur lors de la création du compte.");
+      }
+
+      const accountData = await res.json();
+      const generatedTempPassword = accountData.tempPassword;
       
       // 2. Supprimer la demande d'accès traitée de Firestore
       await deleteAccessRequest(req.id);
@@ -304,7 +343,7 @@ Votre superviseur RECIF`;
                 <p>Voici vos identifiants de connexion provisoires :</p>
                 <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; font-family: monospace; font-size: 0.95rem;">
                   <strong>Adresse e-mail :</strong> ${req.email}<br/>
-                  <strong>Mot de passe temporaire :</strong> <span style="color: #0d9488; font-weight: bold;">${req.tempPassword}</span>
+                  <strong>Mot de passe temporaire :</strong> <span style="color: #0d9488; font-weight: bold;">${generatedTempPassword}</span>
                 </div>
                 <p style="color: #e11d48; font-weight: bold;">⚠️ Important :</p>
                 <p>Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.</p>
@@ -327,7 +366,7 @@ Votre superviseur RECIF`;
       setSuccessModalData({
         name: req.name,
         email: req.email,
-        tempPassword: req.tempPassword
+        tempPassword: generatedTempPassword
       });
     } catch (e: any) {
       alert("Erreur lors de la création directe du compte : " + (e?.message || e));
@@ -345,17 +384,13 @@ Votre superviseur RECIF`;
       return;
     }
 
-    const email = user.email?.toLowerCase() || '';
-    const isTeacher = email === 'admin@recif.dz' || email === 'enseignant@recif.dz' || email.endsWith('@recif.dz');
-    
-    if (!isTeacher) {
+    if (!authIsAdmin) {
       setIsAdmin(false);
       setIsSuperAdmin(false);
       setCheckingAdmin(false);
     } else {
       setIsAdmin(true);
-      const isSuperAdminAccount = email === 'admin@recif.dz' || (email.endsWith('@recif.dz') && email.startsWith('admin'));
-      setIsSuperAdmin(isSuperAdminAccount);
+      setIsSuperAdmin(role === 'admin');
       setCheckingAdmin(false);
       fetchStudents();
       fetchRequests();
@@ -367,7 +402,7 @@ Votre superviseur RECIF`;
 
       return () => clearInterval(interval);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, authIsAdmin, role]);
 
   const fetchStudents = async () => {
     setLoadingStudents(true);
