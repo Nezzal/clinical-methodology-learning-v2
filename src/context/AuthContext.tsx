@@ -11,7 +11,8 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
   updatePassword,
-  deleteUser
+  deleteUser,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { auth, isFirebaseEnabled, db } from '@/utils/firebase';
@@ -42,6 +43,7 @@ interface AuthContextType {
   signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => Promise<void>;
   changePassword: (newPassword: string) => Promise<void>;
+  sendPasswordReset: (email: string) => Promise<void>;
   enableGuestMode: () => void;
   disableGuestMode: () => void;
 }
@@ -61,6 +63,7 @@ const AuthContext = createContext<AuthContextType>({
   signUpWithEmail: async () => {},
   logout: async () => {},
   changePassword: async () => {},
+  sendPasswordReset: async () => {},
   enableGuestMode: () => {},
   disableGuestMode: () => {},
 });
@@ -75,11 +78,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<'admin' | 'teacher' | 'student' | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Charger le mode invité depuis localStorage au montage (côté client)
+  // Charger les modes hors-ligne depuis localStorage au montage (côté client)
   useEffect(() => {
-    const saved = localStorage.getItem('guest_mode_active') === 'true';
-    if (saved) {
+    const savedGuest = localStorage.getItem('guest_mode_active') === 'true';
+    if (savedGuest) {
       setGuestMode(true);
+    }
+    
+    const savedOfflineAdmin = localStorage.getItem('offline_admin_active') === 'true';
+    if (savedOfflineAdmin) {
+      const cachedEmail = localStorage.getItem('offline_admin_email') || 'admin@recif.dz';
+      const isSuperAdmin = cachedEmail === 'admin@recif.dz';
+      
+      setUser({
+        uid: 'offline_admin_uid',
+        email: cachedEmail,
+        displayName: isSuperAdmin ? 'Superviseur RECIF (Hors-ligne)' : 'Enseignant RECIF (Hors-ligne)',
+        photoURL: null,
+        getIdTokenResult: async () => ({
+          claims: { role: isSuperAdmin ? 'admin' : 'teacher' }
+        })
+      } as any);
+      setRole(isSuperAdmin ? 'admin' : 'teacher');
+      setIsAdmin(true);
+      setGuestMode(false);
+      setProfile({
+        uid: 'offline_admin_uid',
+        email: cachedEmail,
+        displayName: isSuperAdmin ? 'Superviseur RECIF (Hors-ligne)' : 'Enseignant RECIF (Hors-ligne)',
+        photoURL: null,
+        level: 'Avancé',
+        role: isSuperAdmin ? 'admin' : 'teacher',
+        stats: {},
+        updatedAt: new Date()
+      } as any);
     }
   }, []);
 
@@ -90,6 +122,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // Interception pour la session admin hors-ligne persistante
+      if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+        const cachedEmail = localStorage.getItem('offline_admin_email') || 'admin@recif.dz';
+        const isSuperAdmin = cachedEmail === 'admin@recif.dz';
+        
+        setUser({
+          uid: 'offline_admin_uid',
+          email: cachedEmail,
+          displayName: isSuperAdmin ? 'Superviseur RECIF (Hors-ligne)' : 'Enseignant RECIF (Hors-ligne)',
+          photoURL: null,
+          getIdTokenResult: async () => ({
+            claims: { role: isSuperAdmin ? 'admin' : 'teacher' }
+          })
+        } as any);
+        setRole(isSuperAdmin ? 'admin' : 'teacher');
+        setIsAdmin(true);
+        setGuestMode(false);
+        setProfile({
+          uid: 'offline_admin_uid',
+          email: cachedEmail,
+          displayName: isSuperAdmin ? 'Superviseur RECIF (Hors-ligne)' : 'Enseignant RECIF (Hors-ligne)',
+          photoURL: null,
+          level: 'Avancé',
+          role: isSuperAdmin ? 'admin' : 'teacher',
+          stats: {},
+          updatedAt: new Date()
+        } as any);
+        setLoading(false);
+        return;
+      }
+
       setUser(currentUser);
       if (currentUser) {
         // Si un utilisateur Firebase se connecte, désactiver le mode invité
@@ -132,6 +195,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // Si on est en mode admin hors-ligne, ne pas écouter Firestore via onSnapshot (qui échouerait)
+    if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+      setLoading(false);
+      return;
+    }
+
     const docRef = doc(db, 'users', user.uid);
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -144,7 +213,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setLoading(false);
     }, (error) => {
-      console.error("Erreur onSnapshot profil:", error);
+      console.warn("⚠️ Information : Erreur onSnapshot profil (fonctionnement hors-ligne possible):", error);
       setLoading(false);
     });
 
@@ -154,6 +223,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Synchronisation automatique après connexion
   useEffect(() => {
     if (!user) return;
+
+    // Si on est en mode admin hors-ligne, ne pas tenter de synchronisation Firestore
+    if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+      return;
+    }
 
     const syncOnLogin = async () => {
       try {
@@ -211,7 +285,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Déclencher un événement de mise à jour de l'UI
         window.dispatchEvent(new Event('progress_changed'));
       } catch (error) {
-        console.error('❌ Erreur lors de la synchronisation au login:', error);
+        console.warn('⚠️ Synchronisation au login (utilisation du cache local/mode hors-ligne) :', error);
       }
     };
 
@@ -224,12 +298,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (role === 'admin' || role === 'teacher') return; // Ne pas tracker les administrateurs/enseignants
 
+    // Si on est en mode admin hors-ligne, ne pas tracker l'activité
+    if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+      return;
+    }
+
     // Mettre à jour immédiatement
-    updateUserLastActive(user.uid).catch(err => console.error("Heartbeat error:", err));
+    updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat error (mode hors-ligne ou réseau) :", err));
 
     // Puis périodiquement toutes les 60 secondes
     const interval = setInterval(() => {
-      updateUserLastActive(user.uid).catch(err => console.error("Heartbeat error:", err));
+      updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat error (mode hors-ligne ou réseau) :", err));
     }, 60000);
 
     return () => clearInterval(interval);
@@ -242,8 +321,70 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signInWithEmail = async (email: string, password: string) => {
+    const cleanEmail = email.toLowerCase().trim();
+    const isOfficialEmail = cleanEmail === 'admin@recif.dz' || cleanEmail === 'enseignant@recif.dz' || cleanEmail.endsWith('@recif.dz');
+
+    const tryOfflineLogin = async () => {
+      const response = await fetch('/api/auth/offline-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('offline_admin_active', 'true');
+        localStorage.setItem('offline_admin_email', cleanEmail);
+        
+        const mockUser = {
+          uid: data.uid || 'offline_admin_uid',
+          email: cleanEmail,
+          displayName: data.displayName || 'Superviseur RECIF (Hors-ligne)',
+          photoURL: null,
+          getIdTokenResult: async () => ({
+            claims: { role: data.role || 'admin' }
+          })
+        };
+        
+        setUser(mockUser as any);
+        setRole(data.role || 'admin');
+        setIsAdmin(data.role === 'admin' || data.role === 'teacher');
+        setGuestMode(false);
+        localStorage.removeItem('guest_mode_active');
+        
+        setProfile({
+          uid: 'offline_admin_uid',
+          email: cleanEmail,
+          displayName: data.displayName || 'Superviseur RECIF (Hors-ligne)',
+          photoURL: null,
+          level: 'Avancé',
+          role: data.role || 'admin',
+          stats: {},
+          updatedAt: new Date()
+        } as any);
+        
+        return;
+      } else {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Mot de passe hors-ligne incorrect.');
+      }
+    };
+
+    if (typeof window !== 'undefined' && !navigator.onLine && isOfficialEmail) {
+      return await tryOfflineLogin();
+    }
+
     if (!isFirebaseEnabled || !auth) throw new Error('Firebase non configuré');
-    await signInWithEmailAndPassword(auth, email, password);
+    
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      if (error.code === 'auth/network-request-failed' && isOfficialEmail) {
+        console.log("🔌 Détection de serveurs Firebase injoignables. Tentative de connexion admin hors-ligne...");
+        return await tryOfflineLogin();
+      }
+      throw error;
+    }
   };
 
   const signUpWithEmail = async (email: string, password: string, displayName: string) => {
@@ -267,6 +408,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     setGuestMode(false);
     localStorage.removeItem('guest_mode_active');
+    localStorage.removeItem('offline_admin_active');
+    localStorage.removeItem('offline_admin_email');
     
     if (isFirebaseEnabled && auth) {
       try {
@@ -276,6 +419,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
     
+    setUser(null);
+    setProfile(null);
     setRole(null);
     setIsAdmin(false);
     setIsSuspended(false);
@@ -296,6 +441,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setRequirePasswordChange(false);
   };
 
+  const sendPasswordReset = async (email: string) => {
+    if (!isFirebaseEnabled || !auth) {
+      throw new Error('Firebase non configuré');
+    }
+    await sendPasswordResetEmail(auth, email);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -312,6 +464,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       signUpWithEmail,
       logout,
       changePassword,
+      sendPasswordReset,
       enableGuestMode,
       disableGuestMode
     }}>

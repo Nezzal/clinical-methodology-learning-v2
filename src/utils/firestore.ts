@@ -6,6 +6,8 @@ import {
   getDocs, 
   query, 
   orderBy, 
+  where,
+  onSnapshot,
   deleteDoc, 
   serverTimestamp,
   getDocsFromCache,
@@ -17,6 +19,10 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, isFirebaseEnabled, auth, firebaseConfig } from './firebase';
 import { LocalStats } from './storage';
+
+const isOfflineAdmin = (): boolean => {
+  return typeof window !== 'undefined' && window.localStorage.getItem('offline_admin_active') === 'true';
+};
 
 // Fonction utilitaire pour récupérer des documents Firestore avec repli immédiat sur le cache s'il est offline
 async function getDocsWithCacheFallback(q: any): Promise<QuerySnapshot<any, any>> {
@@ -39,7 +45,7 @@ async function getDocsWithCacheFallback(q: any): Promise<QuerySnapshot<any, any>
     try {
       return await getDocsFromCache(q);
     } catch (cacheError) {
-      console.error("❌ Impossible de lire les documents Firestore (Serveur & Cache):", cacheError);
+      console.warn("⚠️ Impossible de lire les documents Firestore (Serveur & Cache):", cacheError);
       throw cacheError;
     }
   }
@@ -66,7 +72,7 @@ async function getDocWithCacheFallback(docRef: any): Promise<DocumentSnapshot<an
     try {
       return await getDocFromCache(docRef);
     } catch (cacheError) {
-      console.error("❌ Impossible de lire le document Firestore (Serveur & Cache):", cacheError);
+      console.warn("⚠️ Impossible de lire le document Firestore (Serveur & Cache):", cacheError);
       throw cacheError;
     }
   }
@@ -83,6 +89,9 @@ export interface FirestoreUser {
   status?: 'active' | 'suspended';
   requirePasswordChange?: boolean;
   lastActive?: any;
+  role?: 'admin' | 'teacher' | 'student';
+  assignedTeacherUid?: string;
+  assignedTeacherName?: string;
 }
 
 export interface FirestoreChat {
@@ -163,7 +172,7 @@ export async function syncUserProfile(
 }
 
 export async function loadUserProfile(uid: string): Promise<FirestoreUser | null> {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return null;
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return null;
   try {
     const userDocRef = doc(db, 'users', uid);
     const snap = await getDocWithCacheFallback(userDocRef);
@@ -171,8 +180,7 @@ export async function loadUserProfile(uid: string): Promise<FirestoreUser | null
       return snap.data() as FirestoreUser;
     }
   } catch (error) {
-    console.error('❌ Erreur loadUserProfile:', error);
-    throw error;
+    console.warn('⚠️ Erreur loadUserProfile (mode hors-ligne ou problème cache/réseau):', error);
   }
   return null;
 }
@@ -218,14 +226,14 @@ export async function saveFirestoreChat(
 }
 
 export async function loadFirestoreChats(uid: string): Promise<any[]> {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return [];
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
   try {
     const chatsRef = collection(db, 'users', uid, 'chats');
     const q = query(chatsRef, orderBy('updatedAt', 'desc'));
     const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => d.data());
   } catch (error) {
-    console.error('❌ Erreur loadFirestoreChats:', error);
+    console.warn('⚠️ Erreur loadFirestoreChats:', error);
     return [];
   }
 }
@@ -255,14 +263,14 @@ export async function saveFirestoreProtocol(uid: string, protocol: { id: string;
 }
 
 export async function loadFirestoreProtocols(uid: string): Promise<FirestoreProtocol[]> {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return [];
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
   try {
     const protosRef = collection(db, 'users', uid, 'protocols');
     const q = query(protosRef, orderBy('createdAt', 'desc'));
     const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => d.data() as FirestoreProtocol);
   } catch (error) {
-    console.error('❌ Erreur loadFirestoreProtocols:', error);
+    console.warn('⚠️ Erreur loadFirestoreProtocols:', error);
     return [];
   }
 }
@@ -279,13 +287,13 @@ export async function deleteFirestoreProtocol(uid: string, protocolId: string) {
 
 // 4. Mode Enseignant (Supervision de tous les étudiants)
 export async function getAllUsers(): Promise<FirestoreUser[]> {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return [];
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
   try {
     const usersRef = collection(db, 'users');
     const snap = await getDocsWithCacheFallback(usersRef);
     return snap.docs.map(d => d.data() as FirestoreUser);
   } catch (error) {
-    console.error('❌ Erreur getAllUsers:', error);
+    console.warn('⚠️ Erreur getAllUsers:', error);
     return [];
   }
 }
@@ -362,14 +370,14 @@ export async function submitAccessRequest(name: string, email: string) {
 }
 
 export async function getAccessRequests(): Promise<AccessRequest[]> {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return [];
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
   try {
     const requestsRef = collection(db, 'access_requests');
     const q = query(requestsRef, orderBy('createdAt', 'desc'));
     const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => ({ id: d.id, ...d.data() } as AccessRequest));
   } catch (error) {
-    console.error('❌ Erreur getAccessRequests:', error);
+    console.warn('⚠️ Erreur getAccessRequests:', error);
     return [];
   }
 }
@@ -462,4 +470,293 @@ export async function updateUserLastActive(uid: string) {
     console.error('❌ Erreur updateUserLastActive:', error);
   }
 }
+
+// 7. Messagerie de Support (Étudiant ↔ Enseignant ↔ Admin)
+export interface FirestoreSupportMessage {
+  id: string;
+  senderUid: string;
+  senderName: string;
+  senderEmail: string;
+  senderRole: 'student' | 'teacher';
+  recipientRole: 'teacher' | 'admin';
+  recipientUid?: string; // Utilisé si un enseignant spécifique est ciblé par l'admin
+  subject: string;
+  content: string;
+  createdAt: any;
+  status: 'unread' | 'read' | 'replied';
+  studentRead: boolean;
+  teacherRead: boolean;
+  adminRead: boolean;
+  reply?: string;
+  repliedAt?: any;
+}
+
+export async function assignStudentToTeacher(
+  studentUid: string,
+  teacherUid: string | null,
+  teacherName: string | null
+) {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const userDocRef = doc(db, 'users', studentUid);
+    await setDoc(userDocRef, {
+      assignedTeacherUid: teacherUid || null,
+      assignedTeacherName: teacherName || null,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('❌ Erreur assignStudentToTeacher:', error);
+    throw error;
+  }
+}
+
+export async function sendSupportMessage(
+  senderUid: string,
+  senderName: string,
+  senderEmail: string,
+  senderRole: 'student' | 'teacher',
+  recipientRole: 'teacher' | 'admin',
+  recipientUid: string | undefined,
+  subject: string,
+  content: string
+) {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    let finalRecipientRole = recipientRole;
+    let finalRecipientUid = recipientUid || '';
+
+    if (senderRole === 'student') {
+      const studentProfile = await loadUserProfile(senderUid);
+      if (studentProfile?.assignedTeacherUid) {
+        finalRecipientRole = 'teacher';
+        finalRecipientUid = studentProfile.assignedTeacherUid;
+      } else {
+        finalRecipientRole = 'admin';
+        finalRecipientUid = '';
+      }
+    }
+
+    const messagesRef = collection(db, 'support_messages');
+    const newDocRef = doc(messagesRef); // Génère un ID unique automatiquement
+    const messageData: FirestoreSupportMessage = {
+      id: newDocRef.id,
+      senderUid,
+      senderName,
+      senderEmail,
+      senderRole,
+      recipientRole: finalRecipientRole,
+      recipientUid: finalRecipientUid,
+      subject,
+      content,
+      createdAt: serverTimestamp(),
+      status: 'unread',
+      studentRead: true, // L'expéditeur a déjà lu son propre message
+      teacherRead: false,
+      adminRead: false
+    };
+    await setDoc(newDocRef, messageData);
+    return newDocRef.id;
+  } catch (error) {
+    console.error('❌ Erreur sendSupportMessage:', error);
+    throw error;
+  }
+}
+
+export async function replyToSupportMessage(
+  messageId: string,
+  replyContent: string,
+  replierRole: 'teacher' | 'admin'
+) {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const docRef = doc(db, 'support_messages', messageId);
+    await setDoc(docRef, {
+      status: 'replied',
+      studentRead: false, // Nouveau message non lu pour l'étudiant
+      teacherRead: replierRole === 'teacher',
+      adminRead: replierRole === 'admin',
+      reply: replyContent,
+      repliedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('❌ Erreur replyToSupportMessage:', error);
+    throw error;
+  }
+}
+
+export async function markMessageReadState(
+  messageId: string,
+  roleToMark: 'student' | 'teacher' | 'admin'
+) {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const docRef = doc(db, 'support_messages', messageId);
+    const updatePayload: any = {};
+    if (roleToMark === 'student') {
+      updatePayload.studentRead = true;
+    } else if (roleToMark === 'teacher') {
+      updatePayload.teacherRead = true;
+      updatePayload.status = 'read';
+    } else if (roleToMark === 'admin') {
+      updatePayload.adminRead = true;
+      updatePayload.status = 'read';
+    }
+    await setDoc(docRef, updatePayload, { merge: true });
+  } catch (error) {
+    console.error('❌ Erreur markMessageReadState:', error);
+    throw error;
+  }
+}
+
+export async function loadSupportMessages(filters: {
+  senderUid?: string;
+  recipientRole?: 'teacher' | 'admin';
+  recipientUid?: string;
+  includeSentBy?: string;
+}): Promise<FirestoreSupportMessage[]> {
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
+  try {
+    const messagesRef = collection(db, 'support_messages');
+    let docsData: any[] = [];
+    const currentUser = auth.currentUser;
+
+    if (isOfflineAdmin()) {
+      const q = query(messagesRef, orderBy('createdAt', 'desc'));
+      const snap = await getDocsWithCacheFallback(q);
+      docsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } else if (currentUser) {
+      const tokenResult = await currentUser.getIdTokenResult();
+      const role = tokenResult.claims.role;
+
+      if (role === 'admin') {
+        const q = query(messagesRef, orderBy('createdAt', 'desc'));
+        const snap = await getDocsWithCacheFallback(q);
+        docsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } else if (role === 'teacher') {
+        // Enseignant : uniquement les messages où il est destinataire ou expéditeur
+        const q1 = query(messagesRef, where('recipientUid', '==', currentUser.uid));
+        const q2 = query(messagesRef, where('senderUid', '==', currentUser.uid));
+        
+        const [snap1, snap2] = await Promise.all([
+          getDocsWithCacheFallback(q1),
+          getDocsWithCacheFallback(q2)
+        ]);
+        
+        const docsMap = new Map<string, any>();
+        snap1.docs.forEach(d => docsMap.set(d.id, { id: d.id, ...d.data() }));
+        snap2.docs.forEach(d => docsMap.set(d.id, { id: d.id, ...d.data() }));
+        docsData = Array.from(docsMap.values());
+      } else {
+        // Étudiant : uniquement ses propres messages envoyés ou reçus
+        const q1 = query(messagesRef, where('senderUid', '==', currentUser.uid));
+        const q2 = query(messagesRef, where('recipientUid', '==', currentUser.uid));
+        
+        const [snap1, snap2] = await Promise.all([
+          getDocsWithCacheFallback(q1),
+          getDocsWithCacheFallback(q2)
+        ]);
+        
+        const docsMap = new Map<string, any>();
+        snap1.docs.forEach(d => docsMap.set(d.id, { id: d.id, ...d.data() }));
+        snap2.docs.forEach(d => docsMap.set(d.id, { id: d.id, ...d.data() }));
+        docsData = Array.from(docsMap.values());
+      }
+    }
+
+    let messages = docsData.map(data => {
+      return {
+        ...data,
+        createdAt: data.createdAt ? (data.createdAt.toDate ? data.createdAt.toDate().toISOString() : data.createdAt) : new Date().toISOString(),
+        repliedAt: data.repliedAt ? (data.repliedAt.toDate ? data.repliedAt.toDate().toISOString() : data.repliedAt) : null
+      } as FirestoreSupportMessage;
+    });
+
+    // Trier par date décroissante
+    messages.sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return timeB - timeA;
+    });
+
+    // Filtrage robuste supplémentaire côté client
+    if (filters.senderUid) {
+      messages = messages.filter(m => m.senderUid === filters.senderUid);
+    }
+    if (filters.recipientRole) {
+      messages = messages.filter(m => {
+        if (filters.includeSentBy && m.senderUid === filters.includeSentBy) {
+          return true;
+        }
+
+        if (filters.recipientRole === 'teacher') {
+          return m.recipientRole === 'teacher' && m.recipientUid === filters.recipientUid;
+        }
+        return m.recipientRole === filters.recipientRole;
+      });
+    }
+
+    return messages;
+  } catch (error) {
+    console.warn('⚠️ Erreur loadSupportMessages:', error);
+    return [];
+  }
+}
+
+export function listenToUnreadMessages(
+  uid: string,
+  role: 'student' | 'teacher' | 'admin',
+  onUpdate: (count: number) => void
+): () => void {
+  if (!isFirebaseEnabled || !db) {
+    onUpdate(0);
+    return () => {};
+  }
+  try {
+    const messagesRef = collection(db, 'support_messages');
+    let q;
+    
+    if (role === 'student') {
+      q = query(
+        messagesRef,
+        where('senderUid', '==', uid),
+        where('studentRead', '==', false),
+        where('status', '==', 'replied')
+      );
+    } else if (role === 'teacher') {
+      q = query(
+        messagesRef,
+        where('recipientRole', '==', 'teacher'),
+        where('recipientUid', '==', uid),
+        where('teacherRead', '==', false)
+      );
+    } else {
+      q = query(
+        messagesRef,
+        where('recipientRole', '==', 'admin'),
+        where('adminRead', '==', false)
+      );
+    }
+    
+    return onSnapshot(q, (snapshot) => {
+      let count = snapshot.size;
+      
+      if (role === 'teacher') {
+        const docs = snapshot.docs.map(d => d.data());
+        const filtered = docs.filter(m => m.recipientUid === uid);
+        count = filtered.length;
+      }
+      
+      onUpdate(count);
+    }, (error) => {
+      console.warn("⚠️ listenToUnreadMessages error:", error);
+      onUpdate(0);
+    });
+  } catch (err) {
+    console.warn("⚠️ Impossible d'écouter les messages de support en temps réel:", err);
+    onUpdate(0);
+    return () => {};
+  }
+}
+
+
 

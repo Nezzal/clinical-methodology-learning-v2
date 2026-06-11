@@ -308,3 +308,34 @@
   border-color: rgba(168, 85, 247, 0.5);
   box-shadow: 0 0 12px rgba(168, 85, 247, 0.15);
 }
+
+.sidebarBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  animation: pulseBadge 2.2s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.95;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    transform: scale(1.1);
+    opacity: 1;
+    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.95;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+

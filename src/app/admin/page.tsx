@@ -8,11 +8,17 @@ import {
   loadFirestoreProtocols, 
   loadFirestoreChats, 
   updateUserDisplayName,
+  assignStudentToTeacher,
   getAccessRequests,
   deleteAccessRequest,
   AccessRequest,
   FirestoreUser, 
-  FirestoreProtocol
+  FirestoreProtocol,
+  sendSupportMessage,
+  replyToSupportMessage,
+  markMessageReadState,
+  loadSupportMessages,
+  FirestoreSupportMessage
 } from '@/utils/firestore';
 import styles from './page.module.css';
 
@@ -134,7 +140,21 @@ export default function AdminDashboard() {
   // States pour les demandes d'accès et renommage
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [leftTab, setLeftTab] = useState<'students' | 'requests'>('students');
+  const [leftTab, setLeftTab] = useState<'students' | 'requests' | 'messages'>('students');
+
+  // States pour la messagerie
+  const [teachers, setTeachers] = useState<FirestoreUser[]>([]);
+  const [supportMessages, setSupportMessages] = useState<FirestoreSupportMessage[]>([]);
+  const [activeSupportMessage, setActiveSupportMessage] = useState<FirestoreSupportMessage | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [targetTeacherUid, setTargetTeacherUid] = useState('');
+  const [newMsgSubject, setNewMsgSubject] = useState('');
+  const [newMsgContent, setNewMsgContent] = useState('');
+  const [isSendingNewMsg, setIsSendingNewMsg] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [messagingError, setMessagingError] = useState('');
+  const [messagingSuccess, setMessagingSuccess] = useState('');
+  const [adminMessageFilter, setAdminMessageFilter] = useState<'admin' | 'all'>('admin');
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -240,9 +260,27 @@ export default function AdminDashboard() {
     setLoadingRequests(true);
     try {
       const data = await getAccessRequests();
-      setAccessRequests(data);
+      let finalData = data;
+      if (data && data.length > 0) {
+        localStorage.setItem('recif_offline_requests', JSON.stringify(data));
+      } else {
+        localStorage.setItem('recif_offline_requests', JSON.stringify([]));
+        if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+          const cached = localStorage.getItem('recif_offline_requests');
+          if (cached) {
+            finalData = JSON.parse(cached);
+          }
+        }
+      }
+      setAccessRequests(finalData);
     } catch (e) {
-      console.error("Erreur chargement demandes d'accès:", e);
+      console.warn("Erreur chargement demandes d'accès, tentative de repli cache:", e);
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('recif_offline_requests');
+        if (cached) {
+          setAccessRequests(JSON.parse(cached));
+        }
+      }
     } finally {
       setLoadingRequests(false);
     }
@@ -404,15 +442,185 @@ Votre superviseur RECIF`;
     }
   }, [user, authLoading, authIsAdmin, role]);
 
+  const fetchSupportMessages = async () => {
+    if (!user || authLoading || !authIsAdmin) return;
+    setLoadingMessages(true);
+    setMessagingError('');
+    try {
+      let filters: any = {};
+      if (role === 'teacher') {
+        filters = { recipientRole: 'teacher', recipientUid: user.uid, includeSentBy: user.uid };
+      } else if (role === 'admin') {
+        if (adminMessageFilter === 'admin') {
+          filters = { recipientRole: 'admin', includeSentBy: user.uid };
+        } else {
+          filters = {};
+        }
+      }
+      
+      const msgs = await loadSupportMessages(filters);
+      setSupportMessages(msgs);
+      
+      if (activeSupportMessage) {
+        const updated = msgs.find(m => m.id === activeSupportMessage.id);
+        if (updated) setActiveSupportMessage(updated);
+      }
+    } catch (e: any) {
+      setMessagingError("Erreur chargement messages : " + (e.message || e));
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && authIsAdmin && leftTab === 'messages') {
+      fetchSupportMessages();
+      const interval = setInterval(fetchSupportMessages, 15000);
+      return () => clearInterval(interval);
+    }
+  }, [user, authIsAdmin, leftTab, role, adminMessageFilter]);
+
+  const handleSelectSupportMessage = async (msg: FirestoreSupportMessage) => {
+    setActiveSupportMessage(msg);
+    setReplyContent('');
+    setMessagingError('');
+    setMessagingSuccess('');
+    
+    const supervisorRole = role === 'admin' ? 'admin' : 'teacher';
+    const isUnread = (role === 'admin' && !msg.adminRead && msg.recipientRole === 'admin') || 
+                     (role === 'teacher' && !msg.teacherRead && msg.recipientRole === 'teacher');
+    if (isUnread) {
+      try {
+        await markMessageReadState(msg.id, supervisorRole);
+        setSupportMessages(prev => prev.map(m => m.id === msg.id ? { 
+          ...m, 
+          adminRead: role === 'admin' ? true : m.adminRead,
+          teacherRead: role === 'teacher' ? true : m.teacherRead,
+          status: 'read'
+        } : m));
+        window.dispatchEvent(new Event('progress_changed'));
+      } catch (e) {
+        console.error("Erreur marquage message lu:", e);
+      }
+    }
+  };
+
+  const handleSendReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeSupportMessage || !replyContent.trim()) return;
+    
+    setMessagingError('');
+    setMessagingSuccess('');
+    try {
+      const replierRole = role === 'admin' ? 'admin' : 'teacher';
+      await replyToSupportMessage(activeSupportMessage.id, replyContent, replierRole);
+      setReplyContent('');
+      setMessagingSuccess('Réponse envoyée avec succès !');
+      await fetchSupportMessages();
+    } catch (e: any) {
+      setMessagingError("Erreur d'envoi de la réponse : " + (e.message || e));
+    }
+  };
+
+  const handleSendNewMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    
+    setMessagingError('');
+    setMessagingSuccess('');
+    
+    if (role === 'teacher') {
+      if (!newMsgSubject.trim() || !newMsgContent.trim()) {
+        setMessagingError('Veuillez remplir tous les champs.');
+        return;
+      }
+      try {
+        await sendSupportMessage(
+          user.uid,
+          user.displayName || 'Enseignant',
+          user.email || '',
+          'teacher',
+          'admin',
+          undefined,
+          newMsgSubject,
+          newMsgContent
+        );
+        setNewMsgSubject('');
+        setNewMsgContent('');
+        setIsSendingNewMsg(false);
+        setMessagingSuccess('Message envoyé avec succès à l\'administrateur !');
+        await fetchSupportMessages();
+      } catch (e: any) {
+        setMessagingError("Erreur d'envoi : " + (e.message || e));
+      }
+    } else if (role === 'admin') {
+      if (!targetTeacherUid) {
+        setMessagingError('Veuillez sélectionner un enseignant.');
+        return;
+      }
+      if (!newMsgSubject.trim() || !newMsgContent.trim()) {
+        setMessagingError('Veuillez remplir tous les champs.');
+        return;
+      }
+      
+      const selectedTeacher = teachers.find(t => t.uid === targetTeacherUid);
+      if (!selectedTeacher) {
+        setMessagingError('Enseignant introuvable.');
+        return;
+      }
+      
+      try {
+        await sendSupportMessage(
+          user.uid,
+          user.displayName || 'Administrateur',
+          user.email || '',
+          'teacher',
+          'teacher',
+          selectedTeacher.uid,
+          newMsgSubject,
+          newMsgContent
+        );
+        setNewMsgSubject('');
+        setNewMsgContent('');
+        setTargetTeacherUid('');
+        setIsSendingNewMsg(false);
+        setMessagingSuccess(`Message envoyé avec succès à ${selectedTeacher.displayName || selectedTeacher.email} !`);
+        await fetchSupportMessages();
+      } catch (e: any) {
+        setMessagingError("Erreur d'envoi : " + (e.message || e));
+      }
+    }
+  };
+
   const fetchStudents = async () => {
     setLoadingStudents(true);
     try {
       const data = await getAllUsers();
+      
+      let finalData = data;
+      if (data && data.length > 0) {
+        localStorage.setItem('recif_offline_students', JSON.stringify(data));
+      } else {
+        localStorage.setItem('recif_offline_students', JSON.stringify([]));
+        if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+          const cached = localStorage.getItem('recif_offline_students');
+          if (cached) {
+            finalData = JSON.parse(cached);
+            console.log("📦 Chargement des étudiants depuis le cache local (LocalStorage)");
+          }
+        }
+      }
+
       // Filtrer pour exclure les administrateurs et enseignants de la liste des élèves et des statistiques collectives
-      const onlyStudents = data.filter(u => {
+      const onlyStudents = finalData.filter(u => {
         const email = (u.email || '').toLowerCase();
         const displayName = (u.displayName || '').toLowerCase();
         
+        // Exclure selon le rôle explicite dans la base de données
+        if (u.role === 'admin' || u.role === 'teacher') {
+          return false;
+        }
+
         // Exclure les domaines recif.dz (enseignants et admins officiels)
         if (email.endsWith('@recif.dz') || displayName.endsWith('@recif.dz')) {
           return false;
@@ -445,8 +653,33 @@ Votre superviseur RECIF`;
         return true;
       });
       setStudents(onlyStudents);
+      
+      // Filtrer pour obtenir la liste des enseignants (utilisé par l'admin pour leur écrire)
+      const onlyTeachers = finalData.filter(u => {
+        const email = (u.email || '').toLowerCase();
+        return u.role === 'teacher' || 
+               (email.endsWith('@recif.dz') && email !== 'admin@recif.dz') ||
+               (email.includes('enseignant') && email !== 'admin@recif.dz');
+      });
+      setTeachers(onlyTeachers);
     } catch (e) {
-      console.error('Erreur lors de la récupération des étudiants:', e);
+      console.warn('Erreur lors de la récupération des étudiants, tentative de repli cache:', e);
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('recif_offline_students');
+        if (cached) {
+          const onlyStudents = JSON.parse(cached).filter((u: any) => {
+            const email = (u.email || '').toLowerCase();
+            const displayName = (u.displayName || '').toLowerCase();
+            if (u.role === 'admin' || u.role === 'teacher') return false;
+            if (email.endsWith('@recif.dz') || displayName.endsWith('@recif.dz')) return false;
+            if (email.includes('admin') || email.includes('enseignant') || email.includes('superviseur') || email.includes('supervisor')) return false;
+            if (displayName.includes('admin') || displayName.includes('enseignant') || displayName.includes('superviseur') || displayName.includes('supervisor')) return false;
+            if (user && (email === user.email?.toLowerCase() || u.uid === user.uid)) return false;
+            return true;
+          });
+          setStudents(onlyStudents);
+        }
+      }
     } finally {
       setLoadingStudents(false);
     }
@@ -462,22 +695,52 @@ Votre superviseur RECIF`;
     setActiveTab('stats');
 
     try {
-      // Charger les protocoles et discussions en parallèle
-      const [protos, chats] = await Promise.all([
-        loadFirestoreProtocols(student.uid),
-        loadFirestoreChats(student.uid)
-      ]);
+      // Charger les protocoles et discussions en parallèle (avec repli cache local si déconnecté)
+      let protos = [];
+      let chats = [];
+      
+      try {
+        [protos, chats] = await Promise.all([
+          loadFirestoreProtocols(student.uid),
+          loadFirestoreChats(student.uid)
+        ]);
+        
+        // Mettre en cache dans localStorage pour la consultation hors-ligne
+        localStorage.setItem(`recif_offline_student_protos_${student.uid}`, JSON.stringify(protos));
+        localStorage.setItem(`recif_offline_student_chats_${student.uid}`, JSON.stringify(chats));
+      } catch (err) {
+        console.warn("⚠️ Impossible de lire les détails de l'étudiant sur Firestore, bascule vers le cache local...", err);
+        const cachedProtos = localStorage.getItem(`recif_offline_student_protos_${student.uid}`);
+        const cachedChats = localStorage.getItem(`recif_offline_student_chats_${student.uid}`);
+        if (cachedProtos) protos = JSON.parse(cachedProtos);
+        if (cachedChats) chats = JSON.parse(cachedChats);
+      }
+      
       setStudentProtocols(protos);
       setStudentChats(chats);
     } catch (e) {
-      console.error('Erreur de chargement des détails de l\'étudiant:', e);
+      console.warn('Erreur globale lors de la récupération des détails de l\'étudiant:', e);
     } finally {
       setLoadingDetails(false);
     }
   };
 
+  const getRecipientLabel = (msg: FirestoreSupportMessage) => {
+    if (msg.recipientRole === 'admin') return 'Admin';
+    if (msg.recipientRole === 'teacher') {
+      const found = teachers.find(t => t.uid === msg.recipientUid);
+      return found ? (found.displayName || found.email || 'Enseignant') : 'Enseignant';
+    }
+    return '';
+  };
+
+  // Si l'utilisateur connecté est un enseignant, on restreint la liste à ses étudiants affectés
+  const visibleStudents = role === 'teacher'
+    ? students.filter(s => s.assignedTeacherUid === user?.uid)
+    : students;
+
   // Filtrer les étudiants
-  const filteredStudents = students
+  const filteredStudents = visibleStudents
     .filter(s => {
       const name = (s.displayName || '').toLowerCase();
       const email = (s.email || '').toLowerCase();
@@ -511,12 +774,15 @@ Votre superviseur RECIF`;
     });
 
   // Calculs statistiques collectifs
-  const totalStudents = students.length;
-  const totalProtocols = students.reduce((acc, curr) => acc + (curr.stats?.protocolsGenerated || 0), 0);
-  const totalQuestions = students.reduce((acc, curr) => acc + (curr.stats?.questionsAsked || 0), 0);
+  const totalStudents = visibleStudents.length;
+  const totalProtocols = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.protocolsGenerated || 0), 0);
+  const totalQuestions = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.questionsAsked || 0), 0);
+  const unreadMessagesCount = supportMessages.filter(m => 
+    (role === 'admin' && !m.adminRead) || (role === 'teacher' && !m.teacherRead)
+  ).length;
   
-  const totalQuizCorrect = students.reduce((acc, curr) => acc + (curr.stats?.quizCorrect || 0), 0);
-  const totalQuizTotal = students.reduce((acc, curr) => acc + (curr.stats?.quizTotal || 0), 0);
+  const totalQuizCorrect = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.quizCorrect || 0), 0);
+  const totalQuizTotal = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.quizTotal || 0), 0);
   const classroomQuizAverage = totalQuizTotal > 0 ? Math.round((totalQuizCorrect / totalQuizTotal) * 100) : 0;
 
   if (authLoading || checkingAdmin) {
@@ -595,13 +861,20 @@ Votre superviseur RECIF`;
               className={`${styles.tabBtn} ${leftTab === 'students' ? styles.activeTab : ''}`}
               onClick={() => setLeftTab('students')}
             >
-              Élèves inscrits ({students.length})
+              Élèves inscrits ({visibleStudents.length})
             </button>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'requests' ? styles.activeTab : ''}`}
               onClick={() => setLeftTab('requests')}
             >
-              Demandes d'accès ({accessRequests.length})
+              Demandes ({accessRequests.length})
+            </button>
+            <button 
+              className={`${styles.tabBtn} ${leftTab === 'messages' ? styles.activeTab : ''}`}
+              onClick={() => setLeftTab('messages')}
+              style={{ position: 'relative' }}
+            >
+              Messagerie {unreadMessagesCount > 0 && <span className={styles.tabRedDot} />}
             </button>
           </div>
 
@@ -709,7 +982,7 @@ Votre superviseur RECIF`;
                 </table>
               </div>
             </>
-          ) : (
+          ) : leftTab === 'requests' ? (
             // Demandes d'accès
             <div className={styles.tableContainer}>
               <table className={styles.table}>
@@ -815,12 +1088,246 @@ Votre superviseur RECIF`;
                 </tbody>
               </table>
             </div>
+          ) : (
+            <div className={styles.messageListContainer}>
+              <div className={styles.messagingHeader} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>
+                    {role === 'admin' ? 'Messagerie de Support' : 'Messages Étudiants'}
+                  </h3>
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
+                    onClick={() => {
+                      setIsSendingNewMsg(true);
+                      setActiveSupportMessage(null);
+                      setMessagingError('');
+                      setMessagingSuccess('');
+                    }}
+                  >
+                    + Écrire
+                  </button>
+                </div>
+                {role === 'admin' && (
+                  <select
+                    value={adminMessageFilter}
+                    onChange={(e) => setAdminMessageFilter(e.target.value as 'admin' | 'all')}
+                    style={{
+                      background: '#1e293b',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '6px',
+                      color: 'var(--text-primary)',
+                      padding: '0.4rem 0.6rem',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                      width: '100%'
+                    }}
+                  >
+                    <option value="admin">Mes messages (Enseignants ➡️ Admin)</option>
+                    <option value="all">Tous les échanges (Étudiants ↔ Enseignants)</option>
+                  </select>
+                )}
+              </div>
+
+              {loadingMessages ? (
+                <p style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Chargement...</p>
+              ) : supportMessages.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>
+                  Boîte de réception vide.
+                </p>
+              ) : (
+                <div className={styles.sidebarMsgList}>
+                  {supportMessages.map((msg) => {
+                    const isUnread = (role === 'admin' && !msg.adminRead) || (role === 'teacher' && !msg.teacherRead);
+                    const isActive = activeSupportMessage?.id === msg.id;
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`${styles.msgListItem} ${isActive ? styles.msgActiveItem : ''} ${isUnread ? styles.msgUnreadItem : ''}`}
+                        onClick={() => handleSelectSupportMessage(msg)}
+                      >
+                        <div className={styles.msgItemHeader}>
+                          <span className={styles.msgItemSender} title={msg.senderEmail}>
+                            {msg.senderRole === 'student' ? `${msg.senderName} (Élève)` : msg.senderName}
+                          </span>
+                          {isUnread && <span className={styles.msgUnreadBadge}>Nouveau</span>}
+                        </div>
+                        <div className={styles.msgItemSubject}>{msg.subject}</div>
+                        <div className={styles.msgItemMeta}>
+                          <span>{msg.status === 'unread' ? 'Envoyé' : msg.status === 'read' ? 'Lu' : 'Répondu'}</span>
+                          {role === 'admin' && adminMessageFilter === 'all' && (
+                            <span style={{ color: 'var(--accent-primary)', fontSize: '0.75rem', fontWeight: '500' }}>
+                              ➡️ {getRecipientLabel(msg)}
+                            </span>
+                          )}
+                          <span>{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
         {/* Détails de l'étudiant sélectionné (Droite) */}
         <div className={`${styles.detailCard} glass-card`}>
-          {!selectedStudent ? (
+          {leftTab === 'messages' ? (
+            isSendingNewMsg ? (
+              // FORMULAIRE DE CRÉATION DE MESSAGE
+              <div className={styles.formContainer} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <h3 style={{ marginBottom: '1.25rem', color: 'var(--text-primary)', fontSize: '1.2rem' }}>
+                  {role === 'admin' ? 'Contacter un Enseignant' : 'Envoyer un message à l\'Administrateur'}
+                </h3>
+                {messagingError && <div className={styles.msgErrorBanner} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingError}</div>}
+                {messagingSuccess && <div className={styles.msgSuccessBanner} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingSuccess}</div>}
+                
+                <form onSubmit={handleSendNewMessage} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  {role === 'admin' && (
+                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                      <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Sélectionner l'enseignant destinataire :</label>
+                      <select
+                        className="form-input"
+                        value={targetTeacherUid}
+                        onChange={(e) => setTargetTeacherUid(e.target.value)}
+                        required
+                        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-glass)', padding: '0.6rem', borderRadius: '6px', width: '100%' }}
+                      >
+                        <option value="">-- Choisir un enseignant --</option>
+                        {teachers.map(t => (
+                          <option key={t.uid} value={t.uid}>
+                            {t.displayName || t.email} ({t.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Objet :</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Ex : Question sur les droits d'accès ou l'organisation"
+                      value={newMsgSubject}
+                      onChange={(e) => setNewMsgSubject(e.target.value)}
+                      required
+                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px' }}
+                    />
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: '1.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Message :</label>
+                    <textarea
+                      className="form-input"
+                      style={{ minHeight: '200px', flexGrow: 1, resize: 'vertical', fontFamily: 'inherit', padding: '0.6rem', borderRadius: '6px', width: '100%' }}
+                      placeholder="Saisissez votre message ici..."
+                      value={newMsgContent}
+                      onChange={(e) => setNewMsgContent(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => setIsSendingNewMsg(false)}
+                      style={{ flex: 1 }}
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      style={{ flex: 2 }}
+                    >
+                      Envoyer le message
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : activeSupportMessage ? (
+              // VISUALISATION DE LA DISCUSSION
+              <div className={styles.conversationContainer} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <div className={styles.conversationHeader} style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.35rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{activeSupportMessage.subject}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                        De : <strong>{activeSupportMessage.senderName}</strong> ({activeSupportMessage.senderEmail})
+                      </span>
+                      {role === 'admin' && activeSupportMessage.recipientRole === 'teacher' && (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '500' }}>
+                          Destinataire : {getRecipientLabel(activeSupportMessage)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    le {activeSupportMessage.createdAt ? new Date(activeSupportMessage.createdAt).toLocaleString('fr-FR') : ''}
+                  </span>
+                </div>
+
+                {messagingError && <div className={styles.msgErrorBanner} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingError}</div>}
+                {messagingSuccess && <div className={styles.msgSuccessBanner} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingSuccess}</div>}
+
+                <div className={styles.convBody} style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* Message d'origine */}
+                  <div className={styles.messageBubble} style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', padding: '1rem', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--accent-primary)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                      {activeSupportMessage.senderName}
+                    </div>
+                    <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.95rem' }}>{activeSupportMessage.content}</p>
+                  </div>
+
+                  {/* Réponse précédente si présente */}
+                  {activeSupportMessage.reply && (
+                    <div className={styles.messageBubble} style={{ alignSelf: 'flex-end', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', padding: '1rem', borderRadius: '8px', width: '85%' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--accent-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
+                        Réponse de : {activeSupportMessage.recipientRole === 'admin' ? 'Administrateur' : 'Superviseur'} • {
+                          activeSupportMessage.repliedAt ? new Date(activeSupportMessage.repliedAt).toLocaleString('fr-FR') : ''
+                        }
+                      </div>
+                      <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.95rem' }}>{activeSupportMessage.reply}</p>
+                    </div>
+                  )}
+
+                  {/* Formulaire de réponse ou indicateur de supervision */}
+                  {role === 'admin' && activeSupportMessage.recipientRole === 'teacher' ? (
+                    <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      🔒 Espace de supervision administrative (Lecture seule pour cette discussion Étudiant ↔ Enseignant)
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSendReply} style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.5rem' }}>
+                      <label className="form-label" style={{ fontWeight: '600', fontSize: '0.9rem' }}>
+                        {activeSupportMessage.reply ? 'Modifier la réponse :' : 'Rédiger une réponse :'}
+                      </label>
+                      <textarea
+                        className="form-input"
+                        style={{ minHeight: '100px', resize: 'vertical', fontFamily: 'inherit', padding: '0.6rem', borderRadius: '6px', width: '100%' }}
+                        placeholder="Saisissez votre réponse ici..."
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        required
+                      />
+                      <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-end', padding: '0.5rem 1.5rem' }}>
+                        {activeSupportMessage.reply ? 'Mettre à jour la réponse' : 'Envoyer la réponse'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className={styles.emptyDetail}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>Sélectionnez un message à gauche pour y répondre, ou cliquez sur "+ Écrire" pour envoyer un nouveau message.</span>
+              </div>
+            )
+          ) : !selectedStudent ? (
             <div className={styles.emptyDetail}>
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
@@ -892,6 +1399,59 @@ Votre superviseur RECIF`;
                     )}
                   </div>
                   <p>{selectedStudent.email}</p>
+                  
+                  {/* Section Enseignant Référent */}
+                  <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Enseignant référent :</span>
+                      {role === 'admin' ? (
+                        <select
+                          value={selectedStudent.assignedTeacherUid || ''}
+                          onChange={async (e) => {
+                            const newTeacherUid = e.target.value;
+                            const newTeacher = teachers.find(t => t.uid === newTeacherUid);
+                            const newTeacherName = newTeacher ? (newTeacher.displayName || newTeacher.email || '') : '';
+                            try {
+                              await assignStudentToTeacher(selectedStudent.uid, newTeacherUid || null, newTeacherName || null);
+                              // Mettre à jour l'état local
+                              setSelectedStudent(prev => prev ? {
+                                ...prev,
+                                assignedTeacherUid: newTeacherUid || undefined,
+                                assignedTeacherName: newTeacherName || undefined
+                              } : null);
+                              setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? {
+                                ...s,
+                                assignedTeacherUid: newTeacherUid || undefined,
+                                assignedTeacherName: newTeacherName || undefined
+                              } : s));
+                            } catch (err: any) {
+                              alert("Erreur lors de l'affectation : " + err.message);
+                            }
+                          }}
+                          style={{
+                            background: '#1e293b',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '4px',
+                            color: 'var(--text-primary)',
+                            padding: '0.2rem 0.4rem',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="">Aucun (Non affecté)</option>
+                          {teachers.map(t => (
+                            <option key={t.uid} value={t.uid}>
+                              {t.displayName ? `${t.displayName} (${t.email})` : t.email}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                          {selectedStudent.assignedTeacherName || 'Aucun'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

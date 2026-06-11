@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getProgress } from '@/utils/storage';
-import { loadUserProfile } from '@/utils/firestore';
+import { loadUserProfile, listenToUnreadMessages } from '@/utils/firestore';
 import { APP_VERSION } from '@/utils/constants';
 import styles from './Sidebar.module.css';
 
@@ -18,6 +18,26 @@ export default function Sidebar() {
 
   const [profileName, setProfileName] = useState('');
   const [aiProvider, setAiProvider] = useState<'gemini' | 'ollama'>('gemini');
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || !role) {
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const unsubscribe = listenToUnreadMessages(
+        user.uid,
+        role as 'student' | 'teacher' | 'admin',
+        (count) => {
+          setUnreadCount(count);
+        }
+      );
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn("Sidebar: Failed to setup listenToUnreadMessages", e);
+    }
+  }, [user, role]);
 
   useEffect(() => {
     const handleProviderChange = () => {
@@ -184,7 +204,17 @@ export default function Sidebar() {
     )
   };
 
-  const activeLinks = isAdmin ? [...links, adminLink] : links;
+  const contactLink = {
+    href: '/contact',
+    label: 'Support / Contact',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      </svg>
+    )
+  };
+
+  const activeLinks = isAdmin ? [...links, adminLink] : [...links, contactLink];
 
   return (
     <>
@@ -219,15 +249,20 @@ export default function Sidebar() {
           <ul className={styles.navLinks}>
             {activeLinks.map((link) => {
               const isActive = pathname === link.href;
+              const hasBadge = unreadCount > 0 && (
+                (link.href === '/contact' && !isAdmin) || 
+                (link.href === '/admin' && isAdmin)
+              );
               return (
                 <li
                   key={link.href}
                   className={`${styles.navItem} ${isActive ? styles.active : ''}`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Link href={link.href}>
+                  <Link href={link.href} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     {link.icon}
                     <span>{link.label}</span>
+                    {hasBadge && <span className={styles.sidebarBadge} />}
                   </Link>
                 </li>
               );

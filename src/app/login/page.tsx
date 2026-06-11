@@ -7,10 +7,11 @@ import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
 export default function Login() {
-  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, guestMode, enableGuestMode } = useAuth();
+  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset, guestMode, enableGuestMode } = useAuth();
   const router = useRouter();
 
   const [isRequestAccess, setIsRequestAccess] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [requestName, setRequestName] = useState('');
@@ -18,6 +19,36 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!email.trim()) {
+      setErrorMsg('Veuillez saisir votre adresse e-mail.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await sendPasswordReset(email.trim());
+      setSuccessMsg('Un e-mail de réinitialisation a été envoyé ! Veuillez vérifier votre boîte de réception.');
+    } catch (error: any) {
+      console.warn("Erreur réinitialisation mot de passe:", error.code || error.message);
+      let friendlyError = 'Une erreur est survenue lors de l\'envoi de l\'e-mail.';
+      if (error.code === 'auth/user-not-found') {
+        friendlyError = 'Aucun utilisateur trouvé avec cette adresse e-mail.';
+      } else if (error.code === 'auth/invalid-email') {
+        friendlyError = 'Format d\'adresse e-mail invalide.';
+      } else if (error.message) {
+        friendlyError = error.message;
+      }
+      setErrorMsg(friendlyError);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Redirection automatique si déjà connecté ou en mode invité
   useEffect(() => {
@@ -198,12 +229,19 @@ export default function Login() {
                 <span className={styles.logoText}>Méthodo Clinique</span>
               </div>
               <h1 className={styles.title}>
-                {isRequestAccess ? 'Demander un Accès' : 'Connexion Utilisateur'}
+                {isForgotPassword 
+                  ? 'Réinitialiser le mot de passe' 
+                  : isRequestAccess 
+                    ? 'Demander un Accès' 
+                    : 'Connexion Utilisateur'
+                }
               </h1>
               <p className={styles.subtitle}>
-                {isRequestAccess 
-                  ? 'Remplissez ce formulaire pour envoyer une demande d\'inscription à votre superviseur.' 
-                  : 'Accédez à vos quiz, vos flashcards, échangez avec votre assistant et concevez vos protocoles cliniques.'
+                {isForgotPassword
+                  ? 'Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation.'
+                  : isRequestAccess 
+                    ? 'Remplissez ce formulaire pour envoyer une demande d\'inscription à votre superviseur.' 
+                    : 'Accédez à vos quiz, vos flashcards, échangez avec votre assistant et concevez vos protocoles cliniques.'
                 }
               </p>
             </div>
@@ -232,7 +270,41 @@ export default function Login() {
                 {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
                 {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
 
-                {isRequestAccess ? (
+                {isForgotPassword ? (
+                  // Formulaire de réinitialisation de mot de passe
+                  <form className={styles.form} onSubmit={handleForgotPasswordSubmit}>
+                    <div className={styles.inputGroup}>
+                      <label htmlFor="forgotEmail">Adresse E-mail</label>
+                      <input
+                        type="email"
+                        id="forgotEmail"
+                        placeholder="nom@exemple.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        disabled={submitting}
+                      />
+                    </div>
+
+                    <button type="submit" className={styles.submitBtn} disabled={submitting}>
+                      {submitting ? 'Envoi...' : 'Envoyer le lien de réinitialisation'}
+                    </button>
+                    
+                    <button
+                      type="button"
+                      className={styles.googleBtn}
+                      style={{ marginTop: '0.75rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                      onClick={() => {
+                        setIsForgotPassword(false);
+                        setErrorMsg('');
+                        setSuccessMsg('');
+                      }}
+                      disabled={submitting}
+                    >
+                      Retour à la connexion
+                    </button>
+                  </form>
+                ) : isRequestAccess ? (
                   // Formulaire de demande d'accès
                   <form className={styles.form} onSubmit={handleRequestAccessSubmit}>
                     <div className={styles.inputGroup}>
@@ -282,7 +354,29 @@ export default function Login() {
                     </div>
 
                     <div className={styles.inputGroup}>
-                      <label htmlFor="password">Mot de passe</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                        <label htmlFor="password" style={{ marginBottom: 0 }}>Mot de passe</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsForgotPassword(true);
+                            setIsRequestAccess(false);
+                            setErrorMsg('');
+                            setSuccessMsg('');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--accent-primary)',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            padding: 0,
+                            fontWeight: '500'
+                          }}
+                        >
+                          Mot de passe oublié ?
+                        </button>
+                      </div>
                       <input
                         type="password"
                         id="password"
@@ -300,7 +394,7 @@ export default function Login() {
                   </form>
                 )}
 
-                {!isRequestAccess && (
+                {!isRequestAccess && !isForgotPassword && (
                   <>
                     <div className={styles.divider}>
                       <span>ou</span>
@@ -332,33 +426,41 @@ export default function Login() {
                   </>
                 )}
 
-                <div className={styles.toggleMode}>
-                  {isRequestAccess ? (
-                    <p>
-                      Vous avez déjà un compte ?{' '}
-                      <button 
-                        type="button" 
-                        className={styles.toggleLinkBtn} 
-                        onClick={() => setIsRequestAccess(false)} 
-                        disabled={submitting}
-                      >
-                        Se connecter
-                      </button>
-                    </p>
-                  ) : (
-                    <div className={styles.requestAccessCTA}>
-                      <p>Nouveau sur la plateforme ?</p>
-                      <button 
-                        type="button" 
-                        className={styles.requestAccessBtn}
-                        onClick={() => setIsRequestAccess(true)} 
-                        disabled={submitting}
-                      >
-                        Demander un accès étudiant
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {!isForgotPassword && (
+                  <div className={styles.toggleMode}>
+                    {isRequestAccess ? (
+                      <p>
+                        Vous avez déjà un compte ?{' '}
+                        <button 
+                          type="button" 
+                          className={styles.toggleLinkBtn} 
+                          onClick={() => {
+                            setIsRequestAccess(false);
+                            setIsForgotPassword(false);
+                          }} 
+                          disabled={submitting}
+                        >
+                          Se connecter
+                        </button>
+                      </p>
+                    ) : (
+                      <div className={styles.requestAccessCTA}>
+                        <p>Nouveau sur la plateforme ?</p>
+                        <button 
+                          type="button" 
+                          className={styles.requestAccessBtn}
+                          onClick={() => {
+                            setIsRequestAccess(true);
+                            setIsForgotPassword(false);
+                          }} 
+                          disabled={submitting}
+                        >
+                          Demander un accès étudiant
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>

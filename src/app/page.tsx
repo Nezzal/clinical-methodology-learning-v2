@@ -28,7 +28,7 @@ export default function Dashboard() {
           saveProgress(updated);
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération des stats Firestore:", err);
+        console.warn("⚠️ Récupération des stats Firestore (utilisation des données locales) :", err);
       }
     }
     setStats(getProgress());

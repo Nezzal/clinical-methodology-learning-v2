@@ -67,6 +67,36 @@ service cloud.firestore {
       // Pas de modification autorisée
       allow update: if false;
     }
+
+    // Règles pour les messages de support/contact
+    match /support_messages/{messageId} {
+      // Un message peut être lu par :
+      // - L'administrateur
+      // - L'enseignant destinataire (recipientUid == request.auth.uid)
+      // - L'expéditeur du message (senderUid == request.auth.uid)
+      allow read: if isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        resource.data.recipientUid == request.auth.uid ||
+        resource.data.senderUid == request.auth.uid
+      );
+      
+      // Un message peut être créé par :
+      // - N'importe quel utilisateur connecté (étudiant ou enseignant/admin) si l'expéditeur déclaré est lui-même
+      allow create: if isAuthenticated() && request.resource.data.senderUid == request.auth.uid;
+      
+      // Un message peut être mis à jour par :
+      // - L'administrateur
+      // - L'enseignant destinataire s'il s'agit d'un message destiné aux enseignants
+      // - L'étudiant expéditeur s'il s'agit d'une mise à jour de lecture (ex: studentRead = true)
+      allow update: if isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        (request.auth.token.role == 'teacher' && resource.data.recipientUid == request.auth.uid) ||
+        (resource.data.senderUid == request.auth.uid)
+      );
+      
+      // Pas de suppression autorisée côté client
+      allow delete: if false;
+    }
   }
 }
 
