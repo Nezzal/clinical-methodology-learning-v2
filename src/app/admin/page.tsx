@@ -442,6 +442,32 @@ Votre superviseur RECIF`;
     }
   }, [user, authLoading, authIsAdmin, role]);
 
+  // Synchroniser l'onglet sélectionné avec les paramètres de l'URL (?tab=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'messages') {
+        setLeftTab('messages');
+      } else if (tab === 'requests') {
+        setLeftTab('requests');
+      } else if (tab === 'students') {
+        setLeftTab('students');
+      }
+    };
+
+    handleUrlChange();
+    window.addEventListener('popstate', handleUrlChange);
+    const interval = setInterval(handleUrlChange, 250);
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const fetchSupportMessages = async () => {
     if (!user || authLoading || !authIsAdmin) return;
     setLoadingMessages(true);

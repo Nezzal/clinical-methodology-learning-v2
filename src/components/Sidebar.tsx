@@ -204,6 +204,16 @@ export default function Sidebar() {
     )
   };
 
+  const adminMessagesLink = {
+    href: '/admin?tab=messages',
+    label: 'Messagerie',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      </svg>
+    )
+  };
+
   const contactLink = {
     href: '/contact',
     label: 'Support / Contact',
@@ -214,7 +224,7 @@ export default function Sidebar() {
     )
   };
 
-  const activeLinks = isAdmin ? [...links, adminLink] : [...links, contactLink];
+  const activeLinks = isAdmin ? [...links, adminLink, adminMessagesLink] : [...links, contactLink];
 
   return (
     <>
@@ -248,10 +258,26 @@ export default function Sidebar() {
         <nav className={styles.sidebarNav}>
           <ul className={styles.navLinks}>
             {activeLinks.map((link) => {
-              const isActive = pathname === link.href;
+              let isActive = false;
+              if (typeof window !== 'undefined') {
+                const currentSearch = window.location.search;
+                if (link.href.includes('?')) {
+                  const [linkPath, linkSearch] = link.href.split('?');
+                  isActive = pathname === linkPath && currentSearch.includes(linkSearch);
+                } else {
+                  if (link.href === '/admin') {
+                    isActive = pathname === '/admin' && !currentSearch.includes('tab=messages') && !currentSearch.includes('tab=requests');
+                  } else {
+                    isActive = pathname === link.href;
+                  }
+                }
+              } else {
+                isActive = pathname === link.href;
+              }
+
               const hasBadge = unreadCount > 0 && (
                 (link.href === '/contact' && !isAdmin) || 
-                (link.href === '/admin' && isAdmin)
+                (link.href === '/admin?tab=messages' && isAdmin)
               );
               return (
                 <li
@@ -304,7 +330,11 @@ export default function Sidebar() {
                     {profileName || 'Utilisateur'}
                   </div>
                   <div className={styles.userLevel}>
-                    Niveau: <span className={styles.levelBadge}>{level}</span>
+                    {role === 'admin' || role === 'teacher' ? (
+                      <>Rôle: <span className={styles.levelBadge}>{role === 'admin' ? 'Administrateur' : 'Enseignant'}</span></>
+                    ) : (
+                      <>Niveau: <span className={styles.levelBadge}>{level}</span></>
+                    )}
                   </div>
                 </div>
               </div>
