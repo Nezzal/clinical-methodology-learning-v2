@@ -190,8 +190,10 @@ Instructions pour le rapport :
           if (models.length > 0) {
             // Chercher gemma4 ou un modèle gemma en priorité
             let activeModel = 'gemma4:latest';
-            const hasRequested = models.some((m: any) => m.name.includes('gemma4') || m.name.includes('gemma'));
-            if (!hasRequested) {
+            const matchingModel = models.find((m: any) => m.name.includes('gemma4') || m.name.includes('gemma'));
+            if (matchingModel) {
+              activeModel = matchingModel.name;
+            } else {
               activeModel = models[0].name;
             }
 
