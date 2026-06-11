@@ -189,6 +189,7 @@ export async function POST(req: Request) {
   loadEnvLocal();
   let type = '';
   let topic = '';
+  let headerOllamaModel: string | null = null;
   try {
     const body = await req.json();
     type = body.type;
@@ -200,12 +201,13 @@ export async function POST(req: Request) {
 
     const requestHeaders = new Headers(req.headers);
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    headerOllamaModel = requestHeaders.get('x-ollama-model');
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const prompt = type === 'quiz' ? 
         `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.
@@ -395,7 +397,7 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
     // 1. Tenter d'utiliser Ollama en secours local
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const prompt = type === 'quiz' ? 
         `Tu es un tuteur expert en méthodologie de recherche clinique RECIF.

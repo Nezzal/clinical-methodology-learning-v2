@@ -20,6 +20,9 @@ export default function Sidebar() {
   const [aiProvider, setAiProvider] = useState<'gemini' | 'ollama'>('gemini');
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const [localModels, setLocalModels] = useState<string[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+
   useEffect(() => {
     if (!user || !role) {
       setUnreadCount(0);
@@ -61,6 +64,71 @@ export default function Sidebar() {
     setAiProvider(next);
     localStorage.setItem('recif_ai_provider', next);
     window.dispatchEvent(new Event('ai_provider_changed'));
+  };
+
+  // Charger le modèle sélectionné
+  useEffect(() => {
+    const handleModelChangeLocal = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('recif_ollama_model') || '';
+        setSelectedModel(saved);
+      }
+    };
+    handleModelChangeLocal();
+    window.addEventListener('ollama_model_changed', handleModelChangeLocal);
+    return () => {
+      window.removeEventListener('ollama_model_changed', handleModelChangeLocal);
+    };
+  }, []);
+
+  // Récupérer la liste des modèles locaux
+  useEffect(() => {
+    if (aiProvider === 'ollama') {
+      const fetchOllamaModels = async () => {
+        try {
+          const res = await fetch('http://127.0.0.1:11434/api/tags');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.models && Array.isArray(data.models)) {
+              const names = data.models.map((m: any) => m.name);
+              setLocalModels(names);
+              
+              const savedModel = localStorage.getItem('recif_ollama_model');
+              if (names.length > 0) {
+                if (!savedModel || !names.includes(savedModel)) {
+                  const defaultModel = names.includes('gemma4:latest') 
+                    ? 'gemma4:latest' 
+                    : (names.includes('qwen3:14b') ? 'qwen3:14b' : names[0]);
+                  setSelectedModel(defaultModel);
+                  localStorage.setItem('recif_ollama_model', defaultModel);
+                  window.dispatchEvent(new Event('ollama_model_changed'));
+                } else {
+                  setSelectedModel(savedModel);
+                }
+              }
+            }
+          } else {
+            throw new Error('Incapable de joindre Ollama tags API');
+          }
+        } catch (err) {
+          console.warn("Sidebar: Failed to fetch local Ollama models. Is Ollama running and CORS configured?", err);
+          const savedModel = localStorage.getItem('recif_ollama_model') || 'gemma4:latest';
+          setLocalModels(Array.from(new Set([savedModel, 'gemma4:latest', 'qwen3:14b'])));
+          if (!savedModel) {
+            setSelectedModel('gemma4:latest');
+            localStorage.setItem('recif_ollama_model', 'gemma4:latest');
+          }
+        }
+      };
+
+      fetchOllamaModels();
+    }
+  }, [aiProvider]);
+
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+    localStorage.setItem('recif_ollama_model', model);
+    window.dispatchEvent(new Event('ollama_model_changed'));
   };
 
   useEffect(() => {
@@ -324,6 +392,28 @@ export default function Sidebar() {
               {aiProvider === 'gemini' ? 'Gemini (Cloud)' : 'Ollama (Local)'}
             </span>
           </button>
+
+          {aiProvider === 'ollama' && (
+            <div className={styles.ollamaModelSection}>
+              <span className={styles.aiToggleLabel}>Modèle Ollama :</span>
+              <select
+                className={styles.modelSelect}
+                value={selectedModel}
+                onChange={(e) => handleModelChange(e.target.value)}
+                disabled={localModels.length === 0}
+              >
+                {localModels.length > 0 ? (
+                  localModels.map((model) => (
+                    <option key={model} value={model}>
+                      {model}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">(Aucun modèle)</option>
+                )}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Section Profil de l'utilisateur */}

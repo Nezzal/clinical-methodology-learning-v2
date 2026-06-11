@@ -253,7 +253,8 @@ export default function ProtocoleGenerator() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify({ protocolContent: item.content })
       })
@@ -308,7 +309,8 @@ export default function ProtocoleGenerator() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify({ messages: selectedChat.messages })
       });
@@ -412,7 +414,8 @@ export default function ProtocoleGenerator() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify(formData)
       });
@@ -510,7 +513,8 @@ export default function ProtocoleGenerator() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify({
           ...formData,

@@ -433,7 +433,8 @@ export default function QuizPage() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify({ type: typeToGen, topic })
       });

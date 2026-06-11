@@ -241,6 +241,7 @@ export async function POST(req: Request) {
   let methodologyName = 'Non spécifiée';
   let benefitTypeName = 'Non spécifié';
   let preferredProvider = 'gemini';
+  let headerOllamaModel: string | null = null;
 
   let objectives = '';
   let bias = '';
@@ -291,6 +292,7 @@ export async function POST(req: Request) {
 
     const requestHeaders = new Headers(req.headers);
     preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    headerOllamaModel = requestHeaders.get('x-ollama-model');
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     const studyCategories = recifKb.algerian_regulation.study_categories;
@@ -360,7 +362,7 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
 
     if (!apiKey) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
@@ -432,7 +434,7 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
 
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const studyCategories = recifKb.algerian_regulation.study_categories;
       const resolvedMethodologyName = methodologyName !== 'Non spécifiée' ? methodologyName : (studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée');

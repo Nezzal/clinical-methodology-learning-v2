@@ -567,6 +567,7 @@ function mapCustomJsonToProtocolParams(obj: any, rawChatText?: string): any {
 
 export async function POST(req: Request) {
   loadEnvLocal();
+  let headerOllamaModel: string | null = null;
   try {
     const { messages, protocolContent } = await req.json();
     console.log("📨 [Extracteur] Requête reçue :", { 
@@ -578,6 +579,7 @@ export async function POST(req: Request) {
     
     const requestHeaders = new Headers(req.headers);
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    headerOllamaModel = requestHeaders.get('x-ollama-model');
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     let fullUnprunedChatText = '';
@@ -763,7 +765,7 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
 
     // --- REPLI OLLAMA (si pas de clé API, ou si Gemini a échoué) ---
     const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-    const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+    const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
     const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
     if (resolvedModel) {

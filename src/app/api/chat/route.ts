@@ -704,6 +704,7 @@ Règles d'utilisation du contexte :
 export async function POST(req: Request) {
   loadEnvLocal();
   let messages: any[] = [];
+  let headerOllamaModel: string | null = null;
   try {
     const body = await req.json();
     messages = body.messages;
@@ -714,13 +715,14 @@ export async function POST(req: Request) {
     }
 
     const requestHeaders = new Headers(req.headers);
+    headerOllamaModel = requestHeaders.get('x-ollama-model');
     const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
     const lastUserMessage = messages[messages.length - 1]?.content || '';
 
     // Configuration LLM local Ollama
     const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-    const ollamaModel = process.env.OLLAMA_MODEL || 'gemma2:2b';
+    const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma2:2b';
 
     // Fallback Mock si la clé API n'est pas configurée
     if (!apiKey) {
@@ -869,7 +871,7 @@ export async function POST(req: Request) {
       const mode = 'free'; // Par défaut en cas d'erreur critique
 
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma2:2b';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma2:2b';
 
       // 1. Tenter d'utiliser Ollama
       const localContext = await getLocalContextForLLM(userQuery);

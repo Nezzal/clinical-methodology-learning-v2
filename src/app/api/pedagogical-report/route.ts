@@ -171,6 +171,7 @@ export async function POST(req: Request) {
   let recentQuestions: string[] = [];
   let recentProtocols: string[] = [];
   let preferredProvider = 'gemini';
+  let headerOllamaModel: string | null = null;
 
   try {
     const data = await req.json();
@@ -183,6 +184,7 @@ export async function POST(req: Request) {
 
     const requestHeaders = new Headers(req.headers);
     preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    headerOllamaModel = requestHeaders.get('x-ollama-model');
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Calculs de base
@@ -197,7 +199,7 @@ export async function POST(req: Request) {
     // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
 
@@ -310,7 +312,7 @@ Instructions pour le rapport :
     // 1. Tenter d'utiliser Ollama en secours local
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const totalQuiz = quizScore.total || 0;
       const correctQuiz = quizScore.correct || 0;

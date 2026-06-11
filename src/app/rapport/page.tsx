@@ -188,13 +188,16 @@ Instructions pour le rapport :
           const models = tagsData.models || [];
           
           if (models.length > 0) {
-            // Chercher gemma4 ou un modèle gemma en priorité
-            let activeModel = 'gemma4:latest';
-            const matchingModel = models.find((m: any) => m.name.includes('gemma4') || m.name.includes('gemma'));
-            if (matchingModel) {
-              activeModel = matchingModel.name;
-            } else {
-              activeModel = models[0].name;
+            // Utiliser le modèle sélectionné ou fallback
+            let activeModel = localStorage.getItem('recif_ollama_model') || 'gemma4:latest';
+            const hasModel = models.some((m: any) => m.name === activeModel);
+            if (!hasModel && models.length > 0) {
+              const matchingModel = models.find((m: any) => m.name.includes('gemma4') || m.name.includes('gemma'));
+              if (matchingModel) {
+                activeModel = matchingModel.name;
+              } else {
+                activeModel = models[0].name;
+              }
             }
 
             const chatResponse = await fetch('http://127.0.0.1:11434/api/chat', {
@@ -236,7 +239,8 @@ Instructions pour le rapport :
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-ai-provider': provider
+          'x-ai-provider': provider,
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify(payload)
       });

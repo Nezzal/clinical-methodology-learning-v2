@@ -631,7 +631,8 @@ export default function Tuteur() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify({
           messages: updatedMessages.map((m, idx) => {
@@ -756,7 +757,8 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini'
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
         },
         body: JSON.stringify({ messages })
       });

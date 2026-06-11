@@ -297,6 +297,7 @@ export async function POST(req: Request) {
   let methodologyName = 'Non spécifiée';
   let benefitTypeName = 'Non spécifié';
   let preferredProvider = 'gemini';
+  let headerOllamaModel: string | null = null;
 
   // New variables for Approche B
   let objectives = '';
@@ -349,6 +350,7 @@ export async function POST(req: Request) {
 
     const requestHeaders = new Headers(req.headers);
     preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    headerOllamaModel = requestHeaders.get('x-ollama-model');
     const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
 
     // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
@@ -493,7 +495,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
     // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
@@ -573,7 +575,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
     // Tente de basculer vers Ollama local en cas d'erreur de Gemini (offline / rate limit)
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = process.env.OLLAMA_MODEL || 'gemma4:latest';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
