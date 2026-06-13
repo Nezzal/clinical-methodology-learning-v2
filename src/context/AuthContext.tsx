@@ -294,7 +294,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Écoute de l'activité pour mettre à jour la présence (heartbeat toutes les 60s)
   useEffect(() => {
-    if (!user || !profile) return;
+    if (!user || !role) return;
 
     if (role === 'admin' || role === 'teacher') return; // Ne pas tracker les administrateurs/enseignants
 
@@ -312,7 +312,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, 60000);
 
     return () => clearInterval(interval);
-  }, [user, profile]);
+  }, [user, role]);
 
   const signInWithGoogle = async () => {
     if (!isFirebaseEnabled || !auth) throw new Error('Firebase non configuré');
