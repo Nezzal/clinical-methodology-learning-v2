@@ -3,6 +3,7 @@ import { getAuth, Auth } from 'firebase/auth';
 import { 
   initializeFirestore, 
   persistentLocalCache, 
+  persistentMultipleTabManager,
   Firestore,
   disableNetwork,
   enableNetwork
@@ -52,9 +53,11 @@ if (isFirebaseEnabled) {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     
-    // Initialise Firestore avec le cache persistant mono-onglet (optimal et robuste pour Desktop/Electron)
+    // Initialise Firestore avec le cache persistant multi-onglet (évite les conflits d'accès exclusif IndexedDB)
     db = initializeFirestore(app, {
-      localCache: persistentLocalCache({})
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
     });
 
     // Gérer l'état réseau de Firestore de manière transparente pour éviter le spam de connexion en console
