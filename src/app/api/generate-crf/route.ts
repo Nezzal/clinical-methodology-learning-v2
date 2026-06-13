@@ -415,7 +415,7 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
               temperature: 0.3,
             }
           }),
-          60000 // 60 secondes
+          90000 // 90 secondes
         );
         break;
       } catch (err: any) {

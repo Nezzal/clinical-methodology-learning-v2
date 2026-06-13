@@ -37,7 +37,7 @@ async function getDocsWithCacheFallback(q: any): Promise<QuerySnapshot<any, any>
   try {
     const serverPromise = getDocs(q);
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('TIMEOUT')), 1500)
+      setTimeout(() => reject(new Error('TIMEOUT')), 5000)
     );
     return await Promise.race([serverPromise, timeoutPromise]);
   } catch (error) {
@@ -64,7 +64,7 @@ async function getDocWithCacheFallback(docRef: any): Promise<DocumentSnapshot<an
   try {
     const serverPromise = getDoc(docRef);
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('TIMEOUT')), 1500)
+      setTimeout(() => reject(new Error('TIMEOUT')), 5000)
     );
     return await Promise.race([serverPromise, timeoutPromise]);
   } catch (error) {

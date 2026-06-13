@@ -564,6 +564,9 @@ export default function ProtocoleGenerator() {
           };
           saveFirestoreProtocol(user.uid, updatedProtocolItem)
             .catch(e => console.error("Erreur de sauvegarde du CRF sur Firestore:", e));
+          
+          syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, getProgress())
+            .catch(e => console.error("Erreur de synchronisation du profil sur Firestore après génération du CRF:", e));
         }
       } else {
         throw new Error(data.error || 'Erreur lors de la génération du CRF.');
