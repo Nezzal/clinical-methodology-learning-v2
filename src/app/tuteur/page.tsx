@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreChat, loadFirestoreChats, deleteFirestoreChat, syncUserProfile } from '@/utils/firestore';
@@ -240,6 +241,7 @@ function parseMarkdownToHtml(md: string): string {
 
 export default function Tuteur() {
   const { user } = useAuth();
+  const router = useRouter();
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -1996,9 +1998,18 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                           <button 
                             type="button" 
                             className={styles.transferBtn}
-                            onClick={() => {
+                            onClick={async () => {
                               localStorage.setItem('recif_imported_params', JSON.stringify(params));
-                              window.location.href = '/protocole?import=direct';
+                              if (user && activeSessionId) {
+                                const existingSession = sessions.find(s => s.id === activeSessionId);
+                                const currentTitle = existingSession?.title || 'Discussion';
+                                try {
+                                  await saveFirestoreChat(user.uid, activeSessionId, currentTitle, messages, chatMode || undefined);
+                                } catch (e) {
+                                  console.error("Erreur de sauvegarde finale avant redirection:", e);
+                                }
+                              }
+                              router.push('/protocole?import=direct');
                             }}
                           >
                             <span>Transférer vers le Générateur</span>
