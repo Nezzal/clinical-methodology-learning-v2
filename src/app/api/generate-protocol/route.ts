@@ -111,7 +111,8 @@ function getStaticFallbackProtocol(
     dataAnalysis: string;
   },
   preferredProvider: string = 'gemini',
-  isError = false
+  isError = false,
+  errorMessage = ''
 ): string {
   const {
     title, acronym, question, design, population, inclusion, exclusion,
@@ -126,7 +127,7 @@ function getStaticFallbackProtocol(
     notice = `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`;
   } else {
     notice = isError
-      ? `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible. Vous pouvez basculer sur Ollama localement ou réessayer.*`
+      ? `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible.${errorMessage ? ` (Détails : ${errorMessage})` : ''} Vous pouvez basculer sur Ollama localement ou réessayer.*`
       : `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
   }
 
@@ -597,7 +598,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
         benefitTypeName, objectives, bias, justification, hypothesis, logistics,
         personnel, budget, calendar, ethics, references, annexes,
         samplingStrategy, dataCollection, dataAnalysis
-      }, preferredProvider, true);
+      }, preferredProvider, true, error.message || String(error));
       return NextResponse.json({ protocol: mockProtocol });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;

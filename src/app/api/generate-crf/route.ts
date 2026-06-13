@@ -95,14 +95,15 @@ function getStaticFallbackCrf(
   methodologyName: string,
   benefitTypeName: string,
   preferredProvider = 'gemini',
-  isError = false
+  isError = false,
+  errorMessage = ''
 ): string {
   let notice = '';
   if (preferredProvider === 'ollama') {
     notice = `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`;
   } else {
     notice = isError
-      ? `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible.*`
+      ? `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible.${errorMessage ? ` (Détails : ${errorMessage})` : ''}*`
       : `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
   }
 
@@ -511,7 +512,7 @@ Rédige le CRF en français en Markdown, hautement structuré et professionnel.`
     }
 
     try {
-      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, preferredProvider, true);
+      const mockCrf = getStaticFallbackCrf(title, acronym, question, design, population, inclusion, exclusion, primaryEndpoint, secondaryEndpoints, intervention, methodologyName, benefitTypeName, preferredProvider, true, error.message || String(error));
       return NextResponse.json({ crf: mockCrf });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;
