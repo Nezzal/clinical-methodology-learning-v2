@@ -887,7 +887,7 @@ export async function POST(req: Request) {
       }
 
       // 2. Repli heuristique classique
-      const notePrefix = "Bonjour ! Je suis votre tuteur virtuel RECIF.\n\n⚠️ *Note : Impossible de joindre le service d'IA (appareil hors-ligne ou limite de requêtes de l'API de Google de type quota atteinte).* Voici une réponse issue de notre base de connaissances locale :";
+      const notePrefix = `Bonjour ! Je suis votre tuteur virtuel RECIF.\n\n⚠️ *Note : Impossible de joindre le service d'IA (appareil hors-ligne ou limite de requêtes de l'API de Google de type quota atteinte). (Détails : ${error.message || String(error)})* Voici une réponse issue de notre base de connaissances locale :`;
       
       const mockReply = buildOfflineResponse(userQuery, notePrefix);
       return NextResponse.json({ text: mockReply });
