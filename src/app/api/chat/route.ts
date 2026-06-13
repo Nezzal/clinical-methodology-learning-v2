@@ -850,11 +850,19 @@ export async function POST(req: Request) {
         attempt++;
         console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (Chat):`, err.message || err);
         
-        // Si on est hors-ligne, si le quota est dépassé, ou en cas de timeout, inutile de réessayer
-        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) {
+        if (checkIsOffline(err) || attempt >= maxAttempts) {
           throw err;
         }
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+
+        let waitTime = Math.pow(2, attempt) * 2000;
+        if (checkIsQuotaOrRateLimit(err)) {
+          console.log(`⏳ [Chat API] Quota dépassé. Attente de 6s avant la tentative suivante...`);
+          waitTime = 6000;
+        } else if (err.message === 'TIMEOUT_EXCEEDED') {
+          console.log(`⏳ [Chat API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          waitTime = 3000;
+        }
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
 

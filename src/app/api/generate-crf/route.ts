@@ -422,8 +422,20 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
       } catch (err: any) {
         attempt++;
         console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (CRF):`, err.message || err);
-        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) throw err;
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        
+        if (checkIsOffline(err) || attempt >= maxAttempts) {
+          throw err;
+        }
+
+        let waitTime = Math.pow(2, attempt) * 2000;
+        if (checkIsQuotaOrRateLimit(err)) {
+          console.log(`⏳ [CRF API] Quota dépassé. Attente de 6s avant la tentative suivante...`);
+          waitTime = 6000;
+        } else if (err.message === 'TIMEOUT_EXCEEDED') {
+          console.log(`⏳ [CRF API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          waitTime = 3000;
+        }
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
 

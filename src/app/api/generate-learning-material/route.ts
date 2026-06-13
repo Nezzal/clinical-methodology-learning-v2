@@ -380,11 +380,20 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
       } catch (err: any) {
         attempt++;
         console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent:`, err.message || err);
-        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) {
-          throw err; // Lancer l'erreur immédiatement sans attendre si hors-ligne/quota dépassé/timeout
+        
+        if (checkIsOffline(err) || attempt >= maxAttempts) {
+          throw err;
         }
-        // Attente exponentielle (2s, 4s...)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+
+        let waitTime = Math.pow(2, attempt) * 2000;
+        if (checkIsQuotaOrRateLimit(err)) {
+          console.log(`⏳ [Learning Material API] Quota dépassé. Attente de 6s avant la tentative suivante...`);
+          waitTime = 6000;
+        } else if (err.message === 'TIMEOUT_EXCEEDED') {
+          console.log(`⏳ [Learning Material API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          waitTime = 3000;
+        }
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
 

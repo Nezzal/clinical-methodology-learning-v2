@@ -298,8 +298,20 @@ Instructions pour le rapport :
       } catch (err: any) {
         attempt++;
         console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (Report):`, err.message || err);
-        if (checkIsOffline(err) || checkIsQuotaOrRateLimit(err) || err.message === 'TIMEOUT_EXCEEDED' || attempt >= maxAttempts) throw err;
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        
+        if (checkIsOffline(err) || attempt >= maxAttempts) {
+          throw err;
+        }
+
+        let waitTime = Math.pow(2, attempt) * 2000;
+        if (checkIsQuotaOrRateLimit(err)) {
+          console.log(`⏳ [Pedagogical Report API] Quota dépassé. Attente de 6s avant la tentative suivante...`);
+          waitTime = 6000;
+        } else if (err.message === 'TIMEOUT_EXCEEDED') {
+          console.log(`⏳ [Pedagogical Report API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          waitTime = 3000;
+        }
+        await new Promise(resolve => setTimeout(resolve, waitTime));
       }
     }
 
