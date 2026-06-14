@@ -86,7 +86,7 @@ export default function Sidebar() {
     if (aiProvider === 'ollama') {
       const fetchOllamaModels = async () => {
         try {
-          const res = await fetch('http://127.0.0.1:11434/api/tags');
+          const res = await fetch('/api/ollama-tags');
           if (res.ok) {
             const data = await res.json();
             if (data.models && Array.isArray(data.models)) {
