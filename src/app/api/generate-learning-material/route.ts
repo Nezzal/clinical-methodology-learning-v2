@@ -358,6 +358,35 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
              errMsg.includes('exceeded your current quota');
     };
 
+    const getRetryDelay = (err: any): number => {
+      let delay = 6;
+      try {
+        const errMsg = err.message || '';
+        let errObj: any = null;
+        const jsonStartIndex = errMsg.indexOf('{');
+        if (jsonStartIndex !== -1) {
+          const jsonStr = errMsg.substring(jsonStartIndex);
+          errObj = JSON.parse(jsonStr);
+        }
+        if (errObj) {
+          const details = errObj.error?.details || errObj.details || [];
+          const retryInfo = details.find((d: any) => d['@type']?.includes('RetryInfo') || d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
+          if (retryInfo && retryInfo.retryDelay) {
+            const parsed = parseFloat(retryInfo.retryDelay.replace('s', ''));
+            if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
+          }
+        }
+      } catch (e) {}
+      try {
+        const match = err.message?.match(/Please retry in ([0-9.]+)\s*s/i);
+        if (match) {
+          const parsed = parseFloat(match[1]);
+          if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
+        }
+      } catch (e) {}
+      return delay;
+    };
+
     let response;
     let attempt = 0;
     const maxAttempts = 3;
@@ -387,8 +416,9 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
 
         let waitTime = Math.pow(2, attempt) * 2000;
         if (checkIsQuotaOrRateLimit(err)) {
-          console.log(`⏳ [Learning Material API] Quota dépassé. Attente de 6s avant la tentative suivante...`);
-          waitTime = 6000;
+          const delaySeconds = getRetryDelay(err);
+          console.log(`⏳ [Learning Material API] Quota dépassé. Attente de ${delaySeconds}s avant la tentative suivante...`);
+          waitTime = delaySeconds * 1000;
         } else if (err.message === 'TIMEOUT_EXCEEDED') {
           console.log(`⏳ [Learning Material API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
           waitTime = 3000;
