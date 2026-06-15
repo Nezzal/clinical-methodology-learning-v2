@@ -7,49 +7,49 @@ import Sidebar from './Sidebar';
 
 const faqData = [
   {
-    category: "🔬 Méthodologie Clinique (RECIF)",
+    category: "🚀 Prise en main & Fonctionnalités",
     questions: [
       {
-        q: "Qu'est-ce qu'un biais de confusion ?",
-        a: "C'est un biais induit par une variable externe (facteur de confusion) liée à la fois à l'exposition et au critère de jugement, faussant la relation étudiée. Le guide RECIF recommande de le contrôler à la conception (randomisation, appariement, restriction) ou lors de l'analyse statistique (stratification, ajustement par régression)."
+        q: "Comment générer un protocole d'étude clinique ?",
+        a: "Vous pouvez le concevoir de deux manières : 1) Dans le menu \"Générateur de Protocole\", en saisissant les 23 paramètres requis ou via le questionnaire guidé. 2) Directement depuis le \"Tuteur Virtuel\" en discutant de votre idée de projet clinique. Le coach IA analysera la discussion pour pré-remplir et générer le protocole en un clic."
       },
       {
-        q: "Comment calculer le nombre de sujets nécessaires (NSN) ?",
-        a: "Le NSN dépend de quatre paramètres : l'erreur alpha (généralement fixée à 5%), la puissance statistique 1-bêta (souvent 80% ou 90%), la différence clinique minimale attendue, et la variabilité (variance) attendue du critère. Vous pouvez utiliser le module \"Calculateur NSN\" de la plateforme pour obtenir le calcul précis."
+        q: "Qu'est-ce que le Cahier d'Observation (CRF) et comment l'obtenir ?",
+        a: "Le CRF (Case Report Form) contient tous les formulaires requis pour recueillir les données de vos patients. Dès que votre protocole est généré, la plateforme conçoit automatiquement un CRF adapté à vos critères de jugement. Vous pouvez le visualiser et l'exporter depuis l'onglet \"Cahier d'Observation (CRF)\"."
       },
       {
-        q: "Quelle est la différence entre une étude observationnelle et interventionnelle ?",
-        a: "Dans une étude interventionnelle (ex: essai clinique), le chercheur affecte délibérément une intervention (un traitement, une procédure) pour en évaluer les effets. Dans une étude observationnelle (ex: cohorte, cas-témoin), le chercheur observe les événements et pratiques réels sans modifier la prise en charge médicale courante."
+        q: "Comment utiliser le Calculateur NSN ?",
+        a: "Accédez au module \"Calculateur NSN\". Saisissez vos hypothèses (risque alpha, puissance, différence clinique attendue) pour obtenir immédiatement le Nombre de Sujets Nécessaires. L'application rédige automatiquement le paragraphe de justification statistique à copier dans votre protocole."
+      },
+      {
+        q: "Comment forcer le Tuteur IA à citer un document réglementaire ?",
+        a: "Dans vos questions au Tuteur IA, demandez-lui explicitement : « Cite la Ligne Directrice de 2025 » ou « Selon la Loi 18-11 ». Il ciblera prioritairement ces bases de connaissances et mentionnera la source exacte sous forme de balise [Document, Page X]."
       }
     ]
   },
   {
-    category: "🛡️ Réglementation Algérienne & Directives",
+    category: "🛠️ Astuces d'Export & Rendu PDF",
     questions: [
       {
-        q: "Qu'impose la Loi n° 18-11 relative à la santé en Algérie ?",
-        a: "La Loi 18-11 encadre strictement toute recherche clinique (articles 377-399). Elle impose l'obtention obligatoire du consentement libre, écrit et éclairé des participants. Elle définit également des peines pénales sévères (amendes et emprisonnement) pour toute étude menée sans autorisation ministérielle préalable."
+        q: "Mes boutons d'action (Copier, PDF) sont coupés sur l'écran, comment faire ?",
+        a: "L'interface s'adaptant automatiquement, sur les petits écrans ou lors de la consultation d'onglets longs comme le CRF, les boutons d'exportation se replient proprement sur une ligne distincte directement sous la barre d'onglets pour rester entièrement accessibles."
       },
       {
-        q: "Quelle autorité valide les essais cliniques en Algérie ?",
-        a: "Toute étude clinique interventionnelle doit obtenir l'autorisation écrite préalable du Ministère de la Santé algérien, après avis favorable du Comité National d'Éthique de la Recherche Clinique (CNERC)."
+        q: "Comment obtenir une pagination et un rendu parfaits à l'export PDF ?",
+        a: "Lors de l'impression, décochez l'option \"En-têtes et pieds de page\" par défaut dans la boîte de dialogue d'impression de votre navigateur. La feuille de style intégrée de la plateforme gère elle-même une mise en page épurée et professionnelle (titres, numéros de pages dynamiques, et version)."
       },
       {
-        q: "Qu'apporte la Ligne Directrice du 28/12/2025 (Version 02) ?",
-        a: "Elle précise les modalités pratiques de mise en œuvre de la Loi 18-11 : la composition requise du dossier de demande d'autorisation, les règles de déclaration des événements indésirables graves (EIG) et les obligations éthiques et de monitoring imposées aux promoteurs et investigateurs."
+        q: "Puis-je modifier le protocole ou le CRF généré ?",
+        a: "Oui ! Utilisez le bouton \"Copier\" pour coller le contenu dans Word ou Google Docs, ou cliquez sur \"Télécharger .md\" pour récupérer le fichier au format Markdown modifiable dans votre éditeur préféré."
       }
     ]
   },
   {
-    category: "💻 Utilisation de la Plateforme",
+    category: "🔌 Connexion & Résolution des problèmes",
     questions: [
       {
-        q: "Comment pré-remplir mon protocole grâce à l'IA ?",
-        a: "Dans le menu \"Générateur de Protocole\", utilisez l'option de pré-remplissage via le Tuteur virtuel. En discutant avec le coach IA étape par étape, il compilera vos réponses et générera une synthèse complète prête à être exportée."
-      },
-      {
-        q: "Comment exporter proprement mes documents en PDF ?",
-        a: "Utilisez le bouton \"Exporter en PDF\" présent sur la prévisualisation. Pour un rendu professionnel sans fioritures, assurez-vous de décocher l'option \"En-têtes et pieds de page\" par défaut dans la boîte de dialogue d'impression de votre navigateur. Notre feuille de style générera automatiquement sa propre pagination propre."
+        q: "Que signifie la bannière \"Mode Hors-ligne\" en haut de l'écran ?",
+        a: "En cas de coupure de votre connexion Internet, l'application bascule automatiquement sur un modèle d'IA local (Ollama) s'il est actif sur votre machine. Dès que le réseau est rétabli, la plateforme repasse sur Google Gemini de façon transparente."
       }
     ]
   }
