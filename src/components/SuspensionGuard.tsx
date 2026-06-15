@@ -5,6 +5,56 @@ import { useAuth } from '@/context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 
+const faqData = [
+  {
+    category: "🔬 Méthodologie Clinique (RECIF)",
+    questions: [
+      {
+        q: "Qu'est-ce qu'un biais de confusion ?",
+        a: "C'est un biais induit par une variable externe (facteur de confusion) liée à la fois à l'exposition et au critère de jugement, faussant la relation étudiée. Le guide RECIF recommande de le contrôler à la conception (randomisation, appariement, restriction) ou lors de l'analyse statistique (stratification, ajustement par régression)."
+      },
+      {
+        q: "Comment calculer le nombre de sujets nécessaires (NSN) ?",
+        a: "Le NSN dépend de quatre paramètres : l'erreur alpha (généralement fixée à 5%), la puissance statistique 1-bêta (souvent 80% ou 90%), la différence clinique minimale attendue, et la variabilité (variance) attendue du critère. Vous pouvez utiliser le module \"Calculateur NSN\" de la plateforme pour obtenir le calcul précis."
+      },
+      {
+        q: "Quelle est la différence entre une étude observationnelle et interventionnelle ?",
+        a: "Dans une étude interventionnelle (ex: essai clinique), le chercheur affecte délibérément une intervention (un traitement, une procédure) pour en évaluer les effets. Dans une étude observationnelle (ex: cohorte, cas-témoin), le chercheur observe les événements et pratiques réels sans modifier la prise en charge médicale courante."
+      }
+    ]
+  },
+  {
+    category: "🛡️ Réglementation Algérienne & Directives",
+    questions: [
+      {
+        q: "Qu'impose la Loi n° 18-11 relative à la santé en Algérie ?",
+        a: "La Loi 18-11 encadre strictement toute recherche clinique (articles 377-399). Elle impose l'obtention obligatoire du consentement libre, écrit et éclairé des participants. Elle définit également des peines pénales sévères (amendes et emprisonnement) pour toute étude menée sans autorisation ministérielle préalable."
+      },
+      {
+        q: "Quelle autorité valide les essais cliniques en Algérie ?",
+        a: "Toute étude clinique interventionnelle doit obtenir l'autorisation écrite préalable du Ministère de la Santé algérien, après avis favorable du Comité National d'Éthique de la Recherche Clinique (CNERC)."
+      },
+      {
+        q: "Qu'apporte la Ligne Directrice du 28/12/2025 (Version 02) ?",
+        a: "Elle précise les modalités pratiques de mise en œuvre de la Loi 18-11 : la composition requise du dossier de demande d'autorisation, les règles de déclaration des événements indésirables graves (EIG) et les obligations éthiques et de monitoring imposées aux promoteurs et investigateurs."
+      }
+    ]
+  },
+  {
+    category: "💻 Utilisation de la Plateforme",
+    questions: [
+      {
+        q: "Comment pré-remplir mon protocole grâce à l'IA ?",
+        a: "Dans le menu \"Générateur de Protocole\", utilisez l'option de pré-remplissage via le Tuteur virtuel. En discutant avec le coach IA étape par étape, il compilera vos réponses et générera une synthèse complète prête à être exportée."
+      },
+      {
+        q: "Comment exporter proprement mes documents en PDF ?",
+        a: "Utilisez le bouton \"Exporter en PDF\" présent sur la prévisualisation. Pour un rendu professionnel sans fioritures, assurez-vous de décocher l'option \"En-têtes et pieds de page\" par défaut dans la boîte de dialogue d'impression de votre navigateur. Notre feuille de style générera automatiquement sa propre pagination propre."
+      }
+    ]
+  }
+];
+
 export default function SuspensionGuard({ children }: { children: React.ReactNode }) {
   const { 
     user, 
@@ -25,6 +75,11 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [error, setError] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
+
+  // États pour la FAQ flottante
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [faqSearch, setFaqSearch] = useState('');
+  const [activeFaq, setActiveFaq] = useState<{ catIndex: number; qIndex: number } | null>(null);
 
   // États pour le statut de connexion internet
   const [isOnline, setIsOnline] = useState(true);
@@ -438,6 +493,30 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
     );
   }
 
+  const toggleFaq = (catIndex: number, qIndex: number) => {
+    if (activeFaq && activeFaq.catIndex === catIndex && activeFaq.qIndex === qIndex) {
+      setActiveFaq(null);
+    } else {
+      setActiveFaq({ catIndex, qIndex });
+    }
+  };
+
+  // Filtrage des FAQ par rapport à la recherche
+  const filteredFaq = faqData.map((cat, catIdx) => {
+    const matchedQuestions = cat.questions.map((q, qIdx) => ({
+      ...q,
+      originalQIndex: qIdx
+    })).filter(q => 
+      q.q.toLowerCase().includes(faqSearch.toLowerCase()) || 
+      q.a.toLowerCase().includes(faqSearch.toLowerCase())
+    );
+    return {
+      ...cat,
+      originalCatIndex: catIdx,
+      questions: matchedQuestions
+    };
+  }).filter(cat => cat.questions.length > 0);
+
   // Si on est sur la page de connexion, afficher le contenu nu (sans Sidebar ni conteneur décalé)
   if (isLoginPage) {
     return <main style={{ width: '100%', minHeight: '100vh' }}>{children}</main>;
@@ -457,6 +536,295 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
       }}>
         {children}
       </main>
+
+      {/* Bouton d'action flottant (FAB) FAQ */}
+      <button
+        onClick={() => setIsFaqOpen(true)}
+        className="faq-fab"
+        style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.95) 0%, rgba(79, 70, 229, 0.95) 100%)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          color: '#ffffff',
+          boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          outline: 'none',
+          padding: 0
+        }}
+        title="Foire Aux Questions"
+        aria-label="Ouvrir la FAQ"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: '24px', height: '24px' }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+      </button>
+
+      {/* Overlay / Arrière-plan flouté */}
+      <div
+        onClick={() => setIsFaqOpen(false)}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(7, 10, 19, 0.4)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 999998,
+          transition: 'opacity 0.3s ease',
+          opacity: isFaqOpen ? 1 : 0,
+          pointerEvents: isFaqOpen ? 'all' : 'none'
+        }}
+      />
+
+      {/* Panneau latéral (Drawer) FAQ */}
+      <div
+        className="faq-drawer"
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: '100vw',
+          maxWidth: '420px',
+          height: '100vh',
+          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(8, 14, 28, 0.99) 100%)',
+          backdropFilter: 'blur(20px)',
+          borderLeft: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '-10px 0 40px rgba(0, 0, 0, 0.5)',
+          zIndex: 999999,
+          transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          transform: isFaqOpen ? 'translateX(0)' : 'translateX(100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box'
+        }}
+      >
+        {/* Header du Drawer */}
+        <div style={{
+          padding: '1.5rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <h3 style={{
+              margin: 0,
+              fontSize: '1.2rem',
+              fontWeight: '700',
+              color: '#ffffff',
+              fontFamily: 'Inter, sans-serif'
+            }}>FAQ & Aide</h3>
+            <p style={{
+              margin: '0.2rem 0 0 0',
+              fontSize: '0.8rem',
+              color: '#64748b',
+              fontFamily: 'Inter, sans-serif'
+            }}>Trouvez des réponses rapides à vos questions</p>
+          </div>
+          <button
+            onClick={() => setIsFaqOpen(false)}
+            className="faq-close-btn"
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '32px',
+              height: '32px',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s, color 0.2s'
+            }}
+            aria-label="Fermer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Barre de recherche */}
+        <div style={{
+          padding: '1rem 1.5rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          position: 'relative'
+        }}>
+          <div style={{ position: 'relative' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{
+              position: 'absolute',
+              left: '0.85rem',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '16px',
+              height: '16px',
+              color: '#64748b',
+              pointerEvents: 'none'
+            }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" />
+            </svg>
+            <input
+              type="text"
+              value={faqSearch}
+              onChange={(e) => setFaqSearch(e.target.value)}
+              placeholder="Rechercher une question, Loi, biais..."
+              style={{
+                background: 'rgba(15, 23, 42, 0.6)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                color: '#ffffff',
+                padding: '0.75rem 2.5rem 0.75rem 2.5rem',
+                fontSize: '0.9rem',
+                width: '100%',
+                boxSizing: 'border-box',
+                outline: 'none',
+                fontFamily: 'Inter, sans-serif'
+              }}
+            />
+            {faqSearch && (
+              <button
+                onClick={() => setFaqSearch('')}
+                style={{
+                  position: 'absolute',
+                  right: '0.85rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: '0.85rem'
+                }}
+                type="button"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Liste des Questions / Accordéons */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '1.5rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem'
+        }} className="faq-drawer-content">
+          {filteredFaq.length === 0 ? (
+            <div style={{
+              textAlign: 'center',
+              padding: '3rem 1rem',
+              color: '#64748b',
+              fontFamily: 'Inter, sans-serif'
+            }}>
+              <span style={{ fontSize: '2rem', display: 'block', marginBottom: '1rem' }}>🔍</span>
+              <p style={{ margin: 0, fontSize: '0.9rem' }}>Aucun résultat trouvé pour « <strong>{faqSearch}</strong> »</p>
+            </div>
+          ) : (
+            filteredFaq.map((cat) => (
+              <div key={cat.category} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <h4 style={{
+                  fontSize: '0.75rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: '#0d9488',
+                  margin: '0.5rem 0 0.5rem 0',
+                  fontWeight: '700',
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  {cat.category}
+                </h4>
+                {cat.questions.map((q) => {
+                  const isOpen = activeFaq !== null && 
+                    activeFaq.catIndex === cat.originalCatIndex && 
+                    activeFaq.qIndex === q.originalQIndex;
+                  return (
+                    <div
+                      key={q.q}
+                      className="faq-accordion-card"
+                      style={{
+                        background: 'rgba(30, 41, 59, 0.3)',
+                        borderRadius: '10px',
+                        border: isOpen ? '1px solid rgba(13, 148, 136, 0.4)' : '1px solid rgba(255, 255, 255, 0.05)',
+                        overflow: 'hidden',
+                        transition: 'border-color 0.2s, background-color 0.2s'
+                      }}
+                    >
+                      <div
+                        onClick={() => toggleFaq(cat.originalCatIndex, q.originalQIndex)}
+                        style={{
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '1rem'
+                        }}
+                      >
+                        <span style={{
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          color: '#f8fafc',
+                          lineHeight: '1.4',
+                          fontFamily: 'Inter, sans-serif'
+                        }}>
+                          {q.q}
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" style={{
+                          width: '14px',
+                          height: '14px',
+                          color: isOpen ? '#0d9488' : '#94a3b8',
+                          transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                          transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                          flexShrink: 0
+                        }}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                      </div>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateRows: isOpen ? '1fr' : '0fr',
+                        transition: 'grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                        overflow: 'hidden'
+                      }}>
+                        <div style={{ minHeight: 0 }}>
+                          <div style={{
+                            padding: '0 1rem 1rem 1rem',
+                            fontSize: '0.85rem',
+                            color: '#94a3b8',
+                            lineHeight: '1.5',
+                            fontFamily: 'Inter, sans-serif',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.02)'
+                          }}>
+                            {q.a}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
       {/* Bannière de notification réseau */}
       {showNetworkBanner && (
@@ -532,6 +900,39 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
         @keyframes slideDown {
           from { transform: translate(-50%, -30px); opacity: 0; }
           to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .faq-fab {
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, background 0.3s ease !important;
+        }
+        .faq-fab:hover {
+          transform: scale(1.1) rotate(5deg) !important;
+          box-shadow: 0 12px 40px rgba(13, 148, 136, 0.5) !important;
+          background: linear-gradient(135deg, rgba(20, 184, 166, 0.95) 0%, rgba(99, 102, 241, 0.95) 100%) !important;
+        }
+        .faq-fab:active {
+          transform: scale(0.95) !important;
+        }
+        .faq-drawer-content {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+        .faq-drawer-content::-webkit-scrollbar {
+          width: 6px;
+        }
+        .faq-drawer-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .faq-drawer-content::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.15);
+          border-radius: 3px;
+        }
+        .faq-accordion-card:hover {
+          background-color: rgba(30, 41, 59, 0.5) !important;
+          border-color: rgba(13, 148, 136, 0.25) !important;
+        }
+        .faq-close-btn:hover {
+          background-color: rgba(255, 255, 255, 0.1) !important;
+          color: #ffffff !important;
         }
       `}} />
     </div>
