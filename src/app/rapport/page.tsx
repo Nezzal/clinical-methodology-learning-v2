@@ -179,7 +179,8 @@ Instructions pour le rapport :
    - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
    - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
    - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
-3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.`;
+3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
+4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
 
         // Tenter d'interroger les tags pour voir si Ollama est actif et lister ses modèles
         const tagsResponse = await fetch('http://127.0.0.1:11434/api/tags');
@@ -208,7 +209,7 @@ Instructions pour le rapport :
                 messages: [
                   { 
                     role: 'system', 
-                    content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé et constructif en français sous forme de Markdown, sans préambule ni conclusion." 
+                    content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé et constructif en français sous forme de Markdown, sans préambule ni conclusion, et sans utiliser aucun émoji ou émoticône." 
                   },
                   { role: 'user', content: prompt }
                 ],
