@@ -360,7 +360,7 @@ Instructions pour le rapport :
             </button>
           </div>
 
-          <div className={styles.reportPaper}>
+           <div className={styles.reportPaper}>
             <div className="print-only-header" style={{ display: 'none', borderBottom: '2px solid #005a70', paddingBottom: '0.5rem', marginBottom: '2rem', fontFamily: "'Outfit', sans-serif" }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
@@ -379,14 +379,46 @@ Instructions pour le rapport :
             @media print {
               @page {
                 size: A4;
-                margin: 0;
+                margin: 2.5cm 2.2cm 2.5cm 2.2cm;
+                @bottom-left {
+                  content: "${APP_VERSION_LABEL}";
+                  font-family: 'Inter', sans-serif;
+                  font-size: 8pt;
+                  color: #9ca3af;
+                  border-top: 1px solid #e5e7eb;
+                  vertical-align: top;
+                  padding-top: 8px;
+                }
+                @bottom-center {
+                  content: "";
+                  border-top: 1px solid #e5e7eb;
+                  vertical-align: top;
+                  padding-top: 8px;
+                }
+                @bottom-right {
+                  content: "Page " counter(page);
+                  font-family: 'Inter', sans-serif;
+                  font-size: 8pt;
+                  color: #9ca3af;
+                  border-top: 1px solid #e5e7eb;
+                  vertical-align: top;
+                  padding-top: 8px;
+                }
               }
               body {
-                padding: 2cm 2.5cm !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 background: white !important;
               }
               .print-only-header {
                 display: block !important;
+              }
+              div, table {
+                overflow: visible !important;
+              }
+              p, li, blockquote, pre, tr, td, th {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
               }
             }
           `}} />

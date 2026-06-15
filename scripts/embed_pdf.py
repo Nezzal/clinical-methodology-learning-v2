@@ -6,7 +6,7 @@ import urllib.error
 from pypdf import PdfReader
 
 # Configuration
-PDF_PATH = "/Users/mac/Projects/ClinicalMethodologyLearning/RECIF.pdf"
+WORKSPACE_DIR = "/Users/mac/Projects/ClinicalMethodologyLearning"
 OUTPUT_JSON_PATH = "src/data/recif-embeddings.json"
 MODEL_NAME = "models/gemini-embedding-2"
 BATCH_SIZE = 20  # Let's keep it safe for rate limits and payload sizes
@@ -29,7 +29,7 @@ def load_gemini_api_key():
                         return parts[1].strip("'\" ")
     return ""
 
-def clean_text(text):
+def clean_text(text, doc_name=None):
     """Nettoie le texte extrait pour éliminer les espaces superflus."""
     if not text:
         return ""
@@ -43,9 +43,10 @@ def clean_text(text):
         # Ignorer les lignes contenant uniquement des numéros (pages)
         if line.isdigit():
             continue
-        # Ignorer les en-têtes courants du RECIF
-        if "RECHERCHE CLINIQUE ET EPIDEMIOLOGIQUE" in line.upper() or "CONCEPTION REDACTION FAISABILITE" in line.upper():
-            continue
+        # Ignorer les en-têtes courants du RECIF si c'est le manuel RECIF
+        if doc_name and "RECIF" in doc_name.upper():
+            if "RECHERCHE CLINIQUE ET EPIDEMIOLOGIQUE" in line.upper() or "CONCEPTION REDACTION FAISABILITE" in line.upper():
+                continue
         cleaned_lines.append(line)
         
     # Recomposer le texte
@@ -53,9 +54,9 @@ def clean_text(text):
     # Supprimer les espaces multiples
     return " ".join(joined.split())
 
-def chunk_pdf(pdf_path):
+def chunk_pdf(pdf_path, doc_name):
     """Lit le PDF et le découpe en paragraphes cohérents par page."""
-    print(f"📖 Lecture du fichier PDF : {pdf_path}...")
+    print(f"📖 Lecture du fichier PDF : {pdf_path} ({doc_name})...")
     reader = PdfReader(pdf_path)
     chunks = []
     
@@ -69,7 +70,7 @@ def chunk_pdf(pdf_path):
         # Séparer par paragraphes (généralement \n\n ou grands espaces)
         # Comme l'extraction fusionne parfois les lignes, on va nettoyer d'abord par blocs
         # puis faire un découpage basé sur la taille si besoin
-        cleaned = clean_text(text)
+        cleaned = clean_text(text, doc_name)
         if len(cleaned) < 50:
             continue  # Trop court pour avoir du sens
             
@@ -103,6 +104,7 @@ def chunk_pdf(pdf_path):
             chunk_text = cleaned[start:end].strip()
             if len(chunk_text) > 40:  # Seulement si le chunk est significatif
                 chunks.append({
+                    "doc": doc_name,
                     "page": page_num,
                     "text": chunk_text
                 })
@@ -151,6 +153,7 @@ def get_embeddings_batch(chunks, api_key):
                     for idx, emb_data in enumerate(embeddings):
                         vector = emb_data.get("values", [])
                         embedded_chunks.append({
+                            "doc": batch[idx].get("doc"),
                             "page": batch[idx]["page"],
                             "text": batch[idx]["text"],
                             "embedding": vector
@@ -195,6 +198,29 @@ def get_embeddings_batch(chunks, api_key):
         
     return embedded_chunks
 
+def find_pdfs(workspace_dir):
+    """Trouve tous les fichiers PDF dans le répertoire de travail."""
+    pdfs = []
+    for file in os.listdir(workspace_dir):
+        if file.lower().endswith(".pdf"):
+            pdfs.append(os.path.join(workspace_dir, file))
+    # Trier pour avoir un traitement reproductible (ex: RECIF d'abord ou ordre alphabétique)
+    pdfs.sort()
+    return pdfs
+
+def get_doc_name(pdf_path):
+    """Génère un nom de document lisible à partir du nom du fichier."""
+    base = os.path.basename(pdf_path)
+    name_without_ext, _ = os.path.splitext(base)
+    # Remplacements et nettoyage simples
+    cleaned = name_without_ext.replace("_", " ").replace("-", " ").strip()
+    # Cas spécifiques
+    if "RECIF" in cleaned.upper():
+        return "Manuel RECIF"
+    if "18 11" in cleaned or "SANTE" in cleaned.upper():
+        return "Loi n° 18-11 relative à la santé"
+    return cleaned
+
 def main():
     api_key = load_gemini_api_key()
     if not api_key:
@@ -204,21 +230,37 @@ def main():
         
     print(f"🔑 Clé API détectée : {api_key[:5]}...{api_key[-5:] if len(api_key) > 10 else ''}")
     
-    # 1. Découper le PDF en paragraphes
-    chunks = chunk_pdf(PDF_PATH)
+    # 1. Détecter tous les PDF du workspace
+    pdf_paths = find_pdfs(WORKSPACE_DIR)
+    if not pdf_paths:
+        print(f"❌ Aucun fichier PDF trouvé dans {WORKSPACE_DIR}")
+        return
+        
+    print(f"📂 {len(pdf_paths)} document(s) PDF détecté(s) à indexer :")
+    for path in pdf_paths:
+        print(f" - {os.path.basename(path)} -> {get_doc_name(path)}")
+        
+    # 2. Découper tous les PDF en paragraphes
+    all_chunks = []
+    for path in pdf_paths:
+        doc_name = get_doc_name(path)
+        chunks = chunk_pdf(path, doc_name)
+        all_chunks.extend(chunks)
+        
+    print(f"\n📦 Nombre total combiné de paragraphes à indexer : {len(all_chunks)}")
     
-    # 2. Générer les embeddings
+    # 3. Générer les embeddings
     start_time = time.time()
     try:
-        embedded_chunks = get_embeddings_batch(chunks, api_key)
+        embedded_chunks = get_embeddings_batch(all_chunks, api_key)
         
-        # 3. Sauvegarder dans le fichier JSON
+        # 4. Sauvegarder dans le fichier JSON
         os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
         with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
             json.dump(embedded_chunks, f, ensure_ascii=False, indent=2)
             
         duration = time.time() - start_time
-        print(f"🎉 Succès ! Indexation terminée en {duration:.2f} secondes.")
+        print(f"\n🎉 Succès ! Indexation terminée en {duration:.2f} secondes.")
         print(f"💾 Fichier sauvegardé sous : {OUTPUT_JSON_PATH} ({len(embedded_chunks)} vecteurs indexés)")
         
     except Exception as e:

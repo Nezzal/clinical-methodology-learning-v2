@@ -639,14 +639,39 @@ export default function ProtocoleGenerator() {
             font-family: var(--font-body);
             color: #1f2937;
             line-height: 1.6;
-            padding: 2cm 2.5cm;
+            margin: 0;
+            padding: 0;
             font-size: 11pt;
             background: #ffffff;
           }
 
           @page {
             size: A4;
-            margin: 0;
+            margin: 2.5cm 2.2cm 2.5cm 2.2cm;
+            @bottom-left {
+              content: "${APP_VERSION_LABEL}";
+              font-family: 'Inter', sans-serif;
+              font-size: 8pt;
+              color: #9ca3af;
+              border-top: 1px solid #e5e7eb;
+              vertical-align: top;
+              padding-top: 8px;
+            }
+            @bottom-center {
+              content: "";
+              border-top: 1px solid #e5e7eb;
+              vertical-align: top;
+              padding-top: 8px;
+            }
+            @bottom-right {
+              content: "Page " counter(page);
+              font-family: 'Inter', sans-serif;
+              font-size: 8pt;
+              color: #9ca3af;
+              border-top: 1px solid #e5e7eb;
+              vertical-align: top;
+              padding-top: 8px;
+            }
           }
 
           .doc-header {
@@ -714,6 +739,7 @@ export default function ProtocoleGenerator() {
             margin-bottom: 0.75rem;
             font-weight: 600;
             page-break-after: avoid;
+            break-after: avoid;
           }
 
           h3 {
@@ -724,12 +750,15 @@ export default function ProtocoleGenerator() {
             margin-bottom: 0.5rem;
             font-weight: 600;
             page-break-after: avoid;
+            break-after: avoid;
           }
 
           p {
             margin-top: 0;
             margin-bottom: 0.85rem;
             text-align: justify;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
 
           ul, ol {
@@ -740,19 +769,22 @@ export default function ProtocoleGenerator() {
 
           li {
             margin-bottom: 0.35rem;
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
 
-          .doc-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            font-size: 8pt;
-            color: #9ca3af;
+          table, tr, td, th {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+
+          div, table {
+            overflow: visible !important;
+          }
+
+          tr, td, th {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
 
           hr {
@@ -763,12 +795,8 @@ export default function ProtocoleGenerator() {
 
           @media print {
             body {
-              padding: 2cm 2.5cm;
-            }
-            .doc-footer {
-              bottom: 1.2cm;
-              left: 2.5cm;
-              right: 2.5cm;
+              margin: 0;
+              padding: 0;
             }
           }
         </style>
@@ -791,10 +819,6 @@ export default function ProtocoleGenerator() {
 
         <div class="doc-body">
           ${formattedHtml}
-        </div>
-
-        <div class="doc-footer">
-          <span>${APP_VERSION_LABEL}</span>
         </div>
 
         <script>
@@ -1384,7 +1408,7 @@ export default function ProtocoleGenerator() {
 
         {/* Prévisualisation de droite */}
         <div className={`${styles.previewCard} glass-card`}>
-          <div className={styles.previewHeader} style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
+          <div className={styles.previewHeader} style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem', paddingBottom: '1rem' }}>
             <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid transparent' }}>
               <button
                 className={`${styles.tabBtn} ${previewMode === 'protocol' ? styles.activeTab : ''}`}
@@ -1403,7 +1427,7 @@ export default function ProtocoleGenerator() {
             </div>
 
             {((previewMode === 'protocol' && generatedProtocol) || (previewMode === 'crf' && generatedCrf)) && (
-              <div className={styles.previewActions}>
+              <div className={styles.previewActions} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', width: '100%' }}>
                 <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleCopy}>
                   Copier
                 </button>

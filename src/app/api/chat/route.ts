@@ -46,6 +46,7 @@ async function getLocalQueryEmbedding(query: string): Promise<number[] | null> {
 
 // Interface pour les paragraphes indexés
 interface EmbeddedChunk {
+  doc?: string;
   page: number;
   text: string;
   embedding: number[];
@@ -138,7 +139,7 @@ function generateDynamicProtocol(subject: string): string {
 * **Éthique (Loi 18-11) :** Avis favorable du Comité d'éthique médicale obligatoire avant tout lancement.`;
 }
 
-function searchOfflineChunks(queryText: string, chunks: EmbeddedChunk[]): { page: number; text: string; score: number }[] {
+function searchOfflineChunks(queryText: string, chunks: EmbeddedChunk[]): { doc?: string; page: number; text: string; score: number }[] {
   const cleanQuery = queryText.toLowerCase().replace(/['’]/g, ' ');
   const rawWords = cleanQuery.split(/[^a-z0-9àâäéèêëîïôöùûüç]+/);
   
@@ -192,6 +193,7 @@ function searchOfflineChunks(queryText: string, chunks: EmbeddedChunk[]): { page
     });
     
     return {
+      doc: chunk.doc,
       page: chunk.page,
       text: chunk.text,
       score
@@ -366,7 +368,7 @@ async function getLocalContextForLLM(queryText: string): Promise<{ context: stri
     source = source ? `${source} + Réglementation` : 'Réglementation Algérienne';
   }
 
-  let matchedChunks: { page: number; text: string; similarity: number }[] = [];
+  let matchedChunks: { page: number; text: string; similarity: number; doc?: string }[] = [];
   let usedSemanticSearch = false;
 
   if (recifEmbeddings && recifEmbeddings.length > 0) {
@@ -375,6 +377,7 @@ async function getLocalContextForLLM(queryText: string): Promise<{ context: stri
       const scoredChunks = recifEmbeddings.map(chunk => ({
         page: chunk.page,
         text: chunk.text,
+        doc: chunk.doc,
         similarity: getCosineSimilarity(queryVector, chunk.embedding)
       }));
 
@@ -387,21 +390,23 @@ async function getLocalContextForLLM(queryText: string): Promise<{ context: stri
       matchedChunks = kwMatches.slice(0, 4).map(c => ({
         page: c.page,
         text: c.text,
+        doc: c.doc,
         similarity: c.score
       }));
     }
   }
 
   if (matchedChunks.length > 0) {
-    context += `[Extraits pertinents du manuel RECIF]\n`;
+    context += `[Extraits pertinents des documents de référence]\n`;
     // E5 sémantique local est précis, on prend les 3 meilleurs blocs (au lieu de 2 de 450 chars) et on fournit le bloc entier (tranché)
     const topPassages = matchedChunks.slice(0, 3);
     topPassages.forEach((chunk) => {
-      context += `Page ${chunk.page} : "${chunk.text}"\n\n`;
+      const docName = chunk.doc || "Manuel RECIF";
+      context += `Document: ${docName}, Page ${chunk.page} : "${chunk.text}"\n\n`;
     });
     source = source 
       ? `${source} + Extraits du manuel (${usedSemanticSearch ? 'sémantique' : 'mots-clés'})` 
-      : `Extraits du manuel RECIF (${usedSemanticSearch ? 'sémantique' : 'mots-clés'})`;
+      : `Extraits de référence (${usedSemanticSearch ? 'sémantique' : 'mots-clés'})`;
   }
 
   if (!context) {
@@ -566,12 +571,13 @@ function buildOfflineResponse(queryText: string, notePrefix: string): string {
   const keywords = rawWords.filter(w => w.length > 1 && !stopWords.has(w));
   
   if (matchedChunks.length > 0) {
-    reply += `📖 **Extraits ciblés du Manuel RECIF (Recherche locale) :**\n\n`;
+    reply += `📖 **Extraits ciblés des documents de référence (Recherche locale) :**\n\n`;
     // Limiter aux 2 passages les plus précis
     const topPassages = matchedChunks.slice(0, 2);
     topPassages.forEach((chunk, index) => {
       const snippet = getSnippet(chunk.text, keywords, 450);
-      reply += `*Page ${chunk.page} :*\n`;
+      const docName = chunk.doc || "Manuel RECIF";
+      reply += `*${docName}, Page ${chunk.page} :*\n`;
       reply += `> "${snippet}"\n\n`;
     });
   } else {
@@ -821,6 +827,7 @@ export async function POST(req: Request) {
         if (queryVector) {
           // Calculer les similitudes avec tous les segments
           const scoredChunks = recifEmbeddings.map(chunk => ({
+            doc: chunk.doc,
             page: chunk.page,
             text: chunk.text,
             similarity: getCosineSimilarity(queryVector, chunk.embedding)
@@ -833,12 +840,13 @@ export async function POST(req: Request) {
 
           console.log(`🎯 [RAG Local] Top 4 segments trouvés (Similitudes max: ${topChunks[0]?.similarity.toFixed(4)}) :`);
           topChunks.forEach((c, idx) => {
-            console.log(`   [${idx + 1}] Page ${c.page} (Sim: ${c.similarity.toFixed(4)}) : "${c.text.substring(0, 60)}..."`);
+            const docName = c.doc || "Manuel RECIF";
+            console.log(`   [${idx + 1}] ${docName}, Page ${c.page} (Sim: ${c.similarity.toFixed(4)}) : "${c.text.substring(0, 60)}..."`);
           });
 
           // Construire la chaîne de contexte avec mentions des pages
           contextString = topChunks
-            .map(c => `[Page ${c.page}] : "${c.text}"`)
+            .map(c => `[Document: ${c.doc || 'Manuel RECIF'}, Page ${c.page}] : "${c.text}"`)
             .join('\n\n');
           
           hasRAG = true;
