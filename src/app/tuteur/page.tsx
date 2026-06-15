@@ -371,7 +371,7 @@ export default function Tuteur() {
 
   const getWelcomeMessage = () => ({
     role: 'assistant' as const,
-    content: `Bonjour ! Je suis votre tuteur virtuel spécialisé dans la méthodologie de recherche clinique et le manuel **RECIF**.\n\nJe peux vous expliquer les différents schémas d'études (cohortes, essais randomisés, etc.), vous détailler les obligations de la **réglementation algérienne (Loi n° 18-11 relative à la santé)**, ou vous aider à concevoir la méthodologie de vos projets. Que souhaitez-vous savoir aujourd'hui ?`,
+    content: `Bonjour ! Je suis votre tuteur virtuel spécialisé dans la méthodologie de recherche clinique (manuel **RECIF**, **Loi n° 18-11 relative à la santé en Algérie**, et **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**).\n\nJe peux vous expliquer les schémas d'études, vous détailler les obligations réglementaires algériennes, ou vous guider sur vos projets. Que souhaitez-vous savoir aujourd'hui ?`,
     timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
   });
 
@@ -1918,7 +1918,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                     setChatMode('protocol');
                     const welcome = {
                       role: 'assistant' as const,
-                      content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **RECIF** et de la **Loi n° 18-11 relative à la santé en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
+                      content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **RECIF**, de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
                       timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
                     };
                     setMessages([welcome]);
