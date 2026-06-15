@@ -376,6 +376,14 @@ Instructions pour le rapport :
           
           <style dangerouslySetInnerHTML={{ __html: `
             @media print {
+              @page {
+                size: A4;
+                margin: 0;
+              }
+              body {
+                padding: 2cm 2.5cm !important;
+                background: white !important;
+              }
               .print-only-header {
                 display: block !important;
               }

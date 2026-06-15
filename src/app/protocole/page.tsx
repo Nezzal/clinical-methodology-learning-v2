@@ -645,7 +645,7 @@ export default function ProtocoleGenerator() {
 
           @page {
             size: A4;
-            margin: 2cm;
+            margin: 0;
           }
 
           .doc-header {
@@ -762,7 +762,12 @@ export default function ProtocoleGenerator() {
 
           @media print {
             body {
-              padding: 0;
+              padding: 2cm 2.5cm;
+            }
+            .doc-footer {
+              bottom: 1.2cm;
+              left: 2.5cm;
+              right: 2.5cm;
             }
           }
         </style>
@@ -789,7 +794,6 @@ export default function ProtocoleGenerator() {
 
         <div class="doc-footer">
           <span>${APP_VERSION_LABEL}</span>
-          <span>Algérie • Ministère de la Santé • RECIF & Loi n° 18-11</span>
         </div>
 
         <script>
