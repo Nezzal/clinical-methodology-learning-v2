@@ -1585,7 +1585,7 @@ Votre superviseur RECIF`;
                                 <div className={styles.protoMeta}>
                                   <strong>[{proto.acronym || 'SANS ACRONYME'}]</strong>
                                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                    {new Date(proto.date).toLocaleDateString('fr-FR')}
+                                    {new Date(proto.date).toLocaleDateString('fr-FR')} à {new Date(proto.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
@@ -1715,7 +1715,7 @@ Votre superviseur RECIF`;
             <div className={styles.modalHeader}>
               <div>
                 <h3>[{activeProtocol.acronym || 'SANS ACRONYME'}] - Rédigé par {selectedStudent?.displayName}</h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Date de création : {new Date(activeProtocol.date).toLocaleDateString('fr-FR')}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Date de création : {new Date(activeProtocol.date).toLocaleDateString('fr-FR')} à {new Date(activeProtocol.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
               <button className={styles.closeBtn} onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>&times;</button>
             </div>

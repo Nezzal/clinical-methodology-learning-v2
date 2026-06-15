@@ -426,6 +426,7 @@ export default function ProtocoleGenerator() {
         setGeneratedProtocol(data.protocol);
         setGeneratedCrf(null);
         setPreviewMode('protocol');
+        
         const protocolId = Math.random().toString(36).substring(7);
         setActiveProtocolId(protocolId);
         
@@ -441,9 +442,9 @@ export default function ProtocoleGenerator() {
         };
 
         updateProgress((stats) => {
-          const updatedHistory = [newProtocolItem, ...stats.recentProtocols];
+          const updatedHistory = [newProtocolItem, ...(stats.recentProtocols || [])];
           return {
-            protocolsGenerated: stats.protocolsGenerated + 1,
+            protocolsGenerated: (stats.protocolsGenerated || 0) + 1,
             recentProtocols: updatedHistory.slice(0, 15) // Garder les 15 derniers
           };
         });
@@ -810,6 +811,39 @@ export default function ProtocoleGenerator() {
     printWindow.document.close();
   };
 
+  const handleNewProtocol = () => {
+    setActiveProtocolId(null);
+    setGeneratedProtocol(null);
+    setGeneratedCrf(null);
+    setTitle('');
+    setAcronym('');
+    setMethodology('observational');
+    setBenefitType('sbid');
+    setQuestion('');
+    setDesign('Essai Clinique Randomisé Contrôlé (ECR)');
+    setIntervention('');
+    setPopulation('');
+    setInclusion('');
+    setExclusion('');
+    setPrimaryEndpoint('');
+    setSecondaryEndpoints('');
+    setObjectives('');
+    setBias('');
+    setJustification('');
+    setHypothesis('');
+    setLogistics('');
+    setPersonnel('');
+    setBudget('');
+    setCalendar('');
+    setEthics('');
+    setReferences('');
+    setAnnexes('');
+    setSamplingStrategy('');
+    setDataCollection('');
+    setDataAnalysis('');
+    setActiveTab('info');
+  };
+
   const handleSelectHistory = (item: any) => {
     setActiveProtocolId(item.id);
     setGeneratedProtocol(item.content);
@@ -859,11 +893,25 @@ export default function ProtocoleGenerator() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Générateur de Protocole de Recherche</h1>
-        <p className={styles.subtitle}>
-          Remplissez les détails cliniques pour générer une trame de protocole formalisée selon les exigences du RECIF.
-        </p>
+      <header className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div>
+          <h1 className={styles.title} style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', margin: 0 }}>
+            <span>Générateur de Protocole de Recherche</span>
+            {activeProtocolId && (
+              <span style={{ fontSize: '0.85rem', fontWeight: 500, padding: '0.25rem 0.6rem', background: '#0d9488', color: 'white', borderRadius: '4px', verticalAlign: 'middle' }}>
+                Chargé : {acronym || 'Sans acronyme'}
+              </span>
+            )}
+          </h1>
+          <p className={styles.subtitle} style={{ margin: '0.25rem 0 0 0' }}>
+            Remplissez les détails cliniques pour générer une trame de protocole formalisée selon les exigences du RECIF.
+          </p>
+        </div>
+        {activeProtocolId && (
+          <button className="btn btn-secondary" onClick={handleNewProtocol}>
+            Nouveau protocole
+          </button>
+        )}
       </header>
 
       <div className={styles.layout}>
@@ -1453,7 +1501,7 @@ export default function ProtocoleGenerator() {
                   <div className={styles.historyMeta}>
                     <span>{h.acronym}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span>{new Date(h.date).toLocaleDateString('fr-FR')}</span>
+                      <span>{new Date(h.date).toLocaleDateString('fr-FR')} à {new Date(h.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                       <button
                         className={styles.deleteBtn}
                         onClick={(e) => handleDeleteProtocol(e, h.id)}

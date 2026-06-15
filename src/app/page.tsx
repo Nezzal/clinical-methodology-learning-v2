@@ -223,7 +223,7 @@ export default function Dashboard() {
                 <li key={p.id} className={styles.protocolItem}>
                   <div className={styles.protocolMeta}>
                     <h5>[{p.acronym}] {p.title.length > 25 ? p.title.substring(0, 25) + '...' : p.title}</h5>
-                    <span>{new Date(p.date).toLocaleDateString('fr-FR')}</span>
+                    <span>{new Date(p.date).toLocaleDateString('fr-FR')} à {new Date(p.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   <Link href={`/protocole?id=${p.id}`} style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: '600' }}>
                     Voir &rarr;
