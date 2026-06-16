@@ -719,12 +719,19 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
       let response;
       let attempt = 0;
       const maxAttempts = 3;
+      const modelsToTry = [
+        process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+        'gemini-1.5-flash',
+        'gemini-2.0-flash'
+      ];
 
       while (attempt < maxAttempts) {
+        const currentModel = modelsToTry[attempt % modelsToTry.length];
         try {
+          console.log(`🤖 [Extract Params API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
           response = await withTimeout(
             ai.models.generateContent({
-              model: 'gemini-2.5-flash',
+              model: currentModel,
               contents: [{ role: 'user', parts: [{ text: prompt }] }],
               config: {
                 temperature: 0.1,
@@ -734,10 +741,11 @@ Tu dois impérativement renvoyer uniquement un objet JSON valide contenant exact
             }),
             60000 // 60 secondes de timeout
           );
+          console.log(`✅ [Extract Params API] Réponse obtenue avec succès via le modèle ${currentModel}`);
           break; // Succès
         } catch (err: any) {
           attempt++;
-          console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} d'extraction échouée:`, err.message || err);
+          console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} d'extraction échouée avec le modèle ${currentModel} :`, err.message || err);
           if (attempt >= maxAttempts) {
             console.warn("⚠️ Échec définitif de Gemini. Tentative de repli sur Ollama local...");
             break;

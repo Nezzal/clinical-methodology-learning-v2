@@ -312,12 +312,19 @@ Instructions pour le rapport :
     let response;
     let attempt = 0;
     const maxAttempts = 3;
+    const modelsToTry = [
+      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      'gemini-1.5-flash',
+      'gemini-2.0-flash'
+    ];
 
     while (attempt < maxAttempts) {
+      const currentModel = modelsToTry[attempt % modelsToTry.length];
       try {
+        console.log(`🤖 [Pedagogical Report API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
         response = await withTimeout(
           ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: currentModel,
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
               temperature: 0.6,
@@ -325,10 +332,11 @@ Instructions pour le rapport :
           }),
           90000 // 90 secondes de timeout pour les analyses approfondies
         );
+        console.log(`✅ [Pedagogical Report API] Réponse obtenue avec succès via le modèle ${currentModel}`);
         break; // Succès
       } catch (err: any) {
         attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (Report):`, err.message || err);
+        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
         
         if (checkIsOffline(err) || attempt >= maxAttempts) {
           throw err;
@@ -337,10 +345,10 @@ Instructions pour le rapport :
         let waitTime = Math.pow(2, attempt) * 2000;
         if (checkIsQuotaOrRateLimit(err)) {
           const delaySeconds = getRetryDelay(err);
-          console.log(`⏳ [Pedagogical Report API] Quota dépassé. Attente de ${delaySeconds}s avant la tentative suivante...`);
+          console.log(`⏳ [Pedagogical Report API] Quota dépassé pour ${currentModel}. Attente de ${delaySeconds}s avant la tentative suivante...`);
           waitTime = delaySeconds * 1000;
         } else if (err.message === 'TIMEOUT_EXCEEDED') {
-          console.log(`⏳ [Pedagogical Report API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          console.log(`⏳ [Pedagogical Report API] Timeout dépassé pour ${currentModel}. Attente de 3s avant la tentative suivante...`);
           waitTime = 3000;
         }
         await new Promise(resolve => setTimeout(resolve, waitTime));

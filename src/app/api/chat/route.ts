@@ -869,11 +869,19 @@ export async function POST(req: Request) {
       parts: [{ text: m.content }]
     }));
 
+    const modelsToTry = [
+      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      'gemini-1.5-flash',
+      'gemini-2.0-flash'
+    ];
+
     while (attempt < maxAttempts) {
+      const currentModel = modelsToTry[attempt % modelsToTry.length];
       try {
+        console.log(`🤖 [Chat API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
         response = await withTimeout(
            ai.models.generateContent({
-             model: 'gemini-2.5-flash',
+             model: currentModel,
              contents: contents,
              config: {
                systemInstruction: systemInstruction,
@@ -882,10 +890,11 @@ export async function POST(req: Request) {
            }),
            60000 // 60 secondes de timeout
          );
+        console.log(`✅ [Chat API] Réponse obtenue avec succès via le modèle ${currentModel}`);
         break; // Succès
       } catch (err: any) {
         attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent (Chat):`, err.message || err);
+        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
         
         if (checkIsOffline(err) || attempt >= maxAttempts) {
           throw err;
@@ -894,10 +903,10 @@ export async function POST(req: Request) {
         let waitTime = Math.pow(2, attempt) * 2000;
         if (checkIsQuotaOrRateLimit(err)) {
           const delaySeconds = getRetryDelay(err);
-          console.log(`⏳ [Chat API] Quota dépassé. Attente de ${delaySeconds}s avant la tentative suivante...`);
+          console.log(`⏳ [Chat API] Quota dépassé pour ${currentModel}. Attente de ${delaySeconds}s avant la tentative suivante...`);
           waitTime = delaySeconds * 1000;
         } else if (err.message === 'TIMEOUT_EXCEEDED') {
-          console.log(`⏳ [Chat API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          console.log(`⏳ [Chat API] Timeout dépassé pour ${currentModel}. Attente de 3s avant la tentative suivante...`);
           waitTime = 3000;
         }
         await new Promise(resolve => setTimeout(resolve, waitTime));

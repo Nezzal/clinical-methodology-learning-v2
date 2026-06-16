@@ -390,12 +390,19 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
     let response;
     let attempt = 0;
     const maxAttempts = 3;
+    const modelsToTry = [
+      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+      'gemini-1.5-flash',
+      'gemini-2.0-flash'
+    ];
 
     while (attempt < maxAttempts) {
+      const currentModel = modelsToTry[attempt % modelsToTry.length];
       try {
+        console.log(`🤖 [Learning Material API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
         response = await withTimeout(
           ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: currentModel,
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {
               temperature: 0.8,
@@ -405,10 +412,11 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
           }),
           60000 // 60 secondes de timeout
         );
+        console.log(`✅ [Learning Material API] Réponse obtenue avec succès via le modèle ${currentModel}`);
         break; // Succès
       } catch (err: any) {
         attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée pour generateContent:`, err.message || err);
+        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
         
         if (checkIsOffline(err) || attempt >= maxAttempts) {
           throw err;
@@ -417,10 +425,10 @@ Renvoie un tableau JSON contenant exactement 5 objets.`;
         let waitTime = Math.pow(2, attempt) * 2000;
         if (checkIsQuotaOrRateLimit(err)) {
           const delaySeconds = getRetryDelay(err);
-          console.log(`⏳ [Learning Material API] Quota dépassé. Attente de ${delaySeconds}s avant la tentative suivante...`);
+          console.log(`⏳ [Learning Material API] Quota dépassé pour ${currentModel}. Attente de ${delaySeconds}s avant la tentative suivante...`);
           waitTime = delaySeconds * 1000;
         } else if (err.message === 'TIMEOUT_EXCEEDED') {
-          console.log(`⏳ [Learning Material API] Timeout dépassé. Attente de 3s avant la tentative suivante...`);
+          console.log(`⏳ [Learning Material API] Timeout dépassé pour ${currentModel}. Attente de 3s avant la tentative suivante...`);
           waitTime = 3000;
         }
         await new Promise(resolve => setTimeout(resolve, waitTime));
