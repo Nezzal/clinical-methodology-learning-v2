@@ -129,7 +129,9 @@ export default function AdminDashboard() {
   const [studentProtocols, setStudentProtocols] = useState<FirestoreProtocol[]>([]);
   const [studentChats, setStudentChats] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'protocols' | 'chats'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'protocols' | 'chats' | 'ai-report'>('stats');
+  const [aiReport, setAiReport] = useState<string | null>(null);
+  const [loadingAiReport, setLoadingAiReport] = useState(false);
 
   // Preview modals
   const [activeProtocol, setActiveProtocol] = useState<FirestoreProtocol | null>(null);
@@ -719,6 +721,8 @@ Votre superviseur RECIF`;
     setActiveProtocol(null);
     setActiveChat(null);
     setActiveTab('stats');
+    setAiReport(null);
+    setLoadingAiReport(false);
 
     try {
       // Charger les protocoles et discussions en parallèle (avec repli cache local si déconnecté)
@@ -748,6 +752,44 @@ Votre superviseur RECIF`;
       console.warn('Erreur globale lors de la récupération des détails de l\'étudiant:', e);
     } finally {
       setLoadingDetails(false);
+    }
+  };
+
+  const handleGenerateAiReport = async () => {
+    if (!selectedStudent) return;
+    setLoadingAiReport(true);
+    setAiReport(null);
+    try {
+      const payload = {
+        questionsAsked: selectedStudent.stats?.questionsAsked || 0,
+        protocolsGenerated: selectedStudent.stats?.protocolsGenerated || 0,
+        quizScore: {
+          correct: selectedStudent.stats?.quizCorrect || 0,
+          total: selectedStudent.stats?.quizTotal || 0
+        },
+        flashcardsMastered: {
+          mastered: selectedStudent.stats?.flashcardsMastered?.length || 0,
+          total: 12
+        },
+        recentQuestions: selectedStudent.stats?.recentQuestions || [],
+        recentProtocols: (selectedStudent.stats?.recentProtocols || []).map((p: any) => p.title || p.titleProtocol || ''),
+        synthetic: true
+      };
+      const response = await fetch('/api/pedagogical-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error("Échec de la communication avec le serveur API.");
+      const data = await response.json();
+      setAiReport(data.report || "Aucun bilan généré.");
+    } catch (err: any) {
+      setAiReport(`⚠️ Erreur : ${err.message || err}`);
+    } finally {
+      setLoadingAiReport(false);
     }
   };
 
@@ -1501,6 +1543,12 @@ Votre superviseur RECIF`;
                 >
                   Discussions ({studentChats.length})
                 </button>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === 'ai-report' ? styles.activeTab : ''}`}
+                  onClick={() => setActiveTab('ai-report')}
+                >
+                  Bilan Synthétique IA ✨
+                </button>
               </div>
 
               <div className={styles.tabBody}>
@@ -1637,6 +1685,58 @@ Votre superviseur RECIF`;
                             ))}
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {/* AI SYNTHETIC REPORT TAB */}
+                    {activeTab === 'ai-report' && (
+                      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                        <div className="glass-card" style={{ padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-glass)', background: 'var(--bg-glass-card)' }}>
+                          <h4 style={{ margin: '0 0 0.8rem 0', fontSize: '1rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span>Bilan Pédagogique Synthétique IA</span>
+                          </h4>
+                          
+                          {loadingAiReport ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '2rem 0' }}>
+                              <svg className={styles.spinner} xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2">
+                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                              </svg>
+                              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Génération du bilan synthétique par l'IA en cours...</span>
+                            </div>
+                          ) : aiReport ? (
+                            <div className="markdown-content" style={{ fontSize: '0.85rem', lineHeight: '1.45', color: 'var(--text-primary)' }}>
+                              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(aiReport) }} />
+                              
+                              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button 
+                                  className="btn btn-secondary"
+                                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
+                                  onClick={handleGenerateAiReport}
+                                >
+                                  Régénérer le bilan
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+                              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.2rem' }}>
+                                Aucun bilan généré pour le moment. Vous pouvez demander à l'IA d'analyser l'activité de cet étudiant pour générer une fiche synthèse de son niveau et de ses recommandations.
+                              </p>
+                              <button 
+                                className="btn btn-primary"
+                                style={{ 
+                                  background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)', 
+                                  border: 'none',
+                                  fontSize: '0.8rem',
+                                  padding: '0.5rem 1rem'
+                                }}
+                                onClick={handleGenerateAiReport}
+                              >
+                                Générer le bilan synthétique ✨
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </>

@@ -172,6 +172,7 @@ export async function POST(req: Request) {
   let recentProtocols: string[] = [];
   let preferredProvider = 'gemini';
   let headerOllamaModel: string | null = null;
+  let synthetic = false;
 
   try {
     const data = await req.json();
@@ -181,6 +182,7 @@ export async function POST(req: Request) {
     flashcardsMastered = data.flashcardsMastered ?? { mastered: 0, total: 0 };
     recentQuestions = data.recentQuestions ?? [];
     recentProtocols = data.recentProtocols ?? [];
+    synthetic = data.synthetic === true;
 
     const requestHeaders = new Headers(req.headers);
     preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
@@ -196,13 +198,25 @@ export async function POST(req: Request) {
     const fcTotal = flashcardsMastered.total || 12; // Valeur par défaut
     const fcPct = Math.round((fcMastered / fcTotal) * 100);
 
-    // Fallback si la clé API n'est pas configurée
-    if (!apiKey) {
-      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
-      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
+    const prompt = synthetic
+      ? `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois rédiger un bilan synthétique et très concis (sous forme de fiches à puces, maximum 15 lignes en tout) pour un superviseur qui souhaite évaluer rapidement la progression d'un étudiant.
+      
+Voici les statistiques d'activité de l'étudiant :
+- Questions posées au tuteur virtuel : ${questionsAsked}
+- Protocoles générés : ${protocolsGenerated}
+- Score aux quiz : ${correctQuiz}/${totalQuiz} (${quizPct}%)
+- Flashcards maîtrisées : ${fcMastered}/${fcTotal} (${fcPct}%)
+- Dernières questions posées : ${recentQuestions.length > 0 ? recentQuestions.join(', ') : 'Aucune'}
+- Protocoles initiés : ${recentProtocols.length > 0 ? recentProtocols.join(', ') : 'Aucun'}
 
-      const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
+Rédige le bilan synthétique en Markdown en le divisant en 3 sections courtes :
+1. **Niveau estimé & Résumé de progression** (1 paragraphe court)
+2. **Forces & Lacunes constatées** (2-3 puces courtes)
+3. **Recommandations prioritaires pour le superviseur** (2-3 recommandations concrètes d'actions)
 
+IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, etc.).`
+      : `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
+      
 Voici les statistiques d'activité de l'utilisateur :
 - Questions posées au tuteur virtuel : ${questionsAsked}
 - Protocoles générés : ${protocolsGenerated}
@@ -220,6 +234,11 @@ Instructions pour le rapport :
    - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
 3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
 4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
+
+    // Fallback si la clé API n'est pas configurée
+    if (!apiKey) {
+      const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+      const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
@@ -237,26 +256,6 @@ Instructions pour le rapport :
 
     // Initialisation du client Google GenAI
     const ai = new GoogleGenAI({ apiKey });
-
-    const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
-
-Voici les statistiques d'activité de l'utilisateur :
-- Questions posées au tuteur virtuel : ${questionsAsked}
-- Protocoles générés : ${protocolsGenerated}
-- Score aux quiz : ${correctQuiz}/${totalQuiz} (${quizPct}%)
-- Flashcards maîtrisées : ${fcMastered}/${fcTotal} (${fcPct}%)
-- Dernières questions posées : ${recentQuestions.length > 0 ? recentQuestions.join(', ') : 'Aucune'}
-- Protocoles initiés : ${recentProtocols.length > 0 ? recentProtocols.join(', ') : 'Aucun'}
-
-Instructions pour le rapport :
-1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
-2. Divise le rapport en sections claires :
-   - Bilan général de progression
-   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
-   - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
-   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
-3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
-4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
 
     const checkIsOffline = (err: any) => {
       const errMsg = err.message?.toLowerCase() || '';
