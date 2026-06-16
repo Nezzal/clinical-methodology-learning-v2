@@ -793,6 +793,123 @@ Votre superviseur RECIF`;
     }
   };
 
+  const handleDownloadMarkdown = () => {
+    if (!aiReport || !selectedStudent) return;
+    const blob = new Blob([aiReport], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const studentName = selectedStudent.displayName || selectedStudent.email || 'etudiant';
+    const cleanName = studentName.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    link.setAttribute('download', `bilan_ia_${cleanName}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    if (!aiReport || !selectedStudent) return;
+    const studentName = selectedStudent.displayName || selectedStudent.email || 'Étudiant';
+    
+    // Render markdown to HTML for printing
+    const htmlContent = renderMarkdown(aiReport);
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert("Veuillez autoriser les fenêtres contextuelles pour imprimer le bilan.");
+      return;
+    }
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Bilan Pédagogique - ${studentName}</title>
+          <style>
+            body {
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+              color: #333;
+              line-height: 1.6;
+              padding: 2rem;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 {
+              font-size: 1.8rem;
+              color: #0d9488;
+              border-bottom: 2px solid #0d9488;
+              padding-bottom: 0.5rem;
+              margin-bottom: 1.5rem;
+              text-align: center;
+            }
+            h2 {
+              font-size: 1.3rem;
+              color: #0f766e;
+              margin-top: 1.5rem;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 0.25rem;
+            }
+            h3 {
+              font-size: 1.1rem;
+              color: #115e59;
+              margin-top: 1.25rem;
+            }
+            p, li {
+              font-size: 0.95rem;
+            }
+            li {
+              margin-bottom: 0.5rem;
+            }
+            hr {
+              border: 0;
+              border-top: 1px solid #eee;
+              margin: 1.5rem 0;
+            }
+            .footer {
+              margin-top: 3rem;
+              font-size: 0.8rem;
+              color: #666;
+              text-align: center;
+              border-top: 1px solid #eee;
+              padding-top: 1rem;
+            }
+            @media print {
+              body {
+                padding: 0;
+              }
+              .no-print {
+                display: none;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Bilan Pédagogique Synthétique IA</h1>
+          <div style="margin-bottom: 1.5rem; font-size: 0.9rem; color: #555; background: #f9f9f9; padding: 1rem; border-radius: 6px;">
+            <strong>Étudiant :</strong> ${studentName}<br/>
+            <strong>Adresse e-mail :</strong> ${selectedStudent.email || 'Non renseignée'}<br/>
+            <strong>Date de génération :</strong> ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR')}
+          </div>
+          <div>
+            ${htmlContent}
+          </div>
+          <div class="footer">
+            Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique — RECIF
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() {
+                window.close();
+              }, 1000);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   const getRecipientLabel = (msg: FirestoreSupportMessage) => {
     if (msg.recipientRole === 'admin') return 'Admin';
     if (msg.recipientRole === 'teacher') {
@@ -1707,7 +1824,33 @@ Votre superviseur RECIF`;
                             <div className="markdown-content" style={{ fontSize: '0.85rem', lineHeight: '1.45', color: 'var(--text-primary)' }}>
                               <div dangerouslySetInnerHTML={{ __html: renderMarkdown(aiReport) }} />
                               
-                              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                  <button 
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                    onClick={handleDownloadMarkdown}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                      <polyline points="7 10 12 15 17 10" />
+                                      <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                    Télécharger (MD)
+                                  </button>
+                                  <button 
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                    onClick={handleDownloadPdf}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                      <polyline points="7 10 12 15 17 10" />
+                                      <line x1="12" y1="15" x2="12" y2="3" />
+                                    </svg>
+                                    Télécharger (PDF)
+                                  </button>
+                                </div>
                                 <button 
                                   className="btn btn-secondary"
                                   style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
