@@ -419,11 +419,26 @@ export default function ArticleGenerator() {
             Rédigez votre article scientifique pas-à-pas selon les 22 critères de publication STROBE.
           </p>
         </div>
-        {activeArticleId && (
-          <button className="btn btn-secondary" onClick={handleNewArticle}>
-            Nouvel Article
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <a
+            href="/docs/strobe_checklist_fr.md"
+            download
+            className="btn btn-secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Grille STROBE (MD)
+          </a>
+          {activeArticleId && (
+            <button className="btn btn-secondary" onClick={handleNewArticle}>
+              Nouvel Article
+            </button>
+          )}
+        </div>
       </header>
 
       {extractionSuccess && (
