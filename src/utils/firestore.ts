@@ -118,6 +118,16 @@ export interface FirestoreProtocol {
   formData?: any;
 }
 
+export interface FirestoreArticle {
+  id: string;
+  title: string;
+  studyType: 'cohort' | 'case-control' | 'cross-sectional';
+  date: string;
+  content: string;
+  createdAt?: any;
+  formData?: any; // Contient les réponses aux 22 critères STROBE
+}
+
 // 1. Profil utilisateur et Statistiques
 export async function syncUserProfile(
   uid: string, 
@@ -191,7 +201,7 @@ export async function saveFirestoreChat(
   chatId: string, 
   title: string, 
   messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp?: string }>,
-  mode?: 'free' | 'protocol'
+  mode?: 'free' | 'protocol' | 'strobe'
 ) {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {
@@ -282,6 +292,43 @@ export async function deleteFirestoreProtocol(uid: string, protocolId: string) {
     await deleteDoc(protoDocRef);
   } catch (error) {
     console.error('❌ Erreur deleteFirestoreProtocol:', error);
+  }
+}
+
+// Articles STROBE
+export async function saveFirestoreArticle(uid: string, article: FirestoreArticle) {
+  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  try {
+    const articleDocRef = doc(db, 'users', uid, 'articles', article.id);
+    await setDoc(articleDocRef, {
+      ...article,
+      createdAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('❌ Erreur saveFirestoreArticle:', error);
+  }
+}
+
+export async function loadFirestoreArticles(uid: string): Promise<FirestoreArticle[]> {
+  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
+  try {
+    const articlesRef = collection(db, 'users', uid, 'articles');
+    const q = query(articlesRef, orderBy('createdAt', 'desc'));
+    const snap = await getDocsWithCacheFallback(q);
+    return snap.docs.map(d => d.data() as FirestoreArticle);
+  } catch (error) {
+    console.warn('⚠️ Erreur loadFirestoreArticles:', error);
+    return [];
+  }
+}
+
+export async function deleteFirestoreArticle(uid: string, articleId: string) {
+  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  try {
+    const articleDocRef = doc(db, 'users', uid, 'articles', articleId);
+    await deleteDoc(articleDocRef);
+  } catch (error) {
+    console.error('❌ Erreur deleteFirestoreArticle:', error);
   }
 }
 

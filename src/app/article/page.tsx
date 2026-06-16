@@ -1,0 +1,897 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { getProgress, updateProgress } from '@/utils/storage';
+import { useAuth } from '@/context/AuthContext';
+import { saveFirestoreArticle, loadFirestoreArticles, syncUserProfile, deleteFirestoreArticle } from '@/utils/firestore';
+import { APP_VERSION_LABEL } from '@/utils/constants';
+import styles from './page.module.css';
+
+function renderMarkdown(text: string): string {
+  if (!text) return '';
+  let formatted = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Bold: **text**
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italic: *text*
+  formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Headers
+  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.25rem; margin-bottom: 0.5rem; color: var(--accent-secondary); font-size:1.1rem;">$1</h3>');
+  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.75rem; margin-bottom: 0.75rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.25rem;">$1</h2>');
+  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size:1.5rem; text-align:center;">$1</h1>');
+
+  // Horizontal rules
+  formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
+
+  // List items
+  formatted = formatted.replace(/^\s*[-*]\s+(.*?)$/gm, '<li style="margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.35rem;">$1</li>');
+
+  // Double newlines to paragraphs
+  formatted = formatted.split(/\n\n+/).map(p => {
+    if (p.trim().startsWith('<h') || p.trim().startsWith('<li') || p.trim().startsWith('<ul') || p.trim().startsWith('<table') || p.trim().startsWith('<div') || p.trim().startsWith('<hr')) {
+      return p;
+    }
+    return `<p style="margin-bottom: 1rem;">${p.replace(/\n/g, '<br />')}</p>`;
+  }).join('\n');
+
+  return formatted;
+}
+
+export default function ArticleGenerator() {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<'info' | 'intro' | 'methodo' | 'results' | 'discussion' | 'funding'>('info');
+  const [articles, setArticles] = useState<any[]>([]);
+  const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
+  
+  // Form fields
+  const [title, setTitle] = useState('');
+  const [studyType, setStudyType] = useState<'cohort' | 'case-control' | 'cross-sectional'>('cohort');
+  const [abstract, setAbstract] = useState('');
+  const [rationale, setRationale] = useState('');
+  const [objectives, setObjectives] = useState('');
+  const [design, setDesign] = useState('');
+  const [setting, setSetting] = useState('');
+  const [participants, setParticipants] = useState('');
+  const [variables, setVariables] = useState('');
+  const [dataSources, setDataSources] = useState('');
+  const [bias, setBias] = useState('');
+  const [studySize, setStudySize] = useState('');
+  const [quantitativeVariables, setQuantitativeVariables] = useState('');
+  const [statisticalMethods, setStatisticalMethods] = useState('');
+  const [participantsFlow, setParticipantsFlow] = useState('');
+  const [descriptiveData, setDescriptiveData] = useState('');
+  const [outcomeData, setOutcomeData] = useState('');
+  const [mainResults, setMainResults] = useState('');
+  const [otherAnalyses, setOtherAnalyses] = useState('');
+  const [keyResults, setKeyResults] = useState('');
+  const [limitations, setLimitations] = useState('');
+  const [interpretation, setInterpretation] = useState('');
+  const [generalisability, setGeneralisability] = useState('');
+  const [funding, setFunding] = useState('');
+
+  const [generatedArticle, setGeneratedArticle] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingArticles, setLoadingArticles] = useState(false);
+  const [extractionSuccess, setExtractionSuccess] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
+
+  // Load articles on mount
+  useEffect(() => {
+    const fetchArticles = async () => {
+      if (user) {
+        setLoadingArticles(true);
+        try {
+          const list = await loadFirestoreArticles(user.uid);
+          setArticles(list);
+        } catch (e) {
+          console.error("Error loading articles:", e);
+        } finally {
+          setLoadingArticles(false);
+        }
+      }
+    };
+    fetchArticles();
+  }, [user]);
+
+  // Import from localStorage if direct redirect from Tutor STROBE Mode
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('import') === 'direct') {
+        const stored = localStorage.getItem('recif_imported_strobe_params');
+        if (stored) {
+          try {
+            const params = JSON.parse(stored);
+            fillFormFields(params);
+            setExtractionSuccess(true);
+            setExtractionError(null);
+            
+            localStorage.removeItem('recif_imported_strobe_params');
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } catch (e) {
+            console.error("Failed to parse STROBE params:", e);
+            setExtractionError("Erreur lors de la lecture des paramètres importés.");
+          }
+        }
+      }
+    }
+  }, []);
+
+  const fillFormFields = (p: any) => {
+    if (!p) return;
+    setTitle(p.title || '');
+    setStudyType(p.studyType || 'cohort');
+    setAbstract(p.abstract || '');
+    setRationale(p.rationale || '');
+    setObjectives(p.objectives || '');
+    setDesign(p.design || '');
+    setSetting(p.setting || '');
+    setParticipants(p.participants || '');
+    setVariables(p.variables || '');
+    setDataSources(p.dataSources || '');
+    setBias(p.bias || '');
+    setStudySize(p.studySize || '');
+    setQuantitativeVariables(p.quantitativeVariables || '');
+    setStatisticalMethods(p.statisticalMethods || '');
+    setParticipantsFlow(p.participantsFlow || '');
+    setDescriptiveData(p.descriptiveData || '');
+    setOutcomeData(p.outcomeData || '');
+    setMainResults(p.mainResults || '');
+    setOtherAnalyses(p.otherAnalyses || '');
+    setKeyResults(p.keyResults || '');
+    setLimitations(p.limitations || '');
+    setInterpretation(p.interpretation || '');
+    setGeneralisability(p.generalisability || '');
+    setFunding(p.funding || '');
+  };
+
+  const handleNewArticle = () => {
+    setActiveArticleId(null);
+    setGeneratedArticle(null);
+    setTitle('');
+    setStudyType('cohort');
+    setAbstract('');
+    setRationale('');
+    setObjectives('');
+    setDesign('');
+    setSetting('');
+    setParticipants('');
+    setVariables('');
+    setDataSources('');
+    setBias('');
+    setStudySize('');
+    setQuantitativeVariables('');
+    setStatisticalMethods('');
+    setParticipantsFlow('');
+    setDescriptiveData('');
+    setOutcomeData('');
+    setMainResults('');
+    setOtherAnalyses('');
+    setKeyResults('');
+    setLimitations('');
+    setInterpretation('');
+    setGeneralisability('');
+    setFunding('');
+    setExtractionSuccess(false);
+    setActiveTab('info');
+  };
+
+  const handleSelectArticle = (art: any) => {
+    setActiveArticleId(art.id);
+    setGeneratedArticle(art.content);
+    fillFormFields(art.formData || art);
+    if (art.studyType) {
+      setStudyType(art.studyType);
+    }
+    setExtractionSuccess(false);
+    setActiveTab('info');
+  };
+
+  const handleSaveArticle = async (contentToSave: string) => {
+    if (!user) return;
+    setSaving(true);
+    const artId = activeArticleId || `article_${Math.random().toString(36).substring(7)}`;
+    const artTitle = title || "Article STROBE sans titre";
+
+    const articleData = {
+      id: artId,
+      title: artTitle,
+      studyType,
+      date: new Date().toISOString(),
+      content: contentToSave,
+      formData: {
+        title, studyType, abstract, rationale, objectives, design, setting, participants,
+        variables, dataSources, bias, studySize, quantitativeVariables, statisticalMethods,
+        participantsFlow, descriptiveData, outcomeData, mainResults, otherAnalyses,
+        keyResults, limitations, interpretation, generalisability, funding
+      }
+    };
+
+    try {
+      await saveFirestoreArticle(user.uid, articleData);
+      setActiveArticleId(artId);
+      
+      // Update local state
+      const list = await loadFirestoreArticles(user.uid);
+      setArticles(list);
+    } catch (e) {
+      console.error("Error saving article to Firestore:", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteArticleClick = async (e: React.MouseEvent, artId: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Voulez-vous vraiment supprimer cet article ?")) return;
+    if (!user) return;
+
+    try {
+      await deleteFirestoreArticle(user.uid, artId);
+      if (activeArticleId === artId) {
+        handleNewArticle();
+      }
+      const list = await loadFirestoreArticles(user.uid);
+      setArticles(list);
+    } catch (err) {
+      console.error("Error deleting article:", err);
+    }
+  };
+
+  const handleGenerateArticle = async () => {
+    setGenerating(true);
+    setGeneratedArticle(null);
+    try {
+      const response = await fetch('/api/generate-article', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+        },
+        body: JSON.stringify({
+          title, studyType, abstract, rationale, objectives, design, setting, participants,
+          variables, dataSources, bias, studySize, quantitativeVariables, statisticalMethods,
+          participantsFlow, descriptiveData, outcomeData, mainResults, otherAnalyses,
+          keyResults, limitations, interpretation, generalisability, funding
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Une erreur est survenue lors de la génération.");
+      }
+
+      setGeneratedArticle(data.article);
+      
+      // Update student stats in localStorage and Firestore
+      updateProgress((prev) => ({ protocolsGenerated: (prev.protocolsGenerated || 0) + 1 }));
+      if (user) {
+        await syncUserProfile(user.uid, user.email, user.displayName, user.photoURL, getProgress());
+      }
+      
+      // Auto save article
+      await handleSaveArticle(data.article);
+    } catch (err: any) {
+      alert(`⚠️ Échec de la génération de l'article : ${err.message || err}`);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleDownloadMarkdown = () => {
+    if (!generatedArticle) return;
+    const blob = new Blob([generatedArticle], { type: 'text/markdown;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    const cleanTitle = (title || 'article_strobe').toLowerCase().replace(/[^a-z0-9]/g, '_');
+    link.setAttribute('download', `article_strobe_${cleanTitle}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    if (!generatedArticle) return;
+    const htmlContent = renderMarkdown(generatedArticle);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert("Veuillez autoriser les fenêtres contextuelles pour imprimer l'article.");
+      return;
+    }
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${title || "Article Scientifique STROBE"}</title>
+          <style>
+            body {
+              font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+              color: #333;
+              line-height: 1.6;
+              padding: 2.5rem;
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            h1 {
+              font-size: 2rem;
+              color: #0d9488;
+              border-bottom: 2px solid #0d9488;
+              padding-bottom: 0.5rem;
+              margin-bottom: 1.5rem;
+              text-align: center;
+            }
+            h2 {
+              font-size: 1.4rem;
+              color: #0f766e;
+              margin-top: 2rem;
+              border-bottom: 1px solid #ddd;
+              padding-bottom: 0.25rem;
+            }
+            h3 {
+              font-size: 1.15rem;
+              color: #115e59;
+              margin-top: 1.5rem;
+            }
+            p, li {
+              font-size: 0.95rem;
+              text-align: justify;
+            }
+            li {
+              margin-bottom: 0.5rem;
+            }
+            hr {
+              border: 0;
+              border-top: 1px solid #eee;
+              margin: 2rem 0;
+            }
+            .meta-block {
+              margin-bottom: 2rem;
+              font-size: 0.9rem;
+              color: #555;
+              background: #f9f9f9;
+              padding: 1.25rem;
+              border-radius: 6px;
+              border-left: 4px solid #0d9488;
+            }
+            .footer {
+              margin-top: 4rem;
+              font-size: 0.8rem;
+              color: #666;
+              text-align: center;
+              border-top: 1px solid #eee;
+              padding-top: 1rem;
+            }
+            @media print {
+              body {
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${title || "Article d'Étude Observationnelle STROBE"}</h1>
+          <div class="meta-block">
+            <strong>Schéma méthodologique :</strong> ${studyType === 'cohort' ? 'Étude de cohorte' : (studyType === 'case-control' ? 'Étude cas-témoins' : 'Étude transversale')} (Normes STROBE)<br/>
+            <strong>Date de rédaction :</strong> ${new Date().toLocaleDateString('fr-FR')}
+          </div>
+          <div>
+            ${htmlContent}
+          </div>
+          <div class="footer">
+            Plateforme d'Apprentissage de la Méthodologie Clinique — Guide RECIF & STROBE
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() {
+                window.close();
+              }, 1000);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  return (
+    <div className={styles.container}>
+      <header className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div>
+          <h1 className={styles.title} style={{ display: 'inline-flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', margin: 0 }}>
+            <span>Rédacteur d'Article STROBE</span>
+            {activeArticleId && (
+              <span style={{ fontSize: '0.85rem', fontWeight: 500, padding: '0.25rem 0.6rem', background: 'var(--accent-primary)', color: 'white', borderRadius: '4px', verticalAlign: 'middle' }}>
+                Chargé
+              </span>
+            )}
+          </h1>
+          <p className={styles.subtitle} style={{ margin: '0.25rem 0 0 0' }}>
+            Rédigez votre article scientifique pas-à-pas selon les 22 critères de publication STROBE.
+          </p>
+        </div>
+        {activeArticleId && (
+          <button className="btn btn-secondary" onClick={handleNewArticle}>
+            Nouvel Article
+          </button>
+        )}
+      </header>
+
+      {extractionSuccess && (
+        <div className={styles.successNotice}>
+          🎉 <b>Bilan STROBE importé du Tuteur !</b> Les réponses synthétisées ont été chargées dans le formulaire. Vous pouvez maintenant relire les sections, compléter les données descriptives de vos résultats, puis cliquer sur <b>Générer l'article par l'IA</b>.
+        </div>
+      )}
+
+      {extractionError && (
+        <div className={styles.errorNotice}>
+          ⚠️ {extractionError}
+        </div>
+      )}
+
+      <div className={styles.layout}>
+        {/* FORM CARD (LEFT) */}
+        <div className={`${styles.formCard} glass-card`}>
+          <div className={styles.tabs}>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'info' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('info')}
+            >
+              1. Titre & Résumé
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'intro' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('intro')}
+            >
+              2. Introduction
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'methodo' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('methodo')}
+            >
+              3. Méthodes
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'results' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('results')}
+            >
+              4. Résultats
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'discussion' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('discussion')}
+            >
+              5. Discussion
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === 'funding' ? styles.activeTab : ''}`}
+              onClick={() => setActiveTab('funding')}
+            >
+              6. Financement
+            </button>
+          </div>
+
+          <div className={styles.stepContainer}>
+            {/* 1. Titre & Résumé */}
+            {activeTab === 'info' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="art-title">Titre de l'article (Critère STROBE 1)</label>
+                  <input
+                    type="text"
+                    id="art-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Ex: Facteurs associés à la mortalité par maladies cardiovasculaires en Algérie : étude transversale..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-type">Type d'étude observationnelle (Critère STROBE 1)</label>
+                  <select
+                    id="art-type"
+                    value={studyType}
+                    onChange={(e) => setStudyType(e.target.value as any)}
+                  >
+                    <option value="cohort">Étude de Cohorte (Suivi temporel)</option>
+                    <option value="case-control">Étude Cas-Témoins (Rétrospective comparée)</option>
+                    <option value="cross-sectional">Étude Transversale (Observation à un instant t)</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-abstract">Résumé structuré (Critère STROBE 2)</label>
+                  <textarea
+                    id="art-abstract"
+                    rows={6}
+                    value={abstract}
+                    onChange={(e) => setAbstract(e.target.value)}
+                    placeholder="Présenter un résumé informatif et équilibré de ce qui a été fait et trouvé..."
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 2. Introduction */}
+            {activeTab === 'intro' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="art-rationale">Contexte & Justification (Critère STROBE 3)</label>
+                  <textarea
+                    id="art-rationale"
+                    rows={6}
+                    value={rationale}
+                    onChange={(e) => setRationale(e.target.value)}
+                    placeholder="Expliquer le contexte scientifique, les motifs de la recherche et l'état actuel des connaissances..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-objectives">Objectifs & Hypothèses (Critère STROBE 4)</label>
+                  <textarea
+                    id="art-objectives"
+                    rows={5}
+                    value={objectives}
+                    onChange={(e) => setObjectives(e.target.value)}
+                    placeholder="Indiquer les objectifs spécifiques, y compris toute hypothèse pré-spécifiée..."
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 3. Méthodes */}
+            {activeTab === 'methodo' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="art-design">Schéma d'étude (Critère STROBE 5)</label>
+                  <input
+                    type="text"
+                    id="art-design"
+                    value={design}
+                    onChange={(e) => setDesign(e.target.value)}
+                    placeholder="Ex: Étude observationnelle transversale multicentrique..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-setting">Cadre (dates, lieux, recrutement) (Critère STROBE 6)</label>
+                  <textarea
+                    id="art-setting"
+                    rows={3}
+                    value={setting}
+                    onChange={(e) => setSetting(e.target.value)}
+                    placeholder="Décrire le cadre, les lieux et les dates importantes (recrutement, expositions, collecte)..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-participants">Sélection des participants & Éligibilité (Critère STROBE 6)</label>
+                  <textarea
+                    id="art-participants"
+                    rows={3}
+                    value={participants}
+                    onChange={(e) => setParticipants(e.target.value)}
+                    placeholder="Critères d'éligibilité, sources et méthodes de sélection des participants..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-variables">Variables étudiées (Critère STROBE 7)</label>
+                  <textarea
+                    id="art-variables"
+                    rows={3}
+                    value={variables}
+                    onChange={(e) => setVariables(e.target.value)}
+                    placeholder="Définir clairement toutes les variables : exposition, critères d'évaluation, confusion..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-datasources">Sources de données & Mesures (Critère STROBE 8)</label>
+                  <input
+                    type="text"
+                    id="art-datasources"
+                    value={dataSources}
+                    onChange={(e) => setDataSources(e.target.value)}
+                    placeholder="Indiquer les sources des données et le détail des méthodes d'évaluation (mesures)..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-bias">Efforts contre les biais (Critère STROBE 9)</label>
+                  <input
+                    type="text"
+                    id="art-bias"
+                    value={bias}
+                    onChange={(e) => setBias(e.target.value)}
+                    placeholder="Décrire toutes les mesures prises pour faire face aux biais potentiels..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-size">Taille de l'étude (Critère STROBE 10)</label>
+                  <input
+                    type="text"
+                    id="art-size"
+                    value={studySize}
+                    onChange={(e) => setStudySize(e.target.value)}
+                    placeholder="Expliquer comment la taille de l'échantillon a été déterminée (formule, logiciel)..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-quantitative">Variables quantitatives (Critère STROBE 11)</label>
+                  <input
+                    type="text"
+                    id="art-quantitative"
+                    value={quantitativeVariables}
+                    onChange={(e) => setQuantitativeVariables(e.target.value)}
+                    placeholder="Expliquer comment les variables quantitatives ont été traitées dans les analyses..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-statistical">Méthodes statistiques (Critère STROBE 12)</label>
+                  <textarea
+                    id="art-statistical"
+                    rows={3}
+                    value={statisticalMethods}
+                    onChange={(e) => setStatisticalMethods(e.target.value)}
+                    placeholder="Décrire toutes les méthodes statistiques, y compris celles utilisées pour contrôler les facteurs de confusion..."
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 4. Résultats */}
+            {activeTab === 'results' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="art-flow">Flux des participants (Critère STROBE 13)</label>
+                  <textarea
+                    id="art-flow"
+                    rows={3}
+                    value={participantsFlow}
+                    onChange={(e) => setParticipantsFlow(e.target.value)}
+                    placeholder="Donner le nombre de participants à chaque étape (éligibles, inclus, suivis, analysés)..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-descriptive">Données descriptives (Critère STROBE 14)</label>
+                  <textarea
+                    id="art-descriptive"
+                    rows={4}
+                    value={descriptiveData}
+                    onChange={(e) => setDescriptiveData(e.target.value)}
+                    placeholder="Donner les caractéristiques des participants (démographiques, cliniques, sociales) et les expositions..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-outcomes">Données sur les résultats (Critère STROBE 15)</label>
+                  <textarea
+                    id="art-outcomes"
+                    rows={3}
+                    value={outcomeData}
+                    onChange={(e) => setOutcomeData(e.target.value)}
+                    placeholder="Nombre d'événements d'intérêt ou mesures de résumé au fil du temps..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-mainresults">Résultats principaux (Critère STROBE 16)</label>
+                  <textarea
+                    id="art-mainresults"
+                    rows={4}
+                    value={mainResults}
+                    onChange={(e) => setMainResults(e.target.value)}
+                    placeholder="Donner les estimations non ajustées et, le cas échéant, ajustées, avec les intervalles de confiance à 95%..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-otheranalyses">Analyses secondaires (Critère STROBE 17)</label>
+                  <textarea
+                    id="art-otheranalyses"
+                    rows={3}
+                    value={otherAnalyses}
+                    onChange={(e) => setOtherAnalyses(e.target.value)}
+                    placeholder="Indiquer les autres analyses effectuées (sous-groupes, interactions, analyses de sensibilité)..."
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 5. Discussion */}
+            {activeTab === 'discussion' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="art-keyresults">Résultats clés (Critère STROBE 18)</label>
+                  <textarea
+                    id="art-keyresults"
+                    rows={4}
+                    value={keyResults}
+                    onChange={(e) => setKeyResults(e.target.value)}
+                    placeholder="Résumer les principaux résultats en lien avec les objectifs de l'étude..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-limitations">Limites de l'étude (Critère STROBE 19)</label>
+                  <textarea
+                    id="art-limitations"
+                    rows={4}
+                    value={limitations}
+                    onChange={(e) => setLimitations(e.target.value)}
+                    placeholder="Discuter des limites de l'étude, en tenant compte des sources de biais potentiels ou d'imprécision..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-interpretation">Interprétation des résultats (Critère STROBE 20)</label>
+                  <textarea
+                    id="art-interpretation"
+                    rows={4}
+                    value={interpretation}
+                    onChange={(e) => setInterpretation(e.target.value)}
+                    placeholder="Donner une interprétation globale et prudente des résultats en s'appuyant sur d'autres études..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="art-generalisability">Généralisabilité (Critère STROBE 21)</label>
+                  <textarea
+                    id="art-generalisability"
+                    rows={3}
+                    value={generalisability}
+                    onChange={(e) => setGeneralisability(e.target.value)}
+                    placeholder="Discuter de la possibilité de généraliser les résultats de l'étude (validité externe)..."
+                  />
+                </div>
+              </>
+            )}
+
+            {/* 6. Financement */}
+            {activeTab === 'funding' && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="art-funding">Sources de financement (Critère STROBE 22)</label>
+                  <textarea
+                    id="art-funding"
+                    rows={5}
+                    value={funding}
+                    onChange={(e) => setFunding(e.target.value)}
+                    placeholder="Indiquer les sources de financement et le rôle des financeurs pour la recherche présente..."
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Navigation & Action buttons */}
+          <div className={styles.navButtons}>
+            <div>
+              {activeTab !== 'info' && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    if (activeTab === 'intro') setActiveTab('info');
+                    else if (activeTab === 'methodo') setActiveTab('intro');
+                    else if (activeTab === 'results') setActiveTab('methodo');
+                    else if (activeTab === 'discussion') setActiveTab('results');
+                    else if (activeTab === 'funding') setActiveTab('discussion');
+                  }}
+                >
+                  Précédent
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              {activeTab !== 'funding' ? (
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    if (activeTab === 'info') setActiveTab('intro');
+                    else if (activeTab === 'intro') setActiveTab('methodo');
+                    else if (activeTab === 'methodo') setActiveTab('results');
+                    else if (activeTab === 'results') setActiveTab('discussion');
+                    else if (activeTab === 'discussion') setActiveTab('funding');
+                  }}
+                >
+                  Suivant
+                </button>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  style={{ background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)', border: 'none' }}
+                  onClick={handleGenerateArticle}
+                  disabled={generating}
+                >
+                  {generating ? (
+                    <>
+                      <div className={styles.spinner}></div>
+                      <span style={{ marginLeft: '0.5rem' }}>Génération IA...</span>
+                    </>
+                  ) : (
+                    "Générer l'article par l'IA ✨"
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* PREVIEW CARD (RIGHT) */}
+        <div className={`${styles.previewCard} glass-card`}>
+          {generatedArticle ? (
+            <>
+              <div className={styles.previewHeader}>
+                <span className={styles.previewTitle}>Article Rédigé STROBE</span>
+                <div className={styles.previewActions}>
+                  <button className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }} onClick={handleDownloadMarkdown}>
+                    Télécharger (MD)
+                  </button>
+                  <button className="btn btn-secondary" style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }} onClick={handleDownloadPdf}>
+                    Télécharger (PDF)
+                  </button>
+                </div>
+              </div>
+              <div className={styles.previewBody}>
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(generatedArticle) }} />
+              </div>
+            </>
+          ) : (
+            <div className={styles.emptyPreview}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              <div>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)' }}>Aucun article généré</h4>
+                <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                  Remplissez les formulaires de gauche, puis cliquez sur <b>Générer l'article par l'IA</b> dans le dernier onglet pour obtenir la trame de publication rédigée aux normes de la checklist STROBE.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* HISTORY SECTION */}
+      {articles.length > 0 && (
+        <section className={styles.historySection}>
+          <h3 style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+            Articles enregistrés
+          </h3>
+          <div className={styles.historyList}>
+            {articles.map((art) => (
+              <div
+                key={art.id}
+                className={`${styles.historyItem} glass-card`}
+                onClick={() => handleSelectArticle(art)}
+              >
+                <div className={styles.historyMeta}>
+                  <span>
+                    {art.studyType === 'cohort' ? 'Cohorte' : (art.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale')}
+                  </span>
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={(e) => handleDeleteArticleClick(e, art.id)}
+                    title="Supprimer l'article"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                  </button>
+                </div>
+                <div className={styles.historyTitle}>
+                  {art.title.length > 50 ? art.title.substring(0, 50) + '...' : art.title}
+                </div>
+                <div className={styles.historyDesc}>
+                  Enregistré le {new Date(art.date).toLocaleDateString('fr-FR')} à {new Date(art.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

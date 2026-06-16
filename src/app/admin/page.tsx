@@ -7,6 +7,7 @@ import {
   getAllUsers, 
   loadFirestoreProtocols, 
   loadFirestoreChats, 
+  loadFirestoreArticles,
   updateUserDisplayName,
   assignStudentToTeacher,
   getAccessRequests,
@@ -128,14 +129,16 @@ export default function AdminDashboard() {
   const [selectedStudent, setSelectedStudent] = useState<FirestoreUser | null>(null);
   const [studentProtocols, setStudentProtocols] = useState<FirestoreProtocol[]>([]);
   const [studentChats, setStudentChats] = useState<any[]>([]);
+  const [studentArticles, setStudentArticles] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'protocols' | 'chats' | 'ai-report'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'protocols' | 'chats' | 'ai-report' | 'articles'>('stats');
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [loadingAiReport, setLoadingAiReport] = useState(false);
 
   // Preview modals
   const [activeProtocol, setActiveProtocol] = useState<FirestoreProtocol | null>(null);
   const [activeChat, setActiveChat] = useState<any | null>(null);
+  const [activeArticle, setActiveArticle] = useState<any | null>(null);
   const [actionPending, setActionPending] = useState(false);
   const [modalPreviewMode, setModalPreviewMode] = useState<'protocol' | 'crf'>('protocol');
 
@@ -718,36 +721,44 @@ Votre superviseur RECIF`;
     setLoadingDetails(true);
     setStudentProtocols([]);
     setStudentChats([]);
+    setStudentArticles([]);
     setActiveProtocol(null);
     setActiveChat(null);
+    setActiveArticle(null);
     setActiveTab('stats');
     setAiReport(null);
     setLoadingAiReport(false);
 
     try {
-      // Charger les protocoles et discussions en parallèle (avec repli cache local si déconnecté)
+      // Charger les protocoles, discussions et articles en parallèle (avec repli cache local si déconnecté)
       let protos = [];
       let chats = [];
+      let arts = [];
       
       try {
-        [protos, chats] = await Promise.all([
+        [protos, chats, arts] = await Promise.all([
           loadFirestoreProtocols(student.uid),
-          loadFirestoreChats(student.uid)
+          loadFirestoreChats(student.uid),
+          loadFirestoreArticles(student.uid)
         ]);
         
         // Mettre en cache dans localStorage pour la consultation hors-ligne
         localStorage.setItem(`recif_offline_student_protos_${student.uid}`, JSON.stringify(protos));
         localStorage.setItem(`recif_offline_student_chats_${student.uid}`, JSON.stringify(chats));
+        localStorage.setItem(`recif_offline_student_articles_${student.uid}`, JSON.stringify(arts));
       } catch (err) {
         console.warn("⚠️ Impossible de lire les détails de l'étudiant sur Firestore, bascule vers le cache local...", err);
         const cachedProtos = localStorage.getItem(`recif_offline_student_protos_${student.uid}`);
         const cachedChats = localStorage.getItem(`recif_offline_student_chats_${student.uid}`);
+        const cachedArts = localStorage.getItem(`recif_offline_student_articles_${student.uid}`);
         if (cachedProtos) protos = JSON.parse(cachedProtos);
         if (cachedChats) chats = JSON.parse(cachedChats);
+        if (cachedArts) arts = JSON.parse(cachedArts);
       }
       
       setStudentProtocols(protos);
       setStudentChats(chats);
+      setStudentArticles(arts);
     } catch (e) {
       console.warn('Erreur globale lors de la récupération des détails de l\'étudiant:', e);
     } finally {
@@ -1666,6 +1677,12 @@ Votre superviseur RECIF`;
                 >
                   Bilan Synthétique IA ✨
                 </button>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === 'articles' ? styles.activeTab : ''}`}
+                  onClick={() => setActiveTab('articles')}
+                >
+                  Articles ({studentArticles.length})
+                </button>
               </div>
 
               <div className={styles.tabBody}>
@@ -1880,6 +1897,64 @@ Votre superviseur RECIF`;
                             </div>
                           )}
                         </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'articles' && (
+                      <div className="animate-fade-in">
+                        {activeArticle ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>
+                              <button 
+                                className="btn btn-secondary"
+                                style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
+                                onClick={() => setActiveArticle(null)}
+                              >
+                                &larr; Retour à la liste
+                              </button>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                Type : {activeArticle.studyType === 'cohort' ? 'Cohorte' : (activeArticle.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale')}
+                              </span>
+                            </div>
+                            <div className="glass-card" style={{ padding: '1.5rem', background: 'var(--bg-glass-card)', border: '1px solid var(--border-glass)', borderRadius: '12px' }}>
+                              <h3 style={{ margin: '0 0 1rem 0', color: 'var(--accent-primary)', fontSize: '1.2rem' }}>
+                                {activeArticle.title}
+                              </h3>
+                              <div style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-primary)', maxHeight: '500px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeArticle.content) }} />
+                              </div>
+                            </div>
+                          </div>
+                        ) : studentArticles.length === 0 ? (
+                          <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>
+                            Aucun article rédigé pour cet étudiant.
+                          </p>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {studentArticles.map((art) => (
+                              <div 
+                                key={art.id} 
+                                className="glass-card" 
+                                style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all var(--transition-fast)' }}
+                                onClick={() => setActiveArticle(art)}
+                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
+                              >
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                                    {art.title.length > 60 ? art.title.substring(0, 60) + '...' : art.title}
+                                  </span>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    Type : {art.studyType === 'cohort' ? 'Cohorte' : (art.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale')} • Rédigé le {new Date(art.date).toLocaleDateString('fr-FR')}
+                                  </span>
+                                </div>
+                                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
+                                  Relire l'article
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>

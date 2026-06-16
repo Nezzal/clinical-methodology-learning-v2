@@ -235,6 +235,29 @@ export default function Dashboard() {
         </div>
       </section>
 
+      <section style={{ marginBottom: '3rem' }}>
+        <div className="glass-card" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+          <div style={{ flex: '1', minWidth: '280px' }}>
+            <h3 className={styles.cardTitle} style={{ color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              Rédacteur d'Article Scientifique (STROBE)
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', marginBottom: 0, fontSize: '0.95rem' }}>
+              Rédigez et structurez vos résultats cliniques pour publication selon la grille d'évaluation internationale STROBE pour les études observationnelles (cohortes, cas-témoins, transversales).
+            </p>
+          </div>
+          <Link href="/article" className="btn btn-primary" style={{ background: 'linear-gradient(135deg, var(--accent-secondary) 0%, #0c6a61 100%)', borderColor: 'var(--accent-secondary)', height: 'fit-content' }}>
+            Rédiger un article STROBE
+          </Link>
+        </div>
+      </section>
+
       {/* Réinitialisation */}
       <div className={styles.resetContainer}>
         <button className={styles.resetBtn} onClick={handleResetClick}>
