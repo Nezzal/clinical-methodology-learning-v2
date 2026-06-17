@@ -18,12 +18,28 @@ const faqData = [
         a: "Le CRF (Case Report Form) contient tous les formulaires requis pour recueillir les données de vos patients. Dès que votre protocole est généré, la plateforme conçoit automatiquement un CRF adapté à vos critères de jugement. Vous pouvez le visualiser et l'exporter depuis l'onglet \"Cahier d'Observation (CRF)\"."
       },
       {
+        q: "Comment utiliser le Rédacteur d'article STROBE ?",
+        a: "Le module \"Rédacteur d'Article STROBE\" vous permet de structurer votre manuscrit scientifique selon la grille internationale STROBE pour les études observationnelles (cohortes, cas-témoins, ou transversales). L'IA vous guide pas à pas pour rédiger le titre, l'introduction, les méthodes, les résultats et la discussion conformément aux standards de publication."
+      },
+      {
         q: "Comment utiliser le Calculateur NSN ?",
         a: "Accédez au module \"Calculateur NSN\". Saisissez vos hypothèses (risque alpha, puissance, différence clinique attendue) pour obtenir immédiatement le Nombre de Sujets Nécessaires. L'application rédige automatiquement le paragraphe de justification statistique à copier dans votre protocole."
       },
       {
         q: "Comment forcer le Tuteur IA à citer un document réglementaire ?",
         a: "Dans vos questions au Tuteur IA, demandez-lui explicitement : « Cite la Ligne Directrice de 2025 » ou « Selon la Loi 18-11 ». Il ciblera prioritairement ces bases de connaissances et mentionnera la source exacte sous forme de balise [Document, Page X]."
+      },
+      {
+        q: "Qu'est-ce que le Rapport Pédagogique et comment est-il construit ?",
+        a: "Le \"Rapport Pédagogique\" est un tableau de bord personnel généré par l'IA. Il évalue vos compétences méthodologiques en temps réel en analysant votre progression sur les quiz (réponses correctes), l'acquisition des concepts clés des flashcards (révision espacée) et le nombre de protocoles cliniques rédigés. Il définit votre niveau global (Débutant, Intermédiaire, ou Avancé)."
+      },
+      {
+        q: "Comment fonctionne l'Espace Superviseur et la Messagerie ?",
+        a: "Si votre compte est connecté au serveur (Firebase), vos travaux sont synchronisés. L'Espace Superviseur permet à vos enseignants ou superviseurs (comme le Pr Nezzal) de consulter vos protocoles et vos scores en temps réel. La \"Messagerie\" intégrée vous permet de poser des questions à vos encadrants et d'échanger pour valider vos projets cliniques."
+      },
+      {
+        q: "Comment utiliser les Quiz et Flashcards pour réviser ?",
+        a: "Les Quiz évaluent vos connaissances théoriques sur les biais de recherche et la puissance statistique. Les Flashcards utilisent le système de répétition espacée : vous devez évaluer vous-même si vous connaissez la définition d'un concept. Une carte est considérée comme \"maîtrisée\" lorsque vous la validez plusieurs fois avec succès."
       }
     ]
   },
