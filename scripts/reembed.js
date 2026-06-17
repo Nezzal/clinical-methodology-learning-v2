@@ -6,6 +6,11 @@ const EMBEDDINGS_PATH = path.join(__dirname, '../src/data/recif-embeddings.json'
 const MODEL_NAME = 'Xenova/multilingual-e5-base';
 
 async function main() {
+  const forceRebuild = process.argv.includes('--force');
+  if (forceRebuild) {
+    console.log('🔄 Option --force détectée : recalcul complet de tous les embeddings locaux.');
+  }
+
   console.log('📖 Chargement du fichier recif-embeddings.json...');
   if (!fs.existsSync(EMBEDDINGS_PATH)) {
     console.error(`❌ Fichier non trouvé : ${EMBEDDINGS_PATH}`);
@@ -25,15 +30,24 @@ async function main() {
 
   console.log('🚀 Démarrage de la génération des embeddings locaux...');
   const start = Date.now();
+  let skipped = 0;
 
   for (let i = 0; i < total; i++) {
     const chunk = chunks[i];
+    
+    // Si l'embedding local E5 est déjà calculé, on le conserve !
+    if (!forceRebuild && chunk.model === 'e5' && chunk.embedding && chunk.embedding.length > 0) {
+      skipped++;
+      continue;
+    }
+
     // Le modèle E5 requiert le préfixe "passage: " pour les documents à indexer
     const textToEmbed = `passage: ${chunk.text}`;
 
     try {
       const output = await extractor(textToEmbed, { pooling: 'mean', normalize: true });
       chunk.embedding = Array.from(output.data);
+      chunk.model = 'e5'; // Marquer comme calculé par E5
     } catch (err) {
       console.error(`❌ Erreur lors du calcul du fragment ${i} :`, err);
       process.exit(1);
@@ -42,7 +56,7 @@ async function main() {
     if ((i + 1) % 20 === 0 || i === total - 1) {
       const elapsed = ((Date.now() - start) / 1000).toFixed(1);
       const pct = (((i + 1) / total) * 100).toFixed(1);
-      console.log(`⏳ Progression : ${i + 1} / ${total} (${pct}%) traités en ${elapsed}s...`);
+      console.log(`⏳ Progression : ${i + 1} / ${total} (${pct}%) traités (passés : ${skipped}) en ${elapsed}s...`);
     }
   }
 
@@ -50,7 +64,7 @@ async function main() {
   fs.writeFileSync(EMBEDDINGS_PATH, JSON.stringify(chunks, null, 2), 'utf-8');
   
   const totalTime = ((Date.now() - start) / 1000).toFixed(1);
-  console.log(`🎉 Ré-indexation complétée avec succès en ${totalTime}s !`);
+  console.log(`🎉 Ré-indexation complétée avec succès en ${totalTime}s ! (${skipped} fragments conservés depuis le cache)`);
 }
 
 main().catch(err => {

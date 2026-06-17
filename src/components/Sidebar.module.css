@@ -13,7 +13,7 @@
 }
 
 .logoContainer {
-  padding: 2rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-glass);
   display: flex;
   align-items: center;
@@ -35,10 +35,10 @@
 
 .navLinks {
   list-style: none;
-  padding: 2rem 1rem;
+  padding: 1rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-grow: 1;
 }
 
@@ -46,7 +46,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 1rem;
+  padding: 0.7rem 1rem;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-weight: 500;
@@ -107,8 +107,25 @@
   overflow-y: auto;
 }
 
+.sidebarNav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebarNav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebarNav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.sidebarNav::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
 .profileSection {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border-top: 1px solid var(--border-glass);
   background: rgba(255, 255, 255, 0.01);
 }
@@ -245,7 +262,7 @@
 }
 
 .aiToggleSection {
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border-top: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;

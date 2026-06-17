@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreArticle, loadFirestoreArticles, syncUserProfile, deleteFirestoreArticle } from '@/utils/firestore';
-import { APP_VERSION_LABEL } from '@/utils/constants';
+import { APP_NAME, APP_VERSION } from '@/utils/constants';
 import styles from './page.module.css';
 
 function renderMarkdown(text: string): string {
@@ -387,7 +387,7 @@ export default function ArticleGenerator() {
             ${htmlContent}
           </div>
           <div class="footer">
-            Plateforme d'Apprentissage de la Méthodologie Clinique — Guide RECIF & STROBE
+            ${APP_NAME} v${APP_VERSION}
           </div>
           <script>
             window.onload = function() {

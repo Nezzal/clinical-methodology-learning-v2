@@ -12,12 +12,8 @@ MODEL_NAME = "models/gemini-embedding-2"
 BATCH_SIZE = 20  # Let's keep it safe for rate limits and payload sizes
 
 def load_gemini_api_key():
-    """Charge la clé API de Gemini depuis .env.local ou l'environnement."""
-    key = os.environ.get("GEMINI_API_KEY", "")
-    if key:
-        return key
-    
-    # Tenter de lire depuis .env.local
+    """Charge la clé API de Gemini depuis .env.local (prioritaire) ou l'environnement."""
+    # Tenter de lire d'abord depuis .env.local
     if os.path.exists(".env.local"):
         with open(".env.local", "r", encoding="utf-8") as f:
             for line in f:
@@ -25,9 +21,12 @@ def load_gemini_api_key():
                 if line.startswith("GEMINI_API_KEY="):
                     parts = line.split("=", 1)
                     if len(parts) > 1:
-                        # Enlever d'éventuels guillemets
-                        return parts[1].strip("'\" ")
-    return ""
+                        key = parts[1].strip("'\" ")
+                        if key:
+                            return key
+    
+    # Repli sur la variable d'environnement
+    return os.environ.get("GEMINI_API_KEY", "")
 
 def clean_text(text, doc_name=None):
     """Nettoie le texte extrait pour éliminer les espaces superflus."""
@@ -162,6 +161,7 @@ def get_embeddings_batch(chunks, api_key):
             except urllib.error.HTTPError as e:
                 err_content = e.read().decode('utf-8', errors='ignore')
                 if e.code == 429:
+                    retry += 1
                     sleep_time = 45.0  # par défaut
                     try:
                         err_json = json.loads(err_content)
@@ -174,9 +174,8 @@ def get_embeddings_batch(chunks, api_key):
                                     break
                     except Exception:
                         pass
-                    print(f"⏳ Quota épuisé (429). Sommeil forcé de {sleep_time:.1f} secondes avant de réessayer le lot...")
+                    print(f"⏳ Quota épuisé (429). Sommeil forcé de {sleep_time:.1f} secondes avant de réessayer le lot (tentative {retry}/{max_retries})...")
                     time.sleep(sleep_time)
-                    # Ne pas incrémenter retry pour les 429
                     continue
                 else:
                     retry += 1
@@ -222,6 +221,7 @@ def get_doc_name(pdf_path):
     return cleaned
 
 def main():
+    import sys
     api_key = load_gemini_api_key()
     if not api_key:
         print("❌ Erreur : La clé GEMINI_API_KEY n'a pas été trouvée dans l'environnement ni dans .env.local.")
@@ -230,38 +230,71 @@ def main():
         
     print(f"🔑 Clé API détectée : {api_key[:5]}...{api_key[-5:] if len(api_key) > 10 else ''}")
     
-    # 1. Détecter tous les PDF du workspace
+    # 0. Détecter si reconstruction forcée
+    force_rebuild = "--force" in sys.argv
+    if force_rebuild:
+        print("🔄 Option --force détectée : reconstruction complète de l'index.")
+        
+    # 1. Charger les embeddings existants pour le cache
+    existing_chunks = []
+    existing_docs = set()
+    if not force_rebuild and os.path.exists(OUTPUT_JSON_PATH):
+        try:
+            with open(OUTPUT_JSON_PATH, "r", encoding="utf-8") as f:
+                existing_chunks = json.load(f)
+                for c in existing_chunks:
+                    if "doc" in c:
+                        existing_docs.add(c["doc"])
+            print(f"📦 {len(existing_chunks)} fragments existants chargés depuis le cache (documents : {list(existing_docs)})")
+        except Exception as e:
+            print(f"⚠️ Impossible de charger les embeddings existants: {e}")
+            
+    # 2. Détecter tous les PDF du workspace
     pdf_paths = find_pdfs(WORKSPACE_DIR)
     if not pdf_paths:
         print(f"❌ Aucun fichier PDF trouvé dans {WORKSPACE_DIR}")
         return
         
-    print(f"📂 {len(pdf_paths)} document(s) PDF détecté(s) à indexer :")
+    print(f"📂 {len(pdf_paths)} document(s) PDF détecté(s) :")
     for path in pdf_paths:
         print(f" - {os.path.basename(path)} -> {get_doc_name(path)}")
         
-    # 2. Découper tous les PDF en paragraphes
-    all_chunks = []
+    # 3. Découper uniquement les PDF manquants ou conserver les existants
+    new_chunks = []
+    preserved_chunks = []
+    
     for path in pdf_paths:
         doc_name = get_doc_name(path)
-        chunks = chunk_pdf(path, doc_name)
-        all_chunks.extend(chunks)
-        
-    print(f"\n📦 Nombre total combiné de paragraphes à indexer : {len(all_chunks)}")
+        if doc_name in existing_docs:
+            print(f"✅ Document déjà indexé, conservation des fragments existants : {doc_name}")
+            doc_chunks = [c for c in existing_chunks if c.get("doc") == doc_name]
+            preserved_chunks.extend(doc_chunks)
+        else:
+            print(f"🆕 Nouveau document détecté à indexer : {doc_name}")
+            chunks = chunk_pdf(path, doc_name)
+            new_chunks.extend(chunks)
+            
+    print(f"\n📦 Fragments préservés : {len(preserved_chunks)}")
+    print(f"📦 Nouveaux fragments à indexer : {len(new_chunks)}")
     
-    # 3. Générer les embeddings
+    # 4. Générer les embeddings pour les nouveaux fragments
     start_time = time.time()
     try:
-        embedded_chunks = get_embeddings_batch(all_chunks, api_key)
-        
-        # 4. Sauvegarder dans le fichier JSON
+        if new_chunks:
+            embedded_new_chunks = get_embeddings_batch(new_chunks, api_key)
+            all_final_chunks = preserved_chunks + embedded_new_chunks
+        else:
+            print("✨ Aucun nouveau fragment à indexer !")
+            all_final_chunks = preserved_chunks
+            
+        # 5. Sauvegarder dans le fichier JSON
         os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
         with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as f:
-            json.dump(embedded_chunks, f, ensure_ascii=False, indent=2)
+            json.dump(all_final_chunks, f, ensure_ascii=False, indent=2)
             
         duration = time.time() - start_time
         print(f"\n🎉 Succès ! Indexation terminée en {duration:.2f} secondes.")
-        print(f"💾 Fichier sauvegardé sous : {OUTPUT_JSON_PATH} ({len(embedded_chunks)} vecteurs indexés)")
+        print(f"💾 Fichier sauvegardé sous : {OUTPUT_JSON_PATH} ({len(all_final_chunks)} vecteurs indexés)")
         
     except Exception as e:
         print(f"❌ Échec de la génération des embeddings : {e}")

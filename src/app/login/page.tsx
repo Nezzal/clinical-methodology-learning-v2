@@ -199,6 +199,41 @@ export default function Login() {
                   <p>Évaluez vos connaissances sur les biais de recherche et la puissance statistique avec des outils immersifs.</p>
                 </div>
               </div>
+              <div className={styles.featureItem}>
+                <div className={styles.featureIcon}>📊</div>
+                <div className={styles.featureText}>
+                  <h4>Rapport Pédagogique</h4>
+                  <p>Suivez votre progression d&apos;apprentissage et obtenez un bilan complet de vos compétences en méthodologie clinique.</p>
+                </div>
+              </div>
+              <div className={styles.featureItem}>
+                <div className={styles.featureIcon}>🧮</div>
+                <div className={styles.featureText}>
+                  <h4>Calculateur NSN</h4>
+                  <p>Évaluez le Nombre de Sujets Nécessaires pour vos études et générez automatiquement vos justifications statistiques.</p>
+                </div>
+              </div>
+              <div className={styles.featureItem}>
+                <div className={styles.featureIcon}>📄</div>
+                <div className={styles.featureText}>
+                  <h4>Rédacteur d&apos;articles STROBE</h4>
+                  <p>Structurez vos articles scientifiques pour publication en suivant les recommandations de la grille internationale STROBE.</p>
+                </div>
+              </div>
+              <div className={styles.featureItem}>
+                <div className={styles.featureIcon}>👥</div>
+                <div className={styles.featureText}>
+                  <h4>Espace Superviseur</h4>
+                  <p>Permettez à vos enseignants et superviseurs de suivre votre avancée et de valider vos travaux.</p>
+                </div>
+              </div>
+              <div className={styles.featureItem}>
+                <div className={styles.featureIcon}>💬</div>
+                <div className={styles.featureText}>
+                  <h4>Messagerie</h4>
+                  <p>Communiquez en temps réel avec vos encadrants pour poser des questions ou solliciter une validation.</p>
+                </div>
+              </div>
             </div>
 
             <div className={styles.audienceSection}>
