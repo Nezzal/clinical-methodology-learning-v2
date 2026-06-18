@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
 import styles from './page.module.css';
 
 type StudyType = 'transversal' | 'comparative_prop' | 'comparative_mean' | 'case_control' | 'diagnostic';
@@ -211,9 +210,7 @@ export default function CalculatorPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <Sidebar />
-      <main className={styles.mainContent}>
+    <div className={styles.mainContent}>
         <header className={styles.header}>
           <h1 className={styles.title}>Calculateur de Taille d'Échantillon (NSN)</h1>
           <p className={styles.subtitle}>
@@ -666,7 +663,6 @@ export default function CalculatorPage() {
             </div>
           </div>
         </div>
-      </main>
     </div>
   );
 }

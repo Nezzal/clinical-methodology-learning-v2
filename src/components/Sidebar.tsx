@@ -14,6 +14,7 @@ export default function Sidebar() {
   const router = useRouter();
   const { user, profile, logout, isFirebaseConfigured, guestMode, isAdmin, role } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [level, setLevel] = useState('Débutant');
 
   const [profileName, setProfileName] = useState('');
@@ -22,6 +23,31 @@ export default function Sidebar() {
 
   const [localModels, setLocalModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>('');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('recif_sidebar_collapsed') === 'true';
+      setIsCollapsed(saved);
+
+      const handleSidebarChange = () => {
+        const collapsed = localStorage.getItem('recif_sidebar_collapsed') === 'true';
+        setIsCollapsed(collapsed);
+      };
+
+      window.addEventListener('sidebar_collapsed_changed', handleSidebarChange);
+      return () => {
+        window.removeEventListener('sidebar_collapsed_changed', handleSidebarChange);
+      };
+    }
+  }, []);
+
+  const toggleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    localStorage.setItem('recif_sidebar_collapsed', String(next));
+    window.dispatchEvent(new Event('sidebar_collapsed_changed'));
+  };
 
   useEffect(() => {
     if (!user || !role) {
@@ -337,7 +363,24 @@ export default function Sidebar() {
         )}
       </button>
 
-      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''} no-print`}>
+      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''} ${isCollapsed ? styles.collapsed : ''} no-print`}>
+        <button 
+          className={styles.collapseToggleBtn} 
+          onClick={toggleCollapse} 
+          title={isCollapsed ? "Agrandir le menu" : "Réduire le menu"}
+          aria-label={isCollapsed ? "Agrandir le menu" : "Réduire le menu"}
+        >
+          {isCollapsed ? (
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          )}
+        </button>
+
         <div className={styles.logoContainer}>
           <svg className={styles.logoIcon} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M4.5 16.5c-1.5 1.26-2.5 3.19-2.5 5.5h20c0-2.31-1-4.24-2.5-5.5" />
@@ -455,12 +498,12 @@ export default function Sidebar() {
                 </div>
               </div>
               <button className={styles.logoutBtn} onClick={handleLogout}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.logoutIcon}>
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                Se déconnecter (Quitter)
+                <span>Se déconnecter (Quitter)</span>
               </button>
             </div>
           ) : guestMode ? (
@@ -469,13 +512,13 @@ export default function Sidebar() {
                 <div className={styles.guestTitle}>Mode Invité Local</div>
                 <div className={styles.guestSubtitle}>Données non synchronisées</div>
               </div>
-              <button className={styles.logoutBtn} onClick={handleLogout} style={{ marginTop: '0.75rem', width: '100%' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+              <button className={styles.logoutBtn} onClick={handleLogout} style={{ marginTop: '0.75rem' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.logoutIcon}>
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
                   <line x1="21" y1="12" x2="9" y2="12" />
                 </svg>
-                Quitter le mode hors-ligne
+                <span>Quitter le mode hors-ligne</span>
               </button>
             </div>
           ) : (
@@ -485,7 +528,7 @@ export default function Sidebar() {
                 <div className={styles.guestSubtitle}>Données non synchronisées</div>
               </div>
               <Link href="/login" className={styles.loginBtn}>
-                Connexion
+                <span>Connexion</span>
               </Link>
             </div>
           )}

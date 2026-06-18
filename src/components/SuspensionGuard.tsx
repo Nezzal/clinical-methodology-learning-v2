@@ -102,6 +102,26 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   const [showNetworkBanner, setShowNetworkBanner] = useState(false);
   const [bannerType, setBannerType] = useState<'offline' | 'online'>('online');
 
+  // État de la barre latérale principale (Sidebar)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('recif_sidebar_collapsed') === 'true';
+      setIsSidebarCollapsed(saved);
+
+      const handleSidebarChange = () => {
+        const collapsed = localStorage.getItem('recif_sidebar_collapsed') === 'true';
+        setIsSidebarCollapsed(collapsed);
+      };
+
+      window.addEventListener('sidebar_collapsed_changed', handleSidebarChange);
+      return () => {
+        window.removeEventListener('sidebar_collapsed_changed', handleSidebarChange);
+      };
+    }
+  }, []);
+
   useEffect(() => {
     setHasMounted(true);
   }, []);
@@ -544,11 +564,11 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
       <Sidebar />
       <main style={{ 
         flex: 1, 
-        marginLeft: '280px', 
+        marginLeft: isSidebarCollapsed ? '70px' : '280px', 
         padding: '2rem', 
         minHeight: '100vh', 
-        width: 'calc(100% - 280px)',
-        transition: 'margin-left var(--transition-normal)'
+        width: isSidebarCollapsed ? 'calc(100% - 70px)' : 'calc(100% - 280px)',
+        transition: 'margin-left var(--transition-normal), width var(--transition-normal)'
       }}>
         {children}
       </main>

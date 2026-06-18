@@ -38,6 +38,8 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, border-right 0.3s ease;
+  overflow: hidden;
 }
 
 .sidebarHeader {
@@ -207,6 +209,7 @@
 
 .tutorMessage {
   align-self: flex-start;
+  max-width: 96%;
 }
 
 .messageBubble {
@@ -737,5 +740,119 @@
   color: var(--text-primary);
   border-color: var(--border-glass-active);
   transform: translateY(-2px);
+}
+
+.headerMain {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.manualButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.manualButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-glass-active);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.15);
+}
+
+.manualButton svg {
+  color: var(--accent-primary);
+  transition: transform var(--transition-normal);
+}
+
+.manualButton:hover svg {
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .headerMain {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .manualButton {
+    align-self: flex-start;
+  }
+}
+
+/* Discussion sidebar collapsed state and toggle buttons */
+.sidebarPanel.collapsed {
+  width: 0 !important;
+  border-right: none !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.collapseDiscussionBtn {
+  background: none;
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.collapseDiscussionBtn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-color: var(--border-glass-active);
+}
+
+.collapseDiscussionBtn svg {
+  color: inherit;
+}
+
+.expandDiscussionBtn {
+  position: absolute;
+  left: 0;
+  top: 1rem;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  border-radius: 0 8px 8px 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-glass);
+  border-left: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.expandDiscussionBtn:hover {
+  background: var(--bg-glass);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.expandDiscussionBtn svg {
+  color: inherit;
 }
 

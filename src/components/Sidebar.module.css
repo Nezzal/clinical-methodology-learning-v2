@@ -9,7 +9,7 @@
   left: 0;
   top: 0;
   z-index: 100;
-  transition: transform var(--transition-normal);
+  transition: transform var(--transition-normal), width var(--transition-normal);
 }
 
 .logoContainer {
@@ -404,5 +404,164 @@
   color: #f87171;
   margin-top: 0.2rem;
   display: block;
+}
+
+/* Bouton de réduction de la barre latérale */
+.collapseToggleBtn {
+  position: absolute;
+  top: 1.5rem;
+  right: -12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-glass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+  z-index: 1010;
+  transition: all var(--transition-fast);
+}
+
+.collapseToggleBtn:hover {
+  background: var(--bg-glass);
+  color: var(--accent-primary);
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.1);
+}
+
+.collapseToggleBtn svg {
+  color: inherit;
+}
+
+/* Styles pour l'état rétracté */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .logoContainer {
+  padding: 1.25rem 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .logoText {
+  display: none !important;
+}
+
+.sidebar.collapsed .logoIcon {
+  margin: 0;
+}
+
+.sidebar.collapsed .navLinks {
+  padding: 1rem 0.5rem;
+}
+
+.sidebar.collapsed .navItem a {
+  justify-content: center;
+  padding: 0.7rem 0;
+  gap: 0;
+}
+
+.sidebar.collapsed .navItem a span:not(.sidebarBadge) {
+  display: none !important;
+}
+
+/* Section Profil */
+.sidebar.collapsed .profileSection {
+  padding: 0.75rem 0.5rem;
+}
+
+.sidebar.collapsed .profileCard {
+  justify-content: center;
+}
+
+.sidebar.collapsed .userDetails {
+  display: none !important;
+}
+
+.sidebar.collapsed .logoutBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  margin: 0.75rem auto 0 auto;
+}
+
+.sidebar.collapsed .logoutBtn span {
+  display: none !important;
+}
+
+.sidebar.collapsed .logoutBtn svg {
+  margin: 0 !important;
+}
+
+/* Carte Invité */
+.sidebar.collapsed .guestCard {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.sidebar.collapsed .guestDetails {
+  display: none !important;
+}
+
+.sidebar.collapsed .loginBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar.collapsed .loginBtn span {
+  display: none !important;
+}
+
+/* Remplacer le texte Connexion par une icône ou un emoji */
+.sidebar.collapsed .loginBtn::after {
+  content: "🔑";
+  font-size: 1rem;
+}
+
+/* Section IA */
+.sidebar.collapsed .aiToggleSection {
+  padding: 0.75rem 0.5rem;
+  align-items: center;
+}
+
+.sidebar.collapsed .aiToggleLabel,
+.sidebar.collapsed .ollamaModelSection {
+  display: none !important;
+}
+
+.sidebar.collapsed .aiToggleBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  justify-content: center;
+}
+
+.sidebar.collapsed .aiToggleText {
+  display: none !important;
+}
+
+/* Pied de page */
+.sidebar.collapsed .footer {
+  display: none !important;
+}
+
+/* Masquer le bouton de réduction sur mobile */
+@media (max-width: 768px) {
+  .collapseToggleBtn {
+    display: none !important;
+  }
 }
 

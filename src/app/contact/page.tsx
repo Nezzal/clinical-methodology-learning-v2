@@ -8,7 +8,6 @@ import {
   markMessageReadState, 
   FirestoreSupportMessage 
 } from '@/utils/firestore';
-import Sidebar from '@/components/Sidebar';
 import styles from './page.module.css';
 
 export default function ContactPage() {
@@ -115,9 +114,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
-      <Sidebar />
-      <main className={styles.mainContent}>
+    <div className={styles.mainContent}>
         <header className={styles.header}>
           <h1 className={styles.title}>Support & Contact Enseignant</h1>
           <p className={styles.subtitle}>
@@ -286,7 +283,6 @@ export default function ContactPage() {
             </div>
           </div>
         )}
-      </main>
     </div>
   );
 }

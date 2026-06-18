@@ -100,6 +100,9 @@ function formatMarkdown(text: string): string {
   // Bold: **text**
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   
+  // Links: [text](url)
+  formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); text-decoration: underline; font-weight: 500;">$1</a>');
+  
   // Italic: *text*
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
   
@@ -148,6 +151,9 @@ function parseMarkdownToHtml(md: string): string {
     s = s.replace(/\[Page\s*(\d+)\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>p. $1</span>');
     s = s.replace(/\[Pages\s*(\d+)(?:-(\d+))?\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>pp. $1-$2</span>');
     s = s.replace(/\[Page\s*(\d+),\s*Page\s*(\d+)\]/gi, '<span class="page-badge"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:3px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>pp. $1, $2</span>');
+
+    // Links: [text](url)
+    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: var(--accent-primary); text-decoration: underline; font-weight: 500;">$1</a>');
 
     s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/__([^_]+)__/g, '<strong>$1</strong>');
@@ -252,6 +258,21 @@ export default function Tuteur() {
   const [activePlayingMessageIndex, setActivePlayingMessageIndex] = useState<number | null>(null);
   const [chatMode, setChatMode] = useState<'free' | 'protocol' | 'strobe' | null>(null);
   const [extracting, setExtracting] = useState(false);
+  const [isDiscussionCollapsed, setIsDiscussionCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('recif_tuteur_discussion_collapsed') === 'true';
+      setIsDiscussionCollapsed(saved);
+    }
+  }, []);
+
+  const handleToggleDiscussion = () => {
+    const next = !isDiscussionCollapsed;
+    setIsDiscussionCollapsed(next);
+    localStorage.setItem('recif_tuteur_discussion_collapsed', String(next));
+  };
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesListRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -371,7 +392,7 @@ export default function Tuteur() {
 
   const getWelcomeMessage = () => ({
     role: 'assistant' as const,
-    content: `Bonjour ! Je suis votre tuteur virtuel spécialisé dans la méthodologie de recherche clinique (manuel **RECIF**, **Loi n° 18-11 relative à la santé en Algérie**, et **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**).\n\nJe peux vous expliquer les schémas d'études, vous détailler les obligations réglementaires algériennes, ou vous guider sur vos projets. Que souhaitez-vous savoir aujourd'hui ?`,
+    content: `Bonjour ! Je suis votre tuteur virtuel spécialisé dans la méthodologie de recherche clinique (manuel [**RECIF en ligne**](https://recif-amiens.org/enseignements/le-livre-recif/), **Loi n° 18-11 relative à la santé en Algérie**, et **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**).\n\nJe peux vous expliquer les schémas d'études, vous détailler les obligations réglementaires algériennes, ou vous guider sur vos projets. Que souhaitez-vous savoir aujourd'hui ?`,
     timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
   });
 
@@ -1756,10 +1777,27 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Tuteur Virtuel RECIF</h1>
-        <p className={styles.subtitle}>
-          Posez vos questions méthodologiques et réglementaires sur la base du guide officiel de recherche clinique.
-        </p>
+        <div className={styles.headerMain}>
+          <div>
+            <h1 className={styles.title}>Tuteur Virtuel RECIF</h1>
+            <p className={styles.subtitle}>
+              Posez vos questions méthodologiques et réglementaires sur la base du guide officiel de recherche clinique.
+            </p>
+          </div>
+          <a
+            href="https://recif-amiens.org/enseignements/le-livre-recif/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.manualButton}
+            title="Consulter le Manuel du RECIF en ligne"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+            <span>Manuel RECIF en ligne</span>
+          </a>
+        </div>
       </header>
 
       <div className={styles.actionsHeader}>
@@ -1816,18 +1854,30 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 
       <div className={styles.chatArea}>
         {/* Barre latérale des sessions */}
-        <div className={styles.sidebarPanel}>
-          <div className={styles.sidebarHeader}>
+        <div className={`${styles.sidebarPanel} ${isDiscussionCollapsed ? styles.collapsed : ''}`}>
+          <div className={styles.sidebarHeader} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button 
               className={styles.newChatBtn} 
               onClick={startNewSession}
               disabled={loading}
+              style={{ flexGrow: 1 }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19" />
                 <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Nouvelle Discussion
+            </button>
+            <button
+              className={styles.collapseDiscussionBtn}
+              onClick={handleToggleDiscussion}
+              title="Réduire le volet des discussions"
+              aria-label="Réduire le volet des discussions"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="11 17 6 12 11 7" />
+                <polyline points="18 17 13 12 18 7" />
+              </svg>
             </button>
           </div>
           
@@ -1879,6 +1929,19 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 
         {/* Zone de chat active */}
         <div className={styles.chatContentArea}>
+          {isDiscussionCollapsed && (
+            <button
+              className={styles.expandDiscussionBtn}
+              onClick={handleToggleDiscussion}
+              title="Afficher le volet des discussions"
+              aria-label="Afficher le volet des discussions"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="13 17 18 12 13 7" />
+                <polyline points="6 17 11 12 6 7" />
+              </svg>
+            </button>
+          )}
           {chatMode === null ? (
             <div className={styles.modeSelectionContainer}>
               <div className={styles.modeSelectionHeader}>
@@ -1939,7 +2002,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                     setChatMode('protocol');
                     const welcome = {
                       role: 'assistant' as const,
-                      content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **RECIF**, de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
+                      content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide [**RECIF en ligne**](https://recif-amiens.org/enseignements/le-livre-recif/), de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
                       timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
                     };
                     setMessages([welcome]);
