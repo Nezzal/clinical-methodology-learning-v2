@@ -515,12 +515,12 @@ export default function Tuteur() {
         try {
           const list = await loadFirestoreChats(user.uid);
           setSessions(list);
-          if (list.length > 0) {
-            setActiveSessionId(list[0].id);
-            setMessages(list[0].messages || []);
-            setChatMode(list[0].mode || 'free');
-          } else {
+          if (list.length === 0) {
             startNewSession();
+          } else {
+            setActiveSessionId(null);
+            setChatMode(null);
+            setMessages([]);
           }
         } catch (e) {
           console.error("Erreur de chargement des sessions:", e);
