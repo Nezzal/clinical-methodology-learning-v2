@@ -427,8 +427,12 @@ export default function ProtocoleGenerator() {
         setGeneratedCrf(null);
         setPreviewMode('protocol');
         
-        const protocolId = Math.random().toString(36).substring(7);
-        setActiveProtocolId(protocolId);
+        // Réutiliser l'ID actif si disponible, sinon en générer un nouveau
+        const isExisting = !!activeProtocolId;
+        const protocolId = activeProtocolId || Math.random().toString(36).substring(7);
+        if (!isExisting) {
+          setActiveProtocolId(protocolId);
+        }
         
         // Sauvegarder dans l'historique local
         const newProtocolItem = {
@@ -442,9 +446,20 @@ export default function ProtocoleGenerator() {
         };
 
         updateProgress((stats) => {
-          const updatedHistory = [newProtocolItem, ...(stats.recentProtocols || [])];
+          const recent = stats.recentProtocols || [];
+          const exists = recent.some((proto: any) => proto.id === protocolId);
+          let updatedHistory;
+          
+          if (exists) {
+            // Remplacer et remonter en haut de l'historique
+            const filtered = recent.filter((proto: any) => proto.id !== protocolId);
+            updatedHistory = [newProtocolItem, ...filtered];
+          } else {
+            updatedHistory = [newProtocolItem, ...recent];
+          }
+          
           return {
-            protocolsGenerated: (stats.protocolsGenerated || 0) + 1,
+            protocolsGenerated: exists ? stats.protocolsGenerated : (stats.protocolsGenerated || 0) + 1,
             recentProtocols: updatedHistory.slice(0, 15) // Garder les 15 derniers
           };
         });
@@ -459,7 +474,15 @@ export default function ProtocoleGenerator() {
         }
 
         // Mettre à jour l'état local de l'historique
-        setHistory((prev) => [newProtocolItem, ...prev].slice(0, 15));
+        setHistory((prev) => {
+          const exists = prev.some((proto: any) => proto.id === protocolId);
+          if (exists) {
+            const filtered = prev.filter((proto: any) => proto.id !== protocolId);
+            return [newProtocolItem, ...filtered].slice(0, 15);
+          } else {
+            return [newProtocolItem, ...prev].slice(0, 15);
+          }
+        });
       } else {
         throw new Error(data.error || 'Erreur lors de la génération.');
       }
