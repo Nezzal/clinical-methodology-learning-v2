@@ -717,14 +717,16 @@ export default function QuizPage() {
               disabled={generating}
               style={{ fontSize: '0.85rem', padding: '0.75rem 1.25rem' }}
             >
-              {generating ? 'Génération...' : 'Générer un Quiz'}
+              <span key={generating ? 'generating' : 'idle'}>
+                {generating ? 'Génération...' : 'Générer un Quiz'}
+              </span>
             </button>
           </div>
         </div>
 
         {isDynamic && (
           <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-glass)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--accent-secondary)' }}>
+            <span key={currentDynamicTopic} style={{ fontSize: '0.8rem', color: 'var(--accent-secondary)' }}>
               Mode personnalisé activé : <strong>"{currentDynamicTopic}"</strong>
             </span>
             <button 
@@ -754,13 +756,17 @@ export default function QuizPage() {
               className={`${styles.toggleBtn} ${activeMode === 'flashcards' ? styles.activeToggle : ''}`}
               onClick={() => setActiveMode('flashcards')}
             >
-              {isDynamic ? `Flashcards générées (${cardsList.length})` : `Flashcards Mémos (${cardsList.length})`}
+              <span key={`${isDynamic}_${cardsList.length}`}>
+                {isDynamic ? `Flashcards générées (${cardsList.length})` : `Flashcards Mémos (${cardsList.length})`}
+              </span>
             </button>
             <button
               className={`${styles.toggleBtn} ${activeMode === 'quiz' ? styles.activeToggle : ''}`}
               onClick={() => setActiveMode('quiz')}
             >
-              {isDynamic ? `Quiz généré (${questionsList.length})` : `Quiz d'Évaluation (${questionsList.length})`}
+              <span key={`${isDynamic}_${questionsList.length}`}>
+                {isDynamic ? `Quiz généré (${questionsList.length})` : `Quiz d'Évaluation (${questionsList.length})`}
+              </span>
             </button>
           </div>
 
@@ -776,7 +782,10 @@ export default function QuizPage() {
           ) : (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                <span 
+                  key={`mastery_header_${cardsList.length}_${masteredCards.filter(id => cardsList.some(c => c.id === id)).length}`}
+                  style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}
+                >
                   Cartes maîtrisées : <strong>{masteredCards.filter(id => cardsList.some(c => c.id === id)).length} / {cardsList.length}</strong> ({Math.round((masteredCards.filter(id => cardsList.some(c => c.id === id)).length / cardsList.length) * 100) || 0}%)
                 </span>
                 {masteredCards.length > 0 && (
@@ -804,7 +813,9 @@ export default function QuizPage() {
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '1rem' }}>
                         {card.category}
                       </span>
-                      <h4>{card.question}</h4>
+                      <h4 onClick={(e) => e.stopPropagation()}>
+                        <span key={card.question}>{card.question}</span>
+                      </h4>
                       <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', marginTop: '1rem', opacity: 0.8 }}>
                         Cliquer pour retourner
                       </span>
@@ -812,14 +823,18 @@ export default function QuizPage() {
 
                     {/* Verso */}
                     <div className={styles.cardBack}>
-                      <p>{card.answer}</p>
+                      <p onClick={(e) => e.stopPropagation()}>
+                        <span key={card.answer}>{card.answer}</span>
+                      </p>
                       <div className={styles.masteryActions}>
                         <button
                           className="btn btn-secondary"
                           style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem' }}
                           onClick={(e) => handleToggleMastery(e, card.id)}
                         >
-                          {isMastered ? 'À réviser' : 'Je maîtrise ✓'}
+                          <span key={isMastered ? 'mastered' : 'unmastered'}>
+                            {isMastered ? 'À réviser' : 'Je maîtrise ✓'}
+                          </span>
                         </button>
                       </div>
                     </div>
@@ -845,7 +860,9 @@ export default function QuizPage() {
           ) : !quizStarted ? (
             <div className={`${styles.preQuizCard} glass-card`}>
               <h2 className={styles.preQuizTitle}>
-                {isDynamic ? `Quiz personnalisé : ${currentDynamicTopic}` : "Quiz d'Évaluation Officiel"}
+                <span key={`${isDynamic}_${currentDynamicTopic}`}>
+                  {isDynamic ? `Quiz personnalisé : ${currentDynamicTopic}` : "Quiz d'Évaluation Officiel"}
+                </span>
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
                 Testez vos connaissances sur la méthodologie de recherche clinique RECIF et la législation algérienne.
@@ -886,7 +903,7 @@ export default function QuizPage() {
               </div>
 
               <button className="btn btn-primary" onClick={handleStartQuiz} style={{ width: '100%', padding: '1rem', fontWeight: 600 }}>
-                Démarrer le Quiz
+                <span key="start_quiz">Démarrer le Quiz</span>
               </button>
             </div>
           ) : !quizFinished ? (
@@ -900,7 +917,7 @@ export default function QuizPage() {
                   />
                 </div>
                 <div className={styles.progressText}>
-                  <span>Catégorie : <strong>{questionsList[currentQuestionIdx].category}</strong></span>
+                  <span key={questionsList[currentQuestionIdx].category}>Catégorie : <strong>{questionsList[currentQuestionIdx].category}</strong></span>
                   
                   {isTimerEnabled && (
                     <div className={`${styles.timerDisplay} ${timeLeft < 15 ? styles.timerUrgent : ''}`}>
@@ -908,17 +925,19 @@ export default function QuizPage() {
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
                       </svg>
-                      <span>{formatTime(timeLeft)}</span>
+                      <span key={timeLeft} translate="no">{formatTime(timeLeft)}</span>
                     </div>
                   )}
                   
-                  <span>Question {currentQuestionIdx + 1} sur {questionsList.length}</span>
+                  <span key={currentQuestionIdx}>Question {currentQuestionIdx + 1} sur {questionsList.length}</span>
                 </div>
               </div>
 
               {/* Texte de la question */}
               <h3 className={styles.questionText}>
-                {questionsList[currentQuestionIdx].question}
+                <span key={questionsList[currentQuestionIdx].question}>
+                  {questionsList[currentQuestionIdx].question}
+                </span>
               </h3>
 
               {/* Options */}
@@ -935,12 +954,12 @@ export default function QuizPage() {
 
                   return (
                     <button
-                      key={idx}
+                      key={`${currentQuestionIdx}_${idx}`}
                       className={`${styles.optionBtn} ${optClassName}`}
                       onClick={() => handleOptionClick(idx)}
                       disabled={quizAnswered}
                     >
-                      <span>{option}</span>
+                      <span key={option}>{option}</span>
                       {quizAnswered && isCorrect && (
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12" />
@@ -960,9 +979,11 @@ export default function QuizPage() {
               {/* Boite d'explication */}
               {quizAnswered && (
                 <div className={styles.explanationBox}>
-                  <div className={styles.explanationTitle}>Explication Méthodologique :</div>
+                  <div className={styles.explanationTitle}><span key="explanation_title">Explication Méthodologique :</span></div>
                   <p className={styles.explanationText}>
-                    {questionsList[currentQuestionIdx].explanation}
+                    <span key={questionsList[currentQuestionIdx].explanation}>
+                      {questionsList[currentQuestionIdx].explanation}
+                    </span>
                   </p>
                 </div>
               )}
@@ -971,7 +992,9 @@ export default function QuizPage() {
               <div className={styles.quizFooter}>
                 {quizAnswered && (
                   <button className="btn btn-primary" onClick={handleNextQuestion}>
-                    {currentQuestionIdx === questionsList.length - 1 ? 'Terminer le Quiz' : 'Question Suivante'}
+                    <span key={currentQuestionIdx === questionsList.length - 1 ? 'finish' : 'next'}>
+                      {currentQuestionIdx === questionsList.length - 1 ? 'Terminer le Quiz' : 'Question Suivante'}
+                    </span>
                   </button>
                 )}
               </div>
@@ -979,32 +1002,34 @@ export default function QuizPage() {
           ) : (
             /* Ecran de résultats */
             <div className={`${styles.quizCard} glass-card ${styles.resultScreen}`} style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-primary)', marginBottom: '1rem' }}>Quiz terminé !</h2>
-              <p style={{ color: 'var(--text-secondary)' }}>Voici votre bilan d'évaluation méthodologique :</p>
+              <h2 style={{ fontSize: '1.8rem', color: 'var(--accent-primary)', marginBottom: '1rem' }}><span key="quiz_finished">Quiz terminé !</span></h2>
+              <p style={{ color: 'var(--text-secondary)' }}><span key="quiz_summary">Voici votre bilan d'évaluation méthodologique :</span></p>
               
               <div className={styles.scoreCircle}>
-                <span className={styles.scoreNum}>{correctAnswersCount} / {questionsList.length}</span>
-                <span className={styles.scoreLabel}>Score</span>
+                <span key={correctAnswersCount} className={styles.scoreNum}>{correctAnswersCount} / {questionsList.length}</span>
+                <span className={styles.scoreLabel}><span key="score_label">Score</span></span>
               </div>
 
               <p className={styles.feedbackText}>
-                {correctAnswersCount === questionsList.length ? '🥇 Score parfait ! Vous maîtrisez parfaitement ce thème.' :
-                 correctAnswersCount >= Math.round(questionsList.length * 0.8) ? '🥈 Excellent travail ! Vos bases sont solides.' :
-                 correctAnswersCount >= Math.round(questionsList.length * 0.5) ? '🥉 Niveau moyen. Relisez le cours ou interrogez le tuteur pour combler vos doutes.' :
-                 '📚 Entraînez-vous encore ! Utilisez nos flashcards et posez des questions à notre tuteur virtuel.'}
+                <span key={correctAnswersCount}>
+                  {correctAnswersCount === questionsList.length ? '🥇 Score parfait ! Vous maîtrisez parfaitement ce thème.' :
+                   correctAnswersCount >= Math.round(questionsList.length * 0.8) ? '🥈 Excellent travail ! Vos bases sont solides.' :
+                   correctAnswersCount >= Math.round(questionsList.length * 0.5) ? '🥉 Niveau moyen. Relisez le cours ou interrogez le tuteur pour combler vos doutes.' :
+                   '📚 Entraînez-vous encore ! Utilisez nos flashcards et posez des questions à notre tuteur virtuel.'}
+                </span>
               </p>
 
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
                 <button className="btn btn-primary" onClick={handleResetQuiz}>
-                  Recommencer le Quiz
+                  <span key="retry_quiz">Recommencer le Quiz</span>
                 </button>
                 {isDynamic ? (
                   <button className="btn btn-secondary" onClick={handleRestoreDefaults}>
-                    Quitter le Quiz personnalisé
+                    <span key="quit_custom">Quitter le Quiz personnalisé</span>
                   </button>
                 ) : (
                   <button className="btn btn-secondary" onClick={() => setActiveMode('flashcards')}>
-                    Réviser les Flashcards
+                    <span key="revise_cards">Réviser les Flashcards</span>
                   </button>
                 )}
               </div>
@@ -1019,18 +1044,18 @@ export default function QuizPage() {
                   <path d="M12 8v4l3 3" />
                   <circle cx="12" cy="12" r="10" />
                 </svg>
-                Historique des tentatives
+                <span key="history_title">Historique des tentatives</span>
               </h3>
               {quizHistory.length > 0 && (
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  {quizHistory.length} tentative{quizHistory.length > 1 ? 's' : ''}
+                <span key={quizHistory.length} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  {quizHistory.length} <span key="attempts_label">tentative{quizHistory.length > 1 ? 's' : ''}</span>
                 </span>
               )}
             </div>
 
             {quizHistory.length === 0 ? (
               <div className={styles.emptyHistory}>
-                Aucune tentative de quiz enregistrée pour le moment.
+                <span key="no_history">Aucune tentative de quiz enregistrée pour le moment.</span>
               </div>
             ) : (
               <div className={styles.historyList}>

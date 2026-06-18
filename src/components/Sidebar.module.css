@@ -1,6 +1,8 @@
 .sidebar {
   width: 280px;
-  background-color: var(--bg-secondary);
+  background-color: rgba(9, 12, 21, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;
@@ -54,15 +56,16 @@
 }
 
 .navItem a:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+  background-color: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 .active a {
-  background-color: rgba(56, 189, 248, 0.08);
-  border-left: 3px solid var(--accent-primary);
+  background-color: rgba(56, 189, 248, 0.06);
+  border-left: 4px solid var(--accent-primary);
   color: var(--text-primary);
+  box-shadow: inset 4px 0 12px -4px rgba(56, 189, 248, 0.15);
 }
 
 .footer {
