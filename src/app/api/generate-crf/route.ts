@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { callLLM } from '@/utils/llm';
 import { loadEnvLocal } from '@/utils/env';
 import recifKb from '@/data/recif-kb.json';
 
@@ -40,13 +40,11 @@ async function tryOllamaGenerateCrf(
     console.log(`🤖 [Générateur de CRF] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 secondes de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: ollamaModel,
         messages: [
@@ -57,11 +55,7 @@ async function tryOllamaGenerateCrf(
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: {
-          temperature: 0.3, // Faible température pour plus de structure
-          num_ctx: 16384,
-          num_predict: 4096
-        }
+        options: { temperature: 0.3, num_ctx: 16384, num_predict: 4096 }
       }),
       signal: controller.signal
     });
@@ -94,7 +88,7 @@ function getStaticFallbackCrf(
   intervention: string,
   methodologyName: string,
   benefitTypeName: string,
-  preferredProvider = 'gemini',
+  preferredProvider = 'openrouter',
   isError = false,
   errorMessage = ''
 ): string {
@@ -103,8 +97,8 @@ function getStaticFallbackCrf(
     notice = `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`;
   } else {
     notice = isError
-      ? `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible.${errorMessage ? ` (Détails : ${errorMessage})` : ''}*`
-      : `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
+      ? `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car le service d'IA externe (OpenRouter) a rencontré une erreur ou est temporairement indisponible.${errorMessage ? ` (Détails : ${errorMessage})` : ''}*`
+      : `⚠️ *Note : Ce CRF a été généré via notre algorithme local standard car la clé API \`OPENROUTER_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
   }
 
   const parsedInclusion = inclusion 
@@ -118,7 +112,7 @@ function getStaticFallbackCrf(
   return `# CAHIER D'OBSERVATION CLINIQUE (CRF) - PROTOCOLE DE RECHERCHE
 *Généré selon les directives méthodologiques du manuel RECIF & Loi algérienne n° 18-11*
 
-${notice}
+ ${notice}
 
 ---
 
@@ -134,10 +128,10 @@ ${notice}
 ## 📑 FICHE 1 : CRITÈRES D'ÉLIGIBILITÉ (INCLUSION / NON-INCLUSION)
 
 ### Critères d'inclusion (Tous doivent être cochés "OUI" pour inclure le patient) :
-${parsedInclusion}
+ ${parsedInclusion}
 
 ### Critères de non-inclusion (Tous doivent être cochés "NON" / non cochés pour inclure le patient) :
-${parsedExclusion}
+ ${parsedExclusion}
 
 **DÉCISION D'ÉLIGIBILITÉ :**
 * Le patient remplit-il tous les critères d'éligibilité ?   **[ ] OUI**   **[ ] NON**
@@ -241,7 +235,7 @@ export async function POST(req: Request) {
   let benefitType = 'sbid';
   let methodologyName = 'Non spécifiée';
   let benefitTypeName = 'Non spécifié';
-  let preferredProvider = 'gemini';
+  let preferredProvider = 'openrouter';
   let headerOllamaModel: string | null = null;
 
   let objectives = '';
@@ -292,9 +286,9 @@ export async function POST(req: Request) {
     protocolContent = data.protocolContent || '';
 
     const requestHeaders = new Headers(req.headers);
-    preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    preferredProvider = requestHeaders.get('x-ai-provider') || 'openrouter';
     headerOllamaModel = requestHeaders.get('x-ollama-model');
-    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.OPENROUTER_API_KEY;
     console.log(`🔑 [CRF API] Clé API lue : ${apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 8)}` : 'AUCUNE'}`);
 
     const studyCategories = recifKb.algerian_regulation.study_categories;
@@ -323,10 +317,10 @@ Données simplifiées du projet :
 - Collecte des données : ${dataCollection || 'Non spécifiée'}
 - Analyse des données : ${dataAnalysis || 'Non spécifiée'}
 
-${protocolContent ? `
+ ${protocolContent ? `
 [PROTOCOLE GÉNÉRÉ DE RÉFÉRENCE]
 ---
-${protocolContent}
+ ${protocolContent}
 ---
 ` : ''}
 
@@ -379,106 +373,22 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
       return NextResponse.json({ crf: mockCrf });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-
-    const checkIsOffline = (err: any) => {
-      const errMsg = err.message?.toLowerCase() || '';
-      const errCode = err.code || '';
-      return errMsg.includes('fetch failed') || 
-             errMsg.includes('getaddrinfo') || 
-             errMsg.includes('enotfound') || 
-             errMsg.includes('eai_again') || 
-             errMsg.includes('connect timed out') ||
-             errCode === 'ENOTFOUND' || 
-             errCode === 'EAI_AGAIN';
-    };
-
-    const checkIsQuotaOrRateLimit = (err: any) => {
-      const status = err.status || err.statusCode;
-      const errMsg = err.message?.toLowerCase() || '';
-      return status === 429 || 
-             errMsg.includes('quota') || 
-             errMsg.includes('rate limit') || 
-             errMsg.includes('resource_exhausted') ||
-             errMsg.includes('exceeded your current quota');
-    };
-
-    const getRetryDelay = (err: any): number => {
-      let delay = 6;
-      try {
-        const errMsg = err.message || '';
-        let errObj: any = null;
-        const jsonStartIndex = errMsg.indexOf('{');
-        if (jsonStartIndex !== -1) {
-          const jsonStr = errMsg.substring(jsonStartIndex);
-          errObj = JSON.parse(jsonStr);
+    // --- APPEL OPENROUTER (QWEN / GLM) ---
+    console.log(`🤖 [CRF API] Appel à OpenRouter (QWEN/GLM)...`);
+    const crfText = await withTimeout(
+      callLLM(
+        "Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu conçois des CRF structurés en français conforme au manuel RECIF et à la Loi 18-11 algérienne. Tu utilises des cases à cocher [ ] et des champs [____]. Tu ne fais jamais de LaTeX.",
+        prompt,
+        {
+          provider: "qwen-plus", // QWEN-Plus suffit pour la structuration CRF
+          temperature: 0.3,
+          maxTokens: 8192
         }
-        if (errObj) {
-          const details = errObj.error?.details || errObj.details || [];
-          const retryInfo = details.find((d: any) => d['@type']?.includes('RetryInfo') || d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-          if (retryInfo && retryInfo.retryDelay) {
-            const parsed = parseFloat(retryInfo.retryDelay.replace('s', ''));
-            if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
-          }
-        }
-      } catch (e) {}
-      try {
-        const match = err.message?.match(/Please retry in ([0-9.]+)\s*s/i);
-        if (match) {
-          const parsed = parseFloat(match[1]);
-          if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
-        }
-      } catch (e) {}
-      return delay;
-    };
+      ),
+      120000
+    );
+    console.log(`✅ [CRF API] Réponse obtenue avec succès via OpenRouter`);
 
-    let response;
-    let attempt = 0;
-    const maxAttempts = 3;
-    const modelsToTry = [
-      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      'gemini-1.5-flash',
-      'gemini-2.0-flash'
-    ];
-
-    while (attempt < maxAttempts) {
-      const currentModel = modelsToTry[attempt % modelsToTry.length];
-      try {
-        console.log(`🤖 [CRF API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
-        response = await withTimeout(
-          ai.models.generateContent({
-            model: currentModel,
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-              temperature: 0.3,
-            }
-          }),
-          90000 // 90 secondes
-        );
-        console.log(`✅ [CRF API] Réponse obtenue avec succès via le modèle ${currentModel}`);
-        break;
-      } catch (err: any) {
-        attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
-        
-        if (checkIsOffline(err) || attempt >= maxAttempts) {
-          throw err;
-        }
-
-        let waitTime = Math.pow(2, attempt) * 2000;
-        if (checkIsQuotaOrRateLimit(err)) {
-          const delaySeconds = getRetryDelay(err);
-          console.log(`⏳ [CRF API] Quota dépassé pour ${currentModel}. Attente de ${delaySeconds}s avant la tentative suivante...`);
-          waitTime = delaySeconds * 1000;
-        } else if (err.message === 'TIMEOUT_EXCEEDED') {
-          console.log(`⏳ [CRF API] Timeout dépassé pour ${currentModel}. Attente de 3s avant la tentative suivante...`);
-          waitTime = 3000;
-        }
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-      }
-    }
-
-    const crfText = response?.text || "La génération du CRF a échoué.";
     return NextResponse.json({ crf: crfText });
 
   } catch (error: any) {
@@ -492,7 +402,7 @@ Rédige le CRF complet en français, avec une mise en page très soignée et aca
       const resolvedMethodologyName = methodologyName !== 'Non spécifiée' ? methodologyName : (studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée');
       const resolvedBenefitTypeName = benefitTypeName !== 'Non spécifié' ? benefitTypeName : (studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié');
 
-      const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu devez concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails et le contenu du protocole de recherche clinique ci-dessous.
+      const prompt = `Tu es un méthodologiste et gestionnaire de données cliniques expert. Tu dois concevoir un Cahier d'Observation Clinique (CRF / Case Report Form) formel, structuré, rigoureux et prêt à l'emploi (pour impression ou saisie) en français sous forme de Markdown, basé sur les détails et le contenu du protocole de recherche clinique ci-dessous.
 
 Le CRF final doit être composé de 5 fiches distinctes, structurées avec des cases à cocher [ ] et des lignes de saisie vide [____] pour permettre un recueil propre.
 
@@ -514,39 +424,25 @@ Données simplifiées du projet :
 - Collecte des données : ${dataCollection || 'Non spécifiée'}
 - Analyse des données : ${dataAnalysis || 'Non spécifiée'}
 
-${protocolContent ? `
+ ${protocolContent ? `
 [PROTOCOLE GÉNÉRÉ DE RÉFÉRENCE]
 ---
-${protocolContent}
+ ${protocolContent}
 ---
 ` : ''}
 
 CONSIGNES DE PERSONNALISATION CRITIQUES :
 1. Analyse très attentivement le protocole clinique complet ci-dessus. Le CRF doit correspondre PARFAITEMENT à ce protocole spécifique, sans être générique.
-2. Si le protocole étudie une pathologie spécifique (comme le diabète, la toxicité au plomb, etc.), adapte les questions de la Fiche 2 (Antécédents et caractéristiques démographiques spécifiques à cette population) et la Fiche 3 (Examen clinique et biologique baseline spécifique) pour inclure précisément les signes cliniques, examens biologiques, questionnaires ou scores et paramètres décrits dans le protocole.
-3. Les critères de jugement (Fiche 4) doivent mesurer EXACTEMENT le critère principal et les critères secondaires détaillés dans le protocole (ex. taux de plomb sanguin, HbA1c à 6 mois, scores cliniques réels, délais).
+2. Si le protocole étudie une pathologie spécifique, adapte les questions de la Fiche 2 et la Fiche 3 pour inclure précisément les signes cliniques, examens biologiques et paramètres décrits dans le protocole.
+3. Les critères de jugement (Fiche 4) doivent mesurer EXACTEMENT le critère principal et les critères secondaires détaillés dans le protocole.
 4. L'intervention ou l'exposition (Fiche 2) doit refléter les bras de traitement ou le mode d'exposition réels décrits dans le protocole.
 
 Structure obligatoire du CRF en 5 fiches :
-
-### Fiche 1 : Éligibilité et Inclusion
-* Génère une checklist de critères d'inclusion et d'exclusion saisis par le chercheur.
-* Consentement écrit, signature et validation de l'éligibilité finale.
-
-### Fiche 2 : Caractéristiques Démographiques et Exposition
-* Âge, sexe, date d'inclusion.
-* Section pour quantifier l'exposition ou l'intervention.
-
-### Fiche 3 : État Initial (Baseline)
-* Constantes cliniques initiales.
-* Relevé des examens cliniques et dosages biologiques initiaux.
-
-### Fiche 4 : Évaluation des Critères de Jugement (Endpoints)
-* Grille de recueil pour le critère principal et les critères secondaires.
-
-### Fiche 5 : Pharmacovigilance et Tolérance (Événements Indésirables)
-* Déclaration des EI, tableau de gravité/imputabilité.
-* Rappel de l'obligation de déclaration de tout EIG sous 7 jours au Ministère (Algérie, Loi 18-11).
+- Fiche 1 : Éligibilité et Inclusion
+- Fiche 2 : Caractéristiques Démographiques et Exposition
+- Fiche 3 : État Initial (Baseline)
+- Fiche 4 : Évaluation des Critères de Jugement (Endpoints)
+- Fiche 5 : Pharmacovigilance et Tolérance (Événements Indésirables)
 
 Rédige le CRF en français en Markdown, hautement structuré et professionnel.`;
 
@@ -554,7 +450,7 @@ Rédige le CRF en français en Markdown, hautement structuré et professionnel.`
       if (resolvedModel) {
         const ollamaReply = await tryOllamaGenerateCrf(prompt, ollamaUrl, resolvedModel);
         if (ollamaReply) {
-          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. CRF généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service d'IA externe. CRF généré localement par l'IA (${resolvedModel}) via Ollama.*`;
           return NextResponse.json({ crf: formattedOllamaReply });
         }
       }

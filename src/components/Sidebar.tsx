@@ -18,7 +18,7 @@ export default function Sidebar() {
   const [level, setLevel] = useState('Débutant');
 
   const [profileName, setProfileName] = useState('');
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'ollama'>('gemini');
+  const [aiProvider, setAiProvider] = useState<'openrouter' | 'ollama'>('openrouter');
   const [unreadCount, setUnreadCount] = useState(0);
 
   const [localModels, setLocalModels] = useState<string[]>([]);
@@ -71,9 +71,13 @@ export default function Sidebar() {
   useEffect(() => {
     const handleProviderChange = () => {
       if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('recif_ai_provider') as 'gemini' | 'ollama';
-        if (saved === 'ollama' || saved === 'gemini') {
+        const saved = localStorage.getItem('recif_ai_provider') as 'openrouter' | 'ollama';
+        if (saved === 'ollama' || saved === 'openrouter') {
           setAiProvider(saved);
+        } else {
+          // Migration automatique : si l'ancienne valeur 'gemini' est encore stockée
+          setAiProvider('openrouter');
+          localStorage.setItem('recif_ai_provider', 'openrouter');
         }
       }
     };
@@ -86,7 +90,7 @@ export default function Sidebar() {
   }, []);
 
   const handleToggleAi = () => {
-    const next = aiProvider === 'gemini' ? 'ollama' : 'gemini';
+    const next = aiProvider === 'openrouter' ? 'ollama' : 'openrouter';
     setAiProvider(next);
     localStorage.setItem('recif_ai_provider', next);
     window.dispatchEvent(new Event('ai_provider_changed'));
@@ -181,7 +185,6 @@ export default function Sidebar() {
 
       if (user) {
         try {
-          // Tenter de lire depuis Firestore
           const profileData = await loadUserProfile(user.uid);
           if (profileData?.level) {
             setLevel(profileData.level);
@@ -192,7 +195,6 @@ export default function Sidebar() {
         }
       }
       
-      // Fallback sur le niveau LocalStorage
       const localStats = getProgress();
       const totalQuiz = localStats.quizTotal || 0;
       const correctQuiz = localStats.quizCorrect || 0;
@@ -210,7 +212,6 @@ export default function Sidebar() {
 
     fetchLevel();
 
-    // Écouter les changements locaux
     window.addEventListener('progress_changed', fetchLevel);
     return () => window.removeEventListener('progress_changed', fetchLevel);
   }, [user, profile]);
@@ -437,15 +438,15 @@ export default function Sidebar() {
         <div className={styles.aiToggleSection}>
           <span className={styles.aiToggleLabel}>Moteur d'IA :</span>
           <button 
-            className={`${styles.aiToggleBtn} ${aiProvider === 'gemini' ? styles.geminiActive : styles.ollamaActive}`} 
+            className={`${styles.aiToggleBtn} ${aiProvider === 'openrouter' ? styles.geminiActive : styles.ollamaActive}`} 
             onClick={handleToggleAi}
-            title={aiProvider === 'gemini' ? "Basculer sur Ollama Local (Gemma 4)" : "Basculer sur Google Gemini (Cloud)"}
+            title={aiProvider === 'openrouter' ? "Basculer sur Ollama Local (Gemma 4)" : "Basculer sur QWEN / GLM (Cloud)"}
           >
             <span className={styles.aiToggleIcon}>
-              {aiProvider === 'gemini' ? '☁️' : '🤖'}
+              {aiProvider === 'openrouter' ? '☁️' : '🤖'}
             </span>
             <span className={styles.aiToggleText}>
-              {aiProvider === 'gemini' ? 'Gemini (Cloud)' : 'Ollama (Local)'}
+              {aiProvider === 'openrouter' ? 'QWEN / GLM (Cloud)' : 'Ollama (Local)'}
             </span>
           </button>
 

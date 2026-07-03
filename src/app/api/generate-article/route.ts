@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { callLLM } from '@/utils/llm';
 import { loadEnvLocal } from '@/utils/env';
 
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
@@ -39,28 +39,22 @@ async function tryOllamaGenerateArticle(
     console.log(`🤖 [Générateur d'Article] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 250000); // 250 secondes de timeout
+    const timeoutId = setTimeout(() => controller.abort(), 250000);
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: ollamaModel,
         messages: [
           { 
             role: 'system', 
-            content: "Tu es un méthodologiste expert en recherche clinique. Tu devez rédiger un article scientifique formel, structuré et extrêmement détaillé en français sous forme de Markdown, conforme aux normes internationales de la grille STROBE." 
+            content: "Tu es un méthodologiste expert en recherche clinique. Tu dois rédiger un article scientifique formel, structuré et extrêmement détaillé en français sous forme de Markdown, conforme aux normes internationales de la grille STROBE." 
           },
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: {
-          temperature: 0.5,
-          num_ctx: 16384,
-          num_predict: 4096
-        }
+        options: { temperature: 0.5, num_ctx: 16384, num_predict: 4096 }
       }),
       signal: controller.signal
     });
@@ -89,27 +83,27 @@ function getStaticFallbackArticle(
   const studyTypeName = data.studyType === 'cohort' ? 'Cohorte' : (data.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale');
   const note = preferredProvider === 'ollama'
     ? `⚠️ *Note : Cet article a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle.*`
-    : `⚠️ *Note : Cet article a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible. (Détails : ${errorDetail})*`;
+    : `⚠️ *Note : Cet article a été généré via notre algorithme local standard car le service d'IA externe (OpenRouter) a rencontré une erreur ou est temporairement indisponible. (Détails : ${errorDetail})*`;
 
   return `# ${data.title || 'Article d\'Étude Observationnelle STROBE'}
 *Méthodologie de publication aux normes STROBE — Étude de type ${studyTypeName}*
 
-${note}
+ ${note}
 
 ---
 
 ## 1. Titre et Résumé (Critères STROBE 1-2)
 * **Titre :** ${data.title || 'Non spécifié'}
 * **Résumé structuré :**
-${data.abstract || 'Non spécifié. Résumé synthétique de l\'objectif principal, des méthodes employées, des résultats d\'intérêt majeurs et de la conclusion.'}
+ ${data.abstract || 'Non spécifié. Résumé synthétique de l\'objectif principal, des méthodes employées, des résultats d\'intérêt majeurs et de la conclusion.'}
 
 ---
 
 ## 2. Introduction (Critères STROBE 3-4)
 * **Contexte scientifique et justification :**
-${data.rationale || 'Non spécifié. Justification basée sur l\'état actuel des connaissances scientifiques.'}
+ ${data.rationale || 'Non spécifié. Justification basée sur l\'état actuel des connaissances scientifiques.'}
 * **Objectifs et hypothèses :**
-${data.objectives || 'Non spécifié. Objectifs principaux et secondaires de la recherche.'}
+ ${data.objectives || 'Non spécifié. Objectifs principaux et secondaires de la recherche.'}
 
 ---
 
@@ -128,33 +122,33 @@ ${data.objectives || 'Non spécifié. Objectifs principaux et secondaires de la 
 
 ## 4. Résultats (Critères STROBE 13-17)
 * **Flux de participants (Critère 13) :**
-${data.participantsFlow || 'Non spécifié.'}
+ ${data.participantsFlow || 'Non spécifié.'}
 * **Données descriptives (Critère 14) :**
-${data.descriptiveData || 'Non spécifié.'}
+ ${data.descriptiveData || 'Non spécifié.'}
 * **Données sur les résultats d\'intérêt (Critère 15) :**
-${data.outcomeData || 'Non spécifié.'}
+ ${data.outcomeData || 'Non spécifié.'}
 * **Résultats principaux (Critère 16) :**
-${data.mainResults || 'Non spécifié.'}
+ ${data.mainResults || 'Non spécifié.'}
 * **Analyses secondaires (Critère 17) :**
-${data.otherAnalyses || 'Non spécifié.'}
+ ${data.otherAnalyses || 'Non spécifié.'}
 
 ---
 
 ## 5. Discussion (Critères STROBE 18-21)
 * **Résultats clés (Critère 18) :**
-${data.keyResults || 'Non spécifié.'}
+ ${data.keyResults || 'Non spécifié.'}
 * **Limites de l\'étude (Critère 19) :**
-${data.limitations || 'Non spécifié.'}
+ ${data.limitations || 'Non spécifié.'}
 * **Interprétation (Critère 20) :**
-${data.interpretation || 'Non spécifié.'}
+ ${data.interpretation || 'Non spécifié.'}
 * **Généralisabilité (Critère 21) :**
-${data.generalisability || 'Non spécifié.'}
+ ${data.generalisability || 'Non spécifié.'}
 
 ---
 
 ## 6. Financement (Critère STROBE 22)
 * **Financement de l\'étude :**
-${data.funding || 'Non spécifié.'}
+ ${data.funding || 'Non spécifié.'}
 `;
 }
 
@@ -212,9 +206,9 @@ export async function POST(req: Request) {
   } = payload;
 
   const requestHeaders = new Headers(req.headers);
-  const preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+  const preferredProvider = requestHeaders.get('x-ai-provider') || 'openrouter';
   const headerOllamaModel = requestHeaders.get('x-ollama-model');
-  const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
+  const apiKey = preferredProvider === 'ollama' ? null : process.env.OPENROUTER_API_KEY;
 
   const studyTypeName = studyType === 'cohort' ? 'Cohorte' : (studyType === 'case-control' ? 'Cas-témoins' : 'Transversale');
 
@@ -257,73 +251,36 @@ Voici les données saisies par le chercheur :
 - Financement de l'étude : ${funding || 'Non spécifié'}
 
 Instructions de rédaction :
-Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)" ou "Non spécifié", tu devez formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes, réalistes et structurées, adaptées à l'étude pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les de manière rigoureuse.
+Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)" ou "Non spécifié", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes, réalistes et structurées, adaptées à l'étude pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les de manière rigoureuse.
 `;
 
   try {
     if (!apiKey) {
-      throw new Error("Clé API Google Gemini non configurée (Bascule Ollama)");
+      throw new Error("Clé API OpenRouter non configurée (Bascule Ollama)");
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-    
-    // Rotation des modèles / Fallbacks
-    let attempt = 0;
-    const maxAttempts = 3;
-    let response = null;
-    const modelsToTry = [
-      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      'gemini-1.5-flash',
-      'gemini-2.0-flash'
-    ];
-
-    const checkIsOffline = (err: any) => {
-      const errMsg = err.message?.toLowerCase() || '';
-      return errMsg.includes('fetch failed') || errMsg.includes('getaddrinfo') || errMsg.includes('enotfound');
-    };
-
-    const checkIsQuotaOrRateLimit = (err: any) => {
-      const status = err.status || err.statusCode;
-      const errMsg = err.message?.toLowerCase() || '';
-      return status === 429 || errMsg.includes('quota') || errMsg.includes('rate limit');
-    };
-
-    while (attempt < maxAttempts) {
-      const currentModel = modelsToTry[attempt % modelsToTry.length];
-      try {
-        console.log(`🤖 [Article API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
-        response = await withTimeout(
-          ai.models.generateContent({
-            model: currentModel,
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-              temperature: 0.5,
-            }
-          }),
-          90000 // 90 secondes
-        );
-        console.log(`✅ [Article API] Réponse obtenue avec succès via le modèle ${currentModel}`);
-        break; // Succès
-      } catch (err: any) {
-        attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
-        
-        if (checkIsOffline(err) || attempt >= maxAttempts) {
-          throw err;
+    // --- APPEL OPENROUTER (GLM-5 recommandé pour la rédaction longue) ---
+    console.log(`🤖 [Article API] Appel à OpenRouter (GLM-5)...`);
+    const articleText = await withTimeout(
+      callLLM(
+        "Tu es un méthodologiste expert en recherche clinique. Tu rédiges des articles scientifiques structurés en français conforme aux normes STROBE. Tu ne fais jamais de LaTeX.",
+        prompt,
+        {
+          provider: "glm-5", // GLM-5 excelle en rédaction longue et style académique
+          temperature: 0.6,
+          maxTokens: 8192
         }
+      ),
+      120000
+    );
+    console.log(`✅ [Article API] Réponse obtenue avec succès via OpenRouter`);
 
-        const waitTime = checkIsQuotaOrRateLimit(err) ? 10000 : 3000;
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-      }
-    }
-
-    const articleText = response?.text || "Désolé, la génération de l'article a échoué.";
     return NextResponse.json({ article: articleText });
 
   } catch (error: any) {
     console.error('Erreur API Générateur d\'Article, bascule vers le secours local:', error);
 
-    // Tente de basculer vers Ollama local
+    // Tente Ollama local
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
       const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
@@ -332,7 +289,7 @@ Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)" 
       if (resolvedModel) {
         const ollamaReply = await tryOllamaGenerateArticle(prompt, ollamaUrl, resolvedModel);
         if (ollamaReply) {
-          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. Article généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service d'IA externe. Article généré localement par l'IA (${resolvedModel}) via Ollama.*`;
           return NextResponse.json({ article: formattedOllamaReply });
         }
       }

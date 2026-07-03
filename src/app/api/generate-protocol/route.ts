@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { callLLM } from '@/utils/llm';
 import { loadEnvLocal } from '@/utils/env';
 import recifKb from '@/data/recif-kb.json';
 
@@ -40,13 +40,11 @@ async function tryOllamaGenerateProtocol(
     console.log(`🤖 [Générateur de Protocole] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 250000); // 250 secondes de timeout (plus tolérant)
+    const timeoutId = setTimeout(() => controller.abort(), 250000);
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: ollamaModel,
         messages: [
@@ -57,11 +55,7 @@ async function tryOllamaGenerateProtocol(
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: {
-          temperature: 0.5,
-          num_ctx: 16384,
-          num_predict: 4096
-        }
+        options: { temperature: 0.5, num_ctx: 16384, num_predict: 4096 }
       }),
       signal: controller.signal
     });
@@ -110,7 +104,7 @@ function getStaticFallbackProtocol(
     dataCollection: string;
     dataAnalysis: string;
   },
-  preferredProvider: string = 'gemini',
+  preferredProvider: string = 'openrouter',
   isError = false,
   errorMessage = ''
 ): string {
@@ -127,11 +121,10 @@ function getStaticFallbackProtocol(
     notice = `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`;
   } else {
     notice = isError
-      ? `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service d'IA Google Gemini (Cloud) a rencontré une erreur ou est temporairement indisponible.${errorMessage ? ` (Détails : ${errorMessage})` : ''} Vous pouvez basculer sur Ollama localement ou réessayer.*`
-      : `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car la clé API \`GEMINI_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
+      ? `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car le service d'IA externe (OpenRouter) a rencontré une erreur ou est temporairement indisponible.${errorMessage ? ` (Détails : ${errorMessage})` : ''} Vous pouvez basculer sur Ollama localement ou réessayer.*`
+      : `⚠️ *Note : Ce protocole a été généré via notre algorithme local standard car la clé API \`OPENROUTER_API_KEY\` n'est pas configurée. Pour bénéficier d'une rédaction enrichie par IA, configurez votre clé.*`;
   }
 
-  // Parse list values for cleaner display in the table
   const cleanInclusion = inclusion ? inclusion.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
   const cleanExclusion = exclusion ? exclusion.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
   const cleanObjectives = objectives ? objectives.split('\n').map((line: string) => line.trim()).filter(Boolean).join(' ; ') : '[Non renseigné]';
@@ -139,7 +132,7 @@ function getStaticFallbackProtocol(
   return `# PROTOCOLE DE RECHERCHE CLINIQUE (MÉTHODOLOGIE RECIF & LOI 18-11)
 *Généré selon les 19 sections de la grille d'évaluation du manuel RECIF et la législation algérienne*
 
-${notice}
+ ${notice}
 
 ---
 
@@ -187,13 +180,13 @@ ${notice}
 ### 2. Le(s) objectif(s)
 * **Objectif Principal :** Évaluer l'impact et la tolérance de l'intervention/exposition sur le critère de jugement principal dans la population d'étude.
 * **Objectifs Secondaires :**
-${objectives ? objectives.split('\n').map((line: string) => `  * ${line.trim()}`).join('\n') : '  * Évaluer la tolérance clinique de l\'intervention.\n  * Analyser les critères de jugement secondaires.'}
+ ${objectives ? objectives.split('\n').map((line: string) => `  * ${line.trim()}`).join('\n') : '  * Évaluer la tolérance clinique de l\'intervention.\n  * Analyser les critères de jugement secondaires.'}
 
 ### 3. La justification de l'étude
-${justification || 'Cette étude vise à évaluer la faisabilité et l\'impact de l\'intervention dans la population cible. Elle répond à un besoin médical et méthodologique en accord avec le guide RECIF.'}
+ ${justification || 'Cette étude vise à évaluer la faisabilité et l\'impact de l\'intervention dans la population cible. Elle répond à un besoin médical et méthodologique en accord avec le guide RECIF.'}
 
 ### 4. La (les) hypothèse(s)
-${hypothesis || 'L\'intervention présente une efficacité supérieure ou une équivalence par rapport au standard de soins ou au groupe témoin.'}
+ ${hypothesis || 'L\'intervention présente une efficacité supérieure ou une équivalence par rapport au standard de soins ou au groupe témoin.'}
 
 ### 5. Le type d'étude
 * **Schéma d'étude :** ${design || '[Non renseigné / À compléter]'}
@@ -201,65 +194,65 @@ ${hypothesis || 'L\'intervention présente une efficacité supérieure ou une é
 
 ### 6. Le(s) facteur(s) étudié(s)
 * **Description de l'intervention ou de l'exposition :**
-${intervention || '[Non renseigné / À compléter]'}
+ ${intervention || '[Non renseigné / À compléter]'}
 
 ### 7. Le(s) critère(s) de jugement
 * **Critère de Jugement Principal (Endpoint) :** ${primaryEndpoint || '[Non renseigné / À compléter]'}
 * **Critères de Jugement Secondaires :**
-${secondaryEndpoints || '[Non renseigné / À compléter]'}
+ ${secondaryEndpoints || '[Non renseigné / À compléter]'}
 
 ### 8. Les causes d'erreur : biais et facteurs de confusion
 * **Biais identifiés & Contrôle des facteurs de confusion :**
-${bias || 'Les biais de sélection, d\'information et de confusion seront minimisés par le respect strict des critères d\'éligibilité et une méthodologie rigoureuse.'}
+ ${bias || 'Les biais de sélection, d\'information et de confusion seront minimisés par le respect strict des critères d\'éligibilité et une méthodologie rigoureuse.'}
 
 ### 9. Les sujets
 * **Population cible :** ${population || '[Non renseigné / À compléter]'}
 * **Stratégie d'échantillonnage :** ${samplingStrategy || '[Non renseignée / À compléter]'}
 * **Critères d'Inclusion :**
-${inclusion ? inclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Patient éligible\n* Consentement écrit signé'}
+ ${inclusion ? inclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Patient éligible\n* Consentement écrit signé'}
 * **Critères d'Exclusion :**
-${exclusion ? exclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Contre-indication médicale majeure\n* Refus de participer'}
+ ${exclusion ? exclusion.split('\n').map((line: string) => `* ${line.trim()}`).join('\n') : '* Contre-indication médicale majeure\n* Refus de participer'}
 
 ### 10. La taille de l'échantillon
 * Le calcul du nombre de sujets nécessaires (NSN) sera effectué par un biostatisticien selon la variance attendue du critère principal.
 
 ### 11. La récolte et la gestion des données
 * **Collecte des données :**
-${dataCollection || 'Recueil d\'informations standardisé, stockage sécurisé et respect de la confidentialité.'}
+ ${dataCollection || 'Recueil d\'informations standardisé, stockage sécurisé et respect de la confidentialité.'}
 * **Logistique, récolte & étude pilote :**
-${logistics || 'Anonymisation des données à la source, stockage sécurisé.'}
+ ${logistics || 'Anonymisation des données à la source, stockage sécurisé.'}
 
 ### 12. L'analyse des données
 * **Analyse statistique :**
-${dataAnalysis || 'Plan d\'analyse : Statistiques descriptives pour décrire la population (moyennes, écarts-types, pourcentages) et tests comparatifs univariés et multivariés appropriés (test t, ANOVA, Chi-2) selon la nature des variables.'}
+ ${dataAnalysis || 'Plan d\'analyse : Statistiques descriptives pour décrire la population (moyennes, écarts-types, pourcentages) et tests comparatifs univariés et multivariés appropriés (test t, ANOVA, Chi-2) selon la nature des variables.'}
 
 ### 13. Une éventuelle étude pilote
 * Une phase pilote pourra être initiée sur un nombre restreint de sujets afin de valider la faisabilité opérationnelle du circuit des données.
 
 ### 14. Les implications éthiques
 * **Considérations éthiques & Réglementation :**
-${ethics || 'Soumission au Comité de Protection des Personnes (CPP) ou Comité d\'éthique compétent. Recueil obligatoire du consentement éclairé écrit de chaque participant.'}
+ ${ethics || 'Soumission au Comité de Protection des Personnes (CPP) ou Comité d\'éthique compétent. Recueil obligatoire du consentement éclairé écrit de chaque participant.'}
 * **Loi algérienne 18-11 :** Respect du secret médical (Art. 24), recueil du consentement exprès et éclairé écrit (Art. 386), et notification de tout EIG sous 7 jours (Art. 395).
 
 ### 15. Le personnel
 * **Personnel et rôles requis :**
-${personnel || 'L\'investigateur principal, les cliniciens collaborateurs, le personnel infirmier et le biostatisticien.'}
+ ${personnel || 'L\'investigateur principal, les cliniciens collaborateurs, le personnel infirmier et le biostatisticien.'}
 
 ### 16. Le budget
 * **Budget et Financement :**
-${budget || 'Financement interne / Prise en charge par la structure hospitalière.'}
+ ${budget || 'Financement interne / Prise en charge par la structure hospitalière.'}
 
 ### 17. Le calendrier
 * **Calendrier prévisionnel :**
-${calendar || 'Jalons prévisionnels à définir (soumissions réglementaires, phase active de recrutement, analyse et rédaction finale).'}
+ ${calendar || 'Jalons prévisionnels à définir (soumissions réglementaires, phase active de recrutement, analyse et rédaction finale).'}
 
 ### 18. Les annexes éventuelles
 * **Annexes à joindre :**
-${annexes || 'Cahier d\'observation clinique (CRF), Notice d\'information, Formulaire de consentement.'}
+ ${annexes || 'Cahier d\'observation clinique (CRF), Notice d\'information, Formulaire de consentement.'}
 
 ### 19. Les références
 * **Références bibliographiques :**
-${references || 'Manuel RECIF de méthodologie de recherche clinique.\nLoi algérienne n° 18-11 relative à la santé.'}
+ ${references || 'Manuel RECIF de méthodologie de recherche clinique.\nLoi algérienne n° 18-11 relative à la santé.'}
 
 *(Fin du Protocole)*
 `;
@@ -297,10 +290,9 @@ export async function POST(req: Request) {
   let benefitType = 'sbid';
   let methodologyName = 'Non spécifiée';
   let benefitTypeName = 'Non spécifié';
-  let preferredProvider = 'gemini';
+  let preferredProvider = 'openrouter';
   let headerOllamaModel: string | null = null;
 
-  // New variables for Approche B
   let objectives = '';
   let bias = '';
   let justification = '';
@@ -333,7 +325,6 @@ export async function POST(req: Request) {
     methodology = data.methodology || 'observational';
     benefitType = data.benefitType || 'sbid';
     
-    // Parse new fields
     objectives = data.objectives || '';
     bias = data.bias || '';
     justification = data.justification || '';
@@ -350,12 +341,11 @@ export async function POST(req: Request) {
     dataAnalysis = data.dataAnalysis || '';
 
     const requestHeaders = new Headers(req.headers);
-    preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    preferredProvider = requestHeaders.get('x-ai-provider') || 'openrouter';
     headerOllamaModel = requestHeaders.get('x-ollama-model');
-    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.OPENROUTER_API_KEY;
     console.log(`🔑 [Protocol API] Clé API lue : ${apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 8)}` : 'AUCUNE'}`);
 
-    // Fetch the category name from the Algerian Health Law dataset in recif-kb.json
     const studyCategories = recifKb.algerian_regulation.study_categories;
     methodologyName = studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée';
     benefitTypeName = studyCategories[benefitType as keyof typeof studyCategories] || 'Non spécifié';
@@ -518,113 +508,28 @@ Format du document final : Rédige le protocole complet en français, de manièr
       return NextResponse.json({ protocol: mockProtocol });
     }
 
-    // Initialisation du client Google GenAI
-    const ai = new GoogleGenAI({ apiKey });
-
-    const checkIsOffline = (err: any) => {
-      const errMsg = err.message?.toLowerCase() || '';
-      const errCode = err.code || '';
-      return errMsg.includes('fetch failed') || 
-             errMsg.includes('getaddrinfo') || 
-             errMsg.includes('enotfound') || 
-             errMsg.includes('eai_again') || 
-             errMsg.includes('connect timed out') ||
-             errCode === 'ENOTFOUND' || 
-             errCode === 'EAI_AGAIN';
-    };
-
-    const checkIsQuotaOrRateLimit = (err: any) => {
-      const status = err.status || err.statusCode;
-      const errMsg = err.message?.toLowerCase() || '';
-      return status === 429 || 
-             errMsg.includes('quota') || 
-             errMsg.includes('rate limit') || 
-             errMsg.includes('resource_exhausted') ||
-             errMsg.includes('exceeded your current quota');
-    };
-
-    const getRetryDelay = (err: any): number => {
-      let delay = 6;
-      try {
-        const errMsg = err.message || '';
-        let errObj: any = null;
-        const jsonStartIndex = errMsg.indexOf('{');
-        if (jsonStartIndex !== -1) {
-          const jsonStr = errMsg.substring(jsonStartIndex);
-          errObj = JSON.parse(jsonStr);
+    // --- APPEL OPENROUTER (QWEN / GLM) ---
+    console.log(`🤖 [Protocol API] Appel à OpenRouter (QWEN/GLM)...`);
+    const protocolText = await withTimeout(
+      callLLM(
+        "Tu es un méthodologiste expert en recherche clinique. Tu rédiges des protocoles structurés en français conforme au manuel RECIF et à la Loi 18-11 algérienne. Tu ne fais jamais de LaTeX.",
+        prompt,
+        {
+          provider: "qwen-max", // Change en "glm-5" si tu préfères GLM
+          temperature: 0.5,
+          maxTokens: 8192
         }
-        if (errObj) {
-          const details = errObj.error?.details || errObj.details || [];
-          const retryInfo = details.find((d: any) => d['@type']?.includes('RetryInfo') || d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-          if (retryInfo && retryInfo.retryDelay) {
-            const parsed = parseFloat(retryInfo.retryDelay.replace('s', ''));
-            if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
-          }
-        }
-      } catch (e) {}
-      try {
-        const match = err.message?.match(/Please retry in ([0-9.]+)\s*s/i);
-        if (match) {
-          const parsed = parseFloat(match[1]);
-          if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
-        }
-      } catch (e) {}
-      return delay;
-    };
+      ),
+      120000
+    );
+    console.log(`✅ [Protocol API] Réponse obtenue avec succès via OpenRouter`);
 
-    let response;
-    let attempt = 0;
-    const maxAttempts = 3;
-    const modelsToTry = [
-      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      'gemini-1.5-flash',
-      'gemini-2.0-flash'
-    ];
-
-    while (attempt < maxAttempts) {
-      const currentModel = modelsToTry[attempt % modelsToTry.length];
-      try {
-        console.log(`🤖 [Protocol API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
-        response = await withTimeout(
-          ai.models.generateContent({
-            model: currentModel,
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-              temperature: 0.5,
-            }
-          }),
-          90000 // 90 secondes de timeout pour les protocoles longs
-        );
-        console.log(`✅ [Protocol API] Réponse obtenue avec succès via le modèle ${currentModel}`);
-        break; // Succès
-      } catch (err: any) {
-        attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
-        
-        if (checkIsOffline(err) || attempt >= maxAttempts) {
-          throw err;
-        }
-
-        let waitTime = Math.pow(2, attempt) * 2000;
-        if (checkIsQuotaOrRateLimit(err)) {
-          const delaySeconds = getRetryDelay(err);
-          console.log(`⏳ [Protocol API] Quota dépassé pour ${currentModel}. Attente de ${delaySeconds}s avant la tentative suivante...`);
-          waitTime = delaySeconds * 1000;
-        } else if (err.message === 'TIMEOUT_EXCEEDED') {
-          console.log(`⏳ [Protocol API] Timeout dépassé pour ${currentModel}. Attente de 3s avant la tentative suivante...`);
-          waitTime = 3000;
-        }
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-      }
-    }
-
-    const protocolText = response?.text || "Désolé, la génération du protocole a échoué.";
     return NextResponse.json({ protocol: protocolText });
 
   } catch (error: any) {
     console.error('Erreur API Générateur de Protocole, bascule vers le secours local:', error);
 
-    // Tente de basculer vers Ollama local en cas d'erreur de Gemini (offline / rate limit)
+    // Tente Ollama local en cas d'erreur
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
       const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
@@ -633,7 +538,7 @@ Format du document final : Rédige le protocole complet en français, de manièr
       if (resolvedModel) {
         const ollamaReply = await tryOllamaGenerateProtocol(prompt, ollamaUrl, resolvedModel);
         if (ollamaReply) {
-          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. Protocole généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service d'IA externe. Protocole généré localement par l'IA (${resolvedModel}) via Ollama.*`;
           return NextResponse.json({ protocol: formattedOllamaReply });
         }
       }

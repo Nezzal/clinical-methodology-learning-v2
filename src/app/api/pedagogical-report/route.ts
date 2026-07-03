@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from '@google/genai';
+import { callLLM } from '@/utils/llm';
 import { loadEnvLocal } from '@/utils/env';
+
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
     const res = await fetch(`${ollamaUrl}/api/tags`);
@@ -38,13 +39,11 @@ async function tryOllamaGenerateReport(
     console.log(`🤖 [Rapport Pédagogique] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 secondes de timeout (la génération locale sur CPU/GPU peut être longue)
+    const timeoutId = setTimeout(() => controller.abort(), 180000);
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: ollamaModel,
         messages: [
@@ -55,9 +54,7 @@ async function tryOllamaGenerateReport(
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: {
-          temperature: 0.6
-        }
+        options: { temperature: 0.6 }
       }),
       signal: controller.signal
     });
@@ -82,7 +79,7 @@ function getStaticFallbackReport(
   protocolsGenerated: number,
   quizScore: { correct: number; total: number },
   flashcardsMastered: { mastered: number; total: number },
-  preferredProvider: string = 'gemini'
+  preferredProvider: string = 'openrouter'
 ): string {
   const totalQuiz = quizScore.total || 0;
   const correctQuiz = quizScore.correct || 0;
@@ -113,7 +110,7 @@ function getStaticFallbackReport(
   return `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
 *Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique*
 
-${note}
+ ${note}
 
 ---
 
@@ -149,17 +146,9 @@ Il est crucial d'harmoniser la rigueur réglementaire avec la cohérence de vos 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   let timeoutId: any;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error('TIMEOUT_EXCEEDED'));
-    }, timeoutMs);
+    timeoutId = setTimeout(() => { reject(new Error('TIMEOUT_EXCEEDED')); }, timeoutMs);
   });
-  
-  try {
-    const result = await Promise.race([promise, timeoutPromise]);
-    return result;
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  try { return await Promise.race([promise, timeoutPromise]); } finally { clearTimeout(timeoutId); }
 }
 
 export async function POST(req: Request) {
@@ -170,7 +159,7 @@ export async function POST(req: Request) {
   let flashcardsMastered = { mastered: 0, total: 0 };
   let recentQuestions: string[] = [];
   let recentProtocols: string[] = [];
-  let preferredProvider = 'gemini';
+  let preferredProvider = 'openrouter';
   let headerOllamaModel: string | null = null;
   let synthetic = false;
 
@@ -185,17 +174,16 @@ export async function POST(req: Request) {
     synthetic = data.synthetic === true;
 
     const requestHeaders = new Headers(req.headers);
-    preferredProvider = requestHeaders.get('x-ai-provider') || 'gemini';
+    preferredProvider = requestHeaders.get('x-ai-provider') || 'openrouter';
     headerOllamaModel = requestHeaders.get('x-ollama-model');
-    const apiKey = preferredProvider === 'ollama' ? null : process.env.GEMINI_API_KEY;
+    const apiKey = preferredProvider === 'ollama' ? null : process.env.OPENROUTER_API_KEY;
 
-    // Calculs de base
     const totalQuiz = quizScore.total || 0;
     const correctQuiz = quizScore.correct || 0;
     const quizPct = totalQuiz > 0 ? Math.round((correctQuiz / totalQuiz) * 100) : 0;
 
     const fcMastered = flashcardsMastered.mastered || 0;
-    const fcTotal = flashcardsMastered.total || 12; // Valeur par défaut
+    const fcTotal = flashcardsMastered.total || 12;
     const fcPct = Math.round((fcMastered / fcTotal) * 100);
 
     const prompt = synthetic
@@ -235,7 +223,6 @@ Instructions pour le rapport :
 3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
 4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
 
-    // Fallback si la clé API n'est pas configurée
     if (!apiKey) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
       const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
@@ -249,118 +236,31 @@ Instructions pour le rapport :
         }
       }
 
-      // Repli ultime sur mock statique
       const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered, preferredProvider);
       return NextResponse.json({ report: mockReport });
     }
 
-    // Initialisation du client Google GenAI
-    const ai = new GoogleGenAI({ apiKey });
-
-    const checkIsOffline = (err: any) => {
-      const errMsg = err.message?.toLowerCase() || '';
-      const errCode = err.code || '';
-      return errMsg.includes('fetch failed') || 
-             errMsg.includes('getaddrinfo') || 
-             errMsg.includes('enotfound') || 
-             errMsg.includes('eai_again') || 
-             errMsg.includes('connect timed out') ||
-             errCode === 'ENOTFOUND' || 
-             errCode === 'EAI_AGAIN';
-    };
-
-    const checkIsQuotaOrRateLimit = (err: any) => {
-      const status = err.status || err.statusCode;
-      const errMsg = err.message?.toLowerCase() || '';
-      return status === 429 || 
-             errMsg.includes('quota') || 
-             errMsg.includes('rate limit') || 
-             errMsg.includes('resource_exhausted') ||
-             errMsg.includes('exceeded your current quota');
-    };
-
-    const getRetryDelay = (err: any): number => {
-      let delay = 6;
-      try {
-        const errMsg = err.message || '';
-        let errObj: any = null;
-        const jsonStartIndex = errMsg.indexOf('{');
-        if (jsonStartIndex !== -1) {
-          const jsonStr = errMsg.substring(jsonStartIndex);
-          errObj = JSON.parse(jsonStr);
+    // --- APPEL OPENROUTER (QWEN-PLUS pour le rapport) ---
+    console.log(`🤖 [Pedagogical Report API] Appel à OpenRouter (QWEN-PLUS)...`);
+    const reportText = await withTimeout(
+      callLLM(
+        "Tu es un conseiller pédagogique expert en recherche clinique RECIF. Tu rédiges des rapports de suivi en français, sans aucun émoji ni émoticône.",
+        prompt,
+        {
+          provider: "qwen-plus",
+          temperature: 0.6,
+          maxTokens: 4096
         }
-        if (errObj) {
-          const details = errObj.error?.details || errObj.details || [];
-          const retryInfo = details.find((d: any) => d['@type']?.includes('RetryInfo') || d['@type'] === 'type.googleapis.com/google.rpc.RetryInfo');
-          if (retryInfo && retryInfo.retryDelay) {
-            const parsed = parseFloat(retryInfo.retryDelay.replace('s', ''));
-            if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
-          }
-        }
-      } catch (e) {}
-      try {
-        const match = err.message?.match(/Please retry in ([0-9.]+)\s*s/i);
-        if (match) {
-          const parsed = parseFloat(match[1]);
-          if (!isNaN(parsed)) return Math.ceil(parsed) + 1;
-        }
-      } catch (e) {}
-      return delay;
-    };
+      ),
+      120000
+    );
+    console.log(`✅ [Pedagogical Report API] Réponse obtenue avec succès via OpenRouter`);
 
-    let response;
-    let attempt = 0;
-    const maxAttempts = 3;
-    const modelsToTry = [
-      process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      'gemini-1.5-flash',
-      'gemini-2.0-flash'
-    ];
-
-    while (attempt < maxAttempts) {
-      const currentModel = modelsToTry[attempt % modelsToTry.length];
-      try {
-        console.log(`🤖 [Pedagogical Report API] Appel à ${currentModel} (Tentative ${attempt + 1}/${maxAttempts})...`);
-        response = await withTimeout(
-          ai.models.generateContent({
-            model: currentModel,
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-              temperature: 0.6,
-            }
-          }),
-          90000 // 90 secondes de timeout pour les analyses approfondies
-        );
-        console.log(`✅ [Pedagogical Report API] Réponse obtenue avec succès via le modèle ${currentModel}`);
-        break; // Succès
-      } catch (err: any) {
-        attempt++;
-        console.warn(`⚠️ Tentative ${attempt}/${maxAttempts} échouée avec le modèle ${currentModel} :`, err.message || err);
-        
-        if (checkIsOffline(err) || attempt >= maxAttempts) {
-          throw err;
-        }
-
-        let waitTime = Math.pow(2, attempt) * 2000;
-        if (checkIsQuotaOrRateLimit(err)) {
-          const delaySeconds = getRetryDelay(err);
-          console.log(`⏳ [Pedagogical Report API] Quota dépassé pour ${currentModel}. Attente de ${delaySeconds}s avant la tentative suivante...`);
-          waitTime = delaySeconds * 1000;
-        } else if (err.message === 'TIMEOUT_EXCEEDED') {
-          console.log(`⏳ [Pedagogical Report API] Timeout dépassé pour ${currentModel}. Attente de 3s avant la tentative suivante...`);
-          waitTime = 3000;
-        }
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-      }
-    }
-
-    const reportText = response?.text || "Erreur lors de la génération du rapport par l'IA.";
     return NextResponse.json({ report: reportText });
 
   } catch (error: any) {
     console.error('Erreur API Rapport Pédagogique, bascule vers le secours local:', error);
     
-    // 1. Tenter d'utiliser Ollama en secours local
     try {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
       const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
@@ -387,17 +287,17 @@ Instructions pour le rapport :
 1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
 2. Divise le rapport en sections claires :
    - Bilan général de progression
-   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
+   - Analyse des acquis (forces) et des lacunes potentielles
    - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
-   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
+   - Plan d'action personnalisé et recommandations concrètes
 3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
-4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
+4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport.`;
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
         const ollamaReply = await tryOllamaGenerateReport(prompt, ollamaUrl, resolvedModel);
         if (ollamaReply) {
-          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service Google Cloud. Bilan généré localement par l'IA (${resolvedModel}) via Ollama.*`;
+          const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service d'IA externe. Bilan généré localement par l'IA (${resolvedModel}) via Ollama.*`;
           return NextResponse.json({ report: formattedOllamaReply });
         }
       }
@@ -405,22 +305,15 @@ Instructions pour le rapport :
       console.warn("⚠️ Échec du secours Ollama pour le rapport pédagogique:", ollamaErr);
     }
 
-    // 2. Repli ultime sur mock statique
     try {
       const mockReport = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered, preferredProvider);
       return NextResponse.json({ report: mockReport });
     } catch (fallbackErr) {
       const status = error.status || error.statusCode || 500;
       let userMessage = 'Erreur interne du serveur lors de la génération du rapport.';
-      
-      if (status === 429) {
-        userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
-      } else if (status === 503 || status === 504) {
-        userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
-      } else if (error.message) {
-        userMessage = `Erreur : ${error.message}`;
-      }
-      
+      if (status === 429) userMessage = 'Limite de requêtes d\'IA atteinte (Rate Limit). Veuillez patienter une minute avant de réessayer.';
+      else if (status === 503 || status === 504) userMessage = 'Le service d\'IA est temporairement surchargé. Veuillez réessayer dans quelques instants.';
+      else if (error.message) userMessage = `Erreur : ${error.message}`;
       return NextResponse.json({ error: userMessage }, { status });
     }
   }
