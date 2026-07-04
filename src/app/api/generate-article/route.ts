@@ -266,7 +266,7 @@ Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)" 
         "Tu es un méthodologiste expert en recherche clinique. Tu rédiges des articles scientifiques structurés en français conforme aux normes STROBE. Tu ne fais jamais de LaTeX.",
         prompt,
         {
-          provider: "glm-5", // GLM-5 excelle en rédaction longue et style académique
+          provider: "qwen-plus", // Qwen-Plus pour la rédaction longue et style académique
           temperature: 0.6,
           maxTokens: 8192
         }
