@@ -344,7 +344,6 @@ export async function POST(req: Request) {
     preferredProvider = requestHeaders.get('x-ai-provider') || 'openrouter';
     headerOllamaModel = requestHeaders.get('x-ollama-model');
     const apiKey = preferredProvider === 'ollama' ? null : process.env.OPENROUTER_API_KEY;
-    console.log(`🔑 [Protocol API] Clé API lue : ${apiKey ? `${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 8)}` : 'AUCUNE'}`);
 
     const studyCategories = recifKb.algerian_regulation.study_categories;
     methodologyName = studyCategories[methodology as keyof typeof studyCategories] || 'Non spécifiée';
@@ -517,10 +516,11 @@ Format du document final : Rédige le protocole complet en français, de manièr
         {
           provider: "qwen-max", // Change en "glm-5" si tu préfères GLM
           temperature: 0.5,
-          maxTokens: 8192
+          maxTokens: 8192,
+          timeoutMs: 240000
         }
       ),
-      120000
+      240000
     );
     console.log(`✅ [Protocol API] Réponse obtenue avec succès via OpenRouter`);
 

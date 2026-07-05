@@ -16,7 +16,7 @@ interface LLMOptions {
 }
 
 const MODEL_IDS: Record<LLMProvider, string> = {
-  "glm-5":      "zhipu/glm-5",
+  "glm-5":      "z-ai/glm-5.2",
   "qwen-max":   "qwen/qwen3.7-max",
   "qwen-plus":  "qwen/qwen3.7-plus",
   "qwen-flash": "qwen/qwen3.6-flash",
