@@ -14,8 +14,14 @@ export default function Login() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [requestName, setRequestName] = useState('');
+  const [requestFirstName, setRequestFirstName] = useState('');
+  const [requestLastName, setRequestLastName] = useState('');
+  const [requestInstitution, setRequestInstitution] = useState('');
+  const [requestProfession, setRequestProfession] = useState('');
+  const [requestCity, setRequestCity] = useState('');
+  const [requestCountry, setRequestCountry] = useState('');
   const [requestEmail, setRequestEmail] = useState('');
+  const [requestPhone, setRequestPhone] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -103,8 +109,10 @@ export default function Login() {
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (!requestName.trim() || !requestEmail.trim()) {
-      setErrorMsg('Veuillez remplir tous les champs.');
+    if (!requestFirstName.trim() || !requestLastName.trim() || !requestInstitution.trim() || 
+        !requestProfession.trim() || !requestCity.trim() || !requestCountry.trim() || 
+        !requestEmail.trim()) {
+      setErrorMsg('Veuillez remplir tous les champs obligatoires (marqués d\'un *).');
       return;
     }
 
@@ -113,7 +121,16 @@ export default function Login() {
       const res = await fetch('/api/access-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: requestName.trim(), email: requestEmail.trim() })
+        body: JSON.stringify({
+          firstName: requestFirstName.trim(),
+          lastName: requestLastName.trim(),
+          institution: requestInstitution.trim(),
+          profession: requestProfession.trim(),
+          city: requestCity.trim(),
+          country: requestCountry.trim(),
+          email: requestEmail.trim(),
+          phone: requestPhone.trim()
+        })
       });
       
       if (!res.ok) {
@@ -121,16 +138,22 @@ export default function Login() {
         throw new Error(errData.error || "Impossible de soumettre la demande d'accès.");
       }
 
-      setSuccessMsg('Votre demande d\'accès a été soumise avec succès ! L\'administrateur créera votre compte prochainement.');
-      setRequestName('');
+      setSuccessMsg('Votre demande a été enregistrée ! Consultez votre boîte e-mail pour recevoir les conditions d\'abonnement et les modalités de paiement.');
+      setRequestFirstName('');
+      setRequestLastName('');
+      setRequestInstitution('');
+      setRequestProfession('');
+      setRequestCity('');
+      setRequestCountry('');
       setRequestEmail('');
+      setRequestPhone('');
       setTimeout(() => {
         setIsRequestAccess(false);
         setSuccessMsg('');
-      }, 5000);
+      }, 8000);
     } catch (error: any) {
       console.warn("Erreur soumission demande d'accès:", error.message);
-      setErrorMsg(error.message || 'Impossible de soumettre la demande d\'accès. Il se peut qu\'une demande existe déjà pour cet e-mail.');
+      setErrorMsg(error.message || 'Impossible de soumettre la demande. Veuillez réessayer.');
     } finally {
       setSubmitting(false);
     }
@@ -275,7 +298,7 @@ export default function Login() {
                 {isForgotPassword
                   ? 'Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation.'
                   : isRequestAccess 
-                    ? 'Remplissez ce formulaire pour envoyer une demande d\'inscription à votre superviseur.' 
+                    ? 'Remplissez ce formulaire pour soumettre votre demande d\'inscription. Vous recevrez les conditions d\'abonnement par e-mail.' 
                     : 'Accédez à vos quiz, vos flashcards, échangez avec votre assistant et concevez vos protocoles cliniques.'
                 }
               </p>
@@ -342,25 +365,112 @@ export default function Login() {
                 ) : isRequestAccess ? (
                   // Formulaire de demande d'accès
                   <form className={styles.form} onSubmit={handleRequestAccessSubmit}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className={styles.inputGroup}>
+                        <label htmlFor="requestFirstName">Prénom <span style={{color:'#e11d48'}}>*</span></label>
+                        <input
+                          type="text"
+                          id="requestFirstName"
+                          placeholder="Ahmed"
+                          value={requestFirstName}
+                          onChange={(e) => setRequestFirstName(e.target.value)}
+                          required
+                          disabled={submitting}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label htmlFor="requestLastName">Nom <span style={{color:'#e11d48'}}>*</span></label>
+                        <input
+                          type="text"
+                          id="requestLastName"
+                          placeholder="Benali"
+                          value={requestLastName}
+                          onChange={(e) => setRequestLastName(e.target.value)}
+                          required
+                          disabled={submitting}
+                        />
+                      </div>
+                    </div>
+
                     <div className={styles.inputGroup}>
-                      <label htmlFor="requestName">Nom Complet</label>
+                      <label htmlFor="requestInstitution">Institution / Établissement <span style={{color:'#e11d48'}}>*</span></label>
                       <input
                         type="text"
-                        id="requestName"
-                        placeholder="Dr. Ahmed Benali"
-                        value={requestName}
-                        onChange={(e) => setRequestName(e.target.value)}
+                        id="requestInstitution"
+                        placeholder="Université, CHU, Centre de recherche..."
+                        value={requestInstitution}
+                        onChange={(e) => setRequestInstitution(e.target.value)}
                         required
                         disabled={submitting}
                       />
                     </div>
 
                     <div className={styles.inputGroup}>
-                      <label htmlFor="requestEmail">Adresse E-mail</label>
+                      <label htmlFor="requestProfession">Profession <span style={{color:'#e11d48'}}>*</span></label>
+                      <select
+                        id="requestProfession"
+                        value={requestProfession}
+                        onChange={(e) => setRequestProfession(e.target.value)}
+                        required
+                        disabled={submitting}
+                        style={{
+                          width: '100%',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '8px',
+                          padding: '0.7rem 0.85rem',
+                          color: requestProfession ? 'var(--text-primary)' : 'var(--text-muted)',
+                          fontSize: '0.9rem',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre profession</option>
+                        <option value="Médecin" style={{ background: '#1a1a2e' }}>Médecin</option>
+                        <option value="Résident / Interne" style={{ background: '#1a1a2e' }}>Résident / Interne</option>
+                        <option value="Infirmier(e)" style={{ background: '#1a1a2e' }}>Infirmier(e)</option>
+                        <option value="Pharmacien(ne)" style={{ background: '#1a1a2e' }}>Pharmacien(ne)</option>
+                        <option value="Chercheur en santé" style={{ background: '#1a1a2e' }}>Chercheur en santé</option>
+                        <option value="Doctorant" style={{ background: '#1a1a2e' }}>Doctorant</option>
+                        <option value="Étudiant en santé" style={{ background: '#1a1a2e' }}>Étudiant en santé</option>
+                        <option value="Manager de santé" style={{ background: '#1a1a2e' }}>Manager de santé</option>
+                        <option value="Nutritionniste" style={{ background: '#1a1a2e' }}>Nutritionniste</option>
+                        <option value="Autre" style={{ background: '#1a1a2e' }}>Autre</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className={styles.inputGroup}>
+                        <label htmlFor="requestCity">Ville <span style={{color:'#e11d48'}}>*</span></label>
+                        <input
+                          type="text"
+                          id="requestCity"
+                          placeholder="Alger"
+                          value={requestCity}
+                          onChange={(e) => setRequestCity(e.target.value)}
+                          required
+                          disabled={submitting}
+                        />
+                      </div>
+                      <div className={styles.inputGroup}>
+                        <label htmlFor="requestCountry">Pays <span style={{color:'#e11d48'}}>*</span></label>
+                        <input
+                          type="text"
+                          id="requestCountry"
+                          placeholder="Algérie"
+                          value={requestCountry}
+                          onChange={(e) => setRequestCountry(e.target.value)}
+                          required
+                          disabled={submitting}
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                      <label htmlFor="requestEmail">Adresse E-mail <span style={{color:'#e11d48'}}>*</span></label>
                       <input
                         type="email"
                         id="requestEmail"
-                        placeholder="nom@exemple.com"
+                        placeholder="ahmed.benali@univ.dz"
                         value={requestEmail}
                         onChange={(e) => setRequestEmail(e.target.value)}
                         required
@@ -368,8 +478,20 @@ export default function Login() {
                       />
                     </div>
 
+                    <div className={styles.inputGroup}>
+                      <label htmlFor="requestPhone">Téléphone <span style={{color:'var(--text-muted)', fontSize:'0.8rem'}}>(facultatif)</span></label>
+                      <input
+                        type="tel"
+                        id="requestPhone"
+                        placeholder="+213 555 123 456"
+                        value={requestPhone}
+                        onChange={(e) => setRequestPhone(e.target.value)}
+                        disabled={submitting}
+                      />
+                    </div>
+
                     <button type="submit" className={styles.submitBtn} disabled={submitting}>
-                      {submitting ? 'Envoi...' : 'Envoyer la demande d\'accès'}
+                      {submitting ? 'Envoi en cours...' : 'Envoyer ma demande d\'accès'}
                     </button>
                   </form>
                 ) : (

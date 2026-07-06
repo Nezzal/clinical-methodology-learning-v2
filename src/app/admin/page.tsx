@@ -171,6 +171,10 @@ export default function AdminDashboard() {
   } | null>(null);
   const [invitationCopied, setInvitationCopied] = useState(false);
 
+  // States pour le rejet avec motif
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
+
   const handleToggleSuspension = async (uid: string, newStatus: 'active' | 'suspended') => {
     const confirmMsg = newStatus === 'suspended'
       ? "Êtes-vous sûr de vouloir suspendre temporairement l'activité de cet étudiant ? Il ne pourra plus accéder à l'application."
@@ -196,10 +200,7 @@ export default function AdminDashboard() {
         throw new Error(errData.error || "Erreur lors de la mise à jour du statut.");
       }
       
-      // Mettre à jour l'étudiant sélectionné
       setSelectedStudent(prev => prev ? { ...prev, status: newStatus } : null);
-      
-      // Mettre à jour la liste locale des étudiants
       setStudents(prev => prev.map(s => s.uid === uid ? { ...s, status: newStatus } : s));
     } catch (e) {
       alert("Erreur lors de la mise à jour du statut : " + (e as Error).message);
@@ -232,10 +233,7 @@ export default function AdminDashboard() {
         throw new Error(errData.error || "Erreur serveur lors de la suppression.");
       }
       
-      // Désélectionner l'étudiant
       setSelectedStudent(null);
-      
-      // Supprimer de la liste locale
       setStudents(prev => prev.filter(s => s.uid !== uid));
       
       alert("Le compte de l'étudiant et toutes ses données associées (profil, discussions et protocoles) ont été supprimés définitivement.");
@@ -328,7 +326,7 @@ Voici vos identifiants de connexion provisoires :
 - Mot de passe temporaire : ${modalData.tempPassword}
 
 Vous pouvez vous connecter dès maintenant sur : ${loginUrl}
-⚠️ Important : Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.
+Important : Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.
 
 Cordialement,
 Votre superviseur RECIF`;
@@ -341,7 +339,13 @@ Votre superviseur RECIF`;
   };
 
   const handleAcceptRequest = async (req: AccessRequest) => {
-    const confirmMsg = `Voulez-vous créer le compte étudiant pour ${req.name} (${req.email}) ?\n\nLe compte sera créé dans Firebase Auth et pré-rempli dans la base. Le mot de passe temporaire sera généré automatiquement.`;
+    // Vérifier que le paiement a été marqué comme reçu
+    if (req.status !== 'payment_received') {
+      alert("Le paiement n'a pas encore été confirmé pour cette demande.\n\nVeuillez d'abord cliquer sur « Paiement reçu » avant de valider l'inscription.");
+      return;
+    }
+
+    const confirmMsg = `Confirmez la création du compte pour :\n\n${req.firstName} ${req.lastName}\n${req.email}\n${req.profession} — ${req.institution}\n\nUn mot de passe temporaire sera généré et envoyé par e-mail.`;
     if (!window.confirm(confirmMsg)) return;
 
     setActionPending(true);
@@ -349,14 +353,17 @@ Votre superviseur RECIF`;
       if (!user) throw new Error("Utilisateur non connecté");
       const idToken = await user.getIdToken();
 
-      // 1. Créer le compte via notre API serveur sécurisée
+      // 1. Créer le compte via l'API serveur sécurisée
       const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${idToken}`
         },
-        body: JSON.stringify({ name: req.name, email: req.email })
+        body: JSON.stringify({ 
+          name: `${req.firstName} ${req.lastName}`, 
+          email: req.email 
+        })
       });
 
       if (!res.ok) {
@@ -367,7 +374,7 @@ Votre superviseur RECIF`;
       const accountData = await res.json();
       const generatedTempPassword = accountData.tempPassword;
       
-      // 2. Supprimer la demande d'accès traitée de Firestore
+      // 2. Supprimer la demande traitée de Firestore
       await deleteAccessRequest(req.id);
 
       // 3. Envoyer l'email de confirmation contenant le mot de passe temporaire
@@ -377,42 +384,121 @@ Votre superviseur RECIF`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             to: req.email,
-            subject: "Validation de votre accès - Plateforme RECIF",
+            subject: "Vos identifiants de connexion - Plateforme RECIF",
             html: `
-              <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-                <h2 style="color: #0d9488; margin-top: 0;">Accès validé !</h2>
-                <p>Bonjour <strong>${req.name}</strong>,</p>
-                <p>Votre demande d'inscription sur la plateforme <strong>RECIF Méthodologie</strong> a été validée par votre superviseur.</p>
-                <p>Voici vos identifiants de connexion provisoires :</p>
-                <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; font-family: monospace; font-size: 0.95rem;">
-                  <strong>Adresse e-mail :</strong> ${req.email}<br/>
-                  <strong>Mot de passe temporaire :</strong> <span style="color: #0d9488; font-weight: bold;">${generatedTempPassword}</span>
+              <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafbfc;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <h1 style="color: #0d9488; margin: 0; font-size: 1.5rem;">Plateforme RECIF</h1>
+                  <p style="color: #64748b; margin: 4px 0 0;">Méthodologie de Recherche Clinique</p>
                 </div>
-                <p style="color: #e11d48; font-weight: bold;">⚠️ Important :</p>
-                <p>Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.</p>
-                <p>Vous pouvez vous connecter dès maintenant sur : <a href="${getCleanLoginUrl()}" style="color: #0d9488; font-weight: bold; text-decoration: underline;">Se connecter à RECIF</a></p>
+                <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #166534; font-weight: 600;">Votre paiement a été confirmé et votre compte est activé</p>
+                </div>
+                <p>Bonjour <strong>${req.firstName} ${req.lastName}</strong>,</p>
+                <p>Votre abonnement à la plateforme RECIF a été activé. Voici vos identifiants de connexion :</p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; font-family: monospace;">
+                  <p style="margin: 0 0 8px;"><strong>E-mail :</strong> ${req.email}</p>
+                  <p style="margin: 0;"><strong>Mot de passe temporaire :</strong> <span style="color: #0d9488; font-weight: bold; font-size: 1.1rem;">${generatedTempPassword}</span></p>
+                </div>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; margin: 16px 0;">
+                  <p style="margin: 0; color: #991b1b; font-size: 0.88rem;">
+                    <strong>Sécurité :</strong> Vous devez modifier ce mot de passe temporaire dès votre première connexion.
+                  </p>
+                </div>
+                <p style="text-align: center; margin: 24px 0;">
+                  <a href="${getCleanLoginUrl()}" style="display: inline-block; background: #0d9488; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Se connecter à RECIF</a>
+                </p>
                 <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-                <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Ce message a été envoyé automatiquement. Veuillez ne pas y répondre directement.</p>
+                <p style="font-size: 0.78rem; color: #94a3b8; margin: 0;">Message automatique — Ne pas répondre directement.</p>
               </div>
             `
           })
         });
       } catch (mailErr) {
-        console.error("Erreur lors de l'envoi de l'email de confirmation:", mailErr);
+        console.error("Erreur lors de l'envoi de l'email d'activation:", mailErr);
       }
 
       // 4. Mettre à jour localement les listes
       setAccessRequests(prev => prev.filter(r => r.id !== req.id));
       await fetchStudents();
 
-      // Afficher le modal personnalisé au lieu d'une alerte native
+      // Afficher le modal avec les identifiants
       setSuccessModalData({
-        name: req.name,
+        name: `${req.firstName} ${req.lastName}`,
         email: req.email,
         tempPassword: generatedTempPassword
       });
     } catch (e: any) {
-      alert("Erreur lors de la création directe du compte : " + (e?.message || e));
+      alert("Erreur lors de la création du compte : " + (e?.message || e));
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleMarkPaymentReceived = async (req: AccessRequest) => {
+    if (!window.confirm(`Marquer le paiement comme reçu pour ${req.firstName} ${req.lastName} (${req.email}) ?`)) return;
+    setActionPending(true);
+    try {
+      if (!user) throw new Error("Non connecté");
+      const docId = req.email.replace(/[^a-z0-9]/g, '_');
+      const idToken = await user.getIdToken();
+      
+      await fetch('/api/access-requests/payment', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ 
+          docId,
+          paymentReceivedBy: user.uid 
+        })
+      });
+
+      setAccessRequests(prev => prev.map(r => 
+        r.id === req.id 
+          ? { ...r, status: 'payment_received' as const, paymentReceivedAt: new Date(), paymentReceivedBy: user.uid }
+          : r
+      ));
+    } catch (e: any) {
+      alert("Erreur : " + (e?.message || e));
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleRejectWithReason = async (req: AccessRequest) => {
+    if (!rejectionReason.trim()) {
+      alert("Veuillez saisir le motif de rejet.");
+      return;
+    }
+    if (!window.confirm(`Rejeter la demande de ${req.firstName} ${req.lastName} ?`)) return;
+    
+    setActionPending(true);
+    try {
+      if (!user) throw new Error("Non connecté");
+      const docId = req.email.replace(/[^a-z0-9]/g, '_');
+      const idToken = await user.getIdToken();
+
+      await fetch('/api/access-requests/payment', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ 
+          docId,
+          status: 'rejected',
+          rejectedBy: user.uid,
+          rejectionReason: rejectionReason.trim()
+        })
+      });
+
+      setAccessRequests(prev => prev.filter(r => r.id !== req.id));
+      setRejectingRequestId(null);
+      setRejectionReason('');
+    } catch (e: any) {
+      alert("Erreur : " + (e?.message || e));
     } finally {
       setActionPending(false);
     }
@@ -438,7 +524,6 @@ Votre superviseur RECIF`;
       fetchStudents();
       fetchRequests();
 
-      // Auto-refresh toutes les 30 secondes pour le statut en ligne/hors ligne
       const interval = setInterval(() => {
         fetchStudents();
       }, 30000);
@@ -447,7 +532,7 @@ Votre superviseur RECIF`;
     }
   }, [user, authLoading, authIsAdmin, role]);
 
-  // Synchroniser l'onglet sélectionné avec les paramètres de l'URL (?tab=...)
+  // Synchroniser l'onglet sélectionné avec les paramètres de l'URL
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -637,27 +722,23 @@ Votre superviseur RECIF`;
           const cached = localStorage.getItem('recif_offline_students');
           if (cached) {
             finalData = JSON.parse(cached);
-            console.log("📦 Chargement des étudiants depuis le cache local (LocalStorage)");
+            console.log("Chargement des étudiants depuis le cache local (LocalStorage)");
           }
         }
       }
 
-      // Filtrer pour exclure les administrateurs et enseignants de la liste des élèves et des statistiques collectives
       const onlyStudents = finalData.filter(u => {
         const email = (u.email || '').toLowerCase();
         const displayName = (u.displayName || '').toLowerCase();
         
-        // Exclure selon le rôle explicite dans la base de données
         if (u.role === 'admin' || u.role === 'teacher') {
           return false;
         }
 
-        // Exclure les domaines recif.dz (enseignants et admins officiels)
         if (email.endsWith('@recif.dz') || displayName.endsWith('@recif.dz')) {
           return false;
         }
         
-        // Exclure les comptes contenant 'admin', 'enseignant' ou 'superviseur' dans l'email ou le nom d'affichage
         if (
           email.includes('admin') || 
           email.includes('enseignant') || 
@@ -676,7 +757,6 @@ Votre superviseur RECIF`;
           return false;
         }
         
-        // Exclure également le superviseur connecté en cours
         if (user && (email === user.email?.toLowerCase() || u.uid === user.uid)) {
           return false;
         }
@@ -685,7 +765,6 @@ Votre superviseur RECIF`;
       });
       setStudents(onlyStudents);
       
-      // Filtrer pour obtenir la liste des enseignants (utilisé par l'admin pour leur écrire)
       const onlyTeachers = finalData.filter(u => {
         const email = (u.email || '').toLowerCase();
         return u.role === 'teacher' || 
@@ -730,7 +809,6 @@ Votre superviseur RECIF`;
     setLoadingAiReport(false);
 
     try {
-      // Charger les protocoles, discussions et articles en parallèle (avec repli cache local si déconnecté)
       let protos = [];
       let chats = [];
       let arts = [];
@@ -742,12 +820,11 @@ Votre superviseur RECIF`;
           loadFirestoreArticles(student.uid)
         ]);
         
-        // Mettre en cache dans localStorage pour la consultation hors-ligne
         localStorage.setItem(`recif_offline_student_protos_${student.uid}`, JSON.stringify(protos));
         localStorage.setItem(`recif_offline_student_chats_${student.uid}`, JSON.stringify(chats));
         localStorage.setItem(`recif_offline_student_articles_${student.uid}`, JSON.stringify(arts));
       } catch (err) {
-        console.warn("⚠️ Impossible de lire les détails de l'étudiant sur Firestore, bascule vers le cache local...", err);
+        console.warn("Impossible de lire les détails de l'étudiant sur Firestore, bascule vers le cache local...", err);
         const cachedProtos = localStorage.getItem(`recif_offline_student_protos_${student.uid}`);
         const cachedChats = localStorage.getItem(`recif_offline_student_chats_${student.uid}`);
         const cachedArts = localStorage.getItem(`recif_offline_student_articles_${student.uid}`);
@@ -798,7 +875,7 @@ Votre superviseur RECIF`;
       const data = await response.json();
       setAiReport(data.report || "Aucun bilan généré.");
     } catch (err: any) {
-      setAiReport(`⚠️ Erreur : ${err.message || err}`);
+      setAiReport(`Erreur : ${err.message || err}`);
     } finally {
       setLoadingAiReport(false);
     }
@@ -823,7 +900,6 @@ Votre superviseur RECIF`;
     if (!aiReport || !selectedStudent) return;
     const studentName = selectedStudent.displayName || selectedStudent.email || 'Étudiant';
     
-    // Render markdown to HTML for printing
     const htmlContent = renderMarkdown(aiReport);
     
     const printWindow = window.open('', '_blank');
@@ -955,7 +1031,6 @@ Votre superviseur RECIF`;
       if (aOnline && !bOnline) return -1;
       if (!aOnline && bOnline) return 1;
       
-      // Si les deux sont en ligne ou hors ligne, trier par dernière activité (plus récent d'abord)
       const aTime = a.lastActive?.seconds ? a.lastActive.seconds * 1000 : (a.lastActive ? new Date(a.lastActive).getTime() : 0);
       const bTime = b.lastActive?.seconds ? b.lastActive.seconds * 1000 : (b.lastActive ? new Date(b.lastActive).getTime() : 0);
       
@@ -963,7 +1038,6 @@ Votre superviseur RECIF`;
         return bTime - aTime;
       }
       
-      // En dernier recours, par nom
       const aName = a.displayName || '';
       const bName = b.displayName || '';
       return aName.localeCompare(bName);
@@ -1184,9 +1258,10 @@ Votre superviseur RECIF`;
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Nom demandé</th>
-                    <th>Adresse e-mail</th>
-                    <th>Mot de passe temporaire</th>
+                    <th>Demandeur</th>
+                    <th>Profil</th>
+                    <th>Localisation</th>
+                    <th>Statut</th>
                     <th>Date</th>
                     <th>Actions</th>
                   </tr>
@@ -1194,1010 +1269,518 @@ Votre superviseur RECIF`;
                 <tbody>
                   {accessRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                      <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                         {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande d\'accès en attente.'}
                       </td>
                     </tr>
                   ) : (
-                    accessRequests.map((req) => (
-                      <tr key={req.id}>
-                        <td>
-                          <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{req.name}</span>
-                        </td>
-                        <td>
-                          <span style={{ color: 'var(--text-secondary)' }}>{req.email}</span>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <code style={{ 
-                              background: 'rgba(255, 255, 255, 0.05)', 
-                              padding: '0.2rem 0.4rem', 
-                              borderRadius: '4px', 
-                              fontFamily: 'monospace',
-                              color: 'var(--accent-primary)',
-                              fontSize: '0.85rem'
-                            }}>{req.tempPassword || 'RECIF-XXXXXX'}</code>
-                            {req.tempPassword && (
-                              <button 
-                                onClick={() => handleCopyPassword(req.tempPassword || '')}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  color: 'var(--text-secondary)',
-                                  padding: '0.2rem',
-                                  display: 'inline-flex',
-                                  alignItems: 'center'
-                                }}
-                                title="Copier le mot de passe"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-                                </svg>
-                              </button>
+                    accessRequests.map((req) => {
+                      const fullName = `${req.firstName} ${req.lastName}`;
+                      const isPending = req.status === 'pending';
+                      const isPaymentReceived = req.status === 'payment_received';
+                      const isRejecting = rejectingRequestId === req.id;
+
+                      return (
+                        <tr key={req.id} style={{ 
+                          background: isPaymentReceived ? 'rgba(16, 185, 129, 0.05)' : 'transparent' 
+                        }}>
+                          <td>
+                            <div style={{ marginBottom: '4px' }}>
+                              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fullName}</span>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{req.email}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.institution}</div>
+                            {req.phone && (
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.phone}</div>
                             )}
-                          </div>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            {req.createdAt?.seconds ? new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: '0.4rem' }}>
-                            {isSuperAdmin ? (
-                              <>
-                                <button 
-                                  className="btn btn-primary" 
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: 'linear-gradient(135deg, #0d9488 0%, #0b7a70 100%)' }}
+                          </td>
+                          <td>
+                            <span style={{ 
+                              display: 'inline-block', 
+                              background: 'rgba(255,255,255,0.05)', 
+                              padding: '3px 10px', 
+                              borderRadius: '12px', 
+                              fontSize: '0.8rem',
+                              color: 'var(--text-secondary)'
+                            }}>
+                              {req.profession}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                            {req.city}, {req.country}
+                          </td>
+                          <td>
+                            {isPending && (
+                              <span style={{ 
+                                display: 'inline-block', 
+                                background: 'rgba(251, 191, 36, 0.1)', 
+                                color: '#f59e0b', 
+                                padding: '3px 10px', 
+                                borderRadius: '12px', 
+                                fontSize: '0.78rem',
+                                fontWeight: 600 
+                              }}>
+                                En attente de paiement
+                              </span>
+                            )}
+                            {isPaymentReceived && (
+                              <span style={{ 
+                                display: 'inline-block', 
+                                background: 'rgba(16, 185, 129, 0.1)', 
+                                color: '#10b981', 
+                                padding: '3px 10px', 
+                                borderRadius: '12px', 
+                                fontSize: '0.78rem',
+                                fontWeight: 600 
+                              }}>
+                                Paiement reçu ✓
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            {req.createdAt?.seconds 
+                              ? new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR')
+                              : '—'
+                            }
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                              {isPending && (
+                                <>
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}
+                                    onClick={() => handleMarkPaymentReceived(req)}
+                                    disabled={actionPending}
+                                  >
+                                    💰 Paiement reçu
+                                  </button>
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                                    onClick={() => { setRejectingRequestId(req.id); setRejectionReason(''); }}
+                                    disabled={actionPending}
+                                  >
+                                    ✕ Rejeter
+                                  </button>
+                                </>
+                              )}
+                              {isPaymentReceived && (
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(13,148,136,0.15)', color: '#0d9488', border: '1px solid rgba(13,148,136,0.4)', fontWeight: 600 }}
                                   onClick={() => handleAcceptRequest(req)}
                                   disabled={actionPending}
                                 >
-                                  Accepter
+                                  ✓ Valider & créer le compte
                                 </button>
-                                <button 
-                                  className="btn btn-secondary" 
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', borderColor: 'var(--accent-danger)', color: 'var(--accent-danger)' }}
-                                  onClick={() => handleDeleteRequest(req.id, req.email)}
-                                  disabled={actionPending}
-                                >
-                                  Rejeter
-                                </button>
-                              </>
-                            ) : (
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Lecture seule</span>
-                            )}
-                            <button 
-                              className="btn btn-secondary" 
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                              onClick={() => handleCopyEmail(req.email)}
-                              disabled={actionPending}
-                            >
-                              Copier E-mail
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                              )}
+                              {isRejecting && (
+                                <div style={{ marginTop: '4px', width: '100%' }}>
+                                  <textarea
+                                    placeholder="Motif du rejet..."
+                                    value={rejectionReason}
+                                    onChange={(e) => setRejectionReason(e.target.value)}
+                                    style={{
+                                      width: '100%',
+                                      background: 'rgba(255,255,255,0.05)',
+                                      border: '1px solid rgba(239,68,68,0.3)',
+                                      borderRadius: '6px',
+                                      padding: '6px 8px',
+                                      color: 'var(--text-primary)',
+                                      fontSize: '0.78rem',
+                                      resize: 'vertical',
+                                      minHeight: '50px',
+                                      outline: 'none'
+                                    }}
+                                  />
+                                  <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                                    <button
+                                      className="btn btn-secondary"
+                                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', flex: 1, background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                                      onClick={() => handleRejectWithReason(req)}
+                                      disabled={actionPending || !rejectionReason.trim()}
+                                    >
+                                      Confirmer
+                                    </button>
+                                    <button
+                                      className="btn btn-secondary"
+                                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', flex: 1 }}
+                                      onClick={() => setRejectingRequestId(null)}
+                                    >
+                                      Annuler
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className={styles.messageListContainer}>
-              <div className={styles.messagingHeader} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <h3 style={{ fontSize: '1rem', color: 'var(--text-primary)', margin: 0 }}>
-                    {role === 'admin' ? 'Messagerie de Support' : 'Messages Étudiants'}
-                  </h3>
-                  <button
-                    className="btn btn-primary"
-                    style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
-                    onClick={() => {
-                      setIsSendingNewMsg(true);
-                      setActiveSupportMessage(null);
-                      setMessagingError('');
-                      setMessagingSuccess('');
-                    }}
-                  >
-                    + Écrire
-                  </button>
-                </div>
-                {role === 'admin' && (
+            // Onglet Messagerie
+            <div style={{ padding: '0.5rem 0' }}>
+              {messagingError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#ef4444', fontSize: '0.85rem' }}>{messagingError}</div>}
+              {messagingSuccess && <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#10b981', fontSize: '0.85rem' }}>{messagingSuccess}</div>}
+              
+              {role === 'admin' && (
+                <div style={{ marginBottom: '12px' }}>
                   <select
                     value={adminMessageFilter}
                     onChange={(e) => setAdminMessageFilter(e.target.value as 'admin' | 'all')}
-                    style={{
-                      background: '#1e293b',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '6px',
-                      color: 'var(--text-primary)',
-                      padding: '0.4rem 0.6rem',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      width: '100%'
-                    }}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.5rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
                   >
-                    <option value="admin">Mes messages (Enseignants ➡️ Admin)</option>
-                    <option value="all">Tous les échanges (Étudiants ↔ Enseignants)</option>
+                    <option value="admin" style={{ background: '#1a1a2e' }}>Messages pour moi (Admin)</option>
+                    <option value="all" style={{ background: '#1a1a2e' }}>Tous les messages</option>
                   </select>
-                )}
-              </div>
+                </div>
+              )}
 
               {loadingMessages ? (
-                <p style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Chargement...</p>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Chargement des messages...</p>
               ) : supportMessages.length === 0 ? (
-                <p style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>
-                  Boîte de réception vide.
-                </p>
+                <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Aucun message.</p>
               ) : (
-                <div className={styles.sidebarMsgList}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '400px', overflowY: 'auto' }}>
                   {supportMessages.map((msg) => {
-                    const isUnread = (role === 'admin' && !msg.adminRead) || (role === 'teacher' && !msg.teacherRead);
                     const isActive = activeSupportMessage?.id === msg.id;
+                    const isUnread = (role === 'admin' && !msg.adminRead && msg.recipientRole === 'admin') || (role === 'teacher' && !msg.teacherRead && msg.recipientRole === 'teacher');
                     return (
                       <div
                         key={msg.id}
-                        className={`${styles.msgListItem} ${isActive ? styles.msgActiveItem : ''} ${isUnread ? styles.msgUnreadItem : ''}`}
                         onClick={() => handleSelectSupportMessage(msg)}
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          background: isActive ? 'rgba(13,148,136,0.1)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${isActive ? 'rgba(13,148,136,0.3)' : 'transparent'}`,
+                          cursor: 'pointer',
+                          transition: '0.2s'
+                        }}
                       >
-                        <div className={styles.msgItemHeader}>
-                          <span className={styles.msgItemSender} title={msg.senderEmail}>
-                            {msg.senderRole === 'student' ? `${msg.senderName} (Élève)` : msg.senderName}
-                          </span>
-                          {isUnread && <span className={styles.msgUnreadBadge}>Nouveau</span>}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                          <span style={{ fontWeight: isUnread ? 700 : 500, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{msg.senderName}</span>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}</span>
                         </div>
-                        <div className={styles.msgItemSubject}>{msg.subject}</div>
-                        <div className={styles.msgItemMeta}>
-                          <span>{msg.status === 'unread' ? 'Envoyé' : msg.status === 'read' ? 'Lu' : 'Répondu'}</span>
-                          {role === 'admin' && adminMessageFilter === 'all' && (
-                            <span style={{ color: 'var(--accent-primary)', fontSize: '0.75rem', fontWeight: '500' }}>
-                              ➡️ {getRecipientLabel(msg)}
-                            </span>
-                          )}
-                          <span>{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}</span>
-                        </div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: isUnread ? 600 : 400, color: 'var(--text-secondary)', marginBottom: '2px' }}>{msg.subject}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.content}</div>
                       </div>
                     );
                   })}
                 </div>
               )}
-            </div>
-          )}
-        </div>
 
-        {/* Détails de l'étudiant sélectionné (Droite) */}
-        <div className={`${styles.detailCard} glass-card`}>
-          {leftTab === 'messages' ? (
-            isSendingNewMsg ? (
-              // FORMULAIRE DE CRÉATION DE MESSAGE
-              <div className={styles.formContainer} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <h3 style={{ marginBottom: '1.25rem', color: 'var(--text-primary)', fontSize: '1.2rem' }}>
-                  {role === 'admin' ? 'Contacter un Enseignant' : 'Envoyer un message à l\'Administrateur'}
-                </h3>
-                {messagingError && <div className={styles.msgErrorBanner} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingError}</div>}
-                {messagingSuccess && <div className={styles.msgSuccessBanner} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingSuccess}</div>}
-                
-                <form onSubmit={handleSendNewMessage} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  {role === 'admin' && (
-                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                      <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Sélectionner l'enseignant destinataire :</label>
-                      <select
-                        className="form-input"
-                        value={targetTeacherUid}
-                        onChange={(e) => setTargetTeacherUid(e.target.value)}
-                        required
-                        style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-glass)', padding: '0.6rem', borderRadius: '6px', width: '100%' }}
-                      >
-                        <option value="">-- Choisir un enseignant --</option>
-                        {teachers.map(t => (
-                          <option key={t.uid} value={t.uid}>
-                            {t.displayName || t.email} ({t.email})
-                          </option>
-                        ))}
-                      </select>
+              {activeSupportMessage && (
+                <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
+                  <h4 style={{ fontSize: '0.95rem', marginBottom: '8px' }}>{activeSupportMessage.subject}</h4>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{activeSupportMessage.senderName} ({activeSupportMessage.senderEmail})</p>
+                    <p>{activeSupportMessage.content}</p>
+                  </div>
+                  {activeSupportMessage.reply && (
+                    <div style={{ background: 'rgba(13,148,136,0.05)', border: '1px solid rgba(13,148,136,0.2)', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '0.85rem' }}>
+                      <p style={{ fontWeight: 600, color: 'var(--accent-primary)', marginBottom: '4px' }}>Votre réponse :</p>
+                      <p style={{ color: 'var(--text-secondary)' }}>{activeSupportMessage.reply}</p>
                     </div>
                   )}
-
-                  <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Objet :</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Ex : Question sur les droits d'accès ou l'organisation"
-                      value={newMsgSubject}
-                      onChange={(e) => setNewMsgSubject(e.target.value)}
-                      required
-                      style={{ width: '100%', padding: '0.6rem', borderRadius: '6px' }}
-                    />
-                  </div>
-
-                  <div className="form-group" style={{ marginBottom: '1.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <label className="form-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Message :</label>
+                  <form onSubmit={handleSendReply}>
                     <textarea
-                      className="form-input"
-                      style={{ minHeight: '200px', flexGrow: 1, resize: 'vertical', fontFamily: 'inherit', padding: '0.6rem', borderRadius: '6px', width: '100%' }}
-                      placeholder="Saisissez votre message ici..."
-                      value={newMsgContent}
-                      onChange={(e) => setNewMsgContent(e.target.value)}
-                      required
+                      placeholder="Écrire une réponse..."
+                      value={replyContent}
+                      onChange={(e) => setReplyContent(e.target.value)}
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '60px', resize: 'vertical', outline: 'none', marginBottom: '8px' }}
                     />
-                  </div>
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem' }} disabled={!replyContent.trim()}>
+                      Envoyer la réponse
+                    </button>
+                  </form>
+                </div>
+              )}
 
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setIsSendingNewMsg(false)}
-                      style={{ flex: 1 }}
+              <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
+                <h4 style={{ fontSize: '0.9rem', marginBottom: '10px' }}>Nouveau message</h4>
+                <form onSubmit={handleSendNewMessage}>
+                  {role === 'admin' && (
+                    <select
+                      value={targetTeacherUid}
+                      onChange={(e) => setTargetTeacherUid(e.target.value)}
+                      required
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '8px' }}
                     >
-                      Annuler
-                    </button>
-                    <button
-                      type="submit"
-                      className="btn btn-primary"
-                      style={{ flex: 2 }}
-                    >
-                      Envoyer le message
-                    </button>
-                  </div>
+                      <option value="" disabled style={{ background: '#1a1a2e' }}>Sélectionner un enseignant</option>
+                      {teachers.map(t => (
+                        <option key={t.uid} value={t.uid} style={{ background: '#1a1a2e' }}>{t.displayName || t.email}</option>
+                      ))}
+                    </select>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Sujet"
+                    value={newMsgSubject}
+                    onChange={(e) => setNewMsgSubject(e.target.value)}
+                    required
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '8px', outline: 'none' }}
+                  />
+                  <textarea
+                    placeholder="Votre message..."
+                    value={newMsgContent}
+                    onChange={(e) => setNewMsgContent(e.target.value)}
+                    required
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '60px', resize: 'vertical', outline: 'none', marginBottom: '8px' }}
+                  />
+                  <button type="submit" className="btn btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }} disabled={isSendingNewMsg}>
+                    {isSendingNewMsg ? 'Envoi...' : 'Envoyer le message'}
+                  </button>
                 </form>
               </div>
-            ) : activeSupportMessage ? (
-              // VISUALISATION DE LA DISCUSSION
-              <div className={styles.conversationContainer} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div className={styles.conversationHeader} style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.35rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{activeSupportMessage.subject}</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        De : <strong>{activeSupportMessage.senderName}</strong> ({activeSupportMessage.senderEmail})
-                      </span>
-                      {role === 'admin' && activeSupportMessage.recipientRole === 'teacher' && (
-                        <span style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '500' }}>
-                          Destinataire : {getRecipientLabel(activeSupportMessage)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    le {activeSupportMessage.createdAt ? new Date(activeSupportMessage.createdAt).toLocaleString('fr-FR') : ''}
-                  </span>
-                </div>
-
-                {messagingError && <div className={styles.msgErrorBanner} style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#f87171', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingError}</div>}
-                {messagingSuccess && <div className={styles.msgSuccessBanner} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#34d399', padding: '0.75rem 1rem', borderRadius: '6px', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{messagingSuccess}</div>}
-
-                <div className={styles.convBody} style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {/* Message d'origine */}
-                  <div className={styles.messageBubble} style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', padding: '1rem', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--accent-primary)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                      {activeSupportMessage.senderName}
-                    </div>
-                    <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.95rem' }}>{activeSupportMessage.content}</p>
-                  </div>
-
-                  {/* Réponse précédente si présente */}
-                  {activeSupportMessage.reply && (
-                    <div className={styles.messageBubble} style={{ alignSelf: 'flex-end', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', padding: '1rem', borderRadius: '8px', width: '85%' }}>
-                      <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--accent-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>
-                        Réponse de : {activeSupportMessage.recipientRole === 'admin' ? 'Administrateur' : 'Superviseur'} • {
-                          activeSupportMessage.repliedAt ? new Date(activeSupportMessage.repliedAt).toLocaleString('fr-FR') : ''
-                        }
-                      </div>
-                      <p style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.95rem' }}>{activeSupportMessage.reply}</p>
-                    </div>
-                  )}
-
-                  {/* Formulaire de réponse ou indicateur de supervision */}
-                  {role === 'admin' && activeSupportMessage.recipientRole === 'teacher' ? (
-                    <div style={{ marginTop: 'auto', padding: '1rem', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--border-glass)', borderRadius: '6px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      🔒 Espace de supervision administrative (Lecture seule pour cette discussion Étudiant ↔ Enseignant)
-                    </div>
-                  ) : (
-                    <form onSubmit={handleSendReply} style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.5rem' }}>
-                      <label className="form-label" style={{ fontWeight: '600', fontSize: '0.9rem' }}>
-                        {activeSupportMessage.reply ? 'Modifier la réponse :' : 'Rédiger une réponse :'}
-                      </label>
-                      <textarea
-                        className="form-input"
-                        style={{ minHeight: '100px', resize: 'vertical', fontFamily: 'inherit', padding: '0.6rem', borderRadius: '6px', width: '100%' }}
-                        placeholder="Saisissez votre réponse ici..."
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                        required
-                      />
-                      <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-end', padding: '0.5rem 1.5rem' }}>
-                        {activeSupportMessage.reply ? 'Mettre à jour la réponse' : 'Envoyer la réponse'}
-                      </button>
-                    </form>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className={styles.emptyDetail}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <span>Sélectionnez un message à gauche pour y répondre, ou cliquez sur "+ Écrire" pour envoyer un nouveau message.</span>
-              </div>
-            )
-          ) : !selectedStudent ? (
-            <div className={styles.emptyDetail}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4" />
-                <path d="M12 8h.01" />
-              </svg>
-              <span>Sélectionnez un étudiant dans la liste pour consulter ses statistiques et inspecter son travail.</span>
-            </div>
-          ) : (
-            <div className={styles.detailContent}>
-              <div className={styles.detailHeader}>
-                {selectedStudent.photoURL ? (
-                  <img src={selectedStudent.photoURL} alt="Avatar" className={styles.detailAvatar} />
-                ) : (
-                  <div className={styles.detailAvatarPlaceholder}>
-                    {(selectedStudent.displayName || selectedStudent.email || 'U').substring(0, 1).toUpperCase()}
-                  </div>
-                )}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {isRenaming ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem' }}>
-                        <input 
-                          type="text" 
-                          className="form-input" 
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', width: '180px', height: '30px' }}
-                          value={newName} 
-                          onChange={(e) => setNewName(e.target.value)} 
-                          placeholder="Nouveau nom..."
-                        />
-                        <button 
-                          className="btn btn-primary" 
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', height: '30px', background: 'linear-gradient(135deg, #0d9488 0%, #0b7a70 100%)' }}
-                          onClick={handleSaveName}
-                          disabled={actionPending}
-                        >
-                          Enregistrer
-                        </button>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', height: '30px' }}
-                          onClick={() => setIsRenaming(false)}
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <h3>{selectedStudent.displayName || 'Étudiant'}</h3>
-                        {isSuperAdmin && (
-                          <button 
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '0.2rem', display: 'inline-flex', alignItems: 'center' }}
-                            onClick={() => {
-                              setIsRenaming(true);
-                              setNewName(selectedStudent.displayName || '');
-                            }}
-                            title="Modifier le nom de cet étudiant"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M12 20h9" />
-                              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                            </svg>
-                          </button>
-                        )}
-                        <span className={`${styles.statusBadge} ${selectedStudent.status === 'suspended' ? styles.statusSuspended : styles.statusActive}`}>
-                          {selectedStudent.status === 'suspended' ? 'Suspendu' : 'Actif'}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <p>{selectedStudent.email}</p>
-                  
-                  {/* Section Enseignant Référent */}
-                  <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Enseignant référent :</span>
-                      {role === 'admin' ? (
-                        <select
-                          value={selectedStudent.assignedTeacherUid || ''}
-                          onChange={async (e) => {
-                            const newTeacherUid = e.target.value;
-                            const newTeacher = teachers.find(t => t.uid === newTeacherUid);
-                            const newTeacherName = newTeacher ? (newTeacher.displayName || newTeacher.email || '') : '';
-                            try {
-                              await assignStudentToTeacher(selectedStudent.uid, newTeacherUid || null, newTeacherName || null);
-                              // Mettre à jour l'état local
-                              setSelectedStudent(prev => prev ? {
-                                ...prev,
-                                assignedTeacherUid: newTeacherUid || undefined,
-                                assignedTeacherName: newTeacherName || undefined
-                              } : null);
-                              setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? {
-                                ...s,
-                                assignedTeacherUid: newTeacherUid || undefined,
-                                assignedTeacherName: newTeacherName || undefined
-                              } : s));
-                            } catch (err: any) {
-                              alert("Erreur lors de l'affectation : " + err.message);
-                            }
-                          }}
-                          style={{
-                            background: '#1e293b',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '4px',
-                            color: 'var(--text-primary)',
-                            padding: '0.2rem 0.4rem',
-                            fontSize: '0.8rem',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <option value="">Aucun (Non affecté)</option>
-                          {teachers.map(t => (
-                            <option key={t.uid} value={t.uid}>
-                              {t.displayName ? `${t.displayName} (${t.email})` : t.email}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                          {selectedStudent.assignedTeacherName || 'Aucun'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Onglets */}
-              <div className={styles.tabs}>
-                <button 
-                  className={`${styles.tabBtn} ${activeTab === 'stats' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('stats')}
-                >
-                  Statistiques & Quiz
-                </button>
-                <button 
-                  className={`${styles.tabBtn} ${activeTab === 'protocols' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('protocols')}
-                >
-                  Protocoles ({studentProtocols.length})
-                </button>
-                <button 
-                  className={`${styles.tabBtn} ${activeTab === 'chats' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('chats')}
-                >
-                  Discussions ({studentChats.length})
-                </button>
-                <button 
-                  className={`${styles.tabBtn} ${activeTab === 'ai-report' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('ai-report')}
-                >
-                  Bilan Synthétique IA ✨
-                </button>
-                <button 
-                  className={`${styles.tabBtn} ${activeTab === 'articles' ? styles.activeTab : ''}`}
-                  onClick={() => setActiveTab('articles')}
-                >
-                  Articles ({studentArticles.length})
-                </button>
-              </div>
-
-              <div className={styles.tabBody}>
-                {loadingDetails ? (
-                  <div className={styles.detailLoading}>
-                    <svg className={styles.spinner} xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                    </svg>
-                    <span>Chargement des détails...</span>
-                  </div>
-                ) : (
-                  <>
-                    {/* STATS & QUIZ HISTORY TAB */}
-                    {activeTab === 'stats' && (
-                      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div className={styles.statsSummaryGrid}>
-                          <div className={styles.miniStatsCard}>
-                            <span className={styles.miniLabel}>Questions posées</span>
-                            <span className={styles.miniValue}>{selectedStudent.stats?.questionsAsked || 0}</span>
-                          </div>
-                          <div className={styles.miniStatsCard}>
-                            <span className={styles.miniLabel}>Flashcards acquises</span>
-                            <span className={styles.miniValue}>
-                              {selectedStudent.stats?.flashcardsMastered?.length || 0} / 12
-                            </span>
-                          </div>
-                          <div className={styles.miniStatsCard}>
-                            <span className={styles.miniLabel}>Fiches rédigées</span>
-                            <span className={styles.miniValue}>{selectedStudent.stats?.protocolsGenerated || 0}</span>
-                          </div>
-                        </div>
-
-                        {/* Quiz History Attempts */}
-                        <div className={styles.subSection}>
-                          <h4 style={{ marginBottom: '0.75rem', fontSize: '1rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.35rem' }}>
-                            Historique des quiz résolus
-                          </h4>
-                          {(!selectedStudent.stats?.quizHistory || selectedStudent.stats.quizHistory.length === 0) ? (
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                              Aucun historique de quiz disponible pour cet étudiant.
-                            </p>
-                          ) : (
-                            <div className={styles.quizHistoryList}>
-                              {selectedStudent.stats.quizHistory.map((item: any, idx: number) => {
-                                let scoreColorClass = styles.scoreBad;
-                                if (item.scorePct >= 80) scoreColorClass = styles.scoreExcellent;
-                                else if (item.scorePct >= 50) scoreColorClass = styles.scoreAverage;
-
-                                return (
-                                  <div key={item.id || idx} className={styles.quizHistoryItem}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                                      <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>{item.topic}</span>
-                                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                        {new Date(item.date).toLocaleDateString('fr-FR', {
-                                          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                                        })}
-                                      </span>
-                                    </div>
-                                    <span className={`${styles.miniScoreBadge} ${scoreColorClass}`}>
-                                      {item.correct} / {item.total}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* GENERATED PROTOCOLS TAB */}
-                    {activeTab === 'protocols' && (
-                      <div className="animate-fade-in">
-                        {studentProtocols.length === 0 ? (
-                          <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>
-                            Cet étudiant n'a pas encore rédigé de protocole.
-                          </p>
-                        ) : (
-                          <div className={styles.protocolsList}>
-                            {studentProtocols.map((proto) => (
-                              <div key={proto.id} className={styles.protoItem}>
-                                <div className={styles.protoMeta}>
-                                  <strong>[{proto.acronym || 'SANS ACRONYME'}]</strong>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                    {new Date(proto.date).toLocaleDateString('fr-FR')} à {new Date(proto.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                                  <span className={styles.protoTitle} title={proto.title}>
-                                    {proto.title.length > 50 ? proto.title.substring(0, 50) + '...' : proto.title}
-                                  </span>
-                                  <button 
-                                    className="btn btn-secondary" 
-                                    style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                                    onClick={() => setActiveProtocol(proto)}
-                                  >
-                                    Inspecter
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* TUTOR CHATS TAB */}
-                    {activeTab === 'chats' && (
-                      <div className="animate-fade-in">
-                        {studentChats.length === 0 ? (
-                          <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>
-                            Aucune discussion enregistrée pour cet étudiant.
-                          </p>
-                        ) : (
-                          <div className={styles.chatsList}>
-                            {studentChats.map((chat) => (
-                              <div key={chat.id} className={styles.chatItem}>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <span className={styles.chatTitle} title={chat.title}>
-                                    {chat.title.length > 50 ? chat.title.substring(0, 50) + '...' : chat.title}
-                                  </span>
-                                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                                    Dernière interaction : {chat.updatedAt?.seconds ? new Date(chat.updatedAt.seconds * 1000).toLocaleString('fr-FR') : 'Date inconnue'}
-                                  </span>
-                                </div>
-                                <button 
-                                  className="btn btn-secondary" 
-                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                                  onClick={() => setActiveChat(chat)}
-                                >
-                                  Lire l'historique
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* AI SYNTHETIC REPORT TAB */}
-                    {activeTab === 'ai-report' && (
-                      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                        <div className="glass-card" style={{ padding: '1.2rem', borderRadius: '12px', border: '1px solid var(--border-glass)', background: 'var(--bg-glass-card)' }}>
-                          <h4 style={{ margin: '0 0 0.8rem 0', fontSize: '1rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span>Bilan Pédagogique Synthétique IA</span>
-                          </h4>
-                          
-                          {loadingAiReport ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '2rem 0' }}>
-                              <svg className={styles.spinner} xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2">
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                              </svg>
-                              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Génération du bilan synthétique par l'IA en cours...</span>
-                            </div>
-                          ) : aiReport ? (
-                            <div className="markdown-content" style={{ fontSize: '0.85rem', lineHeight: '1.45', color: 'var(--text-primary)' }}>
-                              <div dangerouslySetInnerHTML={{ __html: renderMarkdown(aiReport) }} />
-                              
-                              <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                  <button 
-                                    className="btn btn-secondary"
-                                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                                    onClick={handleDownloadMarkdown}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                      <polyline points="7 10 12 15 17 10" />
-                                      <line x1="12" y1="15" x2="12" y2="3" />
-                                    </svg>
-                                    Télécharger (MD)
-                                  </button>
-                                  <button 
-                                    className="btn btn-secondary"
-                                    style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
-                                    onClick={handleDownloadPdf}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                      <polyline points="7 10 12 15 17 10" />
-                                      <line x1="12" y1="15" x2="12" y2="3" />
-                                    </svg>
-                                    Télécharger (PDF)
-                                  </button>
-                                </div>
-                                <button 
-                                  className="btn btn-secondary"
-                                  style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem' }}
-                                  onClick={handleGenerateAiReport}
-                                >
-                                  Régénérer le bilan
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
-                              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.2rem' }}>
-                                Aucun bilan généré pour le moment. Vous pouvez demander à l'IA d'analyser l'activité de cet étudiant pour générer une fiche synthèse de son niveau et de ses recommandations.
-                              </p>
-                              <button 
-                                className="btn btn-primary"
-                                style={{ 
-                                  background: 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)', 
-                                  border: 'none',
-                                  fontSize: '0.8rem',
-                                  padding: '0.5rem 1rem'
-                                }}
-                                onClick={handleGenerateAiReport}
-                              >
-                                Générer le bilan synthétique ✨
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {activeTab === 'articles' && (
-                      <div className="animate-fade-in">
-                        {activeArticle ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem' }}>
-                              <button 
-                                className="btn btn-secondary"
-                                style={{ fontSize: '0.75rem', padding: '0.3rem 0.6rem' }}
-                                onClick={() => setActiveArticle(null)}
-                              >
-                                &larr; Retour à la liste
-                              </button>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                Type : {activeArticle.studyType === 'cohort' ? 'Cohorte' : (activeArticle.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale')}
-                              </span>
-                            </div>
-                            <div className="glass-card" style={{ padding: '1.5rem', background: 'var(--bg-glass-card)', border: '1px solid var(--border-glass)', borderRadius: '12px' }}>
-                              <h3 style={{ margin: '0 0 1rem 0', color: 'var(--accent-primary)', fontSize: '1.2rem' }}>
-                                {activeArticle.title}
-                              </h3>
-                              <div style={{ fontSize: '0.9rem', lineHeight: '1.6', color: 'var(--text-primary)', maxHeight: '500px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeArticle.content) }} />
-                              </div>
-                            </div>
-                          </div>
-                        ) : studentArticles.length === 0 ? (
-                          <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.9rem', textAlign: 'center', padding: '2rem 0' }}>
-                            Aucun article rédigé pour cet étudiant.
-                          </p>
-                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                            {studentArticles.map((art) => (
-                              <div 
-                                key={art.id} 
-                                className="glass-card" 
-                                style={{ padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', transition: 'all var(--transition-fast)' }}
-                                onClick={() => setActiveArticle(art)}
-                                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--bg-tertiary)'; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                              >
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-                                  <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
-                                    {art.title.length > 60 ? art.title.substring(0, 60) + '...' : art.title}
-                                  </span>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                    Type : {art.studyType === 'cohort' ? 'Cohorte' : (art.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale')} • Rédigé le {new Date(art.date).toLocaleDateString('fr-FR')}
-                                  </span>
-                                </div>
-                                <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>
-                                  Relire l'article
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Section d'actions d'administration */}
-              <div className={styles.adminActions}>
-                <span className={styles.adminActionsTitle}>Actions de supervision :</span>
-                {isSuperAdmin ? (
-                  <>
-                    <div className={styles.adminButtons}>
-                      {selectedStudent.status === 'suspended' ? (
-                        <button 
-                          className="btn btn-primary" 
-                          style={{ 
-                            background: 'linear-gradient(135deg, #0d9488 0%, #0b7a70 100%)', 
-                            borderColor: 'var(--accent-primary)',
-                            fontSize: '0.8rem', 
-                            padding: '0.4rem 0.8rem' 
-                          }}
-                          onClick={() => handleToggleSuspension(selectedStudent.uid, 'active')}
-                          disabled={actionPending}
-                        >
-                          {actionPending ? 'Action...' : 'Réactiver l\'élève'}
-                        </button>
-                      ) : (
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ 
-                            borderColor: 'var(--accent-danger)', 
-                            color: 'var(--accent-danger)', 
-                            fontSize: '0.8rem', 
-                            padding: '0.4rem 0.8rem' 
-                          }}
-                          onClick={() => handleToggleSuspension(selectedStudent.uid, 'suspended')}
-                          disabled={actionPending}
-                        >
-                          {actionPending ? 'Action...' : 'Suspendre l\'élève'}
-                        </button>
-                      )}
-                      
-                      <button 
-                        className="btn btn-secondary" 
-                        style={{ 
-                          borderColor: 'rgba(239, 68, 68, 0.4)', 
-                          color: 'rgba(239, 68, 68, 0.8)', 
-                          fontSize: '0.8rem', 
-                          padding: '0.4rem 0.8rem' 
-                        }}
-                        onClick={() => handleDeleteStudentData(selectedStudent.uid)}
-                        disabled={actionPending}
-                      >
-                        {actionPending ? 'Suppression...' : 'Supprimer toutes les données'}
-                      </button>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.75rem', lineHeight: '1.4', borderTop: '1px solid var(--border-glass)', paddingTop: '0.75rem' }}>
-                      ⚠️ <strong>Note d'administration</strong> : La suppression retire les données Firestore (stats, chats, protocoles), mais ne supprime pas le compte d'authentification Firebase. Pensez à supprimer le compte dans votre <strong>Console Firebase (onglet Authentication)</strong> pour bloquer l'accès définitivement.
-                    </p>
-                  </>
-                ) : (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic' }}>
-                    🔒 Les actions de suspension et de suppression de données sont réservées aux administrateurs. En tant qu'enseignant, votre accès est en lecture seule.
-                  </p>
-                )}
-              </div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* MODAL PREVIEW PROTOCOLE */}
-      {activeProtocol && (
-        <div className={styles.modalOverlay} onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>
-          <div className={`${styles.modalContent} glass-card`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
+        {/* Panneau de détail étudiant (Droite) */}
+        {selectedStudent ? (
+          <div className={`${styles.detailCard} glass-card`}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <div>
-                <h3>[{activeProtocol.acronym || 'SANS ACRONYME'}] - Rédigé par {selectedStudent?.displayName}</h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Date de création : {new Date(activeProtocol.date).toLocaleDateString('fr-FR')} à {new Date(activeProtocol.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-              <button className={styles.closeBtn} onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>&times;</button>
-            </div>
-            
-            <div className={styles.tabs} style={{ borderBottom: '1px solid var(--border-glass)', padding: '0.5rem 1.5rem 0 1.5rem', background: 'rgba(255, 255, 255, 0.02)', display: 'flex', gap: '0.5rem' }}>
-              <button
-                className={`${styles.tabBtn} ${modalPreviewMode === 'protocol' ? styles.activeTab : ''}`}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                onClick={() => setModalPreviewMode('protocol')}
-              >
-                1. Protocole de recherche
-              </button>
-              <button
-                className={`${styles.tabBtn} ${modalPreviewMode === 'crf' ? styles.activeTab : ''}`}
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-                onClick={() => setModalPreviewMode('crf')}
-              >
-                2. Cahier d'Observation (CRF) {activeProtocol.crfContent ? '✅' : '❌'}
-              </button>
-            </div>
-
-            <div className={styles.modalBody}>
-              {modalPreviewMode === 'protocol' ? (
-                <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeProtocol.content) }} />
-              ) : (
-                activeProtocol.crfContent ? (
-                  <div dangerouslySetInnerHTML={{ __html: renderMarkdown(activeProtocol.crfContent) }} />
-                ) : (
-                  <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.6 }}>
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="9" y1="9" x2="15" y2="9" />
-                      <line x1="9" y1="13" x2="15" y2="13" />
-                      <line x1="9" y1="17" x2="15" y2="17" />
-                    </svg>
-                    <p style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--text-primary)' }}>CRF non généré</p>
-                    <p style={{ fontSize: '0.85rem' }}>Cet étudiant n'a pas encore généré de Cahier d'Observation Clinique (CRF) pour ce protocole.</p>
+                {isRenaming ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--accent-primary)', borderRadius: '6px', padding: '4px 8px', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 600, outline: 'none' }}
+                      autoFocus
+                    />
+                    <button className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={handleSaveName}>OK</button>
+                    <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setIsRenaming(false)}>✕</button>
                   </div>
-                )
-              )}
-            </div>
-            <div className={styles.modalFooter}>
-              <button className="btn btn-secondary" onClick={() => { setActiveProtocol(null); setModalPreviewMode('protocol'); }}>Fermer</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL PREVIEW DISCUSSION */}
-      {activeChat && (
-        <div className={styles.modalOverlay} onClick={() => setActiveChat(null)}>
-          <div className={`${styles.modalContent} glass-card`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <div>
-                <h3>Discussion : {activeChat.title}</h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Échanges de {selectedStudent?.displayName} avec le Tuteur Virtuel</span>
-              </div>
-              <button className={styles.closeBtn} onClick={() => setActiveChat(null)}>&times;</button>
-            </div>
-            <div className={styles.modalBody} style={{ background: 'var(--bg-tertiary)' }}>
-              <div className={styles.chatHistoryMessages}>
-                {(!activeChat.messages || activeChat.messages.length === 0) ? (
-                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>Aucun message dans cette discussion.</p>
                 ) : (
-                  activeChat.messages.map((m: any, idx: number) => (
-                    <div key={idx} className={`${styles.messageRow} ${m.role === 'user' ? styles.userRow : styles.assistantRow}`}>
-                      <div className={styles.messageBubble}>
-                        <div className={styles.messageMeta}>
-                          <strong>{m.role === 'user' ? (selectedStudent?.displayName || 'Étudiant') : 'Tuteur RECIF'}</strong>
-                          <span>{m.timestamp}</span>
-                        </div>
-                        <p className={styles.messageText}>{m.content}</p>
-                      </div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => { setNewName(selectedStudent.displayName || ''); setIsRenaming(true); }}>
+                    {selectedStudent.displayName || 'Étudiant'}
+                  </h3>
+                )}
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{selectedStudent.email}</span>
+              </div>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => { setSelectedStudent(null); setActiveProtocol(null); setActiveChat(null); setActiveArticle(null); }}>
+                ✕ Fermer
+              </button>
+            </div>
+
+            {/* Onglets de détail */}
+            <div className={styles.tabs} style={{ marginBottom: '1rem' }}>
+              <button className={`${styles.tabBtn} ${activeTab === 'stats' ? styles.activeTab : ''}`} onClick={() => setActiveTab('stats')}>Stats</button>
+              <button className={`${styles.tabBtn} ${activeTab === 'protocols' ? styles.activeTab : ''}`} onClick={() => setActiveTab('protocols')}>Protocoles ({studentProtocols.length})</button>
+              <button className={`${styles.tabBtn} ${activeTab === 'chats' ? styles.activeTab : ''}`} onClick={() => setActiveTab('chats')}>Tuteur ({studentChats.length})</button>
+              <button className={`${styles.tabBtn} ${activeTab === 'ai-report' ? styles.activeTab : ''}`} onClick={() => setActiveTab('ai-report')}>Bilan IA</button>
+              <button className={`${styles.tabBtn} ${activeTab === 'articles' ? styles.activeTab : ''}`} onClick={() => setActiveTab('articles')}>Articles ({studentArticles.length})</button>
+            </div>
+
+            {loadingDetails ? (
+              <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Chargement des détails...</p>
+            ) : activeTab === 'stats' ? (
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{selectedStudent.stats?.questionsAsked || 0}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Questions tuteur</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-secondary)' }}>{selectedStudent.stats?.protocolsGenerated || 0}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Protocoles générés</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-success)' }}>
+                      {selectedStudent.stats?.quizTotal ? Math.round(((selectedStudent.stats.quizCorrect || 0) / selectedStudent.stats.quizTotal) * 100) : 0}%
                     </div>
-                  ))
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Score Quiz ({selectedStudent.stats?.quizCorrect || 0}/{selectedStudent.stats?.quizTotal || 0})</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-warning)' }}>{selectedStudent.stats?.flashcardsMastered?.length || 0}/12</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Flashcards maîtrisées</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }} onClick={() => handleToggleSuspension(selectedStudent.uid, selectedStudent.status === 'suspended' ? 'active' : 'suspended')} disabled={actionPending}>
+                    {selectedStudent.status === 'suspended' ? 'Réactiver' : 'Suspendre'}
+                  </button>
+                  <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }} onClick={() => handleDeleteStudentData(selectedStudent.uid)} disabled={actionPending}>
+                    Supprimer définitivement
+                  </button>
+                </div>
+              </div>
+            ) : activeTab === 'protocols' ? (
+              <div>
+                {studentProtocols.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Aucun protocole généré.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {studentProtocols.map((proto) => (
+                      <div key={proto.id} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', cursor: 'pointer', border: '1px solid transparent', transition: '0.2s' }} onClick={() => { setActiveProtocol(proto); setModalPreviewMode('protocol'); }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: '4px' }}>{proto.title || 'Sans titre'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{proto.date} {proto.acronym ? `• ${proto.acronym}` : ''}</div>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
+            ) : activeTab === 'chats' ? (
+              <div>
+                {studentChats.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Aucune discussion avec le tuteur.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {studentChats.map((chat) => (
+                      <div key={chat.id} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', cursor: 'pointer' }} onClick={() => setActiveChat(chat)}>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: '4px' }}>{chat.title || 'Discussion'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{chat.messages?.length || 0} messages</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : activeTab === 'ai-report' ? (
+              <div>
+                {!aiReport && !loadingAiReport && (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Générer un bilan pédagogique synthétique basé sur l'activité de l'étudiant.</p>
+                    <button className="btn btn-primary" onClick={handleGenerateAiReport}>Générer le bilan IA</button>
+                  </div>
+                )}
+                {loadingAiReport && (
+                  <div style={{ textAlign: 'center', padding: '2rem' }}>
+                    <svg className={styles.spinner} xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Analyse en cours par l'IA...</p>
+                  </div>
+                )}
+                {aiReport && (
+                  <div>
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                      <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }} onClick={handleDownloadMarkdown}>Markdown</button>
+                      <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }} onClick={handleDownloadPdf}>PDF / Imprimer</button>
+                      <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem' }} onClick={() => { setAiReport(null); }}>Nouveau bilan</button>
+                    </div>
+                    <div style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text-secondary)' }} dangerouslySetInnerHTML={{ __html: renderMarkdown(aiReport) }} />
+                  </div>
+                )}
+              </div>
+            ) : activeTab === 'articles' ? (
+              <div>
+                {studentArticles.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Aucun article rédigé.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {studentArticles.map((article) => (
+                      <div key={article.id} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', cursor: 'pointer' }} onClick={() => setActiveArticle(article)}>
+                        <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: '4px' }}>{article.title || 'Sans titre'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{article.date} • {article.studyType}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <div className={`${styles.detailCard} glass-card`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px' }}>
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center' }}>Sélectionnez un étudiant pour voir ses détails.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal de prévisualisation Protocole */}
+      {activeProtocol && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setActiveProtocol(null)}>
+          <div style={{ background: 'var(--bg-card, #1a222c)', borderRadius: '12px', maxWidth: '800px', width: '100%', maxHeight: '80vh', overflow: 'auto', padding: '24px', border: '1px solid var(--border-glass, rgba(255,255,255,0.1))' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.1rem' }}>{activeProtocol.title}</h3>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setActiveProtocol(null)}>✕</button>
             </div>
-            <div className={styles.modalFooter}>
-              <button className="btn btn-secondary" onClick={() => setActiveChat(null)}>Fermer</button>
+            {activeProtocol.crfContent && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '8px' }}>
+                  <button className={`btn btn-secondary ${modalPreviewMode === 'protocol' ? 'activeTab' : ''}`} style={{ fontSize: '0.78rem', padding: '0.25rem 0.5rem' }} onClick={() => setModalPreviewMode('protocol')}>Protocole</button>
+                  <button className={`btn btn-secondary ${modalPreviewMode === 'crf' ? 'activeTab' : ''}`} style={{ fontSize: '0.78rem', padding: '0.25rem 0.5rem' }} onClick={() => setModalPreviewMode('crf')}>CRF</button>
+                </div>
+              </div>
+            )}
+            <div style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text-secondary)' }} dangerouslySetInnerHTML={{ __html: renderMarkdown(modalPreviewMode === 'crf' && activeProtocol.crfContent ? activeProtocol.crfContent : activeProtocol.content) }} />
+          </div>
+        </div>
+      )}
+
+      {/* Modal de prévisualisation Chat */}
+      {activeChat && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setActiveChat(null)}>
+          <div style={{ background: 'var(--bg-card, #1a222c)', borderRadius: '12px', maxWidth: '700px', width: '100%', maxHeight: '80vh', overflow: 'auto', padding: '24px', border: '1px solid var(--border-glass, rgba(255,255,255,0.1))' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.1rem' }}>{activeChat.title || 'Discussion'}</h3>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setActiveChat(null)}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {(activeChat.messages || []).map((msg: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div style={{ maxWidth: '80%', padding: '10px 14px', borderRadius: '12px', fontSize: '0.85rem', lineHeight: 1.6, background: msg.role === 'user' ? 'rgba(13,148,136,0.15)' : 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL SUCCESS COMPTE CRÉÉ */}
+      {/* Modal de prévisualisation Article */}
+      {activeArticle && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setActiveArticle(null)}>
+          <div style={{ background: 'var(--bg-card, #1a222c)', borderRadius: '12px', maxWidth: '800px', width: '100%', maxHeight: '80vh', overflow: 'auto', padding: '24px', border: '1px solid var(--border-glass, rgba(255,255,255,0.1))' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '1.1rem' }}>{activeArticle.title}</h3>
+              <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setActiveArticle(null)}>✕</button>
+            </div>
+            <div style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text-secondary)' }} dangerouslySetInnerHTML={{ __html: renderMarkdown(activeArticle.content) }} />
+          </div>
+        </div>
+      )}
+
+      {/* Modal de succès création compte */}
       {successModalData && (
-        <div className={styles.modalOverlay} onClick={() => setSuccessModalData(null)}>
-          <div className={`${styles.modalContent} ${styles.successModalContent} glass-card`} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} onClick={() => setSuccessModalData(null)}>
+          <div style={{ background: 'var(--bg-card, #1a222c)', borderRadius: '12px', maxWidth: '480px', width: '100%', padding: '28px', border: '1px solid var(--border-glass, rgba(255,255,255,0.1))' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+              </div>
+              <h3 style={{ fontSize: '1.15rem', marginBottom: '4px' }}>Compte créé avec succès</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Les identifiants ont été envoyés par e-mail.</p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '14px', marginBottom: '16px' }}>
+              <div style={{ marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Nom</span>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{successModalData.name}</div>
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>E-mail</span>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{successModalData.email}</div>
+              </div>
               <div>
-                <h3 className={styles.successTitleText} style={{ color: 'var(--accent-success)' }}>Création du compte réussie</h3>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Le compte étudiant a été configuré avec succès</span>
-              </div>
-              <button className={styles.closeBtn} onClick={() => setSuccessModalData(null)}>&times;</button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              <div className={styles.successIconContainer}>
-                <div className={styles.successBadge}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Mot de passe temporaire</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <code style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--accent-primary)', fontFamily: 'monospace' }}>{successModalData.tempPassword}</code>
+                  <button style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }} onClick={() => handleCopyPassword(successModalData.tempPassword)} title="Copier le mot de passe">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                  </button>
                 </div>
-              </div>
-
-              <h4 className={styles.successTitleText}>
-                Compte créé pour {successModalData.name}
-              </h4>
-              <p className={styles.successDescription}>
-                Le profil étudiant est désormais actif dans la base de données.
-              </p>
-
-              <div className={styles.credentialsCard}>
-                <div className={styles.credentialsRow}>
-                  <span className={styles.credentialsLabel}>Adresse E-mail</span>
-                  <span className={styles.credentialsValue}>{successModalData.email}</span>
-                </div>
-                <div className={styles.credentialsRow}>
-                  <span className={styles.credentialsLabel}>Mot de passe temporaire</span>
-                  <span className={styles.credentialsValue}>{successModalData.tempPassword}</span>
-                </div>
-              </div>
-
-              <p className={styles.successEmailInfo}>
-                📩 Un e-mail automatique contenant ces identifiants a été envoyé à l'étudiant.
-              </p>
-
-              <div style={{ marginTop: '1.25rem' }}>
-                <span className={styles.previewLabel}>Aperçu de l'invitation :</span>
-                <textarea
-                  className={styles.previewTextarea}
-                  readOnly
-                  value={`Bonjour ${successModalData.name},
-
-Votre demande d'inscription sur la plateforme RECIF Méthodologie a été validée par votre superviseur.
-
-Voici vos identifiants de connexion provisoires :
-- E-mail : ${successModalData.email}
-- Mot de passe temporaire : ${successModalData.tempPassword}
-
-Vous pouvez vous connecter dès maintenant sur : ${getCleanLoginUrl()}
-⚠️ Important : Pour des raisons de sécurité, vous serez invité(e) à modifier ce mot de passe temporaire dès votre premier accès.
-
-Cordialement,
-Votre superviseur RECIF`}
-                />
               </div>
             </div>
-
-            <div className={styles.modalFooter} style={{ gap: '0.75rem' }}>
-              <button 
-                className={`btn ${invitationCopied ? 'btn-secondary' : 'btn-primary'}`}
-                style={invitationCopied ? { color: 'var(--accent-success)', borderColor: 'rgba(52, 211, 153, 0.4)' } : undefined}
-                onClick={() => handleCopyInvitation()}
-              >
-                {invitationCopied ? (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.25rem' }}>
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    Invitation copiée !
-                  </>
-                ) : (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1, fontSize: '0.85rem' }} onClick={() => handleCopyInvitation()}>
+                {invitationCopied ? 'Copié !' : (
                   <>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.25rem' }}>
                       <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />

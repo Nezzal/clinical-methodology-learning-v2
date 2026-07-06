@@ -22,8 +22,6 @@ import {
   syncUserProfile, 
   loadFirestoreProtocols, 
   saveFirestoreProtocol,
-  findAccessRequestByEmail,
-  deleteAccessRequest,
   updateUserLastActive,
   FirestoreUser
 } from '@/utils/firestore';

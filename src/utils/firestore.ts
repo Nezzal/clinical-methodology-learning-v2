@@ -125,7 +125,7 @@ export interface FirestoreArticle {
   date: string;
   content: string;
   createdAt?: any;
-  formData?: any; // Contient les réponses aux 22 critères STROBE
+  formData?: any;
 }
 
 // 1. Profil utilisateur et Statistiques
@@ -211,18 +211,14 @@ export async function saveFirestoreChat(
       id: chatId,
       title,
       updatedAt: serverTimestamp(),
-      createdAt: serverTimestamp() // merge: true protégera la date de création
+      createdAt: serverTimestamp()
     };
     if (mode) {
       chatHeader.mode = mode;
     }
     
-    // Enregistrer l'en-tête du chat
     await setDoc(chatDocRef, chatHeader, { merge: true });
 
-    // Enregistrer les messages (nous écrasons ou ajoutons à une sous-collection de messages)
-    // Pour rester simple et efficace, nous pouvons stocker les messages directement dans le document de chat sous forme de tableau, 
-    // ou dans une sous-collection. Un tableau de messages est très performant et économique pour le tuteur !
     const messagesClean = messages.map(m => ({
       role: m.role,
       content: m.content,
@@ -360,21 +356,18 @@ export async function updateUserStatus(uid: string, status: 'active' | 'suspende
 export async function deleteUserFully(uid: string) {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {
-    // 1. Supprimer tous les documents de chat de l'utilisateur
     const chatsRef = collection(db, 'users', uid, 'chats');
     const chatsSnap = await getDocsWithCacheFallback(chatsRef);
     for (const chatDoc of chatsSnap.docs) {
       await deleteDoc(doc(db, 'users', uid, 'chats', chatDoc.id));
     }
 
-    // 2. Supprimer tous les protocoles de l'utilisateur
     const protosRef = collection(db, 'users', uid, 'protocols');
     const protosSnap = await getDocsWithCacheFallback(protosRef);
     for (const protoDoc of protosSnap.docs) {
       await deleteDoc(doc(db, 'users', uid, 'protocols', protoDoc.id));
     }
 
-    // 3. Supprimer le profil de l'utilisateur principal
     const userDocRef = doc(db, 'users', uid);
     await deleteDoc(userDocRef);
   } catch (error) {
@@ -386,34 +379,21 @@ export async function deleteUserFully(uid: string) {
 // 6. Demandes d'Accès
 export interface AccessRequest {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  institution: string;
+  profession: string;
+  city: string;
+  country: string;
   email: string;
-  tempPassword?: string;
+  phone: string;
+  status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
   createdAt: any;
-}
-
-export async function submitAccessRequest(name: string, email: string) {
-  if (!isFirebaseEnabled || !db) return;
-  try {
-    // Générer un mot de passe temporaire unique de type RECIF-XXXXXX
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let tempPassword = 'RECIF-';
-    for (let i = 0; i < 6; i++) {
-      tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-
-    const docId = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const docRef = doc(db, 'access_requests', docId);
-    await setDoc(docRef, {
-      name,
-      email: email.toLowerCase(),
-      tempPassword,
-      createdAt: serverTimestamp()
-    });
-  } catch (error) {
-    console.error('❌ Erreur submitAccessRequest:', error);
-    throw error;
-  }
+  paymentReceivedAt: any;
+  paymentReceivedBy: string | null;
+  rejectedAt: any;
+  rejectedBy: string | null;
+  rejectionReason: string;
 }
 
 export async function getAccessRequests(): Promise<AccessRequest[]> {
@@ -427,21 +407,6 @@ export async function getAccessRequests(): Promise<AccessRequest[]> {
     console.warn('⚠️ Erreur getAccessRequests:', error);
     return [];
   }
-}
-
-export async function findAccessRequestByEmail(email: string): Promise<AccessRequest | null> {
-  if (!isFirebaseEnabled || !db) return null;
-  try {
-    const docId = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-    const docRef = doc(db, 'access_requests', docId);
-    const snap = await getDocWithCacheFallback(docRef);
-    if (snap && snap.exists()) {
-      return { id: snap.id, ...snap.data() } as AccessRequest;
-    }
-  } catch (error) {
-    console.error('❌ Erreur findAccessRequestByEmail:', error);
-  }
-  return null;
 }
 
 export async function deleteAccessRequest(requestId: string) {
@@ -469,17 +434,14 @@ export async function updateUserDisplayName(uid: string, displayName: string) {
 export async function createStudentAccountDirectly(name: string, email: string, tempPassword: string) {
   if (!isFirebaseEnabled || !db) throw new Error('Firebase non configuré');
   
-  // Initialiser une instance temporaire d'authentification pour éviter de déconnecter le compte administrateur actif
   const tempAppName = `temp_creator_${Date.now()}`;
   const tempApp = initializeApp(firebaseConfig, tempAppName);
   const tempAuth = getAuth(tempApp);
 
   try {
-    // 1. Créer l'utilisateur dans Firebase Authentication
     const userCredential = await createUserWithEmailAndPassword(tempAuth, email, tempPassword);
     const newUid = userCredential.user.uid;
 
-    // 2. Créer le profil initial dans Firestore avec "requirePasswordChange: true" et "status: active"
     const userDocRef = doc(db, 'users', newUid);
     await setDoc(userDocRef, {
       uid: newUid,
@@ -500,7 +462,6 @@ export async function createStudentAccountDirectly(name: string, email: string, 
       updatedAt: serverTimestamp()
     });
 
-    // 3. Se déconnecter de l'instance temporaire
     await signOut(tempAuth);
   } catch (error) {
     console.error('❌ Erreur createStudentAccountDirectly:', error);
@@ -526,7 +487,7 @@ export interface FirestoreSupportMessage {
   senderEmail: string;
   senderRole: 'student' | 'teacher';
   recipientRole: 'teacher' | 'admin';
-  recipientUid?: string; // Utilisé si un enseignant spécifique est ciblé par l'admin
+  recipientUid?: string;
   subject: string;
   content: string;
   createdAt: any;
@@ -584,7 +545,7 @@ export async function sendSupportMessage(
     }
 
     const messagesRef = collection(db, 'support_messages');
-    const newDocRef = doc(messagesRef); // Génère un ID unique automatiquement
+    const newDocRef = doc(messagesRef);
     const messageData: FirestoreSupportMessage = {
       id: newDocRef.id,
       senderUid,
@@ -597,7 +558,7 @@ export async function sendSupportMessage(
       content,
       createdAt: serverTimestamp(),
       status: 'unread',
-      studentRead: true, // L'expéditeur a déjà lu son propre message
+      studentRead: true,
       teacherRead: false,
       adminRead: false
     };
@@ -619,7 +580,7 @@ export async function replyToSupportMessage(
     const docRef = doc(db, 'support_messages', messageId);
     await setDoc(docRef, {
       status: 'replied',
-      studentRead: false, // Nouveau message non lu pour l'étudiant
+      studentRead: false,
       teacherRead: replierRole === 'teacher',
       adminRead: replierRole === 'admin',
       reply: replyContent,
@@ -680,7 +641,6 @@ export async function loadSupportMessages(filters: {
         const snap = await getDocsWithCacheFallback(q);
         docsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } else if (role === 'teacher') {
-        // Enseignant : uniquement les messages où il est destinataire ou expéditeur
         const q1 = query(messagesRef, where('recipientUid', '==', currentUser.uid));
         const q2 = query(messagesRef, where('senderUid', '==', currentUser.uid));
         
@@ -694,7 +654,6 @@ export async function loadSupportMessages(filters: {
         snap2.docs.forEach(d => docsMap.set(d.id, { id: d.id, ...d.data() }));
         docsData = Array.from(docsMap.values());
       } else {
-        // Étudiant : uniquement ses propres messages envoyés ou reçus
         const q1 = query(messagesRef, where('senderUid', '==', currentUser.uid));
         const q2 = query(messagesRef, where('recipientUid', '==', currentUser.uid));
         
@@ -718,14 +677,12 @@ export async function loadSupportMessages(filters: {
       } as FirestoreSupportMessage;
     });
 
-    // Trier par date décroissante
     messages.sort((a, b) => {
       const timeA = new Date(a.createdAt).getTime();
       const timeB = new Date(b.createdAt).getTime();
       return timeB - timeA;
     });
 
-    // Filtrage robuste supplémentaire côté client
     if (filters.senderUid) {
       messages = messages.filter(m => m.senderUid === filters.senderUid);
     }
@@ -804,6 +761,3 @@ export function listenToUnreadMessages(
     return () => {};
   }
 }
-
-
-
