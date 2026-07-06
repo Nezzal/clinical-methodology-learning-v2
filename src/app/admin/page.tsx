@@ -184,7 +184,7 @@ export default function AdminDashboard() {
     setActionPending(true);
     try {
       if (!user) throw new Error("Utilisateur non connecté");
-      const idToken = await user.getIdToken();
+      const idToken = await user.getIdToken(true);
       
       const res = await fetch(`/api/admin/users/${uid}`, {
         method: 'PATCH',
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
     setActionPending(true);
     try {
       if (!user) throw new Error("Utilisateur non connecté");
-      const idToken = await user.getIdToken();
+      const idToken = await user.getIdToken(true);
 
       const res = await fetch(`/api/admin/users/${uid}`, {
         method: 'DELETE',
@@ -351,7 +351,7 @@ Votre superviseur RECIF`;
     setActionPending(true);
     try {
       if (!user) throw new Error("Utilisateur non connecté");
-      const idToken = await user.getIdToken();
+      const idToken = await user.getIdToken(true);
 
       // 1. Créer le compte via l'API serveur sécurisée
       const res = await fetch('/api/admin/users', {
@@ -441,7 +441,7 @@ Votre superviseur RECIF`;
     try {
       if (!user) throw new Error("Non connecté");
       const docId = req.email.replace(/[^a-z0-9]/g, '_');
-      const idToken = await user.getIdToken();
+      const idToken = await user.getIdToken(true);
       
       await fetch('/api/access-requests/payment', {
         method: 'PATCH',
@@ -478,7 +478,7 @@ Votre superviseur RECIF`;
     try {
       if (!user) throw new Error("Non connecté");
       const docId = req.email.replace(/[^a-z0-9]/g, '_');
-      const idToken = await user.getIdToken();
+      const idToken = await user.getIdToken(true);
 
       await fetch('/api/access-requests/payment', {
         method: 'PATCH',
