@@ -1375,6 +1375,16 @@ Votre superviseur`;
                                   ✓ Valider & créer le compte
                                 </button>
                               )}
+                              {!isPending && !isPaymentReceived && (
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", width: "100%", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}
+                                  onClick={() => handleDeleteRequest(req.id, req.email)}
+                                  disabled={actionPending}
+                                >
+                                  🗑 Supprimer
+                                </button>
+                              )}
                               {isRejecting && (
                                 <div style={{ marginTop: '4px', width: '100%' }}>
                                   <textarea
