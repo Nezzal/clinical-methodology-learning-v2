@@ -31,6 +31,8 @@ export async function PATCH(req: Request) {
     }
 
     // Marquer le paiement comme reçu
+    if (!currentData) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
+    if (!currentData) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
     if (currentData.status !== 'pending') {
       return NextResponse.json({ error: "Cette demande n'est pas en attente de paiement." }, { status: 400 });
     }
