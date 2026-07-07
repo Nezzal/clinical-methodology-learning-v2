@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import SuspensionGuard from "@/components/SuspensionGuard";
+import MobileOverlay from "@/components/MobileOverlay";
 
 export const metadata: Metadata = {
   title: "RECIF Méthodologie - Formation en Recherche Clinique",
@@ -21,6 +22,7 @@ export default function RootLayout({
             {children}
           </SuspensionGuard>
         </AuthProvider>
+        <MobileOverlay />
       </body>
     </html>
   );
