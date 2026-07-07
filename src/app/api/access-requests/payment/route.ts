@@ -1,9 +1,22 @@
 import { NextResponse } from 'next/server';
-import { adminDb, admin } from '@/utils/firebase-admin';
+import { adminDb, admin, verifyUserAuth } from '@/utils/firebase-admin';
 import { loadEnvLocal } from '@/utils/env';
 
 export async function PATCH(req: Request) {
   loadEnvLocal();
+  
+  // Validation de sécurité (vérification de l'authentification et de la non-suspension)
+  const authCheck = await verifyUserAuth(req);
+  if (authCheck.error) {
+    return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+  }
+
+  const decodedToken = authCheck.decodedToken;
+  // Vérifier les droits (doit être admin ou teacher)
+  if (!decodedToken || (decodedToken.role !== 'admin' && decodedToken.role !== 'teacher')) {
+    return NextResponse.json({ error: "Interdit (Droits insuffisants)" }, { status: 403 });
+  }
+
   try {
     const { docId, paymentReceivedBy, status, rejectedBy, rejectionReason } = await req.json();
 
