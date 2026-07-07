@@ -10,15 +10,15 @@ L'application a été conçue pour fonctionner dans toutes les conditions, y com
 
 ### 1. Mode "Zéro Configuration" (100% Hors-ligne - Aucun prérequis)
 * **Pour qui** : Les utilisateurs qui veulent lancer l'application immédiatement sans rien installer d'autre.
-* **Fonctionnement** : En l'absence de clé API Gemini ou d'Ollama actif, l'application utilise sa base de connaissances intégrée (Glossaire expert, Loi 18-11, extraits ciblés du livre). Le tuteur répond instantanément par des fiches méthodologiques et des extraits précis.
+* **Fonctionnement** : En l'absence de clé API OpenRouter ou d'Ollama actif, l'application utilise sa base de connaissances intégrée (Glossaire expert, Loi 18-11, extraits ciblés du livre). Le tuteur répond instantanément par des fiches méthodologiques et des extraits précis.
 
 ### 2. Mode "IA Locale Avancée" (100% Hors-ligne - Avec Ollama)
 * **Pour qui** : Les utilisateurs voulant une IA locale intelligente capable de reformuler et de synthétiser les extraits du livre sans internet.
 * **Fonctionnement** : Nécessite l'installation d'Ollama sur la machine (voir section ci-dessous). L'application détecte automatiquement le modèle de chat disponible (comme `gemma4:latest`, `qwen2.5` ou `mistral`) et l'interroge en local.
 
-### 3. Mode "IA Connectée Cloud" (En ligne - Avec clé API Gemini)
-* **Pour qui** : Les utilisateurs disposant d'une connexion internet et voulant la puissance maximale de l'IA (Gemini 2.5 Flash) avec RAG vectoriel en temps réel.
-* **Fonctionnement** : Il suffit de renseigner la variable `GEMINI_API_KEY` dans le fichier `.env.local`.
+### 3. Mode "IA Connectée Cloud" (En ligne - Avec clé API OpenRouter)
+* **Pour qui** : Les utilisateurs disposant d'une connexion internet et voulant la puissance maximale de l'IA (Qwen / GLM via OpenRouter) avec RAG vectoriel en temps réel.
+* **Fonctionnement** : Il suffit de renseigner la variable `OPENROUTER_API_KEY` dans le fichier `.env.local`.
 
 ---
 
