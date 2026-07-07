@@ -364,7 +364,10 @@ export default function Sidebar() {
         )}
       </button>
 
-      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''} ${isCollapsed ? styles.collapsed : ''} no-print`}>
+      <aside 
+        className={`${styles.sidebar} ${isOpen ? styles.open : ''} ${isCollapsed ? styles.collapsed : ''} no-print`}
+        style={isOpen ? { transform: 'translateX(0)', width: '280px' } : undefined}
+      >
         <button 
           className={styles.collapseToggleBtn} 
           onClick={toggleCollapse} 
