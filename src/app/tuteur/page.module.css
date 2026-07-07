@@ -787,11 +787,29 @@
   .headerMain {
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
+    gap: 0.5rem;
   }
   
   .manualButton {
     align-self: flex-start;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .subtitle {
+    display: none;
+  }
+
+  .header {
+    margin-bottom: 0.5rem;
+  }
+
+  .container {
+    height: calc(100vh - 2rem);
   }
 
   /* Corrections Responsives pour le Tuteur Virtuel */

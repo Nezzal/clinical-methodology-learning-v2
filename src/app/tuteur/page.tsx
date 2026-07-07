@@ -2306,18 +2306,20 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
               </div>
 
               {/* Suggestions de questions rapides */}
-              <div className={styles.suggestions}>
-                {suggestions.map((s, i) => (
-                  <button
-                    key={i}
-                    className={styles.suggestionBtn}
-                    onClick={() => handleSend(s)}
-                    disabled={loading}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {messages.length <= 1 && (
+                <div className={styles.suggestions}>
+                  {suggestions.map((s, i) => (
+                    <button
+                      key={i}
+                      className={styles.suggestionBtn}
+                      onClick={() => handleSend(s)}
+                      disabled={loading}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Zone d'entrée de saisie */}
               <form
