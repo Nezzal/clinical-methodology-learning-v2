@@ -55,8 +55,14 @@ Si un utilisateur souhaite bénéficier de la reformulation par IA sans internet
 
 ## 📦 Distribution et Déploiement
 
-### Option A : Archive ZIP (Recommandé pour un usage local simple)
-Vous pouvez compresser le dossier complet de l'application (en excluant les dossiers `.next` et `node_modules` pour réduire la taille à moins de 5 Mo) et le fournir à vos collègues. Ils n'auront qu'à exécuter `npm install` puis `npm run dev` pour la lancer.
+### Option A : Archive ZIP Sécurisée (Recommandé pour un usage local simple)
+⚠️ **Consigne de sécurité importante** : Le fichier `.env.local` contient des secrets réels sensibles (clé OpenRouter, mot de passe SMTP, clé privée de service Firebase). **Il ne doit jamais être inclus dans l'archive de distribution** ou poussé sur un dépôt public. 
+
+Pour générer une archive ZIP propre et sécurisée qui exclut automatiquement le fichier `.env.local`, les dossiers `.git`, `node_modules`, `.next`, `.venv` et les builds, exécutez la commande suivante à la racine :
+```bash
+npm run zip
+```
+Cette commande génère un fichier `clinical-methodology-learning.zip` de taille minimale et totalement expurgé de tout secret. Les collaborateurs n'auront qu'à décompresser l'archive, dupliquer le gabarit `.env.example` en renommant la copie en `.env.local`, y insérer leurs propres clés si besoin, et exécuter `npm install && npm run dev` pour démarrer.
 
 ### Option B : Application de bureau (Format .exe / .app)
 Si vous souhaitez packager l'application pour qu'elle s'exécute comme un double-clic traditionnel sans passer par la ligne de commande, vous pouvez l'envelopper avec **Electron** ou **Tauri**.
