@@ -10,7 +10,7 @@ import styles from './page.module.css';
 function renderReportHtmlTable(rows: string[]): string {
   if (rows.length === 0) return '';
   
-  let html = '<div style="overflow-x: auto; margin: 1rem 0; width: 100%;"><table style="width: 100%; border-collapse: collapse; border: 1px solid var(--border-glass); font-size: 0.9rem; background-color: rgba(255, 255, 255, 0.01);">';
+  let html = '<div style="overflow-x: auto; margin: 1rem 0; width: 100%;"><table style="width: 100%; min-width: 500px; border-collapse: collapse; border: 1px solid var(--border-glass); font-size: 0.9rem; background-color: rgba(255, 255, 255, 0.01);">';
   
   // Parse rows
   let parsedRows = rows.map(row => {
