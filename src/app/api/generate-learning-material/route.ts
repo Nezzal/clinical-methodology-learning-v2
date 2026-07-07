@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { loadEnvLocal } from '@/utils/env';
+import { verifyUserAuth } from '@/utils/firebase-admin';
 import recifKb from '@/data/recif-kb.json';
 import glossaryData from '@/data/glossary.json';
 
@@ -187,6 +188,12 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 
 export async function POST(req: Request) {
   loadEnvLocal();
+
+  // Validation de sécurité (vérification de l'authentification et de la non-suspension)
+  const authCheck = await verifyUserAuth(req);
+  if (authCheck.error) {
+    return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+  }
   let type = '';
   let topic = '';
   let headerOllamaModel: string | null = null;

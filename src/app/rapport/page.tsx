@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { getProgress, LocalStats } from '@/utils/storage';
 import { APP_VERSION_LABEL } from '@/utils/constants';
+import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
 // Simple table rendering helper for report
@@ -119,6 +120,7 @@ function formatReportMarkdown(text: string): string {
 }
 
 export default function RapportPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<LocalStats | null>(null);
   const [report, setReport] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -236,13 +238,23 @@ Instructions pour le rapport :
 
     // 2. Repli classique via l'API route du serveur
     try {
+      const headers: Record<string, string> = { 
+        'Content-Type': 'application/json',
+        'x-ai-provider': provider,
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur token:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/pedagogical-report', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-ai-provider': provider,
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify(payload)
       });
 

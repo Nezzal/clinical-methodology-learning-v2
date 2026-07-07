@@ -23,3 +23,44 @@ if (!admin.apps.length) {
 export const adminAuth = admin.auth();
 export const adminDb = admin.firestore();
 export { admin };
+
+/**
+ * Valide l'authentification et l'état actif (non suspendu) de l'utilisateur
+ * s'appuyant sur Firebase Auth et Firestore. S'adapte au mode local.
+ */
+export async function verifyUserAuth(req: Request) {
+  // Détecter si Firebase Admin est configuré (évite les erreurs en local pur sans configuration)
+  const isFirebaseConfigured = !!(
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+    process.env.FIREBASE_PROJECT_ID
+  );
+  
+  if (!isFirebaseConfigured) {
+    // Mode local pur "Zéro configuration", bypasser l'authentification
+    return { decodedToken: { uid: 'offline_admin_uid', role: 'teacher' } };
+  }
+
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: "Non autorisé (Token manquant)", status: 401 };
+  }
+
+  const idToken = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    
+    // Vérifier si l'utilisateur est suspendu dans Firestore
+    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
+    if (userDoc.exists) {
+      const userData = userDoc.data();
+      if (userData?.status === 'suspended') {
+        return { error: "Votre compte est suspendu. Accès interdit aux services d'IA.", status: 403 };
+      }
+    }
+    
+    return { decodedToken };
+  } catch (err: any) {
+    console.error("❌ Échec de vérification du jeton utilisateur:", err.message);
+    return { error: "Session invalide ou expirée", status: 401 };
+  }
+}

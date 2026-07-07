@@ -650,13 +650,23 @@ export default function Tuteur() {
     }
 
     try {
+      const headers: Record<string, string> = { 
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur lors de l'obtention du token Firebase Auth:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify({
           messages: updatedMessages.map((m, idx) => {
             let contentToSend = m.content;
@@ -776,13 +786,23 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     
     setExtracting(true);
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur lors de l'obtention du token Firebase Auth:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/extract-protocol-params', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify({ messages })
       });
 

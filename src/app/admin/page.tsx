@@ -863,12 +863,22 @@ Votre superviseur`;
         recentProtocols: (selectedStudent.stats?.recentProtocols || []).map((p: any) => p.title || p.titleProtocol || ''),
         synthetic: true
       };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur token:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/pedagogical-report', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-        },
+        headers,
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error("Échec de la communication avec le serveur API.");

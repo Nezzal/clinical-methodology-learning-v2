@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { callLLM } from '@/utils/llm';
 import { loadEnvLocal } from '@/utils/env';
+import { verifyUserAuth } from '@/utils/firebase-admin';
 
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
@@ -305,6 +306,13 @@ function mapCustomJsonToProtocolParams(obj: any, rawChatText?: string): any {
 
 export async function POST(req: Request) {
   loadEnvLocal();
+
+  // Validation de sécurité (vérification de l'authentification et de la non-suspension)
+  const authCheck = await verifyUserAuth(req);
+  if (authCheck.error) {
+    return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+  }
+
   let headerOllamaModel: string | null = null;
   try {
     const { messages, protocolContent } = await req.json();

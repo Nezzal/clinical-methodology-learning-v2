@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { callLLM } from '@/utils/llm';
 import { loadEnvLocal } from '@/utils/env';
+import { verifyUserAuth } from '@/utils/firebase-admin';
 
 async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string): Promise<string | null> {
   try {
@@ -153,6 +154,12 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 
 export async function POST(req: Request) {
   loadEnvLocal();
+
+  // Validation de sécurité (vérification de l'authentification et de la non-suspension)
+  const authCheck = await verifyUserAuth(req);
+  if (authCheck.error) {
+    return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+  }
   let questionsAsked = 0;
   let protocolsGenerated = 0;
   let quizScore = { correct: 0, total: 0 };

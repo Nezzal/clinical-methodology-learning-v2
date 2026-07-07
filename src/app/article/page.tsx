@@ -249,13 +249,23 @@ export default function ArticleGenerator() {
     setGenerating(true);
     setGeneratedArticle(null);
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur token:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/generate-article', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify({
           title, studyType, abstract, rationale, objectives, design, setting, participants,
           variables, dataSources, bias, studySize, quantitativeVariables, statisticalMethods,

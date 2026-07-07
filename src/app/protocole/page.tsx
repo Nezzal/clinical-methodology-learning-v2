@@ -243,23 +243,33 @@ export default function ProtocoleGenerator() {
     setDataAnalysis(p.dataAnalysis || '');
   };
 
-  const loadProtocolParameters = (item: any) => {
+  const loadProtocolParameters = async (item: any) => {
     if (item.formData) {
       fillFormFields(item.formData);
     } else if (item.content) {
       setExtractionError(null);
       setExtracting(true);
-      fetch('/api/extract-protocol-params', {
-        method: 'POST',
-        headers: {
+      try {
+        const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
           'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
-        body: JSON.stringify({ protocolContent: item.content })
-      })
-      .then(res => res.json())
-      .then(data => {
+        };
+        if (user) {
+          try {
+            const idToken = await user.getIdToken(true);
+            headers['Authorization'] = `Bearer ${idToken}`;
+          } catch (tokenErr) {
+            console.warn("Erreur token:", tokenErr);
+          }
+        }
+
+        const res = await fetch('/api/extract-protocol-params', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ protocolContent: item.content })
+        });
+        const data = await res.json();
         if (data.params) {
           fillFormFields(data.params);
           
@@ -281,13 +291,11 @@ export default function ProtocoleGenerator() {
               .catch(e => console.error("Erreur de mise à jour du protocole extrait sur Firestore:", e));
           }
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Erreur lors de l'extraction des paramètres:", err);
-      })
-      .finally(() => {
+      } finally {
         setExtracting(false);
-      });
+      }
     }
   };
 
@@ -305,13 +313,23 @@ export default function ProtocoleGenerator() {
     setExtractionError(null);
 
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur token:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/extract-protocol-params', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify({ messages: selectedChat.messages })
       });
 
@@ -410,13 +428,23 @@ export default function ProtocoleGenerator() {
     };
 
     try {
+      const headers: Record<string, string> = { 
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur token:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/generate-protocol', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify(formData)
       });
 
@@ -533,13 +561,23 @@ export default function ProtocoleGenerator() {
     };
 
     try {
+      const headers: Record<string, string> = { 
+        'Content-Type': 'application/json',
+        'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
+        'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
+      };
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          headers['Authorization'] = `Bearer ${idToken}`;
+        } catch (tokenErr) {
+          console.warn("Erreur token:", tokenErr);
+        }
+      }
+
       const response = await fetch('/api/generate-crf', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-ai-provider': localStorage.getItem('recif_ai_provider') || 'gemini',
-          'x-ollama-model': localStorage.getItem('recif_ollama_model') || ''
-        },
+        headers,
         body: JSON.stringify({
           ...formData,
           protocolContent: generatedProtocol
