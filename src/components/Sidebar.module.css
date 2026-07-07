@@ -10,7 +10,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   transition: transform var(--transition-normal), width var(--transition-normal);
 }
 
@@ -82,7 +82,7 @@
   position: fixed;
   top: 1rem;
   left: 1rem;
-  z-index: 200;
+  z-index: 1010;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-glass);
   color: var(--text-primary);
