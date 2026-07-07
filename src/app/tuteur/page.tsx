@@ -400,12 +400,22 @@ export default function Tuteur() {
     setActiveSessionId(`chat_${Math.random().toString(36).substring(7)}`);
     setChatMode(null);
     setMessages([]);
+    
+    // Sur mobile, replier automatiquement le volet d'historique
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsDiscussionCollapsed(true);
+    }
   };
 
   const handleSelectSession = (session: any) => {
     setActiveSessionId(session.id);
     setMessages(session.messages || []);
     setChatMode(session.mode || 'free');
+    
+    // Sur mobile, replier automatiquement le volet d'historique après sélection d'un chat
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsDiscussionCollapsed(true);
+    }
   };
 
   const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
