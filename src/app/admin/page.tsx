@@ -1116,7 +1116,7 @@ Votre superviseur`;
       {/* Cartes KPI Collectifs */}
       <section className={styles.kpiGrid}>
         <div className="glass-card styles.kpiCard" style={{ padding: '1.25rem' }}>
-          <span className={styles.kpiLabel}>Étudiants inscrits</span>
+          <span className={styles.kpiLabel}>Utilisateurs inscrits</span>
           <span className={styles.kpiValue} style={{ color: 'var(--accent-primary)' }}>{totalStudents}</span>
         </div>
         <div className="glass-card styles.kpiCard" style={{ padding: '1.25rem' }}>
@@ -1145,7 +1145,7 @@ Votre superviseur`;
                 router.push('/admin?tab=students');
               }}
             >
-              Élèves inscrits ({visibleStudents.length})
+              Utilisateurs inscrits ({visibleStudents.length})
             </button>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'requests' ? styles.activeTab : ''}`}
@@ -1175,7 +1175,7 @@ Votre superviseur`;
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Rechercher un étudiant par nom ou email..." 
+                    placeholder="Rechercher un utilisateur par nom ou email..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -1186,7 +1186,7 @@ Votre superviseur`;
                     value={presenceFilter}
                     onChange={(e) => setPresenceFilter(e.target.value as 'all' | 'online')}
                   >
-                    <option value="all">Tous les élèves</option>
+                    <option value="all">Tous les utilisateurs</option>
                     <option value="online">En ligne uniquement 🟢</option>
                   </select>
                 </div>
