@@ -103,6 +103,10 @@
   .mobileToggle {
     display: block;
   }
+
+  .logoContainer {
+    padding-left: 4.5rem;
+  }
 }
 
 .sidebarNav {
