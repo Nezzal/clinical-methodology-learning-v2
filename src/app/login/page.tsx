@@ -23,6 +23,7 @@ export default function Login() {
   const [requestCountry, setRequestCountry] = useState('');
   const [requestEmail, setRequestEmail] = useState('');
   const [requestPhone, setRequestPhone] = useState('');
+  const [requestOtherText, setRequestOtherText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -117,6 +118,14 @@ export default function Login() {
       return;
     }
 
+    const isOther = requestProfession === 'Autre';
+    if (isOther && !requestOtherText.trim()) {
+      setErrorMsg(requestedRole === 'teacher' ? 'Veuillez préciser votre discipline.' : 'Veuillez préciser votre profession.');
+      return;
+    }
+
+    const finalProfession = isOther ? requestOtherText.trim() : requestProfession.trim();
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/access-requests', {
@@ -126,7 +135,7 @@ export default function Login() {
           firstName: requestFirstName.trim(),
           lastName: requestLastName.trim(),
           institution: requestInstitution.trim(),
-          profession: requestProfession.trim(),
+          profession: finalProfession,
           city: requestCity.trim(),
           country: requestCountry.trim(),
           email: requestEmail.trim(),
@@ -149,6 +158,7 @@ export default function Login() {
       setRequestCountry('');
       setRequestEmail('');
       setRequestPhone('');
+      setRequestOtherText('');
       setTimeout(() => {
         setIsRequestAccess(false);
         setSuccessMsg('');
@@ -410,38 +420,77 @@ export default function Login() {
                       />
                     </div>
 
-                    <div className={styles.inputGroup}>
-                      <label htmlFor="requestProfession">Profession <span style={{color:'#e11d48'}}>*</span></label>
-                      <select
-                        id="requestProfession"
-                        value={requestProfession}
-                        onChange={(e) => setRequestProfession(e.target.value)}
-                        required
-                        disabled={submitting}
-                        style={{
-                          width: '100%',
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255,255,255,0.1)',
-                          borderRadius: '8px',
-                          padding: '0.7rem 0.85rem',
-                          color: requestProfession ? 'var(--text-primary)' : 'var(--text-muted)',
-                          fontSize: '0.9rem',
-                          outline: 'none'
-                        }}
-                      >
-                        <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre profession</option>
-                        <option value="Médecin" style={{ background: '#1a1a2e' }}>Médecin</option>
-                        <option value="Résident / Interne" style={{ background: '#1a1a2e' }}>Résident / Interne</option>
-                        <option value="Infirmier(e)" style={{ background: '#1a1a2e' }}>Infirmier(e)</option>
-                        <option value="Pharmacien(ne)" style={{ background: '#1a1a2e' }}>Pharmacien(ne)</option>
-                        <option value="Chercheur en santé" style={{ background: '#1a1a2e' }}>Chercheur en santé</option>
-                        <option value="Doctorant" style={{ background: '#1a1a2e' }}>Doctorant</option>
-                        <option value="Étudiant en santé" style={{ background: '#1a1a2e' }}>Étudiant en santé</option>
-                        <option value="Manager de santé" style={{ background: '#1a1a2e' }}>Manager de santé</option>
-                        <option value="Nutritionniste" style={{ background: '#1a1a2e' }}>Nutritionniste</option>
-                        <option value="Autre" style={{ background: '#1a1a2e' }}>Autre</option>
-                      </select>
-                    </div>
+                     <div className={styles.inputGroup}>
+                       <label htmlFor="requestProfession">
+                         {requestedRole === 'teacher' ? 'Discipline enseignée' : 'Profession'} <span style={{color:'#e11d48'}}>*</span>
+                       </label>
+                       <select
+                         id="requestProfession"
+                         value={requestProfession}
+                         onChange={(e) => {
+                           setRequestProfession(e.target.value);
+                           setRequestOtherText(''); // Réinitialiser à chaque changement
+                         }}
+                         required
+                         disabled={submitting}
+                         style={{
+                           width: '100%',
+                           background: 'rgba(255, 255, 255, 0.05)',
+                           border: '1px solid rgba(255,255,255,0.1)',
+                           borderRadius: '8px',
+                           padding: '0.7rem 0.85rem',
+                           color: requestProfession ? 'var(--text-primary)' : 'var(--text-muted)',
+                           fontSize: '0.9rem',
+                           outline: 'none'
+                         }}
+                       >
+                         {requestedRole === 'teacher' ? (
+                           <>
+                             <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre discipline</option>
+                             <option value="Médecine Clinique" style={{ background: '#1a1a2e' }}>Médecine Clinique</option>
+                             <option value="Épidémiologie / Santé Publique" style={{ background: '#1a1a2e' }}>Épidémiologie / Santé Publique</option>
+                             <option value="Biostatistique / Informatique Médicale" style={{ background: '#1a1a2e' }}>Biostatistique / Informatique Médicale</option>
+                             <option value="Pharmacologie / Toxicologie" style={{ background: '#1a1a2e' }}>Pharmacologie / Toxicologie</option>
+                             <option value="Chirurgie / Spécialités chirurgicales" style={{ background: '#1a1a2e' }}>Chirurgie / Spécialités chirurgicales</option>
+                             <option value="Biologie Médicale / Génétique" style={{ background: '#1a1a2e' }}>Biologie Médicale / Génétique</option>
+                             <option value="Sciences Infirmières / Paramédical" style={{ background: '#1a1a2e' }}>Sciences Infirmières / Paramédical</option>
+                             <option value="Éthique Médicale / Droit de la Santé" style={{ background: '#1a1a2e' }}>Éthique Médicale / Droit de la Santé</option>
+                             <option value="Autre" style={{ background: '#1a1a2e' }}>Autre (préciser...)</option>
+                           </>
+                         ) : (
+                           <>
+                             <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre profession</option>
+                             <option value="Médecin" style={{ background: '#1a1a2e' }}>Médecin</option>
+                             <option value="Résident / Interne" style={{ background: '#1a1a2e' }}>Résident / Interne</option>
+                             <option value="Infirmier(e)" style={{ background: '#1a1a2e' }}>Infirmier(e)</option>
+                             <option value="Pharmacien(ne)" style={{ background: '#1a1a2e' }}>Pharmacien(ne)</option>
+                             <option value="Chercheur en santé" style={{ background: '#1a1a2e' }}>Chercheur en santé</option>
+                             <option value="Doctorant" style={{ background: '#1a1a2e' }}>Doctorant</option>
+                             <option value="Étudiant en santé" style={{ background: '#1a1a2e' }}>Étudiant en santé</option>
+                             <option value="Manager de santé" style={{ background: '#1a1a2e' }}>Manager de santé</option>
+                             <option value="Nutritionniste" style={{ background: '#1a1a2e' }}>Nutritionniste</option>
+                             <option value="Autre" style={{ background: '#1a1a2e' }}>Autre (préciser...)</option>
+                           </>
+                         )}
+                       </select>
+                     </div>
+
+                     {requestProfession === 'Autre' && (
+                       <div className={styles.inputGroup} style={{ marginTop: '0.2rem', marginBottom: '1.25rem' }}>
+                         <label htmlFor="requestOtherText">
+                           {requestedRole === 'teacher' ? 'Précisez votre discipline' : 'Précisez votre profession'} <span style={{color:'#e11d48'}}>*</span>
+                         </label>
+                         <input
+                           type="text"
+                           id="requestOtherText"
+                           placeholder={requestedRole === 'teacher' ? "Ex: Cardiologie, Gynécologie, Oncologie..." : "Ex: Kinésithérapeute, Sage-femme..."}
+                           value={requestOtherText}
+                           onChange={(e) => setRequestOtherText(e.target.value)}
+                           required
+                           disabled={submitting}
+                         />
+                       </div>
+                     )}
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <div className={styles.inputGroup}>
@@ -616,6 +665,8 @@ export default function Login() {
                               setIsRequestAccess(true);
                               setIsForgotPassword(false);
                               setRequestedRole('student');
+                              setRequestProfession('');
+                              setRequestOtherText('');
                             }} 
                             disabled={submitting}
                             style={{ flex: 1, padding: '0.7rem 0.5rem', fontSize: '0.85rem' }}
@@ -629,6 +680,8 @@ export default function Login() {
                               setIsRequestAccess(true);
                               setIsForgotPassword(false);
                               setRequestedRole('teacher');
+                              setRequestProfession('');
+                              setRequestOtherText('');
                             }} 
                             disabled={submitting}
                             style={{ flex: 1, padding: '0.7rem 0.5rem', fontSize: '0.85rem', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
