@@ -293,11 +293,12 @@ export default function Login() {
                   src="/logo.png" 
                   alt="Logo" 
                   style={{ 
-                    width: '36px', 
-                    height: '36px', 
-                    borderRadius: '8px', 
+                    width: '54px', 
+                    height: '54px', 
+                    borderRadius: '12px', 
                     objectFit: 'cover',
-                    border: '1.5px solid rgba(56, 189, 248, 0.3)' 
+                    border: '2px solid rgba(56, 189, 248, 0.4)',
+                    boxShadow: '0 0 15px rgba(56, 189, 248, 0.15)'
                   }} 
                 />
                 <span className={styles.logoText}>Méthodo Clinique</span>
