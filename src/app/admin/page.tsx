@@ -319,7 +319,7 @@ export default function AdminDashboard() {
     const loginUrl = getCleanLoginUrl();
     const text = `Bonjour ${modalData.name},
 
-Votre demande d'inscription sur la plateforme Methodo Clinique Méthodologie a été validée par votre superviseur.
+Votre demande d'inscription sur la plateforme Methodo&Clinique a été validée par votre superviseur.
 
 Voici vos identifiants de connexion provisoires :
 - E-mail : ${modalData.email}
@@ -385,18 +385,18 @@ Votre superviseur`;
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             to: req.email,
-            subject: "Vos identifiants de connexion - Plateforme Methodo Clinique",
+            subject: "Vos identifiants de connexion - Plateforme Methodo&Clinique",
             html: `
               <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafbfc;">
                 <div style="text-align: center; margin-bottom: 24px;">
-                  <h1 style="color: #0d9488; margin: 0; font-size: 1.5rem;">Plateforme Methodo Clinique</h1>
+                  <h1 style="color: #0d9488; margin: 0; font-size: 1.5rem;">Plateforme Methodo&Clinique</h1>
                   <p style="color: #64748b; margin: 4px 0 0;">Méthodologie de Recherche Clinique</p>
                 </div>
                 <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
                   <p style="margin: 0; color: #166534; font-weight: 600;">Votre paiement a été confirmé et votre compte est activé</p>
                 </div>
                 <p>Bonjour <strong>${req.firstName} ${req.lastName}</strong>,</p>
-                <p>Votre abonnement à la plateforme Methodo Clinique a été activé. Voici vos identifiants de connexion :</p>
+                <p>Votre abonnement à la plateforme Methodo&Clinique a été activé. Voici vos identifiants de connexion :</p>
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; font-family: monospace;">
                   <p style="margin: 0 0 8px;"><strong>E-mail :</strong> ${req.email}</p>
                   <p style="margin: 0;"><strong>Mot de passe temporaire :</strong> <span style="color: #0d9488; font-weight: bold; font-size: 1.1rem;">${generatedTempPassword}</span></p>
@@ -992,7 +992,7 @@ Votre superviseur`;
             ${htmlContent}
           </div>
           <div class="footer">
-            Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique — Methodo Clinique
+            Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique — Methodo&Clinique
           </div>
           <script>
             window.onload = function() {
@@ -1086,7 +1086,7 @@ Votre superviseur`;
           <line x1="9" y1="9" x2="15" y2="15" />
         </svg>
         <h2>Accès Restreint</h2>
-        <p>Cet espace est exclusivement réservé aux enseignants et superviseurs de la plateforme Methodo Clinique.</p>
+        <p>Cet espace est exclusivement réservé aux enseignants et superviseurs de la plateforme Methodo&Clinique.</p>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           Pour y accéder, veuillez vous connecter avec un compte email se terminant par <strong>@recif.dz</strong>.
         </p>

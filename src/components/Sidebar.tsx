@@ -408,7 +408,7 @@ export default function Sidebar() {
               border: '2px solid rgba(56, 189, 248, 0.4)' 
             }} 
           />
-          <span className={styles.logoText}>Méthodo Clinique</span>
+          <span className={styles.logoText}>Methodo&Clinique</span>
         </div>
 
         <nav className={styles.sidebarNav}>

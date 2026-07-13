@@ -26,7 +26,7 @@ export default function GuidePage() {
       <header className={styles.header}>
         <h1 className={styles.title}>Guide d'Utilisation Hors-ligne & IA Locale (Ollama)</h1>
         <p className={styles.subtitle}>
-          Ce guide est destiné aux enseignants et aux étudiants souhaitant utiliser l'application de formation <strong>Methodo Clinique</strong> en local, de façon autonome et <strong>sans aucune connexion internet</strong>.
+          Ce guide est destiné aux enseignants et aux étudiants souhaitant utiliser l'application de formation <strong>Methodo&Clinique</strong> en local, de façon autonome et <strong>sans aucune connexion internet</strong>.
         </p>
       </header>
 
@@ -218,7 +218,7 @@ export default function GuidePage() {
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
-          🚀 4. Étape 3 : Lancer l'application Methodo Clinique
+          🚀 4. Étape 3 : Lancer l'application Methodo&Clinique
         </h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
           Une fois Ollama installé et le modèle téléchargé :
@@ -228,7 +228,7 @@ export default function GuidePage() {
           <li className={styles.stepItem}>
             <span className={styles.stepNumber}>1</span>
             <div className={styles.stepText}>
-              <p>Démarrez l'application <strong>Methodo Clinique</strong> (soit en ouvrant le dossier et en saisissant <code>npm run dev</code> dans le terminal, soit en lançant l'application de bureau Electron).</p>
+              <p>Démarrez l'application <strong>Methodo&Clinique</strong> (soit en ouvrant le dossier et en saisissant <code>npm run dev</code> dans le terminal, soit en lançant l'application de bureau Electron).</p>
             </div>
           </li>
           <li className={styles.stepItem}>

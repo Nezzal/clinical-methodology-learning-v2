@@ -301,7 +301,7 @@ export default function Login() {
                     boxShadow: '0 0 20px rgba(56, 189, 248, 0.2)'
                   }} 
                 />
-                <span className={styles.logoText}>Méthodo Clinique</span>
+                <span className={styles.logoText}>Methodo&Clinique</span>
               </div>
               <h1 className={styles.title}>
                 {isForgotPassword 

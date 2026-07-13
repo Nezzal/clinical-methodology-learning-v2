@@ -131,16 +131,16 @@ export async function POST(req: Request) {
         });
 
         await transporter.sendMail({
-          from: `"Plateforme Methodo Clinique" <${smtpUser}>`,
+          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: cleanEmail,
-          subject: "Votre demande d'accès - Plateforme Methodo Clinique",
+          subject: "Votre demande d'accès - Plateforme Methodo&Clinique",
           html: `
             <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 620px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc;">
               <div style="text-align: center; margin-bottom: 24px;">
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: linear-gradient(135deg, #2563EB, #1d4ed8); border-radius: 14px; margin-bottom: 12px;">
                   <span style="color: white; font-size: 24px;">⚕</span>
                 </div>
-                <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 600;">Plateforme Methodo Clinique</h1>
+                <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 600;">Plateforme Methodo&Clinique</h1>
                 <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Méthodologie de Recherche Clinique</p>
               </div>
 
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
               </div>
 
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
-              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement suite à votre demande d'inscription sur la Plateforme Methodo Clinique.</p>
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement suite à votre demande d'inscription sur la Plateforme Methodo&Clinique.</p>
             </div>
           `
         });
@@ -208,13 +208,13 @@ export async function POST(req: Request) {
         });
 
         await transporter.sendMail({
-          from: `"Plateforme Methodo Clinique" <${smtpUser}>`,
+          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: adminNotificationEmail,
           subject: `Nouvelle demande d'accès [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}] - ${firstName.trim()} ${lastName.trim()}`,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
               <h2 style="color: #1e40af; margin-top: 0;">Nouvelle demande d'inscription [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}]</h2>
-              <p>Un utilisateur a demandé l'accès à la Plateforme Methodo Clinique. Le courrier de confirmation lui a été envoyé automatiquement.</p>
+              <p>Un utilisateur a demandé l'accès à la Plateforme Methodo&Clinique. Le courrier de confirmation lui a été envoyé automatiquement.</p>
               <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; font-size: 0.9rem;">
                 <strong>Type d'accès demandé :</strong> ${cleanRole === 'teacher' ? '👨‍🏫 Enseignant / Superviseur' : '🎓 Étudiant'}<br/>
                 <strong>Prénom :</strong> ${firstName.trim()}<br/>
