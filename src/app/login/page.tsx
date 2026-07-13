@@ -12,6 +12,7 @@ export default function Login() {
 
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [requestedRole, setRequestedRole] = useState<'student' | 'teacher'>('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [requestFirstName, setRequestFirstName] = useState('');
@@ -129,7 +130,8 @@ export default function Login() {
           city: requestCity.trim(),
           country: requestCountry.trim(),
           email: requestEmail.trim(),
-          phone: requestPhone.trim()
+          phone: requestPhone.trim(),
+          requestedRole: requestedRole
         })
       });
       
@@ -365,6 +367,9 @@ export default function Login() {
                 ) : isRequestAccess ? (
                   // Formulaire de demande d'accès
                   <form className={styles.form} onSubmit={handleRequestAccessSubmit}>
+                    <div style={{ marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.2)', color: 'var(--accent-primary)', fontSize: '0.9rem', fontWeight: '600', textAlign: 'center' }}>
+                      Type d'accès demandé : {requestedRole === 'student' ? '🎓 Accès Étudiant' : '👨‍🏫 Accès Enseignant'}
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <div className={styles.inputGroup}>
                         <label htmlFor="requestFirstName">Prénom <span style={{color:'#e11d48'}}>*</span></label>
@@ -602,18 +607,35 @@ export default function Login() {
                       </p>
                     ) : (
                       <div className={styles.requestAccessCTA}>
-                        <p>Nouveau sur la plateforme ?</p>
-                        <button 
-                          type="button" 
-                          className={styles.requestAccessBtn}
-                          onClick={() => {
-                            setIsRequestAccess(true);
-                            setIsForgotPassword(false);
-                          }} 
-                          disabled={submitting}
-                        >
-                          Demander un accès utilisateur
-                        </button>
+                        <p>Nouveau sur la plateforme ? Demandez votre accès :</p>
+                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', width: '100%' }}>
+                          <button 
+                            type="button" 
+                            className={styles.requestAccessBtn}
+                            onClick={() => {
+                              setIsRequestAccess(true);
+                              setIsForgotPassword(false);
+                              setRequestedRole('student');
+                            }} 
+                            disabled={submitting}
+                            style={{ flex: 1, padding: '0.7rem 0.5rem', fontSize: '0.85rem' }}
+                          >
+                            🎓 Accès Étudiant
+                          </button>
+                          <button 
+                            type="button" 
+                            className={styles.requestAccessBtn}
+                            onClick={() => {
+                              setIsRequestAccess(true);
+                              setIsForgotPassword(false);
+                              setRequestedRole('teacher');
+                            }} 
+                            disabled={submitting}
+                            style={{ flex: 1, padding: '0.7rem 0.5rem', fontSize: '0.85rem', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
+                          >
+                            👨‍🏫 Accès Enseignant
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

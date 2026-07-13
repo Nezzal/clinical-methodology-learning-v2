@@ -387,6 +387,7 @@ export interface AccessRequest {
   country: string;
   email: string;
   phone: string;
+  requestedRole?: 'student' | 'teacher';
   status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
   createdAt: any;
   paymentReceivedAt: any;

@@ -18,7 +18,8 @@ export async function POST(req: Request) {
       city,
       country,
       email,
-      phone
+      phone,
+      requestedRole
     } = body;
 
     // Validations
@@ -92,6 +93,8 @@ export async function POST(req: Request) {
       }
     }
 
+    const cleanRole = requestedRole === 'teacher' ? 'teacher' : 'student';
+
     // 3. Insérer la demande dans Firestore
     const requestData = {
       firstName: firstName.trim(),
@@ -102,6 +105,7 @@ export async function POST(req: Request) {
       country: country.trim(),
       email: cleanEmail,
       phone: phone?.trim() || '',
+      requestedRole: cleanRole,
       status: 'pending',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       paymentReceivedAt: null,
@@ -172,10 +176,14 @@ export async function POST(req: Request) {
                   <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Téléphone</td>
                   <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${phone.trim()}</td>
                 </tr>` : ''}
+                <tr style="background: #f8fafc;">
+                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Type d'accès</td>
+                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b; font-weight: bold;">${cleanRole === 'teacher' ? '👨‍🏫 Enseignant / Superviseur' : '🎓 Étudiant'}</td>
+                </tr>
               </table>
 
               <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin: 20px 0;">
-                <p style="margin: 0; color: #1e40af; font-size: 0.88rem; line-height: 1.6;">Le contenu de la plateforme et son fonctionnement, ainsi que les modalités d'abonnement et de paiement vous seront précisés dans le second mail qui suit.</p>
+                <p style="margin: 0; color: #1e40af; font-size: 0.88rem; line-height: 1.6;">Le contenu de la plateforme et son fonctionnement, ainsi que les modalités d'abonnement et de paiement spécifiques au profil <strong>${cleanRole === 'teacher' ? 'Enseignant / Superviseur' : 'Étudiant'}</strong> vous seront précisés dans le second mail qui suit.</p>
               </div>
 
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
@@ -202,12 +210,13 @@ export async function POST(req: Request) {
         await transporter.sendMail({
           from: `"Plateforme Methodo Clinique" <${smtpUser}>`,
           to: adminNotificationEmail,
-          subject: `Nouvelle demande d'accès - ${firstName.trim()} ${lastName.trim()} (${profession.trim()})`,
+          subject: `Nouvelle demande d'accès [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}] - ${firstName.trim()} ${lastName.trim()}`,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #1e40af; margin-top: 0;">Nouvelle demande d'inscription</h2>
+              <h2 style="color: #1e40af; margin-top: 0;">Nouvelle demande d'inscription [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}]</h2>
               <p>Un utilisateur a demandé l'accès à la Plateforme Methodo Clinique. Le courrier de confirmation lui a été envoyé automatiquement.</p>
               <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; font-size: 0.9rem;">
+                <strong>Type d'accès demandé :</strong> ${cleanRole === 'teacher' ? '👨‍🏫 Enseignant / Superviseur' : '🎓 Étudiant'}<br/>
                 <strong>Prénom :</strong> ${firstName.trim()}<br/>
                 <strong>Nom :</strong> ${lastName.trim()}<br/>
                 <strong>Institution :</strong> ${institution.trim()}<br/>

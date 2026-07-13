@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, email } = await req.json();
+    const { name, email, role } = await req.json();
 
     if (!name || !name.trim() || !email || !email.trim()) {
       return NextResponse.json({ error: "Le nom et l'adresse e-mail sont requis." }, { status: 400 });
@@ -43,6 +43,7 @@ export async function POST(req: Request) {
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanName = name.trim();
+    const cleanRole = (role === 'teacher' || role === 'admin') ? role : 'student';
 
     // 2. Vérifier si l'utilisateur existe déjà dans Firebase Authentication
     try {
@@ -65,8 +66,8 @@ export async function POST(req: Request) {
       emailVerified: true
     });
 
-    // 5. Attribuer le Custom Claim "student"
-    await adminAuth.setCustomUserClaims(userRecord.uid, { role: 'student' });
+    // 5. Attribuer le Custom Claim
+    await adminAuth.setCustomUserClaims(userRecord.uid, { role: cleanRole });
 
     // 6. Créer le profil initial dans Firestore
     await adminDb.collection('users').doc(userRecord.uid).set({
@@ -75,7 +76,7 @@ export async function POST(req: Request) {
       displayName: cleanName,
       photoURL: null,
       level: 'Débutant',
-      role: 'student',
+      role: cleanRole,
       stats: {
         questionsAsked: 0,
         protocolsGenerated: 0,
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    console.log(`✅ Compte étudiant créé avec succès : ${cleanEmail} (UID: ${userRecord.uid})`);
+    console.log(`✅ Compte [${cleanRole}] créé avec succès : ${cleanEmail} (UID: ${userRecord.uid})`);
 
     // Retourner les informations nécessaires pour l'affichage ou l'envoi de mail
     return NextResponse.json({

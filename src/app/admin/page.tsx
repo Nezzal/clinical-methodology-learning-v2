@@ -362,7 +362,8 @@ Votre superviseur`;
         },
         body: JSON.stringify({ 
           name: `${req.firstName} ${req.lastName}`, 
-          email: req.email 
+          email: req.email,
+          role: req.requestedRole || 'student'
         })
       });
 
@@ -1315,6 +1316,21 @@ Votre superviseur`;
                             }}>
                               {req.profession}
                             </span>
+                            <div style={{ marginTop: '5px' }}>
+                              <span style={{ 
+                                display: 'inline-block', 
+                                background: req.requestedRole === 'teacher' ? 'rgba(99, 102, 241, 0.12)' : 'rgba(56, 189, 248, 0.12)', 
+                                border: req.requestedRole === 'teacher' ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid rgba(56, 189, 248, 0.25)',
+                                padding: '2px 8px', 
+                                borderRadius: '4px', 
+                                fontSize: '0.72rem',
+                                fontWeight: 'bold',
+                                color: req.requestedRole === 'teacher' ? '#818cf8' : '#38bdf8',
+                                textTransform: 'uppercase'
+                              }}>
+                                {req.requestedRole === 'teacher' ? 'Enseignant' : 'Étudiant'}
+                              </span>
+                            </div>
                           </td>
                           <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                             {req.city}, {req.country}
