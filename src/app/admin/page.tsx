@@ -1140,19 +1140,28 @@ Votre superviseur`;
           <div className={styles.tabs} style={{ marginBottom: '1.25rem' }}>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'students' ? styles.activeTab : ''}`}
-              onClick={() => setLeftTab('students')}
+              onClick={() => {
+                setLeftTab('students');
+                router.push('/admin?tab=students');
+              }}
             >
               Élèves inscrits ({visibleStudents.length})
             </button>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'requests' ? styles.activeTab : ''}`}
-              onClick={() => setLeftTab('requests')}
+              onClick={() => {
+                setLeftTab('requests');
+                router.push('/admin?tab=requests');
+              }}
             >
               Demandes ({accessRequests.length})
             </button>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'messages' ? styles.activeTab : ''}`}
-              onClick={() => setLeftTab('messages')}
+              onClick={() => {
+                setLeftTab('messages');
+                router.push('/admin?tab=messages');
+              }}
               style={{ position: 'relative' }}
             >
               Messagerie {unreadMessagesCount > 0 && <span className={styles.tabRedDot} />}
