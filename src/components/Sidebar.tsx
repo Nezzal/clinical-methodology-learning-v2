@@ -401,11 +401,11 @@ export default function Sidebar() {
             alt="Logo" 
             className={styles.logoIcon} 
             style={{ 
-              width: '38px', 
-              height: '38px', 
-              borderRadius: '8px', 
+              width: '46px', 
+              height: '46px', 
+              borderRadius: '10px', 
               objectFit: 'cover',
-              border: '1.5px solid rgba(56, 189, 248, 0.4)' 
+              border: '2px solid rgba(56, 189, 248, 0.4)' 
             }} 
           />
           <span className={styles.logoText}>Méthodo Clinique</span>
