@@ -289,13 +289,17 @@ export default function Login() {
           <div className={styles.card}>
             <div className={styles.header}>
               <div className={styles.logo}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4.5 16.5c-1.5 1.26-2.5 3.19-2.5 5.5h20c0-2.31-1-4.24-2.5-5.5" />
-                  <path d="M12 2C6.5 2 2 6.5 2 12c0 2.3.8 4.4 2.1 6.1" />
-                  <path d="M22 12c0-5.5-4.5-10-10-10a9.9 9.9 0 0 0-2.1.2" />
-                  <path d="M12 18v-4" />
-                  <path d="m9 13 3-3 3 3" />
-                </svg>
+                <img 
+                  src="/logo.png" 
+                  alt="Logo" 
+                  style={{ 
+                    width: '36px', 
+                    height: '36px', 
+                    borderRadius: '8px', 
+                    objectFit: 'cover',
+                    border: '1.5px solid rgba(56, 189, 248, 0.3)' 
+                  }} 
+                />
                 <span className={styles.logoText}>Méthodo Clinique</span>
               </div>
               <h1 className={styles.title}>
