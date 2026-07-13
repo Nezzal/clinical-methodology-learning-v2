@@ -612,7 +612,7 @@ export default function Login() {
                           }} 
                           disabled={submitting}
                         >
-                          Demander un accès étudiant
+                          Demander un accès utilisateur
                         </button>
                       </div>
                     )}
