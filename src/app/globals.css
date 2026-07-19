@@ -217,13 +217,21 @@ a {
 
 /* Printing styles for reports */
 @media print {
-  body {
+  * {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  html, body, main {
     background: white !important;
     color: black !important;
   }
-  .no-print {
+  
+  .no-print, .faq-fab, .faq-drawer, [class*="faq-fab"], [class*="faq-drawer"], button, aside {
     display: none !important;
   }
+  
   .glass-card {
     border: 1px solid #ccc !important;
     box-shadow: none !important;

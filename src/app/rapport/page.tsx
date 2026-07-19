@@ -60,24 +60,46 @@ function formatReportMarkdown(text: string): string {
   // Convert markdown tables to HTML tables
   let lines = formatted.split('\n');
   let inTable = false;
+  let inList = false;
   let tableRows: string[] = [];
   let processedLines: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     const isTableRow = line.startsWith('|') && line.endsWith('|');
+    const isListItem = line.startsWith('- ') || line.startsWith('* ');
     
+    // Handle tables
     if (isTableRow) {
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
+      }
       if (!inTable) {
         inTable = true;
         tableRows = [];
       }
       tableRows.push(lines[i]);
+      continue;
+    } else if (inTable) {
+      const htmlTable = renderReportHtmlTable(tableRows);
+      processedLines.push(htmlTable);
+      inTable = false;
+    }
+    
+    // Handle lists
+    if (isListItem) {
+      if (!inList) {
+        inList = true;
+        processedLines.push('<ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">');
+      }
+      // Remove the bullet marker "- " or "* "
+      const itemContent = line.substring(2).trim();
+      processedLines.push(`<li style="margin-bottom: 0.35rem; list-style-type: disc;">${itemContent}</li>`);
     } else {
-      if (inTable) {
-        const htmlTable = renderReportHtmlTable(tableRows);
-        processedLines.push(htmlTable);
-        inTable = false;
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
       }
       processedLines.push(lines[i]);
     }
@@ -86,6 +108,9 @@ function formatReportMarkdown(text: string): string {
   if (inTable) {
     const htmlTable = renderReportHtmlTable(tableRows);
     processedLines.push(htmlTable);
+  }
+  if (inList) {
+    processedLines.push('</ul>');
   }
 
   formatted = processedLines.join('\n');
@@ -107,14 +132,11 @@ function formatReportMarkdown(text: string): string {
   // Horizontal rules
   formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
 
-  // List items
-  formatted = formatted.replace(/^\s*[-*]\s+(.*?)$/gm, '<li style="margin-left: 1.25rem; list-style-type: disc; margin-bottom: 0.35rem;">$1</li>');
-
   // Double newlines to paragraphs
   formatted = formatted.split('\n').join('<br />');
 
   // Cleanup redundant br tags
-  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/h4>|<\/h5>|<\/h6>|<\/li>|<hr \/>)<br \/>/g, '$1');
+  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/h4>|<\/h5>|<\/h6>|<\/li>|<\/ul>|<hr \/>)<br \/>/g, '$1');
 
   return formatted;
 }
@@ -185,7 +207,7 @@ const RadarChart = ({ scores }: { scores: { name: string; value: number }[] }) =
   const size = 300;
   const cx = size / 2;
   const cy = size / 2 - 10;
-  const r = 80;
+  const r = 62;
   const numAxes = 5;
 
   const getCoordinates = (index: number, radius: number) => {
@@ -275,7 +297,7 @@ const RadarChart = ({ scores }: { scores: { name: string; value: number }[] }) =
 
         {/* Labels */}
         {scores.map((s, idx) => {
-          const { x, y } = getCoordinates(idx, r + 15);
+          const { x, y } = getCoordinates(idx, r + 14);
           
           let textAnchor: "inherit" | "end" | "start" | "middle" | undefined = 'middle';
           let dy = '0.35em';
