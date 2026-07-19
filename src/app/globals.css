@@ -223,9 +223,26 @@ a {
     text-shadow: none !important;
   }
   
-  html, body, main {
+  html, body {
     background: white !important;
     color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  main {
+    background: white !important;
+    color: black !important;
+    margin-left: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    position: static !important;
+    transform: none !important;
   }
   
   .no-print, .faq-fab, .faq-drawer, [class*="faq-fab"], [class*="faq-drawer"], button, aside {

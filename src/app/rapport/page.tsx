@@ -50,9 +50,14 @@ function renderReportHtmlTable(rows: string[]): string {
   return html;
 }
 
+function stripEmojis(text: string): string {
+  // Regex mapping all standard emojis, pictographs, symbols and warning signs
+  return text.replace(/[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{1F000}-\u{1F1FF}\u{26A0}-\u{26A1}\u{FE0F}]/gu, '');
+}
+
 // Markdown parser helper for report rendering
 function formatReportMarkdown(text: string): string {
-  let formatted = text
+  let formatted = stripEmojis(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
