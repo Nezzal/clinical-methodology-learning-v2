@@ -21,21 +21,48 @@
   font-size: 0.95rem;
 }
 
-.overviewGrid {
+/* Dashboard Layout */
+.dashboardSection {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
 }
 
+.statsColumn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.radarCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  min-height: 310px;
+}
+
+.radarTitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
 @media (max-width: 900px) {
-  .overviewGrid {
+  .dashboardSection {
+    grid-template-columns: 1fr;
+  }
+  .statsColumn {
     grid-template-columns: 1fr 1fr;
   }
 }
 
 @media (max-width: 500px) {
-  .overviewGrid {
+  .statsColumn {
     grid-template-columns: 1fr;
   }
 }
@@ -48,14 +75,69 @@
 .metricValue {
   font-size: 1.75rem;
   font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.metricActiveValue {
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--accent-primary);
   margin-bottom: 0.25rem;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
 }
 
 .metricLabel {
   font-size: 0.8rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+/* SVG Radar Chart Styling */
+.radarGrid {
+  stroke: rgba(255, 255, 255, 0.07);
+}
+
+.radarAxis {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.radarPolygon {
+  stroke: var(--accent-primary);
+}
+
+.radarPoint {
+  fill: var(--accent-primary);
+  stroke: #111122;
+}
+
+.radarText {
+  fill: var(--text-secondary);
+}
+
+/* Printable Report Radar Container */
+.printRadarContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.printRadarBox {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+  max-width: 360px;
+  width: 100%;
+}
+
+.printRadarTitle {
+  margin: 0 0 1rem 0;
+  color: var(--accent-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
 }
 
 .generateBox {
@@ -157,7 +239,39 @@
     color: black !important;
     border-bottom-color: #ccc !important;
   }
-  .reportActions, .header, .overviewGrid, .generateBox {
+  .reportActions, .header, .dashboardSection, .generateBox {
     display: none !important;
+  }
+  
+  /* Print Radar Overrides */
+  .printRadarContainer {
+    display: flex !important;
+    margin-bottom: 1.5rem !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .printRadarBox {
+    background: transparent !important;
+    border: 1px solid #ccc !important;
+    color: black !important;
+  }
+  .printRadarTitle {
+    color: #005a70 !important;
+  }
+  .radarGrid {
+    stroke: #e5e7eb !important;
+  }
+  .radarAxis {
+    stroke: #d1d5db !important;
+  }
+  .radarPolygon {
+    stroke: #0284c7 !important;
+  }
+  .radarPoint {
+    fill: #0284c7 !important;
+    stroke: white !important;
+  }
+  .radarText {
+    fill: #111827 !important;
   }
 }

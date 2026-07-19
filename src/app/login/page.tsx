@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 
 export default function Login() {
-  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset, guestMode, enableGuestMode } = useAuth();
+  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
   const router = useRouter();
 
   const [isRequestAccess, setIsRequestAccess] = useState(false);
@@ -58,12 +58,17 @@ export default function Login() {
     }
   };
 
-  // Redirection automatique si déjà connecté ou en mode invité
+  // Redirection automatique si déjà connecté
   useEffect(() => {
-    if (user || guestMode) {
+    if (typeof window !== 'undefined' && localStorage.getItem('guest_mode_active')) {
+      localStorage.removeItem('guest_mode_active');
+      window.location.reload();
+      return;
+    }
+    if (user) {
       router.push('/');
     }
-  }, [user, guestMode, router]);
+  }, [user, router]);
 
   if (loading) {
     return (
@@ -189,13 +194,7 @@ export default function Login() {
     }
   };
 
-  const handleGuestMode = () => {
-    enableGuestMode();
-    setSuccessMsg('Accès hors-ligne activé (Mode Invité). Redirection...');
-    setTimeout(() => {
-      router.push('/');
-    }, 500);
-  };
+
 
   return (
     <div className={styles.container}>
@@ -631,14 +630,7 @@ export default function Login() {
                       Se connecter avec Google
                     </button>
 
-                    <button 
-                      type="button" 
-                      className={styles.offlineBtn} 
-                      onClick={handleGuestMode}
-                      disabled={submitting}
-                    >
-                      📡 Accéder hors-ligne (Mode Invité)
-                    </button>
+
                   </>
                 )}
 

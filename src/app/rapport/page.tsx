@@ -119,6 +119,214 @@ function formatReportMarkdown(text: string): string {
   return formatted;
 }
 
+// Helper to classify quiz topics into 5 core competencies
+const mapTopicToCompetency = (topic: string): string => {
+  const t = topic.toLowerCase();
+  if (t.includes('loi') || t.includes('comité') || t.includes('art. 382') || t.includes('ethique') || t.includes('éthique') || t.includes('valorisation')) {
+    return 'Éthique & Réglementation';
+  }
+  if (t.includes('transvers') || t.includes('témoin') || t.includes('cohorte') || t.includes('essai') || t.includes('méta-analyse') || t.includes('diagnostique') || t.includes('schéma')) {
+    return 'Schémas d\'Étude';
+  }
+  if (t.includes('sujets') || t.includes('nsn') || t.includes('statistique') || t.includes('économique') || t.includes('décision') || t.includes('calcul')) {
+    return 'Calculs & Statistiques';
+  }
+  if (t.includes('biais') || t.includes('confond') || t.includes('mesure') || t.includes('questionnaire') || t.includes('qualité de vie')) {
+    return 'Gestion des Biais';
+  }
+  return 'Hypothèse & Question';
+};
+
+// Calculate competency scores using stats history and activity fallbacks
+const getCompetencyScores = (stats: LocalStats) => {
+  const competencies = [
+    { name: 'Éthique & Réglementation', score: 0, count: 0 },
+    { name: 'Schémas d\'Étude', score: 0, count: 0 },
+    { name: 'Hypothèse & Question', score: 0, count: 0 },
+    { name: 'Calculs & Statistiques', score: 0, count: 0 },
+    { name: 'Gestion des Biais', score: 0, count: 0 }
+  ];
+
+  const history = stats.quizHistory || [];
+  history.forEach(attempt => {
+    const compName = mapTopicToCompetency(attempt.topic);
+    const comp = competencies.find(c => c.name === compName);
+    if (comp) {
+      comp.score += attempt.scorePct;
+      comp.count += 1;
+    }
+  });
+
+  return competencies.map(comp => {
+    let finalScore = 0;
+    if (comp.count > 0) {
+      finalScore = comp.score / comp.count;
+    } else {
+      // Activity fallbacks
+      if (comp.name === 'Schémas d\'Étude' && stats.protocolsGenerated > 0) {
+        finalScore = Math.min(75, 30 + stats.protocolsGenerated * 15);
+      } else if (comp.name === 'Calculs & Statistiques' && stats.protocolsGenerated > 0) {
+        finalScore = Math.min(60, 20 + stats.protocolsGenerated * 10);
+      } else if (comp.name === 'Hypothèse & Question' && stats.questionsAsked > 0) {
+        finalScore = Math.min(50, 15 + stats.questionsAsked * 5);
+      } else if (stats.questionsAsked > 5) {
+        finalScore = 15;
+      }
+    }
+    return {
+      name: comp.name,
+      value: Math.round(finalScore)
+    };
+  });
+};
+
+// Pure SVG RadarChart Component
+const RadarChart = ({ scores }: { scores: { name: string; value: number }[] }) => {
+  const size = 300;
+  const cx = size / 2;
+  const cy = size / 2 - 10;
+  const r = 80;
+  const numAxes = 5;
+
+  const getCoordinates = (index: number, radius: number) => {
+    const angle = -Math.PI / 2 + (index * 2 * Math.PI) / numAxes;
+    return {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle)
+    };
+  };
+
+  const gridRings = [0.2, 0.4, 0.6, 0.8, 1.0];
+  const gridPolygons = gridRings.map(pct => {
+    const points = Array.from({ length: numAxes }, (_, i) => {
+      const { x, y } = getCoordinates(i, r * pct);
+      return `${x},${y}`;
+    }).join(' ');
+    return points;
+  });
+
+  const axisLines = Array.from({ length: numAxes }, (_, i) => {
+    return getCoordinates(i, r);
+  });
+
+  const dataPoints = scores.map((s, i) => {
+    const valuePct = s.value / 100;
+    const radius = r * Math.max(0.05, valuePct);
+    return getCoordinates(i, radius);
+  });
+  
+  const dataPointsStr = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+      <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible', maxWidth: '320px' }}>
+        <defs>
+          <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="var(--accent-secondary)" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
+
+        {/* Rings */}
+        {gridPolygons.map((pts, idx) => (
+          <polygon
+            key={idx}
+            points={pts}
+            fill="none"
+            className={styles.radarGrid}
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* Axes */}
+        {axisLines.map((p, idx) => (
+          <line
+            key={idx}
+            x1={cx}
+            y1={cy}
+            x2={p.x}
+            y2={p.y}
+            className={styles.radarAxis}
+            strokeWidth="1"
+            strokeDasharray="2,2"
+          />
+        ))}
+
+        {/* Data polygon */}
+        <polygon
+          points={dataPointsStr}
+          fill="url(#radarGradient)"
+          className={styles.radarPolygon}
+          strokeWidth="2.5"
+          strokeLinejoin="round"
+        />
+
+        {/* Data points */}
+        {dataPoints.map((p, idx) => (
+          <circle
+            key={idx}
+            cx={p.x}
+            cy={p.y}
+            r="4"
+            className={styles.radarPoint}
+            strokeWidth="1.5"
+          />
+        ))}
+
+        {/* Labels */}
+        {scores.map((s, idx) => {
+          const { x, y } = getCoordinates(idx, r + 15);
+          
+          let textAnchor: "inherit" | "end" | "start" | "middle" | undefined = 'middle';
+          let dy = '0.35em';
+          let dx = '0';
+          
+          if (idx === 0) {
+            textAnchor = 'middle';
+            dy = '-8px';
+          } else if (idx === 1) {
+            textAnchor = 'start';
+            dx = '5px';
+            dy = '0px';
+          } else if (idx === 2) {
+            textAnchor = 'start';
+            dx = '5px';
+            dy = '10px';
+          } else if (idx === 3) {
+            textAnchor = 'end';
+            dx = '-5px';
+            dy = '10px';
+          } else if (idx === 4) {
+            textAnchor = 'end';
+            dx = '-5px';
+            dy = '0px';
+          }
+
+          return (
+            <text
+              key={idx}
+              x={x}
+              y={y}
+              dx={dx}
+              dy={dy}
+              textAnchor={textAnchor}
+              className={styles.radarText}
+              style={{
+                fontSize: '8.5px',
+                fontWeight: '600',
+                fontFamily: "'Inter', sans-serif",
+                letterSpacing: '0.02em'
+              }}
+            >
+              {s.name} ({s.value}%)
+            </text>
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
 export default function RapportPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<LocalStats | null>(null);
@@ -297,6 +505,7 @@ Instructions pour le rapport :
 
   const quizPct = stats.quizTotal > 0 ? Math.round((stats.quizCorrect / stats.quizTotal) * 100) : 0;
   const fcPct = Math.round((stats.flashcardsMastered.length / 12) * 100);
+  const compScores = getCompetencyScores(stats);
 
   return (
     <div className={styles.container}>
@@ -307,23 +516,29 @@ Instructions pour le rapport :
         </p>
       </header>
 
-      {/* Grid de récapitulatif des indicateurs bruts */}
-      <section className={`${styles.overviewGrid} no-print`}>
-        <div className={`${styles.metricCard} glass-card`}>
-          <div className={styles.metricValue}>{stats.questionsAsked}</div>
-          <div className={styles.metricLabel}>Questions Tuteur</div>
+      {/* Dashboard : Statistiques + Graphique Radar */}
+      <section className={`${styles.dashboardSection} no-print`}>
+        <div className={styles.statsColumn}>
+          <div className={`${styles.metricCard} glass-card`}>
+            <div className={stats.questionsAsked > 0 ? styles.metricActiveValue : styles.metricValue}>{stats.questionsAsked}</div>
+            <div className={styles.metricLabel}>Questions Tuteur</div>
+          </div>
+          <div className={`${styles.metricCard} glass-card`}>
+            <div className={stats.protocolsGenerated > 0 ? styles.metricActiveValue : styles.metricValue}>{stats.protocolsGenerated}</div>
+            <div className={styles.metricLabel}>Protocoles Créés</div>
+          </div>
+          <div className={`${styles.metricCard} glass-card`}>
+            <div className={stats.quizTotal > 0 ? styles.metricActiveValue : styles.metricValue}>{quizPct}%</div>
+            <div className={styles.metricLabel}>Réussite Quiz ({stats.quizCorrect}/{stats.quizTotal})</div>
+          </div>
+          <div className={`${styles.metricCard} glass-card`}>
+            <div className={stats.flashcardsMastered.length > 0 ? styles.metricActiveValue : styles.metricValue}>{fcPct}%</div>
+            <div className={styles.metricLabel}>Flashcards ({stats.flashcardsMastered.length}/12)</div>
+          </div>
         </div>
-        <div className={`${styles.metricCard} glass-card`}>
-          <div className={styles.metricValue}>{stats.protocolsGenerated}</div>
-          <div className={styles.metricLabel}>Protocoles Créés</div>
-        </div>
-        <div className={`${styles.metricCard} glass-card`}>
-          <div className={styles.metricValue}>{quizPct}%</div>
-          <div className={styles.metricLabel}>Réussite Quiz ({stats.quizCorrect}/{stats.quizTotal})</div>
-        </div>
-        <div className={`${styles.metricCard} glass-card`}>
-          <div className={styles.metricValue}>{fcPct}%</div>
-          <div className={styles.metricLabel}>Flashcards ({stats.flashcardsMastered.length}/12)</div>
+        <div className={`${styles.radarCard} glass-card`}>
+          <h3 className={styles.radarTitle}>Profil de Compétences Méthodologiques</h3>
+          <RadarChart scores={compScores} />
         </div>
       </section>
 
@@ -384,6 +599,17 @@ Instructions pour le rapport :
                 </div>
               </div>
             </div>
+
+            {/* Graphique radar dans le rapport imprimable */}
+            <div className={styles.printRadarContainer}>
+              <div className={styles.printRadarBox}>
+                <h4 className={styles.printRadarTitle}>
+                  Cartographie des Compétences de Recherche Clinique
+                </h4>
+                <RadarChart scores={compScores} />
+              </div>
+            </div>
+
             <div dangerouslySetInnerHTML={{ __html: formatReportMarkdown(report) }} />
           </div>
           
