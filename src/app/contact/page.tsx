@@ -6,6 +6,7 @@ import {
   sendSupportMessage, 
   loadSupportMessages, 
   markMessageReadState, 
+  replyToSupportMessage,
   FirestoreSupportMessage 
 } from '@/utils/firestore';
 import styles from './page.module.css';
@@ -24,10 +25,15 @@ export default function ContactPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
+  // Reply fields
+  const [studentReplyText, setStudentReplyText] = useState('');
+  const [isReplying, setIsReplying] = useState(false);
+  
   const fetchMessages = async () => {
     if (user && !guestMode) {
       try {
-        const msgs = await loadSupportMessages({ senderUid: user.uid });
+        // Appeler sans filtre de senderUid pour pouvoir charger aussi les messages initiés par l'admin pour l'étudiant
+        const msgs = await loadSupportMessages({});
         setMessages(msgs);
         
         // Si un message actif est sélectionné, rafraîchir son contenu local
@@ -52,6 +58,9 @@ export default function ContactPage() {
   const handleSelectMessage = async (msg: FirestoreSupportMessage) => {
     setActiveMessage(msg);
     setIsCreating(false);
+    setError('');
+    setSuccess('');
+    setStudentReplyText('');
     
     // Marquer comme lu pour l'étudiant
     if (!msg.studentRead) {
@@ -64,6 +73,26 @@ export default function ContactPage() {
       } catch (e) {
         console.error("Erreur marquage lu:", e);
       }
+    }
+  };
+
+  const handleSendReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeMessage || !studentReplyText.trim()) return;
+
+    setIsReplying(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await replyToSupportMessage(activeMessage.id, studentReplyText, 'student');
+      setStudentReplyText('');
+      setSuccess('Votre réponse a été envoyée avec succès !');
+      await fetchMessages();
+    } catch (e: any) {
+      setError("Erreur lors de l'envoi de la réponse : " + (e.message || e));
+    } finally {
+      setIsReplying(false);
     }
   };
 
@@ -252,26 +281,77 @@ export default function ContactPage() {
                   </div>
 
                   <div className={styles.bubbleArea}>
-                    {/* Message Étudiant */}
-                    <div className={`${styles.bubble} ${styles.studentBubble}`}>
-                      <div className={styles.bubbleMeta}>Vous</div>
-                      <p className={styles.bubbleContent}>{activeMessage.content}</p>
-                    </div>
-
-                    {/* Réponse Enseignant ou Admin */}
-                    {activeMessage.reply ? (
-                      <div className={`${styles.bubble} ${styles.teacherBubble}`}>
-                        <div className={styles.bubbleMeta}>
-                          {activeMessage.recipientRole === 'admin' ? 'Administration RECIF' : 'Enseignant RECIF'} • {
-                            activeMessage.repliedAt ? new Date(activeMessage.repliedAt).toLocaleString('fr-FR') : 'Date inconnue'
-                          }
+                    {activeMessage.senderUid === user?.uid ? (
+                      // Message initié par l'étudiant
+                      <>
+                        <div className={`${styles.bubble} ${styles.studentBubble}`}>
+                          <div className={styles.bubbleMeta}>Vous</div>
+                          <p className={styles.bubbleContent}>{activeMessage.content}</p>
                         </div>
-                        <p className={styles.bubbleContent}>{activeMessage.reply}</p>
-                      </div>
+
+                        {/* Réponse de l'enseignant ou admin */}
+                        {activeMessage.reply ? (
+                          <div className={`${styles.bubble} ${styles.teacherBubble}`}>
+                            <div className={styles.bubbleMeta}>
+                              {activeMessage.recipientRole === 'admin' ? 'Administration RECIF' : 'Enseignant RECIF'} • {
+                                activeMessage.repliedAt ? new Date(activeMessage.repliedAt).toLocaleString('fr-FR') : 'Date inconnue'
+                              }
+                            </div>
+                            <p className={styles.bubbleContent}>{activeMessage.reply}</p>
+                          </div>
+                        ) : (
+                          <div className={styles.waitingBanner}>
+                            ⏳ En attente de réponse de {activeMessage.recipientRole === 'admin' ? "l'administration" : "votre enseignant référent"}...
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <div className={styles.waitingBanner}>
-                        ⏳ En attente de réponse de {activeMessage.recipientRole === 'admin' ? "l'administration" : "votre enseignant référent"}...
-                      </div>
+                      // Message initié par l'administration pour l'étudiant
+                      <>
+                        <div className={`${styles.bubble} ${styles.teacherBubble}`}>
+                          <div className={styles.bubbleMeta}>
+                            {activeMessage.senderName} ({activeMessage.senderEmail})
+                          </div>
+                          <p className={styles.bubbleContent}>{activeMessage.content}</p>
+                        </div>
+
+                        {/* Réponse de l'étudiant */}
+                        {activeMessage.reply ? (
+                          <div className={`${styles.bubble} ${styles.studentBubble}`}>
+                            <div className={styles.bubbleMeta}>
+                              Vous • {activeMessage.repliedAt ? new Date(activeMessage.repliedAt).toLocaleString('fr-FR') : 'Date inconnue'}
+                            </div>
+                            <p className={styles.bubbleContent}>{activeMessage.reply}</p>
+                          </div>
+                        ) : (
+                          <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1rem', width: '100%' }}>
+                            <form onSubmit={handleSendReply} style={{ width: '100%' }}>
+                              {error && <div className={styles.errorBanner} style={{ marginBottom: '0.75rem' }}>{error}</div>}
+                              {success && <div className={styles.successBanner} style={{ marginBottom: '0.75rem' }}>{success}</div>}
+                              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                                <label className="form-label">Votre réponse :</label>
+                                <textarea
+                                  className="form-input"
+                                  style={{ minHeight: '100px', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem' }}
+                                  placeholder="Écrivez votre réponse ici..."
+                                  value={studentReplyText}
+                                  onChange={(e) => setStudentReplyText(e.target.value)}
+                                  required
+                                  disabled={isReplying}
+                                />
+                              </div>
+                              <button
+                                type="submit"
+                                className="btn btn-primary"
+                                style={{ width: '100%', padding: '0.6rem' }}
+                                disabled={isReplying || !studentReplyText.trim()}
+                              >
+                                {isReplying ? 'Envoi en cours...' : 'Envoyer la réponse'}
+                              </button>
+                            </form>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

@@ -672,7 +672,7 @@ Votre superviseur`;
       }
     } else if (role === 'admin') {
       if (!targetTeacherUid) {
-        setMessagingError('Veuillez sélectionner un enseignant.');
+        setMessagingError('Veuillez sélectionner un destinataire.');
         return;
       }
       if (!newMsgSubject.trim() || !newMsgContent.trim()) {
@@ -680,9 +680,18 @@ Votre superviseur`;
         return;
       }
       
-      const selectedTeacher = teachers.find(t => t.uid === targetTeacherUid);
-      if (!selectedTeacher) {
-        setMessagingError('Enseignant introuvable.');
+      // Rechercher d'abord s'il s'agit d'un enseignant
+      let selectedRecipient = teachers.find(t => t.uid === targetTeacherUid);
+      let recipientRole: 'teacher' | 'student' = 'teacher';
+      
+      // Sinon rechercher parmi les étudiants
+      if (!selectedRecipient) {
+        selectedRecipient = students.find(s => s.uid === targetTeacherUid);
+        recipientRole = 'student';
+      }
+      
+      if (!selectedRecipient) {
+        setMessagingError('Destinataire introuvable.');
         return;
       }
       
@@ -691,9 +700,9 @@ Votre superviseur`;
           user.uid,
           user.displayName || 'Administrateur',
           user.email || '',
-          'teacher',
-          'teacher',
-          selectedTeacher.uid,
+          'admin',
+          recipientRole,
+          selectedRecipient.uid,
           newMsgSubject,
           newMsgContent
         );
@@ -701,7 +710,7 @@ Votre superviseur`;
         setNewMsgContent('');
         setTargetTeacherUid('');
         setIsSendingNewMsg(false);
-        setMessagingSuccess(`Message envoyé avec succès à ${selectedTeacher.displayName || selectedTeacher.email} !`);
+        setMessagingSuccess(`Message envoyé avec succès à ${selectedRecipient.displayName || selectedRecipient.email} !`);
         await fetchSupportMessages();
       } catch (e: any) {
         setMessagingError("Erreur d'envoi : " + (e.message || e));
@@ -1524,26 +1533,37 @@ Votre superviseur`;
                 <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
                   <h4 style={{ fontSize: '0.95rem', marginBottom: '8px' }}>{activeSupportMessage.subject}</h4>
                   <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                    <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{activeSupportMessage.senderName} ({activeSupportMessage.senderEmail})</p>
+                    <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                      {activeSupportMessage.senderUid === user?.uid ? "Vous" : activeSupportMessage.senderName} ({activeSupportMessage.senderEmail})
+                    </p>
                     <p>{activeSupportMessage.content}</p>
                   </div>
                   {activeSupportMessage.reply && (
                     <div style={{ background: 'rgba(13,148,136,0.05)', border: '1px solid rgba(13,148,136,0.2)', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '0.85rem' }}>
-                      <p style={{ fontWeight: 600, color: 'var(--accent-primary)', marginBottom: '4px' }}>Votre réponse :</p>
+                      <p style={{ fontWeight: 600, color: 'var(--accent-primary)', marginBottom: '4px' }}>
+                        {activeSupportMessage.senderUid === user?.uid ? "Réponse reçue :" : "Votre réponse :"}
+                      </p>
                       <p style={{ color: 'var(--text-secondary)' }}>{activeSupportMessage.reply}</p>
                     </div>
                   )}
-                  <form onSubmit={handleSendReply}>
-                    <textarea
-                      placeholder="Écrire une réponse..."
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '60px', resize: 'vertical', outline: 'none', marginBottom: '8px' }}
-                    />
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem' }} disabled={!replyContent.trim()}>
-                      Envoyer la réponse
-                    </button>
-                  </form>
+                  {activeSupportMessage.senderUid !== user?.uid && !activeSupportMessage.reply && (
+                    <form onSubmit={handleSendReply}>
+                      <textarea
+                        placeholder="Écrire une réponse..."
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '60px', resize: 'vertical', outline: 'none', marginBottom: '8px' }}
+                      />
+                      <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem' }} disabled={!replyContent.trim()}>
+                        Envoyer la réponse
+                      </button>
+                    </form>
+                  )}
+                  {activeSupportMessage.senderUid === user?.uid && !activeSupportMessage.reply && (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic', textAlign: 'center', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px' }}>
+                      ⏳ En attente de réponse du destinataire...
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1557,10 +1577,17 @@ Votre superviseur`;
                       required
                       style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '8px' }}
                     >
-                      <option value="" disabled style={{ background: '#1a1a2e' }}>Sélectionner un enseignant</option>
-                      {teachers.map(t => (
-                        <option key={t.uid} value={t.uid} style={{ background: '#1a1a2e' }}>{t.displayName || t.email}</option>
-                      ))}
+                      <option value="" disabled style={{ background: '#1a1a2e' }}>Sélectionner un destinataire</option>
+                      <optgroup label="Enseignants" style={{ background: '#1a1a2e', color: 'var(--accent-primary)' }}>
+                        {teachers.map(t => (
+                          <option key={t.uid} value={t.uid} style={{ background: '#1a1a2e', color: 'var(--text-primary)' }}>{t.displayName || t.email}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Étudiants" style={{ background: '#1a1a2e', color: 'var(--accent-secondary)' }}>
+                        {students.map(s => (
+                          <option key={s.uid} value={s.uid} style={{ background: '#1a1a2e', color: 'var(--text-primary)' }}>{s.displayName || s.email}</option>
+                        ))}
+                      </optgroup>
                     </select>
                   )}
                   <input

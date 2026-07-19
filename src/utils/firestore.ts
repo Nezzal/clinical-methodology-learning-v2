@@ -486,8 +486,8 @@ export interface FirestoreSupportMessage {
   senderUid: string;
   senderName: string;
   senderEmail: string;
-  senderRole: 'student' | 'teacher';
-  recipientRole: 'teacher' | 'admin';
+  senderRole: 'student' | 'teacher' | 'admin';
+  recipientRole: 'teacher' | 'admin' | 'student';
   recipientUid?: string;
   subject: string;
   content: string;
@@ -523,8 +523,8 @@ export async function sendSupportMessage(
   senderUid: string,
   senderName: string,
   senderEmail: string,
-  senderRole: 'student' | 'teacher',
-  recipientRole: 'teacher' | 'admin',
+  senderRole: 'student' | 'teacher' | 'admin',
+  recipientRole: 'teacher' | 'admin' | 'student',
   recipientUid: string | undefined,
   subject: string,
   content: string
@@ -559,11 +559,112 @@ export async function sendSupportMessage(
       content,
       createdAt: serverTimestamp(),
       status: 'unread',
-      studentRead: true,
-      teacherRead: false,
-      adminRead: false
+      studentRead: finalRecipientRole !== 'student', // Non lu pour l'étudiant s'il est destinataire
+      teacherRead: finalRecipientRole !== 'teacher', // Non lu pour l'enseignant s'il est destinataire
+      adminRead: finalRecipientRole !== 'admin'      // Non lu pour l'administrateur s'il est destinataire
     };
     await setDoc(newDocRef, messageData);
+
+    // Déclenchement de la notification e-mail asynchrone
+    try {
+      let recipientEmail = '';
+      if (finalRecipientRole === 'teacher' && finalRecipientUid) {
+        const teacherProfile = await loadUserProfile(finalRecipientUid);
+        if (teacherProfile?.email) {
+          recipientEmail = teacherProfile.email;
+        }
+      } else if (finalRecipientRole === 'student' && finalRecipientUid) {
+        const studentProfile = await loadUserProfile(finalRecipientUid);
+        if (studentProfile?.email) {
+          recipientEmail = studentProfile.email;
+        }
+      } else if (finalRecipientRole === 'admin') {
+        recipientEmail = process.env.NEXT_PUBLIC_ADMIN_NOTIFICATION_EMAIL || '';
+      }
+
+      if (recipientEmail) {
+        const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const isToStudent = finalRecipientRole === 'student';
+        const emailSubject = isToStudent 
+          ? `[RECIF] Nouveau message de l'administration : ${subject}`
+          : `[RECIF] Nouvelle question de ${senderName} : ${subject}`;
+
+        const emailHtml = isToStudent 
+          ? `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc; color: #334155;">
+              <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #e6fffa; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
+                  ✉️
+                </div>
+                <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Vous avez reçu un nouveau message de supervision</p>
+              </div>
+              
+              <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">Bonjour,</p>
+              <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">L'administration (ou votre enseignant référent) vous a adressé un message sur la plateforme :</p>
+              
+              <div style="background: #f8fafc; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; border-radius: 6px; border: 1px solid #e2e8f0; border-left-width: 4px;">
+                <strong style="color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.95rem;">Objet : ${subject}</strong>
+                <p style="margin: 0; color: #475569; font-style: italic; font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap;">"${content}"</p>
+              </div>
+              
+              <p style="font-size: 0.95rem; line-height: 1.5; color: #334155; margin-bottom: 24px;">Vous pouvez consulter ce message et y répondre directement depuis votre espace d'aide.</p>
+              
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${appUrl || 'https://clinical-methodology-learning.vercel.app'}/contact" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+                  Consulter mes Messages / Support
+                </a>
+              </div>
+              
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+            </div>
+          `
+          : `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc; color: #334155;">
+              <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #edf2f7; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
+                  💬
+                </div>
+                <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Nouveau message de support reçu</p>
+              </div>
+              
+              <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">Bonjour,</p>
+              <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">L'étudiant <strong>${senderName}</strong> (${senderEmail}) a posé une question méthodologique ou technique sur la plateforme :</p>
+              
+              <div style="background: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 6px; border: 1px solid #e2e8f0; border-left-width: 4px;">
+                <strong style="color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.95rem;">Objet : ${subject}</strong>
+                <p style="margin: 0; color: #475569; font-style: italic; font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap;">"${content}"</p>
+              </div>
+              
+              <p style="font-size: 0.95rem; line-height: 1.5; color: #334155; margin-bottom: 24px;">Vous pouvez consulter ce message et y répondre directement depuis votre espace de supervision.</p>
+              
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${appUrl || 'https://clinical-methodology-learning.vercel.app'}/admin" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);">
+                  Accéder au Tableau de Bord Enseignant
+                </a>
+              </div>
+              
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+            </div>
+          `;
+
+        fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: recipientEmail,
+            subject: emailSubject,
+            html: emailHtml
+          })
+        }).catch(err => console.error("⚠️ Échec d'envoi de la notification e-mail :", err));
+      }
+    } catch (mailErr) {
+      console.warn("⚠️ Impossible d'initier l'envoi d'e-mail :", mailErr);
+    }
+
     return newDocRef.id;
   } catch (error) {
     console.error('❌ Erreur sendSupportMessage:', error);
@@ -574,19 +675,135 @@ export async function sendSupportMessage(
 export async function replyToSupportMessage(
   messageId: string,
   replyContent: string,
-  replierRole: 'teacher' | 'admin'
+  replierRole: 'teacher' | 'admin' | 'student'
 ) {
   if (!isFirebaseEnabled || !db) return;
   try {
     const docRef = doc(db, 'support_messages', messageId);
     await setDoc(docRef, {
       status: 'replied',
-      studentRead: false,
+      studentRead: replierRole === 'student',
       teacherRead: replierRole === 'teacher',
       adminRead: replierRole === 'admin',
       reply: replyContent,
       repliedAt: serverTimestamp()
     }, { merge: true });
+
+    // Déclenchement de la notification e-mail asynchrone
+    try {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const msgData = snap.data();
+        const studentEmail = msgData.senderEmail;
+        const studentName = msgData.senderName;
+        const subject = msgData.subject;
+
+        if (replierRole === 'student') {
+          // Notify the supervisor (sender of the original message)
+          let supervisorEmail = '';
+          const senderUid = msgData.senderUid;
+          const recipientRole = msgData.recipientRole;
+
+          if (recipientRole === 'teacher' || recipientRole === 'admin') {
+            const supervisorProfile = await loadUserProfile(senderUid);
+            if (supervisorProfile?.email) {
+              supervisorEmail = supervisorProfile.email;
+            }
+          } else {
+            supervisorEmail = process.env.NEXT_PUBLIC_ADMIN_NOTIFICATION_EMAIL || '';
+          }
+
+          if (supervisorEmail) {
+            const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: supervisorEmail,
+                subject: `[RECIF] Nouvelle réponse de l'étudiant ${studentName} : ${subject}`,
+                html: `
+                  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc; color: #334155;">
+                    <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                      <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #edf2f7; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
+                        💬
+                      </div>
+                      <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                      <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Réponse d'étudiant reçue</p>
+                    </div>
+                    
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">Bonjour,</p>
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">L'étudiant <strong>${studentName}</strong> a répondu à votre message concernant le sujet suivant :</p>
+                    
+                    <div style="background: #f8fafc; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 6px; border: 1px solid #e2e8f0; border-left-width: 4px;">
+                      <strong style="color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.95rem;">Sujet : ${subject}</strong>
+                      <p style="margin: 0; color: #475569; font-style: italic; font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap;">"${replyContent}"</p>
+                    </div>
+                    
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: #334155; margin-bottom: 24px;">Vous pouvez consulter la discussion complète sur votre espace de supervision.</p>
+                    
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${appUrl || 'https://clinical-methodology-learning.vercel.app'}/admin" style="display: inline-block; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);">
+                        Accéder au Tableau de Bord Enseignant
+                      </a>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
+                    <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+                  </div>
+                `
+              })
+            }).catch(err => console.error("⚠️ Échec d'envoi de la notification e-mail à l'enseignant :", err));
+          }
+        } else {
+          // Notify student
+          if (studentEmail) {
+            const appUrl = typeof window !== 'undefined' ? window.location.origin : '';
+            const replierTitle = replierRole === 'admin' ? "L'administration" : "Votre enseignant référent";
+
+            fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: studentEmail,
+                subject: `[RECIF] Réponse à votre question : ${subject}`,
+                html: `
+                  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc; color: #334155;">
+                    <div style="text-align: center; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                      <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #e6fffa; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
+                        ✉️
+                      </div>
+                      <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                      <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Une réponse a été apportée à votre question</p>
+                    </div>
+                    
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">Bonjour <strong>${studentName}</strong>,</p>
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: #334155;">${replierTitle} a répondu à votre message de support :</p>
+                    
+                    <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; border-radius: 6px; border: 1px solid #e6f4ea; border-left-width: 4px;">
+                      <strong style="color: #137333; display: block; margin-bottom: 8px; font-size: 0.95rem;">Réponse :</strong>
+                      <p style="margin: 0; color: #3c4043; font-style: italic; font-size: 0.92rem; line-height: 1.6; white-space: pre-wrap;">"${replyContent}"</p>
+                    </div>
+                    
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: #334155; margin-bottom: 24px;">Vous pouvez consulter la discussion complète dans votre espace d'aide.</p>
+                    
+                    <div style="text-align: center; margin: 28px 0;">
+                      <a href="${appUrl || 'https://clinical-methodology-learning.vercel.app'}/contact" style="display: inline-block; padding: 12px 24px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+                        Consulter l'Historique Support
+                      </a>
+                    </div>
+                    
+                    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
+                    <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+                  </div>
+                `
+              })
+            }).catch(err => console.error("⚠️ Échec d'envoi de la notification e-mail à l'étudiant :", err));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("⚠️ Impossible d'envoyer la notification e-mail :", err);
+    }
   } catch (error) {
     console.error('❌ Erreur replyToSupportMessage:', error);
     throw error;
