@@ -105,8 +105,8 @@ function getStaticFallbackReport(
   }
 
   const note = preferredProvider === 'ollama'
-    ? `⚠️ *Note : Ce bilan a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`
-    : `⚠️ *Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée ou indisponible). Vous pouvez configurer votre clé ou activer Ollama localement pour une analyse personnalisée approfondie.*`;
+    ? `*Note : Ce bilan a été généré via notre algorithme local standard car le service local Ollama est injoignable ou le modèle n'est pas chargé. Veuillez lancer l'application Ollama et charger le modèle \`${process.env.OLLAMA_MODEL || 'gemma4:latest'}\`.*`
+    : `*Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée ou indisponible). Vous pouvez configurer votre clé ou activer Ollama localement pour une analyse personnalisée approfondie.*`;
 
   return `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
 *Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique*
