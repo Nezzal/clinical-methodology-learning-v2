@@ -11,20 +11,24 @@ async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string
     const models = data.models || [];
     if (models.length === 0) return null;
 
-    const hasRequested = models.some((m: any) => m.name === requestedModel || m.name.split(':')[0] === requestedModel.split(':')[0]);
-    if (hasRequested) return requestedModel;
+    const reqLower = requestedModel.toLowerCase();
+    const exact = models.find((m: any) => m.name.toLowerCase() === reqLower);
+    if (exact) return exact.name;
+
+    const baseRequested = requestedModel.split(':')[0].toLowerCase();
+    const baseMatch = models.find((m: any) => {
+      const b = m.name.split(':')[0].toLowerCase();
+      return b === baseRequested || m.name.toLowerCase().includes(baseRequested);
+    });
+    if (baseMatch) return baseMatch.name;
 
     const chatModels = models.filter((m: any) => {
       const name = m.name.toLowerCase();
       return !name.includes('embed') && !name.includes('minilm');
     });
 
-    if (chatModels.length === 0) return null;
-
-    const gemmaModel = chatModels.find((m: any) => m.name.toLowerCase().includes('gemma'));
-    if (gemmaModel) return gemmaModel.name;
-
-    return chatModels[0].name;
+    if (chatModels.length > 0) return chatModels[0].name;
+    return models[0].name;
   } catch (err) {
     console.warn("⚠️ Impossible de lister les modèles Ollama:", err);
     return null;
@@ -38,8 +42,9 @@ async function callOllamaSection(
   ollamaModel: string
 ): Promise<string | null> {
   try {
+    console.log(`🤖 [Ollama Section] Exécution sur le modèle : ${ollamaModel}...`);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 min timeout pour modèles 14B
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -62,12 +67,15 @@ async function callOllamaSection(
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.warn(`⚠️ [Ollama Section] Statut HTTP non-OK : ${response.status}`);
+      return null;
+    }
     const data = await response.json();
     const content = data.message?.content || null;
     return content ? content.trim() : null;
-  } catch (err) {
-    console.warn('⚠️ Échec de la génération d\'une section Ollama:', err);
+  } catch (err: any) {
+    console.warn(`⚠️ Échec de la génération section Ollama (${ollamaModel}):`, err.message || err);
     return null;
   }
 }
