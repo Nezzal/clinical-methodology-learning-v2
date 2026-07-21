@@ -221,6 +221,9 @@ a {
     background: transparent !important;
     box-shadow: none !important;
     text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
   }
   
   html, body {
@@ -230,9 +233,12 @@ a {
     padding: 0 !important;
     width: 100% !important;
     height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
   
-  main {
+  main, .animate-fade-in {
     background: white !important;
     color: black !important;
     margin-left: 0 !important;
@@ -243,6 +249,10 @@ a {
     min-width: 100% !important;
     position: static !important;
     transform: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    display: block !important;
   }
   
   .no-print, .faq-fab, .faq-drawer, [class*="faq-fab"], [class*="faq-drawer"], button, aside {

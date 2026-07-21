@@ -55,93 +55,108 @@ function stripEmojis(text: string): string {
   return text.replace(/[\u{1F300}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FAFF}\u{1F000}-\u{1F1FF}\u{26A0}-\u{26A1}\u{FE0F}]/gu, '');
 }
 
-// Markdown parser helper for report rendering
+// Markdown parser helper for report rendering with clean page-break elements
 function formatReportMarkdown(text: string): string {
-  let formatted = stripEmojis(text)
+  let cleaned = stripEmojis(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
-  // Convert markdown tables to HTML tables
-  let lines = formatted.split('\n');
+  let lines = cleaned.split('\n');
   let inTable = false;
   let inList = false;
   let tableRows: string[] = [];
-  let processedLines: string[] = [];
+  let processedBlocks: string[] = [];
+  let currentParagraphLines: string[] = [];
+
+  const flushParagraph = () => {
+    if (currentParagraphLines.length > 0) {
+      const pText = currentParagraphLines.join('<br />').trim();
+      if (pText) {
+        processedBlocks.push(`<p style="margin-bottom: 1rem; line-height: 1.65; page-break-inside: auto; break-inside: auto;">${pText}</p>`);
+      }
+      currentParagraphLines = [];
+    }
+  };
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const rawLine = lines[i];
+    const line = rawLine.trim();
+
+    // Headers
+    if (line.startsWith('#')) {
+      flushParagraph();
+      if (inList) { processedBlocks.push('</ul>'); inList = false; }
+      if (inTable) { processedBlocks.push(renderReportHtmlTable(tableRows)); inTable = false; }
+
+      if (line.startsWith('###### ')) processedBlocks.push(`<h6 style="margin-top: 1rem; margin-bottom: 0.3rem; color: var(--text-muted); font-size:0.9rem; page-break-after: avoid; break-after: avoid;">${line.substring(7)}</h6>`);
+      else if (line.startsWith('##### ')) processedBlocks.push(`<h5 style="margin-top: 1.1rem; margin-bottom: 0.35rem; color: var(--text-secondary); font-size:0.95rem; page-break-after: avoid; break-after: avoid;">${line.substring(6)}</h5>`);
+      else if (line.startsWith('#### ')) processedBlocks.push(`<h4 style="margin-top: 1.25rem; margin-bottom: 0.4rem; color: var(--text-primary); font-size:1rem; font-weight:600; page-break-after: avoid; break-after: avoid;">${line.substring(5)}</h4>`);
+      else if (line.startsWith('### ')) processedBlocks.push(`<h3 style="margin-top: 1.4rem; margin-bottom: 0.5rem; color: var(--accent-secondary); font-size:1.1rem; page-break-after: avoid; break-after: avoid;">${line.substring(4)}</h3>`);
+      else if (line.startsWith('## ')) processedBlocks.push(`<h2 style="margin-top: 1.75rem; margin-bottom: 0.75rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.3rem; font-size:1.25rem; page-break-after: avoid; break-after: avoid;">${line.substring(3)}</h2>`);
+      else if (line.startsWith('# ')) processedBlocks.push(`<h1 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--text-primary); font-size:1.5rem; text-align:center; page-break-after: avoid; break-after: avoid;">${line.substring(2)}</h1>`);
+      continue;
+    }
+
+    // Horizontal Rule
+    if (line === '---' || line === '***') {
+      flushParagraph();
+      if (inList) { processedBlocks.push('</ul>'); inList = false; }
+      if (inTable) { processedBlocks.push(renderReportHtmlTable(tableRows)); inTable = false; }
+      processedBlocks.push('<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
+      continue;
+    }
+
+    // Tables
     const isTableRow = line.startsWith('|') && line.endsWith('|');
-    const isListItem = line.startsWith('- ') || line.startsWith('* ');
-    
-    // Handle tables
     if (isTableRow) {
-      if (inList) {
-        processedLines.push('</ul>');
-        inList = false;
-      }
-      if (!inTable) {
-        inTable = true;
-        tableRows = [];
-      }
-      tableRows.push(lines[i]);
+      flushParagraph();
+      if (inList) { processedBlocks.push('</ul>'); inList = false; }
+      if (!inTable) { inTable = true; tableRows = []; }
+      tableRows.push(rawLine);
       continue;
     } else if (inTable) {
-      const htmlTable = renderReportHtmlTable(tableRows);
-      processedLines.push(htmlTable);
+      processedBlocks.push(renderReportHtmlTable(tableRows));
       inTable = false;
     }
-    
-    // Handle lists
+
+    // Lists
+    const isListItem = line.startsWith('- ') || line.startsWith('* ');
     if (isListItem) {
+      flushParagraph();
       if (!inList) {
         inList = true;
-        processedLines.push('<ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">');
+        processedBlocks.push('<ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc; page-break-inside: auto; break-inside: auto;">');
       }
-      // Remove the bullet marker "- " or "* "
       const itemContent = line.substring(2).trim();
-      processedLines.push(`<li style="margin-bottom: 0.35rem; list-style-type: disc;">${itemContent}</li>`);
-    } else {
-      if (inList) {
-        processedLines.push('</ul>');
-        inList = false;
-      }
-      processedLines.push(lines[i]);
+      processedBlocks.push(`<li style="margin-bottom: 0.35rem; list-style-type: disc; page-break-inside: auto; break-inside: auto;">${itemContent}</li>`);
+      continue;
+    } else if (inList) {
+      processedBlocks.push('</ul>');
+      inList = false;
     }
-  }
-  
-  if (inTable) {
-    const htmlTable = renderReportHtmlTable(tableRows);
-    processedLines.push(htmlTable);
-  }
-  if (inList) {
-    processedLines.push('</ul>');
+
+    // Empty line -> ends paragraph
+    if (!line) {
+      flushParagraph();
+      continue;
+    }
+
+    // Paragraph text line
+    currentParagraphLines.push(line);
   }
 
-  formatted = processedLines.join('\n');
+  flushParagraph();
+  if (inTable) processedBlocks.push(renderReportHtmlTable(tableRows));
+  if (inList) processedBlocks.push('</ul>');
+
+  let formatted = processedBlocks.join('\n');
 
   // Bold: **text**
   formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
   
   // Italic: *text*
   formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  
-  // Headers
-  formatted = formatted.replace(/^###### (.*?)$/gm, '<h6 style="margin-top: 0.6rem; margin-bottom: 0.2rem; color: var(--text-muted); font-size:0.9rem;">$1</h6>');
-  formatted = formatted.replace(/^##### (.*?)$/gm, '<h5 style="margin-top: 0.7rem; margin-bottom: 0.25rem; color: var(--text-secondary); font-size:0.95rem;">$1</h5>');
-  formatted = formatted.replace(/^#### (.*?)$/gm, '<h4 style="margin-top: 0.85rem; margin-bottom: 0.3rem; color: var(--text-primary); font-size:1rem; font-weight:600;">$1</h4>');
-  formatted = formatted.replace(/^### (.*?)$/gm, '<h3 style="margin-top: 1.1rem; margin-bottom: 0.4rem; color: var(--accent-secondary); font-size:1.1rem;">$1</h3>');
-  formatted = formatted.replace(/^## (.*?)$/gm, '<h2 style="margin-top: 1.5rem; margin-bottom: 0.6rem; color: var(--accent-primary); border-bottom: 1px solid var(--border-glass); padding-bottom: 0.25rem; font-size:1.25rem;">$1</h2>');
-  formatted = formatted.replace(/^# (.*?)$/gm, '<h1 style="margin-top: 1.8rem; margin-bottom: 0.8rem; color: var(--text-primary); font-size:1.5rem; text-align:center;">$1</h1>');
-
-  // Horizontal rules
-  formatted = formatted.replace(/^---$/gm, '<hr style="border: 0; border-top: 1px solid var(--border-glass); margin: 1.5rem 0;" />');
-
-  // Double newlines to paragraphs
-  formatted = formatted.split('\n').join('<br />');
-
-  // Cleanup redundant br tags
-  formatted = formatted.replace(/(<\/h1>|<\/h2>|<\/h3>|<\/h4>|<\/h5>|<\/h6>|<\/li>|<\/ul>|<hr \/>)<br \/>/g, '$1');
 
   return formatted;
 }
@@ -644,7 +659,7 @@ Instructions pour le rapport :
             @media print {
               @page {
                 size: A4;
-                margin: 2.5cm 2.2cm 2.5cm 2.2cm;
+                margin: 2cm 1.8cm 2cm 1.8cm;
                 @bottom-left {
                   content: "${APP_VERSION_LABEL}";
                   font-family: 'Inter', sans-serif;
@@ -670,20 +685,46 @@ Instructions pour le rapport :
                   padding-top: 8px;
                 }
               }
-              body {
+              * {
+                animation: none !important;
+                transition: none !important;
+                transform: none !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+              }
+              html, body, main, div, section, article {
+                background: white !important;
+                color: black !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background: white !important;
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                width: 100% !important;
+                position: static !important;
+                float: none !important;
+                transform: none !important;
+                overflow: visible !important;
               }
               .print-only-header {
                 display: block !important;
               }
-              div, table {
-                overflow: visible !important;
+              .no-print, button, aside {
+                display: none !important;
               }
-              p, li, blockquote, pre, tr, td, th {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
+              h1, h2, h3, h4, h5, h6 {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+                color: black !important;
+              }
+              p, li, tr, td, th {
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+                color: black !important;
+              }
+              ul, ol {
+                page-break-inside: auto !important;
+                break-inside: auto !important;
               }
             }
           `}} />
