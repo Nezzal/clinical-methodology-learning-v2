@@ -53,7 +53,7 @@ async function callOllamaSection(
         stream: false,
         options: {
           temperature: 0.6,
-          num_predict: 1200,
+          num_predict: 2500,
           num_ctx: 4096
         }
       }),
@@ -314,27 +314,27 @@ export async function POST(req: Request) {
         {
           id: 1,
           title: "## 1. Bilan Général de Progression et Positionnement",
-          prompt: `${statsContext}\n\nREQUÊTE : Rédige 2 à 3 paragraphes détaillés analysant l'engagement global de l'apprenant, son assiduité avec le tuteur virtuel et sa dynamique d'assimilation des principes méthodologiques. N'utilise aucun émoji.`
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse académique très approfondie d'au moins 350 à 450 mots (3 à 4 paragraphes denses) évaluant la rigueur de l'apprenant, le volume d'interactions avec le tuteur virtuel, sa maîtrise théorique et sa dynamique globale d'assimilation du Manuel RECIF. Sois extrêmement précis, formel et analytique. N'utilise aucun émoji.`
         },
         {
           id: 2,
           title: "## 2. Synthèse Détaillée des Compétences Méthodologiques",
-          prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse approfondie structurée avec 3 sous-titres explicites :\n### 2.1 Schémas d'Étude & Définition de la Population (FINE & PICOT)\n### 2.2 Réglementation (Loi n° 18-11 relative à la santé) & Éthique\n### 2.3 Calcul du Nombre de Sujets Nécessaires (NSN) & Biais de Recherche\nDéveloppe 1 à 2 paragraphes détaillés sous chaque sous-titre. N'utilise aucun émoji.`
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse méthodologique très riche d'au moins 400 à 500 mots structurée avec 3 sous-titres explicites :\n### 2.1 Schémas d'Étude & Définition de la Population (FINE & PICOT)\n### 2.2 Réglementation (Loi n° 18-11 relative à la santé) & Éthique (Articles 388 et suivants)\n### 2.3 Calcul du Nombre de Sujets Nécessaires (NSN) & Biais de Recherche\nDéveloppe au moins 2 paragraphes très complets et argumentés sous chaque sous-titre. N'utilise aucun émoji.`
         },
         {
           id: 3,
           title: "## 3. Analyse des Acquis (Forces) et des Axes d'Amélioration",
-          prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse sous forme de listes à puces commentées (3 à 4 puces développées par catégorie) :\n### 3.1 Points Forts Identifiés\n### 3.2 Axes de Progrès Prioritaires\nN'utilise aucun émoji.`
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige une synthèse détaillée d'au moins 350 mots sous forme de deux catégories comportant chacune 4 puces largement commentées avec exemples :\n### 3.1 Points Forts Identifiés (4 puces argumentées)\n### 3.2 Axes de Progrès Prioritaires (4 puces argumentées avec recommandations de révision)\nN'utilise aucun émoji.`
         },
         {
           id: 4,
           title: "## 4. Focus Méthodologique Personnalisé (RECIF & STROBE)",
-          prompt: `${statsContext}\n\nREQUÊTE : Rédige 2 paragraphes sur mesure focalisés sur les besoins de l'étudiant, l'adéquation objectif/critère de jugement et le respect des normes STROBE. N'utilise aucun émoji.`
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige 3 paragraphes denses d'au moins 350 à 450 mots axés sur l'adéquation entre objectif principal et critère de jugement principal, l'identification des facteurs de confusion et la mise en conformité des manuscrits avec les 22 critères de la grille internationale STROBE. N'utilise aucun émoji.`
         },
         {
           id: 5,
           title: "## 5. Plan d'Action Opérationnel et Recommandations Pédagogiques",
-          prompt: `${statsContext}\n\nREQUÊTE : Rédige un plan d'action opérationnel concis et complet en 4 étapes numérotées explicites :\n1. **Étape 1 - Révision Manuel RECIF (Loi 18-11 & Éthique)**\n2. **Étape 2 - Entraînement Quiz/Flashcards**\n3. **Étape 3 - Conception Pratique de Protocole**\n4. **Étape 4 - Rédaction Scientifique STROBE**\nPour chaque étape, écris 2 phrases concrètes (Objectif + Action). Veille à rédiger intégralement les 4 étapes sans en abréger ni en couper aucune. N'utilise aucun émoji.`
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige un plan d'action opérationnel complet et détaillé d'au moins 350 à 450 mots structuré en 4 étapes numérotées explicites :\n1. **Étape 1 - Révision Théorique du Manuel RECIF (Loi 18-11 & Éthique)**\n2. **Étape 2 - Entraînement Systématique Quiz & Flashcards**\n3. **Étape 3 - Conception Pratique de Protocole**\n4. **Étape 4 - Rédaction Scientifique STROBE**\nPour chaque étape, détaille minutieusement l'Objectif Principal, l'Action Méthodologique et le Livrable Attendu. Veille à rédiger l'intégralité des 4 étapes jusqu'à la fin de la 4ème. N'utilise aucun émoji.`
         }
       ];
 
@@ -353,7 +353,7 @@ export async function POST(req: Request) {
       } else if (apiKey) {
         try {
           sectionContent = await withTimeout(
-            callLLM(systemPrompt, targetSpec.prompt, { provider: "qwen-plus", temperature: 0.6, maxTokens: 1500 }),
+            callLLM(systemPrompt, targetSpec.prompt, { provider: "qwen-plus", temperature: 0.6, maxTokens: 2500 }),
             60000
           );
         } catch (err) {
