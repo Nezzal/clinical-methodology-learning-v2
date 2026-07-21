@@ -272,15 +272,30 @@ a {
     max-height: none !important;
   }
   
-  .no-print, .faq-fab, .faq-drawer, [class*="faq-fab"], [class*="faq-drawer"], button, aside {
-    display: none !important;
-  }
-  
   .glass-card {
     border: 1px solid #ccc !important;
     box-shadow: none !important;
     background: white !important;
     color: black !important;
+  }
+
+  /* ABSOLUTE HIDE FOR NON-PRINT ELEMENTS (MUST BE LAST IN @MEDIA PRINT) */
+  .no-print,
+  .no-print *,
+  .faq-fab,
+  .faq-drawer,
+  .faq-overlay,
+  [class*="faq-fab"],
+  [class*="faq-drawer"],
+  [class*="faq-overlay"],
+  button,
+  aside {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
   }
 }
 

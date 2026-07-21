@@ -576,7 +576,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
       {/* Bouton d'action flottant (FAB) FAQ */}
       <button
         onClick={() => setIsFaqOpen(true)}
-        className="faq-fab"
+        className="faq-fab no-print"
         style={{
           position: 'fixed',
           bottom: '2rem',
@@ -608,6 +608,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
       {/* Overlay / Arrière-plan flouté */}
       <div
         onClick={() => setIsFaqOpen(false)}
+        className="faq-overlay no-print"
         style={{
           position: 'fixed',
           top: 0,
@@ -625,7 +626,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
 
       {/* Panneau latéral (Drawer) FAQ */}
       <div
-        className="faq-drawer"
+        className="faq-drawer no-print"
         style={{
           position: 'fixed',
           top: 0,

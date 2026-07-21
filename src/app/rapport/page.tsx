@@ -709,9 +709,6 @@ Instructions pour le rapport :
               .print-only-header {
                 display: block !important;
               }
-              .no-print, button, aside {
-                display: none !important;
-              }
               h1, h2, h3, h4, h5, h6 {
                 page-break-after: avoid !important;
                 break-after: avoid !important;
@@ -725,6 +722,23 @@ Instructions pour le rapport :
               ul, ol {
                 page-break-inside: auto !important;
                 break-inside: auto !important;
+              }
+              .no-print,
+              .no-print *,
+              .faq-fab,
+              .faq-drawer,
+              .faq-overlay,
+              [class*="faq-fab"],
+              [class*="faq-drawer"],
+              [class*="faq-overlay"],
+              button,
+              aside {
+                display: none !important;
+                visibility: hidden !important;
+                opacity: 0 !important;
+                height: 0 !important;
+                width: 0 !important;
+                overflow: hidden !important;
               }
             }
           `}} />
