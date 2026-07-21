@@ -334,7 +334,7 @@ export async function POST(req: Request) {
         {
           id: 5,
           title: "## 5. Plan d'Action Opérationnel et Recommandations Pédagogiques",
-          prompt: `${statsContext}\n\nREQUÊTE : Propose un plan de travail précis en 4 étapes concrètes (1. Révision Manuel RECIF, 2. Entraînement Quiz/Flashcards, 3. Conception Protocole, 4. Rédaction STROBE). N'utilise aucun émoji.`
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige un plan d'action opérationnel concis et complet en 4 étapes numérotées explicites :\n1. **Étape 1 - Révision Manuel RECIF (Loi 18-11 & Éthique)**\n2. **Étape 2 - Entraînement Quiz/Flashcards**\n3. **Étape 3 - Conception Pratique de Protocole**\n4. **Étape 4 - Rédaction Scientifique STROBE**\nPour chaque étape, écris 2 phrases concrètes (Objectif + Action). Veille à rédiger intégralement les 4 étapes sans en abréger ni en couper aucune. N'utilise aucun émoji.`
         }
       ];
 
@@ -363,6 +363,31 @@ export async function POST(req: Request) {
 
       if (sectionContent && sectionContent.trim().length > 30) {
         let text = sectionContent.trim();
+
+        // Détection de tronquature (phrase coupée mid-sentence sans ponctuation finale)
+        const lastChar = text.slice(-1);
+        const endsWithPunctuation = ['.', '!', '?', ')', '*'].includes(lastChar);
+
+        if (!endsWithPunctuation) {
+          console.warn(`⚠️ Section ${sectionId} tronquée à la fin (dernier caractère: '${lastChar}'). Détection et réparation en cours...`);
+          
+          if (sectionId === 5 && (!text.includes('4.') || !text.includes('STROBE') || !text.includes('Étape 4'))) {
+            // Si la section 5 a manqué l'Étape 4 ou s'est terminée brusquement, utiliser le secours statique propre à 4 étapes
+            const fullStatic = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered, preferredProvider);
+            const staticParts = fullStatic.split(/\n(?=## \d\.)/);
+            const sec5Static = staticParts.find(p => p.trim().startsWith('## 5.'));
+            if (sec5Static) {
+              text = sec5Static.trim();
+            }
+          } else {
+            // Rogner proprement jusqu'à la dernière phrase complète
+            const lastDot = Math.max(text.lastIndexOf('.'), text.lastIndexOf(')'));
+            if (lastDot > 100) {
+              text = text.slice(0, lastDot + 1);
+            }
+          }
+        }
+
         if (!text.startsWith('##') && !text.startsWith('#')) {
           text = `${targetSpec.title}\n\n${text}`;
         }
