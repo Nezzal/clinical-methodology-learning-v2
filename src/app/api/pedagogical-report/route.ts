@@ -50,12 +50,16 @@ async function tryOllamaGenerateReport(
         messages: [
           { 
             role: 'system', 
-            content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé et constructif en français sous forme de Markdown, sans préambule ni conclusion de type 'Voici votre rapport', et sans utiliser aucun émoji ou émoticône." 
+            content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé, constructif et très détaillé en français sous forme de Markdown, d'au moins 400 mots couvrant les 4 sections demandées, sans préambule ni conclusion de type 'Voici votre rapport', et sans utiliser aucun émoji ou émoticône." 
           },
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: { temperature: 0.6 }
+        options: {
+          temperature: 0.6,
+          num_predict: 2500,
+          num_ctx: 4096
+        }
       }),
       signal: controller.signal
     });
@@ -68,7 +72,13 @@ async function tryOllamaGenerateReport(
     }
 
     const data = await response.json();
-    return data.message?.content || null;
+    const content = data.message?.content || null;
+    if (content && content.trim().length >= 300) {
+      return content.trim();
+    } else {
+      console.warn(`⚠️ Réponse d'Ollama trop courte (${content?.length || 0} car.), bascule vers le secours local complet.`);
+      return null;
+    }
   } catch (error: any) {
     console.warn('⚠️ Échec de la génération locale de rapport par Ollama:', error.message || error);
     return null;
