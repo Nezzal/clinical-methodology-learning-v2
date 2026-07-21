@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getProgress } from '@/utils/storage';
 import { loadUserProfile, listenToUnreadMessages } from '@/utils/firestore';
 import { APP_VERSION } from '@/utils/constants';
+import ChangelogModal from './ChangelogModal';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -15,6 +16,7 @@ export default function Sidebar() {
   const { user, profile, logout, isFirebaseConfigured, guestMode, isAdmin, role } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const [level, setLevel] = useState('Débutant');
 
   const [profileName, setProfileName] = useState('');
@@ -554,9 +556,21 @@ export default function Sidebar() {
         </div>
 
         <div className={styles.footer}>
-          <span>Methodo&Clinique Éducation v{APP_VERSION}</span>
+          <button
+            className={styles.versionBtn}
+            onClick={() => setShowChangelog(true)}
+            title="Voir les nouveautés et l'historique des versions"
+          >
+            <span>✨</span>
+            <span>v{APP_VERSION} Nouveautés</span>
+          </button>
         </div>
       </aside>
+
+      <ChangelogModal
+        isOpen={showChangelog}
+        onClose={() => setShowChangelog(false)}
+      />
     </>
   );
 }
