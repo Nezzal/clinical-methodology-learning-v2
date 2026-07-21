@@ -523,7 +523,185 @@ Instructions pour le rapport :
   };
 
   const handlePrint = () => {
-    window.print();
+    const paperEl = document.querySelector(`.${styles.reportPaper}`);
+    if (!paperEl) {
+      window.print();
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const paperHtml = paperEl.innerHTML;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <title>Bilan Pédagogique et Suivi - RECIF Méthodologie</title>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+          :root {
+            --font-title: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+          }
+
+          @page {
+            size: A4;
+            margin: 1.8cm 1.6cm 1.8cm 1.6cm;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+
+          body {
+            font-family: var(--font-body);
+            color: #111827;
+            background: #ffffff;
+            line-height: 1.6;
+            font-size: 10pt;
+            margin: 0;
+            padding: 0;
+          }
+
+          .print-only-header {
+            display: block !important;
+            border-bottom: 2px solid #005a70;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+          }
+
+          h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-title);
+            color: #111827;
+            page-break-after: avoid;
+            break-after: avoid;
+          }
+
+          h1 {
+            font-size: 18pt;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+          }
+
+          h2 {
+            font-size: 13pt;
+            color: #005a70;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.25rem;
+          }
+
+          h3 {
+            font-size: 11pt;
+            color: #0d9488;
+            margin-top: 1.2rem;
+            margin-bottom: 0.4rem;
+          }
+
+          p {
+            margin-bottom: 0.75rem;
+            text-align: justify;
+            page-break-inside: auto;
+            break-inside: auto;
+          }
+
+          ul, ol {
+            margin-top: 0.25rem;
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            page-break-inside: auto;
+            break-inside: auto;
+          }
+
+          li {
+            margin-bottom: 0.35rem;
+            page-break-inside: auto;
+            break-inside: auto;
+          }
+
+          hr {
+            border: 0;
+            border-top: 1px solid #e5e7eb;
+            margin: 1.5rem 0;
+          }
+
+          blockquote {
+            margin: 1rem 0;
+            padding: 0.5rem 1rem;
+            border-left: 4px solid #005a70;
+            background: #f9fafb;
+            font-style: italic;
+          }
+
+          /* Radar Chart Styling in Print Window */
+          div[class*="printRadarContainer"] {
+            display: block !important;
+            text-align: center !important;
+            margin: 0 auto 1.5rem auto !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+
+          div[class*="printRadarBox"] {
+            display: inline-block !important;
+            background: transparent !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 8px;
+            padding: 1rem;
+            color: black !important;
+            max-width: 340px;
+            width: 100%;
+          }
+
+          h4[class*="printRadarTitle"] {
+            color: #005a70 !important;
+            margin: 0 0 0.5rem 0 !important;
+            font-size: 10pt !important;
+            font-family: var(--font-title);
+          }
+
+          svg {
+            max-width: 100%;
+            height: auto;
+          }
+
+          polygon[class*="radarGrid"] { stroke: #e5e7eb !important; }
+          line[class*="radarAxis"] { stroke: #d1d5db !important; }
+          polygon[class*="radarPolygon"] { stroke: #0284c7 !important; }
+          circle[class*="radarPoint"] { fill: #0284c7 !important; stroke: white !important; }
+          text[class*="radarText"] { fill: #111827 !important; font-size: 8pt !important; }
+
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${paperHtml}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const handleDownload = () => {
@@ -705,6 +883,8 @@ Instructions pour le rapport :
                 float: none !important;
                 transform: none !important;
                 overflow: visible !important;
+                display: block !important;
+                flex: none !important;
               }
               .print-only-header {
                 display: block !important;

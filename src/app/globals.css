@@ -242,6 +242,8 @@ a {
   div[style*="display: flex"],
   div[style*="display:flex"] {
     display: block !important;
+    flex: none !important;
+    float: none !important;
     min-height: 0 !important;
     height: auto !important;
     max-height: none !important;

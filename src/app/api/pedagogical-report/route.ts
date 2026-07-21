@@ -31,16 +31,15 @@ async function getAvailableOllamaModel(ollamaUrl: string, requestedModel: string
   }
 }
 
-async function tryOllamaGenerateReport(
-  prompt: string,
+async function callOllamaSection(
+  systemPrompt: string,
+  userPrompt: string,
   ollamaUrl: string,
   ollamaModel: string
 ): Promise<string | null> {
   try {
-    console.log(`🤖 [Rapport Pédagogique] Tentative d'appel à Ollama (${ollamaModel}) sur ${ollamaUrl}...`);
-
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 180000);
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const response = await fetch(`${ollamaUrl}/api/chat`, {
       method: 'POST',
@@ -48,16 +47,13 @@ async function tryOllamaGenerateReport(
       body: JSON.stringify({
         model: ollamaModel,
         messages: [
-          { 
-            role: 'system', 
-            content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé, constructif et très détaillé en français sous forme de Markdown, d'au moins 400 mots couvrant les 4 sections demandées, sans préambule ni conclusion de type 'Voici votre rapport', et sans utiliser aucun émoji ou émoticône." 
-          },
-          { role: 'user', content: prompt }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
         ],
         stream: false,
         options: {
           temperature: 0.6,
-          num_predict: 2500,
+          num_predict: 1200,
           num_ctx: 4096
         }
       }),
@@ -66,21 +62,73 @@ async function tryOllamaGenerateReport(
 
     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      console.warn(`⚠️ Ollama a retourné un statut d'erreur : ${response.status}`);
-      return null;
-    }
-
+    if (!response.ok) return null;
     const data = await response.json();
     const content = data.message?.content || null;
-    if (content && content.trim().length >= 300) {
-      return content.trim();
+    return content ? content.trim() : null;
+  } catch (err) {
+    console.warn('⚠️ Échec de la génération d\'une section Ollama:', err);
+    return null;
+  }
+}
+
+async function tryOllamaSequencedGenerateReport(
+  statsContext: string,
+  ollamaUrl: string,
+  ollamaModel: string
+): Promise<string | null> {
+  try {
+    console.log(`🤖 [Rapport Pédagogique] Génération SÉQUENTIELLE par section avec Ollama (${ollamaModel})...`);
+
+    const systemPrompt = "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF (Loi n° 18-11). Tu rédiges avec rigueur et précision en français, sans préambule ni conclusion métatexte (ne commence pas par 'Voici la section'), et sans utiliser aucun émoji ni émoticône.";
+
+    const sectionsPrompts = [
+      {
+        title: "## 1. Bilan Général de Progression et Positionnement",
+        prompt: `${statsContext}\n\nREQUÊTE : Rédige 2 à 3 paragraphes détaillés analysant l'engagement global de l'apprenant, son assiduité avec le tuteur virtuel et sa dynamique d'assimilation des principes méthodologiques.`
+      },
+      {
+        title: "## 2. Synthèse Détaillée des Compétences Méthodologiques",
+        prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse approfondie structurée avec 3 sous-titres explicites :\n### 2.1 Schémas d'Étude & Définition de la Population (FINE & PICOT)\n### 2.2 Réglementation (Loi n° 18-11 relative à la santé) & Éthique\n### 2.3 Calcul du Nombre de Sujets Nécessaires (NSN) & Biais de Recherche\nDéveloppe 1 à 2 paragraphes détaillés sous chaque sous-titre.`
+      },
+      {
+        title: "## 3. Analyse des Acquis (Forces) et des Axes d'Amélioration",
+        prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse sous forme de listes à puces commentées (3 à 4 puces développées par catégorie) :\n### 3.1 Points Forts Identifiés\n### 3.2 Axes de Progrès Prioritaires`
+      },
+      {
+        title: "## 4. Focus Méthodologique Personnalisé (RECIF & STROBE)",
+        prompt: `${statsContext}\n\nREQUÊTE : Rédige 2 paragraphes sur mesure focalisés sur les besoins de l'étudiant, l'adéquation objectif/critère de jugement et le respect des normes STROBE.`
+      },
+      {
+        title: "## 5. Plan d'Action Opérationnel et Recommandations Pédagogiques",
+        prompt: `${statsContext}\n\nREQUÊTE : Propose un plan de travail précis en 4 étapes concrètes (1. Révision Manuel RECIF, 2. Entraînement Quiz/Flashcards, 3. Conception Protocole, 4. Rédaction STROBE).`
+      }
+    ];
+
+    const generatedSections: string[] = [];
+
+    for (const item of sectionsPrompts) {
+      console.log(`⏳ Ollama séquentiel - Génération de : ${item.title}...`);
+      const sectionText = await callOllamaSection(systemPrompt, item.prompt, ollamaUrl, ollamaModel);
+      if (sectionText && sectionText.length > 50) {
+        if (!sectionText.startsWith('##') && !sectionText.startsWith('#')) {
+          generatedSections.push(`${item.title}\n\n${sectionText}`);
+        } else {
+          generatedSections.push(sectionText);
+        }
+      }
+    }
+
+    if (generatedSections.length >= 3) {
+      const fullReport = `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI\n*Plateforme d'Apprentissage RECIF*\n\n` + generatedSections.join('\n\n---\n\n');
+      console.log(`✅ [Ollama Séquentiel] Rapport généré avec succès (${fullReport.length} caractères, ${generatedSections.length}/5 sections).`);
+      return fullReport;
     } else {
-      console.warn(`⚠️ Réponse d'Ollama trop courte (${content?.length || 0} car.), bascule vers le secours local complet.`);
+      console.warn(`⚠️ [Ollama Séquentiel] Nombre insuffisant de sections générées (${generatedSections.length}/5).`);
       return null;
     }
   } catch (error: any) {
-    console.warn('⚠️ Échec de la génération locale de rapport par Ollama:', error.message || error);
+    console.warn('⚠️ Échec de la génération séquentielle Ollama:', error.message || error);
     return null;
   }
 }
@@ -310,7 +358,7 @@ IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport.`;
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
-        const ollamaReply = await tryOllamaGenerateReport(prompt, ollamaUrl, resolvedModel);
+        const ollamaReply = await tryOllamaSequencedGenerateReport(prompt, ollamaUrl, resolvedModel);
         if (ollamaReply) {
           const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Ce bilan a été généré localement par l'IA (${resolvedModel}) via Ollama.*`;
           return NextResponse.json({ report: formattedOllamaReply });
@@ -376,7 +424,7 @@ Instructions pour le rapport :
 
       const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
       if (resolvedModel) {
-        const ollamaReply = await tryOllamaGenerateReport(prompt, ollamaUrl, resolvedModel);
+        const ollamaReply = await tryOllamaSequencedGenerateReport(prompt, ollamaUrl, resolvedModel);
         if (ollamaReply) {
           const formattedOllamaReply = ollamaReply + `\n\n---\n*Note : Impossible de joindre le service d'IA externe. Bilan généré localement par l'IA (${resolvedModel}) via Ollama.*`;
           return NextResponse.json({ report: formattedOllamaReply });
