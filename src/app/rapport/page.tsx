@@ -369,10 +369,63 @@ const RadarChart = ({ scores }: { scores: { name: string; value: number }[] }) =
   );
 };
 
+interface ReportSectionState {
+  id: number;
+  title: string;
+  shortTitle: string;
+  description: string;
+  status: 'idle' | 'loading' | 'done' | 'error';
+  content: string | null;
+}
+
+const INITIAL_SECTIONS: ReportSectionState[] = [
+  {
+    id: 1,
+    title: "1. Bilan Général de Progression et Positionnement",
+    shortTitle: "Bilan Général",
+    description: "Analyse du volume d'interactions, de l'assiduité et du niveau global.",
+    status: 'idle',
+    content: null
+  },
+  {
+    id: 2,
+    title: "2. Synthèse Détaillée des Compétences Méthodologiques",
+    shortTitle: "Compétences & Réglementation",
+    description: "Évaluation PICOT/FINE, Loi 18-11, éthique, NSN et maîtrise des biais.",
+    status: 'idle',
+    content: null
+  },
+  {
+    id: 3,
+    title: "3. Analyse des Acquis (Forces) et des Axes d'Amélioration",
+    shortTitle: "Acquis & Axes de Progrès",
+    description: "Synthèse des points forts identifiés et des lacunes prioritaires.",
+    status: 'idle',
+    content: null
+  },
+  {
+    id: 4,
+    title: "4. Focus Méthodologique Personnalisé (RECIF & STROBE)",
+    shortTitle: "Focus RECIF & STROBE",
+    description: "Conseils sur mesure liés à vos questions récentes et projets de protocole.",
+    status: 'idle',
+    content: null
+  },
+  {
+    id: 5,
+    title: "5. Plan d'Action Opérationnel et Recommandations Pédagogiques",
+    shortTitle: "Plan d'Action",
+    description: "Programme de travail recommandé en 4 étapes opérationnelles.",
+    status: 'idle',
+    content: null
+  }
+];
+
 export default function RapportPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<LocalStats | null>(null);
-  const [report, setReport] = useState<string | null>(null);
+  const [sections, setSections] = useState<ReportSectionState[]>(INITIAL_SECTIONS);
+  const [isAutoProgressing, setIsAutoProgressing] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const loadStats = () => {
@@ -384,7 +437,7 @@ export default function RapportPage() {
     window.addEventListener('progress_changed', loadStats);
     
     const handleProviderChange = () => {
-      setReport(null);
+      setSections(INITIAL_SECTIONS);
     };
     window.addEventListener('ai_provider_changed', handleProviderChange);
 
@@ -394,12 +447,9 @@ export default function RapportPage() {
     };
   }, []);
 
-  const handleGenerateReport = async () => {
-    if (!stats) return;
-    setLoading(true);
-    setReport(null);
-
-    const payload = {
+  const getPayload = () => {
+    if (!stats) return null;
+    return {
       questionsAsked: stats.questionsAsked,
       protocolsGenerated: stats.protocolsGenerated,
       quizScore: { correct: stats.quizCorrect, total: stats.quizTotal },
@@ -407,87 +457,16 @@ export default function RapportPage() {
       recentQuestions: stats.recentQuestions,
       recentProtocols: stats.recentProtocols.map(p => `[${p.acronym}] ${p.title}`),
     };
+  };
 
-    const provider = localStorage.getItem('recif_ai_provider') || 'gemini';
+  const fetchSection = async (sectionId: number): Promise<boolean> => {
+    const payload = getPayload();
+    if (!payload) return false;
 
-    // 1. Si Ollama est sélectionné, tenter d'abord un appel en direct depuis le navigateur pour l'application en ligne
-    if (provider === 'ollama') {
-      try {
-        console.log("🤖 Tentative d'appel direct à Ollama depuis le navigateur...");
-        const prompt = `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
+    setSections(prev => prev.map(s => s.id === sectionId ? { ...s, status: 'loading' } : s));
 
-Voici les statistiques d'activité de l'utilisateur :
-- Questions posées au tuteur virtuel : ${payload.questionsAsked}
-- Protocoles générés : ${payload.protocolsGenerated}
-- Score aux quiz : ${payload.quizScore.correct}/${payload.quizScore.total} (${payload.quizScore.total > 0 ? Math.round((payload.quizScore.correct / payload.quizScore.total) * 100) : 0}%)
-- Flashcards maîtrisées : ${payload.flashcardsMastered.mastered}/${payload.flashcardsMastered.total} (${Math.round((payload.flashcardsMastered.mastered / payload.flashcardsMastered.total) * 100)}%)
-- Dernières questions posées : ${payload.recentQuestions.length > 0 ? payload.recentQuestions.join(', ') : 'Aucune'}
-- Protocoles initiés : ${payload.recentProtocols.length > 0 ? payload.recentProtocols.join(', ') : 'Aucun'}
-
-Instructions pour le rapport :
-1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
-2. Divise le rapport en sections claires :
-   - Bilan général de progression
-   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
-   - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
-   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
-3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
-4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
-
-        // Tenter d'interroger les tags pour voir si Ollama est actif et lister ses modèles
-        const tagsResponse = await fetch('http://127.0.0.1:11434/api/tags');
-        if (tagsResponse.ok) {
-          const tagsData = await tagsResponse.json();
-          const models = tagsData.models || [];
-          
-          if (models.length > 0) {
-            // Utiliser le modèle sélectionné ou fallback
-            let activeModel = localStorage.getItem('recif_ollama_model') || 'gemma4:latest';
-            const hasModel = models.some((m: any) => m.name === activeModel);
-            if (!hasModel && models.length > 0) {
-              const matchingModel = models.find((m: any) => m.name.includes('gemma4') || m.name.includes('gemma'));
-              if (matchingModel) {
-                activeModel = matchingModel.name;
-              } else {
-                activeModel = models[0].name;
-              }
-            }
-
-            const chatResponse = await fetch('http://127.0.0.1:11434/api/chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                model: activeModel,
-                messages: [
-                  { 
-                    role: 'system', 
-                    content: "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois formuler un rapport de suivi personnalisé et constructif en français sous forme de Markdown, sans préambule ni conclusion, et sans utiliser aucun émoji ou émoticône." 
-                  },
-                  { role: 'user', content: prompt }
-                ],
-                stream: false,
-                options: { temperature: 0.6 }
-              })
-            });
-
-            if (chatResponse.ok) {
-              const chatData = await chatResponse.json();
-              const content = chatData.message?.content;
-              if (content) {
-                setReport(content + `\n\n---\n*Note : Ce bilan a été généré en direct de votre navigateur par votre IA locale (${activeModel}) via Ollama.*`);
-                setLoading(false);
-                return; // Succès !
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("⚠️ Impossible de contacter Ollama directement depuis le navigateur (CORS ou service éteint). Tentative via le serveur...", err);
-      }
-    }
-
-    // 2. Repli classique via l'API route du serveur
     try {
+      const provider = localStorage.getItem('recif_ai_provider') || 'gemini';
       const headers: Record<string, string> = { 
         'Content-Type': 'application/json',
         'x-ai-provider': provider,
@@ -505,22 +484,54 @@ Instructions pour le rapport :
       const response = await fetch('/api/pedagogical-report', {
         method: 'POST',
         headers,
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, sectionId })
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        setReport(data.report);
+      if (response.ok && data.content) {
+        setSections(prev => prev.map(s => s.id === sectionId ? { ...s, status: 'done', content: data.content } : s));
+        return true;
       } else {
-        throw new Error(data.error || 'Erreur de génération du rapport.');
+        throw new Error(data.error || 'Erreur lors de la génération de la section.');
       }
-    } catch (error: any) {
-      alert(`⚠️ Échec de l'analyse : ${error.message || 'Le serveur n\'a pas répondu.'}`);
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      console.warn(`Erreur section ${sectionId}:`, err);
+      setSections(prev => prev.map(s => s.id === sectionId ? { ...s, status: 'error' } : s));
+      return false;
     }
   };
+
+  const handleGenerateSingleSection = (sectionId: number) => {
+    fetchSection(sectionId);
+  };
+
+  const handleContinueNextSection = () => {
+    const nextSec = sections.find(s => s.status !== 'done');
+    if (nextSec) {
+      fetchSection(nextSec.id);
+    }
+  };
+
+  const handleGenerateAllSequentially = async () => {
+    setIsAutoProgressing(true);
+    for (let i = 1; i <= 5; i++) {
+      await fetchSection(i);
+    }
+    setIsAutoProgressing(false);
+  };
+
+  const handleResetSections = () => {
+    setSections(INITIAL_SECTIONS);
+  };
+
+  const completedSectionsCount = sections.filter(s => s.status === 'done').length;
+  const combinedReportMarkdown = sections
+    .filter(s => s.content)
+    .map(s => s.content)
+    .join('\n\n---\n\n');
+
+  const fullReportText = combinedReportMarkdown ? `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI\n*Plateforme d'Apprentissage RECIF*\n\n` + combinedReportMarkdown : null;
 
   const handlePrint = () => {
     const paperEl = document.querySelector(`.${styles.reportPaper}`);
@@ -705,8 +716,8 @@ Instructions pour le rapport :
   };
 
   const handleDownload = () => {
-    if (!report) return;
-    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    if (!fullReportText) return;
+    const blob = new Blob([fullReportText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -732,7 +743,7 @@ Instructions pour le rapport :
       <header className={`${styles.header} no-print`}>
         <h1 className={styles.title}>Rapport Pédagogique & Suivi</h1>
         <p className={styles.subtitle}>
-          Visualisez votre progression globale et obtenez un bilan méthodologique personnalisé généré par l'IA.
+          Visualisez votre progression globale et rédigez votre bilan méthodologique personnalisé section par section (Approche Interactive A).
         </p>
       </header>
 
@@ -762,35 +773,83 @@ Instructions pour le rapport :
         </div>
       </section>
 
-      {/* Bouton de génération si aucun rapport n'a été fait */}
-      {!report && !loading && (
-        <div className={`${styles.generateBox} glass-card no-print`}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '1rem' }}>
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Bilan de Compétences Personnalisé</h3>
-          <p>
-            Notre IA va analyser vos questions posées au Tuteur, les titres de vos protocoles cliniques rédigés et vos réussites aux quiz afin de dresser une synthèse de vos points forts, de vos axes d'amélioration et de vous proposer un plan de travail sur-mesure.
-          </p>
-          <button className="btn btn-primary" onClick={handleGenerateReport}>
-            Générer mon rapport pédagogique IA
-          </button>
+      {/* Dashboard Interactif des Cartes de Section (Approche A) */}
+      <section className={`${styles.planSection} glass-card no-print`}>
+        <div className={styles.planHeader}>
+          <div>
+            <h3 className={styles.planTitle}>
+              Tableau de bord de rédaction par section ({completedSectionsCount}/5 rédigées)
+            </h3>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              Pilotez la génération de chaque chapitre indépendamment pour une analyse complète sans limitation de longueur.
+            </p>
+          </div>
+          <div className={styles.planControls}>
+            <button 
+              className="btn btn-primary" 
+              onClick={handleGenerateAllSequentially}
+              disabled={isAutoProgressing}
+            >
+              {isAutoProgressing ? 'Rédaction pas-à-pas en cours...' : 'Lancer la rédaction complète pas-à-pas'}
+            </button>
+            {completedSectionsCount < 5 && (
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleContinueNextSection}
+                disabled={isAutoProgressing}
+              >
+                Continuer (Section suivante)
+              </button>
+            )}
+            {completedSectionsCount > 0 && (
+              <button 
+                className="btn" 
+                style={{ background: 'transparent', border: '1px solid var(--border-glass)', color: 'var(--text-muted)' }} 
+                onClick={handleResetSections}
+                disabled={isAutoProgressing}
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Écran de chargement */}
-      {loading && (
-        <div className={`${styles.generateBox} glass-card no-print`} style={{ minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 2s linear infinite', marginBottom: '1.5rem' }}>
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-          </svg>
-          <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>Analyse méthodologique en cours...</h3>
-          <p style={{ color: 'var(--text-muted)' }}>L'IA compile votre historique d'apprentissage pour structurer vos recommandations.</p>
+        <div className={styles.sectionCardsGrid}>
+          {sections.map((sec) => (
+            <div 
+              key={sec.id} 
+              className={`${styles.sectionCard} ${sec.status === 'loading' ? styles.sectionCardActive : sec.status === 'done' ? styles.sectionCardDone : ''}`}
+            >
+              <div>
+                <div className={styles.sectionCardHeader}>
+                  <span className={styles.sectionNumber}>Chapitre 0{sec.id}</span>
+                  {sec.status === 'idle' && <span className={styles.badgeIdle}>Attente</span>}
+                  {sec.status === 'loading' && <span className={styles.badgeLoading}><span className="animate-spin">⏳</span> Rédaction...</span>}
+                  {sec.status === 'done' && <span className={styles.badgeDone}>✓ Rédigée ({sec.content ? sec.content.split(' ').length : 0} mots)</span>}
+                  {sec.status === 'error' && <span className={styles.badgeError}>⚠️ Erreur</span>}
+                </div>
+                <h4 className={styles.sectionTitle}>{sec.shortTitle}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.4' }}>
+                  {sec.description}
+                </p>
+              </div>
+              <div className={styles.sectionActions}>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ width: '100%', fontSize: '0.8rem', padding: '0.4rem 0.75rem' }}
+                  onClick={() => handleGenerateSingleSection(sec.id)}
+                  disabled={sec.status === 'loading' || isAutoProgressing}
+                >
+                  {sec.status === 'done' ? 'Régénérer cette section' : 'Générer la section'}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      )}
+      </section>
 
-      {/* Feuille de rapport imprimable */}
-      {report && (
+      {/* Feuille de rapport imprimable (Assemblage en direct) */}
+      {fullReportText && (
         <div className="animate-fade-in">
           {/* Actions sur le rapport */}
           <div className={`${styles.reportActions} no-print`}>
@@ -803,7 +862,7 @@ Instructions pour le rapport :
                 <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                 <rect x="6" y="14" width="12" height="8" />
               </svg>
-              Imprimer / PDF
+              Imprimer / PDF ({completedSectionsCount}/5 sections)
             </button>
           </div>
 
@@ -830,7 +889,7 @@ Instructions pour le rapport :
               </div>
             </div>
 
-            <div dangerouslySetInnerHTML={{ __html: formatReportMarkdown(report) }} />
+            <div dangerouslySetInnerHTML={{ __html: formatReportMarkdown(fullReportText) }} />
           </div>
           
           <style dangerouslySetInnerHTML={{ __html: `
@@ -922,12 +981,6 @@ Instructions pour le rapport :
               }
             }
           `}} />
-          
-          <div className={`${styles.reportActions} no-print`} style={{ justifyContent: 'center', marginTop: '2rem' }}>
-            <button className="btn btn-secondary" onClick={() => setReport(null)}>
-              Nouveau Bilan
-            </button>
-          </div>
         </div>
       )}
 

@@ -282,6 +282,7 @@ export async function POST(req: Request) {
     flashcardsMastered = data.flashcardsMastered ?? { mastered: 0, total: 0 };
     recentQuestions = data.recentQuestions ?? [];
     recentProtocols = data.recentProtocols ?? [];
+    const sectionId = typeof data.sectionId === 'number' ? data.sectionId : null;
     synthetic = data.synthetic === true;
 
     const requestHeaders = new Headers(req.headers);
@@ -296,6 +297,86 @@ export async function POST(req: Request) {
     const fcMastered = flashcardsMastered.mastered || 0;
     const fcTotal = flashcardsMastered.total || 12;
     const fcPct = Math.round((fcMastered / fcTotal) * 100);
+
+    const statsContext = `Statistiques d'activité de l'étudiant :
+- Questions posées au tuteur virtuel : ${questionsAsked}
+- Protocoles générés : ${protocolsGenerated}
+- Score aux quiz : ${correctQuiz}/${totalQuiz} (${quizPct}%)
+- Flashcards maîtrisées : ${fcMastered}/${fcTotal} (${fcPct}%)
+- Dernières questions posées : ${recentQuestions.length > 0 ? recentQuestions.join(', ') : 'Aucune'}
+- Protocoles initiés : ${recentProtocols.length > 0 ? recentProtocols.join(', ') : 'Aucun'}`;
+
+    // Si une section spécifique est demandée (Approche A)
+    if (sectionId && sectionId >= 1 && sectionId <= 5) {
+      console.log(`🤖 [Pedagogical Report API] Génération ciblée de la section ${sectionId} (Provider: ${preferredProvider})...`);
+      
+      const sectionsPromptsSpec = [
+        {
+          id: 1,
+          title: "## 1. Bilan Général de Progression et Positionnement",
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige 2 à 3 paragraphes détaillés analysant l'engagement global de l'apprenant, son assiduité avec le tuteur virtuel et sa dynamique d'assimilation des principes méthodologiques. N'utilise aucun émoji.`
+        },
+        {
+          id: 2,
+          title: "## 2. Synthèse Détaillée des Compétences Méthodologiques",
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse approfondie structurée avec 3 sous-titres explicites :\n### 2.1 Schémas d'Étude & Définition de la Population (FINE & PICOT)\n### 2.2 Réglementation (Loi n° 18-11 relative à la santé) & Éthique\n### 2.3 Calcul du Nombre de Sujets Nécessaires (NSN) & Biais de Recherche\nDéveloppe 1 à 2 paragraphes détaillés sous chaque sous-titre. N'utilise aucun émoji.`
+        },
+        {
+          id: 3,
+          title: "## 3. Analyse des Acquis (Forces) et des Axes d'Amélioration",
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige une analyse sous forme de listes à puces commentées (3 à 4 puces développées par catégorie) :\n### 3.1 Points Forts Identifiés\n### 3.2 Axes de Progrès Prioritaires\nN'utilise aucun émoji.`
+        },
+        {
+          id: 4,
+          title: "## 4. Focus Méthodologique Personnalisé (RECIF & STROBE)",
+          prompt: `${statsContext}\n\nREQUÊTE : Rédige 2 paragraphes sur mesure focalisés sur les besoins de l'étudiant, l'adéquation objectif/critère de jugement et le respect des normes STROBE. N'utilise aucun émoji.`
+        },
+        {
+          id: 5,
+          title: "## 5. Plan d'Action Opérationnel et Recommandations Pédagogiques",
+          prompt: `${statsContext}\n\nREQUÊTE : Propose un plan de travail précis en 4 étapes concrètes (1. Révision Manuel RECIF, 2. Entraînement Quiz/Flashcards, 3. Conception Protocole, 4. Rédaction STROBE). N'utilise aucun émoji.`
+        }
+      ];
+
+      const targetSpec = sectionsPromptsSpec.find(s => s.id === sectionId) || sectionsPromptsSpec[0];
+      const systemPrompt = "Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF (Loi n° 18-11). Tu rédiges avec rigueur et précision en français sous forme de Markdown, sans préambule ni métatexte, et sans utiliser aucun émoji ni émoticône.";
+
+      let sectionContent: string | null = null;
+
+      if (!apiKey && preferredProvider === 'ollama') {
+        const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
+        const ollamaModel = headerOllamaModel || process.env.OLLAMA_MODEL || 'gemma4:latest';
+        const resolvedModel = await getAvailableOllamaModel(ollamaUrl, ollamaModel);
+        if (resolvedModel) {
+          sectionContent = await callOllamaSection(systemPrompt, targetSpec.prompt, ollamaUrl, resolvedModel);
+        }
+      } else if (apiKey) {
+        try {
+          sectionContent = await withTimeout(
+            callLLM(systemPrompt, targetSpec.prompt, { provider: "qwen-plus", temperature: 0.6, maxTokens: 1500 }),
+            60000
+          );
+        } catch (err) {
+          console.warn(`⚠️ Appel OpenRouter pour section ${sectionId} échoué:`, err);
+        }
+      }
+
+      if (sectionContent && sectionContent.trim().length > 30) {
+        let text = sectionContent.trim();
+        if (!text.startsWith('##') && !text.startsWith('#')) {
+          text = `${targetSpec.title}\n\n${text}`;
+        }
+        return NextResponse.json({ sectionId, title: targetSpec.title, content: text });
+      }
+
+      // Fallback statique pour cette section
+      const fullStatic = getStaticFallbackReport(questionsAsked, protocolsGenerated, quizScore, flashcardsMastered, preferredProvider);
+      const staticParts = fullStatic.split(/\n(?=## \d\.)/);
+      let staticSection = staticParts.find(p => p.trim().startsWith(`## ${sectionId}.`));
+      if (!staticSection) staticSection = `${targetSpec.title}\n\nSection générée via algorithme de secours.`;
+
+      return NextResponse.json({ sectionId, title: targetSpec.title, content: staticSection.trim() });
+    }
 
     const prompt = synthetic
       ? `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique RECIF. Tu dois rédiger un bilan synthétique et très concis (sous forme de fiches à puces, maximum 15 lignes en tout) pour un superviseur qui souhaite évaluer rapidement la progression d'un étudiant.
