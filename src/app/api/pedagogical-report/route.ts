@@ -119,38 +119,84 @@ function getStaticFallbackReport(
     : `*Note : Ce bilan a été généré via notre algorithme local standard (clé API non configurée ou indisponible). Vous pouvez configurer votre clé ou activer Ollama localement pour une analyse personnalisée approfondie.*`;
 
   return `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
-*Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique*
+*Plateforme d'Apprentissage de la Méthodologie de Recherche Clinique (Manuel RECIF & Loi n° 18-11)*
 
- ${note}
-
----
-
-## 1. INDICATEURS DE PROGRESSION
-* **Niveau global estimé :** ${level}
-* **Interactions avec le Tuteur :** ${questionsAsked} question(s) posée(s)
-* **Protocoles rédigés :** ${protocolsGenerated} protocole(s) généré(s)
-* **Score global aux Quiz :** ${correctQuiz}/${totalQuiz} (${quizPct}%)
-* **Flashcards acquises :** ${fcMastered}/${fcTotal} (${fcPct}%)
+${note}
 
 ---
 
-## 2. SYNTHÈSE DES COMPÉTENCES ACQUISES
-* **Méthodologie réglementaire (Loi n° 18-11 relative à la santé) :** ${quizPct >= 50 ? 'Maîtrise en cours de consolidation. Vous distinguez les types d\'études réglementées par la Loi 18-11.' : 'Concepts réglementaires encore fragiles, à travailler.'}
-* **Conception de protocole (Recommandations RECIF) :** Vous avez créé ${protocolsGenerated} structure(s) de protocole. ${protocolsGenerated > 0 ? 'La structure d\'un protocole type commence à être bien intégrée.' : 'Commencez par générer un premier protocole sur un sujet simple.'}
-* **Vocabulaire scientifique et conceptuel :** ${fcPct >= 50 ? 'Bonne assimilation des notions de base (biais, insu, randomisation).' : 'Révisez vos flashcards pour automatiser le vocabulaire de recherche clinique.'}
+## 1. Bilan Général de Progression et Positionnement
+
+Votre engagement dans l'apprentissage de la méthodologie de recherche clinique est remarquable, comme en témoigne le volume d'interactions enregistrées avec le tuteur virtuel (${questionsAsked} questions posées) et le nombre de projets de recherche initiés (${protocolsGenerated} protocoles générés). Cette régularité traduit une démarche active d'assimilation des principes fondateurs de la recherche médicale.
+
+Sur la base de l'ensemble de vos activités (réponses aux quiz, entraînement sur flashcards conceptuelles et création de protocoles d'études), votre niveau global de maîtrise méthodologique est actuellement estimé au rang **${level}**. Vos résultats montrent une compréhension progressive de la structuration des projets d'études observationnelles et interventionnelles.
+
+L'analyse de vos parcours de révision indique que vous êtes en phase de consolidation des acquis théoriques. Pour poursuivre votre progression vers l'autonomie complète, il convient de renforcer l'harmonisation entre la question scientifique initiale (framework PICOT/FINE), la rigueur éthique et la justification statistique de la taille de votre échantillon.
 
 ---
 
-## 3. AXE DE TRAVAIL PRIORITAIRE : ${focusArea.toUpperCase()}
-D'après votre parcours, l'axe principal sur lequel orienter vos efforts concerne : **${focusArea}**.
-Il est crucial d'harmoniser la rigueur réglementaire avec la cohérence de vos objectifs scientifiques.
+## 2. Synthèse Détaillée des Compétences Méthodologiques
+
+### 2.1 Schémas d'Étude & Définition de la Population (FINE & PICOT)
+* **Formulation de l'hypothèse :** Vous démontrez une bonne capacité à définir le cadre de recherche. Assurez-vous de vérifier systématiquement les 5 critères FINE (Faisable, Intéressant, Novateur, Éthique, Pertinent).
+* **Définition PICOT :** La population cible, l'intervention/exposition, le comparateur et le critère de jugement principal doivent toujours s'articuler avec une précision temporelle explicite.
+* **Sélection du schéma d'étude :** ${protocolsGenerated > 0 ? 'Vos choix de schémas (cohortes, cas-témoins ou transversales) démontrent une assimilation concrète de la typologie des études observationnelles.' : 'Prenez le temps d\'explorer les différences fondamentales entre études descriptives et étiologiques dans le Manuel RECIF.'}
+
+### 2.2 Réglementation (Loi n° 18-11 relative à la santé) & Éthique
+* **Conformité Réglementaire :** Toute recherche sur l'être humain en Algérie doit se conformer strictement aux dispositions des Articles 388 et suivants de la Loi n° 18-11.
+* **Considérations Éthiques :** La soumission préalable au Comité d'Éthique de la Recherche (CER) et le recueil du consentement éclairé écrit de chaque participant constituent des préalables indérogeables avant tout début de recueil de données.
+* **Protection des Données :** L'anonymisation des cahiers d'observation (CRF) et la confidentialité des informations médicales doivent être garanties tout au long de la conduite du projet.
+
+### 2.3 Calcul du Nombre de Sujets Nécessaires (NSN) & Biais de Recherche
+* **Statistique Inférentielle :** Le calcul du NSN repose sur la fixation explicite du risque alpha (généralement 5%), de la puissance 1-béta (généralement 80% ou 90%) et de la taille d'effet cliniquement pertinente.
+* **Maîtrise des Biais :** ${quizPct >= 50 ? 'Vos scores aux quiz confirmant une assimilation en cours des biais de sélection, de classement et de confusion.' : 'Révisez les fiches flashcards sur les biais pour apprendre à anticiper les facteurs de confusion au stade du protocole.'}
+* **Ajustement & Analyse :** L'anticipation des perdus de vue (majoration usuelle de 10% à 20% du NSN) doit être systématiquement intégrée au chapitre statistique de votre protocole.
 
 ---
 
-## 4. PLAN D'ACTION ET RECOMMANDATIONS PÉDAGOGIQUES
-1. **Pratique Tuteur :** Posez des questions ciblées sur la validité interne, la validité externe et les biais méthodologiques.
-2. **Entraînement Quiz :** Tentez de refaire les quiz pour atteindre un score minimal de 80% sur toutes les catégories.
-3. **Approfondissement :** ${recommendation}
+## 3. Analyse des Acquis (Forces) et des Axes d'Amélioration
+
+### 3.1 Points Forts Identifiés
+* **Proactivité & Rigueur :** Assiduité soutenue sur la plateforme avec ${questionsAsked} question(s) méthodologique(s) soumise(s) au tuteur virtuel.
+* **Structure de Protocole :** Capacité à utiliser le générateur pour formaliser la logique globale d'une recherche.
+* **Assimilation du Vocabulaire :** Validation de ${fcMastered}/${fcTotal} flashcard(s) conceptuelle(s) (${fcPct}% de maîtrise).
+
+### 3.2 Axes de Progrès Prioritaires
+* **Orientation statistique :** Approfondir la justification du choix du critère de jugement principal (unique, mesurable, cliniquement pertinent).
+* **Rdaction STROBE :** Veiller à ce que la section Méthodes du manuscrit réponde point par point aux 22 critères de la grille internationale STROBE.
+* **Standardisation du CRF :** Harmoniser les variables recueillies avec les objectifs secondaires pour éviter les données superflues.
+
+---
+
+## 4. Focus Méthodologique Personnalisé (RECIF & STROBE)
+
+L'analyse de vos activités récentes montre un intérêt particulier pour les sujets liés à : **${focusArea}**.
+
+Pour garantir la valeur scientifique et la publiabilité de vos futurs travaux, nous vous recommandons d'accorder une attention méthodique aux points suivants :
+1. **Adéquation de l'objectif principal :** L'objectif principal doit répondre à une seule question claire et être directement traduit par le critère de jugement principal.
+2. **Rapprochement épidémiologique :** Dans une étude observationnelle, l'identification précise des facteurs de confusion dès la conception du protocole permet de prévoir les stratifications ou régressions multivariées nécessaires lors de l'analyse des données.
+3. **Respect du standard STROBE :** Lors de la rédaction de l'article final, la description du flux des participants (flowchart STROBE) est exigée par tous les journaux médicaux à comité de lecture.
+
+---
+
+## 5. Plan d'Action Opérationnel et Recommandations Pédagogiques
+
+Pour consolider vos connaissances et passer au niveau supérieur, voici votre programme de travail recommandé :
+
+1. **Étape 1 - Révision Théorique (Manuel RECIF) :**
+   Consultez le chapitre dédié aux biais et à la réglementation algérienne (Loi 18-11) dans la section Guide de la plateforme.
+
+2. **Étape 2 - Entraînement sur Quiz & Flashcards :**
+   Révisez quotidiennement vos cartes mémoire jusqu'à atteindre un taux d'assimilation de 85% sur l'ensemble du paquet.
+
+3. **Étape 3 - Conception Pratique de Protocole :**
+   Rédigez un nouveau protocole sur le Générateur en veillant à compléter minutieusement les 23 paramètres requis, notamment la taille d'échantillon et l'analyse statistique.
+
+4. **Étape 4 - Rédaction Scientifique STROBE :**
+   Utilisez le module Rédacteur STROBE pour transformer votre projet de protocole en manuscrit prêt pour la soumission.
+
+---
+*Ce bilan pédagogique est un outil personnalisé d'accompagnement de la plateforme Methodo&Clinique Édu (RECIF).*
 `;
 }
 
@@ -219,9 +265,9 @@ Rédige le bilan synthétique en Markdown en le divisant en 3 sections courtes :
 2. **Forces & Lacunes constatées** (2-3 puces courtes)
 3. **Recommandations prioritaires pour le superviseur** (2-3 recommandations concrètes d'actions)
 
-IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, etc.).`
-      : `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique. Tu dois rédiger un bilan de compétences personnalisé et un rapport de suivi pour un utilisateur étudiant la méthodologie de recherche clinique (manuel RECIF).
-      
+IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport.`
+      : `Tu es un conseiller pédagogique et méthodologique expert en recherche clinique (manuel RECIF & Loi n° 18-11). Tu dois rédiger un rapport de suivi et bilan de compétences personnalisé, complet, très détaillé et formel d'au moins 4 pages (au moins 1200 mots) pour l'apprenant.
+
 Voici les statistiques d'activité de l'utilisateur :
 - Questions posées au tuteur virtuel : ${questionsAsked}
 - Protocoles générés : ${protocolsGenerated}
@@ -230,15 +276,33 @@ Voici les statistiques d'activité de l'utilisateur :
 - Dernières questions posées : ${recentQuestions.length > 0 ? recentQuestions.join(', ') : 'Aucune'}
 - Protocoles initiés : ${recentProtocols.length > 0 ? recentProtocols.join(', ') : 'Aucun'}
 
-Instructions pour le rapport :
-1. Rédige un rapport formel et encourageant en Markdown, destiné à l'étudiant.
-2. Divise le rapport en sections claires :
-   - Bilan général de progression
-   - Analyse des acquis (forces) et des lacunes potentielles (sur la base de son score au quiz et des questions qu'il pose)
-   - Focus méthodologique spécifique lié à ses centres d'intérêt ou ses questions récentes
-   - Plan d'action personnalisé et recommandations concrètes pour s'améliorer (étapes de lecture dans le RECIF, exercices ciblés).
-3. Le style doit être constructif, haut de gamme, et rédigé entièrement en français.
-4. IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport (aucun symbole graphique comme 🔬, 🧠, ✅, 🛡️, etc., ni dans les titres ni dans le texte).`;
+Tu DOIS impérativement suivre la structure Markdown exacte ci-dessous et rédiger 2 à 3 paragraphes complets sous CHAQUE sous-titre pour produire un rapport très riche de 4 pages :
+
+# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI
+
+## 1. Bilan Général de Progression et Positionnement
+Rédige 2 paragraphes détaillés sur l'engagement global, le volume d'interactions (${questionsAsked}), le niveau estimé (${quizPct >= 80 ? 'Avancé' : quizPct >= 50 ? 'Intermédiaire' : 'Débutant'}) et la dynamique d'apprentissage.
+
+## 2. Synthèse Détaillée des Compétences Méthodologiques
+### 2.1 Schémas d'Étude & Définition de la Population (FINE & PICOT)
+Rédige un bilan approfondi sur l'assimilation du cadre PICOT/FINE et des études observationnelles.
+### 2.2 Réglementation (Loi n° 18-11 relative à la santé) & Éthique
+Analyse la maîtrise des articles 388/391 de la Loi 18-11, du consentement éclairé et du passage en comité d'éthique.
+### 2.3 Calcul du Nombre de Sujets Nécessaires (NSN) & Biais de Recherche
+Détaille les connaissances en statistique (risque alpha, puissance, calcul NSN) et la gestion des biais.
+
+## 3. Analyse des Acquis (Forces) et des Axes d'Amélioration
+Développe sous forme de listes à puces commentées :
+- **Points forts identifiés :** (3 à 4 points développés)
+- **Axes de progrès prioritaires :** (3 à 4 points développés)
+
+## 4. Focus Méthodologique Personnalisé (RECIF & STROBE)
+Développe une analyse sur mesure liée à ses questions récentes et ses protocoles.
+
+## 5. Plan d'Action Opérationnel et Recommandations Pédagogiques
+Fournis un plan de travail détaillé en 4 étapes concrètes (Manuel RECIF, Quiz, Protocole, Grille STROBE).
+
+IMPORTANT : N'utilise absolument aucun émoji ni émoticône dans le rapport.`;
 
     if (!apiKey) {
       const ollamaUrl = process.env.OLLAMA_URL || 'http://127.0.0.1:11434';
