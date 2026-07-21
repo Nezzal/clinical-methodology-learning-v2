@@ -582,3 +582,24 @@
   cursor: not-allowed;
 }
 
+.deleteArticleBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.deleteArticleBtn:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+

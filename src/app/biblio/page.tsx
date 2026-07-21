@@ -150,6 +150,12 @@ export default function BiblioPage() {
     }
   };
 
+  // Supprimer localement un article considéré non pertinent
+  const handleDeleteArticle = (pmid: string) => {
+    setArticles(prev => prev.filter(a => a.pmid !== pmid));
+    setSelectedPmids(prev => prev.filter(id => id !== pmid));
+  };
+
   // Basculer l'affichage du résumé
   const toggleAbstract = (pmid: string) => {
     setExpandedAbstracts(prev => ({ ...prev, [pmid]: !prev[pmid] }));
@@ -368,8 +374,9 @@ export default function BiblioPage() {
                 >
                   <option value={5}>5 articles</option>
                   <option value={10}>10 articles</option>
-                  <option value={15}>15 articles</option>
                   <option value={20}>20 articles</option>
+                  <option value={30}>30 articles</option>
+                  <option value={50}>50 articles</option>
                 </select>
               </div>
 
@@ -481,6 +488,18 @@ export default function BiblioPage() {
                         <div className={styles.articleContent}>
                           <div className={styles.articleHeader}>
                             <h3 className={styles.articleTitle}>{art.title}</h3>
+                            <button
+                              type="button"
+                              className={styles.deleteArticleBtn}
+                              onClick={() => handleDeleteArticle(art.pmid)}
+                              title="Exclure cet article"
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                              Exclure
+                            </button>
                           </div>
 
                           <div className={styles.pubMeta}>

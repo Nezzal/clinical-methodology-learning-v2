@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     const options: PubMedSearchOptions = {
-      retmax: typeof retmax === 'number' ? Math.min(Math.max(retmax, 1), 30) : 10,
+      retmax: typeof retmax === 'number' ? Math.min(Math.max(retmax, 1), 50) : 10,
       yearStart: typeof yearStart === 'number' ? yearStart : undefined,
       yearEnd: typeof yearEnd === 'number' ? yearEnd : undefined,
       publicationType: typeof publicationType === 'string' ? publicationType : undefined,
