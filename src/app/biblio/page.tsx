@@ -1,0 +1,622 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/Sidebar';
+import MobileOverlay from '@/components/MobileOverlay';
+import { PubMedArticle } from '@/utils/pubmed';
+import { useAuth } from '@/context/AuthContext';
+import styles from './page.module.css';
+
+export default function BiblioPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  // Filtres de recherche
+  const [query, setQuery] = useState('');
+  const [publicationType, setPublicationType] = useState('all');
+  const [yearStart, setYearStart] = useState('');
+  const [yearEnd, setYearEnd] = useState('');
+  const [retmax, setRetmax] = useState(10);
+  const [sort, setSort] = useState<'relevance' | 'pub_date'>('relevance');
+
+  // États des données
+  const [articles, setArticles] = useState<PubMedArticle[]>([]);
+  const [selectedPmids, setSelectedPmids] = useState<string[]>([]);
+  const [expandedAbstracts, setExpandedAbstracts] = useState<Record<string, boolean>>({});
+
+  // États d'exécution et de résultat
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSynthesizing, setIsSynthesizing] = useState(false);
+  const [synthesisResult, setSynthesisResult] = useState<string | null>(null);
+  const [synthesisProvider, setSynthesisProvider] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Recherche PubMed
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!query.trim()) return;
+
+    setIsSearching(true);
+    setError(null);
+    setArticles([]);
+    setSelectedPmids([]);
+
+    try {
+      let token = '';
+      if (user) {
+        token = await user.getIdToken();
+      }
+
+      const res = await fetch('/api/pubmed/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          query: query.trim(),
+          retmax,
+          yearStart: yearStart ? parseInt(yearStart, 10) : undefined,
+          yearEnd: yearEnd ? parseInt(yearEnd, 10) : undefined,
+          publicationType,
+          sort,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Échec de la recherche PubMed');
+      }
+
+      setArticles(data.articles || []);
+      // Sélectionner tous les articles par défaut
+      if (data.articles && data.articles.length > 0) {
+        setSelectedPmids(data.articles.map((a: PubMedArticle) => a.pmid));
+      }
+    } catch (err: any) {
+      console.error('Erreur recherche PubMed:', err);
+      setError(err.message || 'Impossible d\'effectuer la recherche PubMed.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Basculer la sélection d'un article
+  const toggleSelectArticle = (pmid: string) => {
+    setSelectedPmids(prev =>
+      prev.includes(pmid) ? prev.filter(id => id !== pmid) : [...prev, pmid]
+    );
+  };
+
+  // Tout sélectionner / Tout désélectionner
+  const toggleSelectAll = () => {
+    if (selectedPmids.length === articles.length) {
+      setSelectedPmids([]);
+    } else {
+      setSelectedPmids(articles.map(a => a.pmid));
+    }
+  };
+
+  // Basculer l'affichage du résumé
+  const toggleAbstract = (pmid: string) => {
+    setExpandedAbstracts(prev => ({ ...prev, [pmid]: !prev[pmid] }));
+  };
+
+  // Lancer la synthèse par IA (Qwen / Gemini)
+  const handleSynthesize = async () => {
+    const selectedArticles = articles.filter(a => selectedPmids.includes(a.pmid));
+    if (selectedArticles.length === 0) return;
+
+    setIsSynthesizing(true);
+    setError(null);
+    setSynthesisResult(null);
+
+    try {
+      let token = '';
+      if (user) {
+        token = await user.getIdToken();
+      }
+
+      const aiProvider = localStorage.getItem('recif_ai_provider') || 'openrouter';
+      const ollamaModel = localStorage.getItem('recif_ollama_model') || '';
+
+      const res = await fetch('/api/pubmed/synthesize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ai-provider': aiProvider,
+          'x-ollama-model': ollamaModel,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          articles: selectedArticles,
+          query,
+          modelProvider: aiProvider,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Échec de la génération de la synthèse');
+      }
+
+      setSynthesisResult(data.synthesis);
+      setSynthesisProvider(data.provider);
+    } catch (err: any) {
+      console.error('Erreur synthèse IA:', err);
+      setError(err.message || 'Erreur lors de la génération de la synthèse.');
+    } finally {
+      setIsSynthesizing(false);
+    }
+  };
+
+  // Copier dans le presse-papier
+  const handleCopy = () => {
+    if (!synthesisResult) return;
+    navigator.clipboard.writeText(synthesisResult);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  // Télécharger le fichier texte/markdown
+  const handleDownload = () => {
+    if (!synthesisResult) return;
+    const blob = new Blob([synthesisResult], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `revue_bibliographique_pubmed_${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Transférer au générateur de protocole
+  const handleTransferToProtocol = () => {
+    if (!synthesisResult) return;
+    localStorage.setItem('recif_biblio_synthesis', synthesisResult);
+    router.push('/protocole');
+  };
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#0b132b' }}>
+      <Sidebar />
+      <MobileOverlay />
+
+      <main className={styles.mainContent} style={{ flex: 1 }}>
+        {/* En-tête */}
+        <header className={styles.header}>
+          <h1 className={styles.title}>Recherche Bibliographique & Revue PubMed</h1>
+          <p className={styles.subtitle}>
+            Explorez les publications scientifiques sur <strong>PubMed</strong> en temps réel et générez une revue de la littérature structurée assistée par IA (<strong>Qwen / Gemini</strong>).
+          </p>
+        </header>
+
+        {/* Formulaire de recherche */}
+        <section className={styles.card} style={{ marginBottom: '2rem' }}>
+          <form onSubmit={handleSearch} className={styles.searchForm}>
+            <div className={styles.searchBarRow}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Ex : Type 2 diabetes SGLT2 inhibitors clinical trial, PICO, ou mots-clés MeSH..."
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+              />
+              <button
+                type="submit"
+                className={styles.searchBtn}
+                disabled={isSearching || !query.trim()}
+              >
+                {isSearching ? (
+                  <>
+                    <span className={styles.loadingSpinner} />
+                    Recherche...
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    Chercher sur PubMed
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Filtres de recherche */}
+            <div className={styles.filtersGrid}>
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Type d'étude</label>
+                <select
+                  className={styles.filterSelect}
+                  value={publicationType}
+                  onChange={e => setPublicationType(e.target.value)}
+                >
+                  <option value="all">Tous les types</option>
+                  <option value="clinical_trial">Essais Cliniques (RCT)</option>
+                  <option value="meta_analysis">Méta-Analyses</option>
+                  <option value="systematic_review">Revues Systématiques</option>
+                  <option value="review">Revues Générales</option>
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Année Début</label>
+                <input
+                  type="number"
+                  className={styles.filterInput}
+                  placeholder="Ex : 2018"
+                  value={yearStart}
+                  onChange={e => setYearStart(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Année Fin</label>
+                <input
+                  type="number"
+                  className={styles.filterInput}
+                  placeholder="Ex : 2026"
+                  value={yearEnd}
+                  onChange={e => setYearEnd(e.target.value)}
+                />
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Nombre de résultats</label>
+                <select
+                  className={styles.filterSelect}
+                  value={retmax}
+                  onChange={e => setRetmax(parseInt(e.target.value, 10))}
+                >
+                  <option value={5}>5 articles</option>
+                  <option value={10}>10 articles</option>
+                  <option value={15}>15 articles</option>
+                  <option value={20}>20 articles</option>
+                </select>
+              </div>
+
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>Trier par</label>
+                <select
+                  className={styles.filterSelect}
+                  value={sort}
+                  onChange={e => setSort(e.target.value as any)}
+                >
+                  <option value="relevance">Pertinence</option>
+                  <option value="pub_date">Date de publication</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        {/* Message d'erreur */}
+        {error && (
+          <div style={{
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            borderRadius: '12px',
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            color: '#fca5a5'
+          }}>
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Grille principale : Articles et Synthèse IA */}
+        <div className={`${styles.layout} ${synthesisResult ? styles.layoutWithResults : ''}`}>
+          {/* Colonne Gauche : Liste des articles PubMed */}
+          <section className={styles.card}>
+            <h2 className={styles.cardTitle}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+              </svg>
+              Articles PubMed ({articles.length})
+            </h2>
+
+            {articles.length === 0 ? (
+              <div className={styles.emptyState}>
+                <svg className={styles.emptyIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <p>
+                  Saisissez une question de recherche ou des mots-clés ci-dessus pour rechercher sur PubMed.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Barre d'action sélection */}
+                <div className={styles.actionBar}>
+                  <div className={styles.selectionInfo}>
+                    <input
+                      type="checkbox"
+                      className={styles.checkbox}
+                      checked={selectedPmids.length === articles.length && articles.length > 0}
+                      onChange={toggleSelectAll}
+                    />
+                    <span>
+                      {selectedPmids.length} / {articles.length} sélectionnés
+                    </span>
+                  </div>
+
+                  <button
+                    className={styles.synthesizeBtn}
+                    onClick={handleSynthesize}
+                    disabled={isSynthesizing || selectedPmids.length === 0}
+                  >
+                    {isSynthesizing ? (
+                      <>
+                        <span className={styles.loadingSpinner} />
+                        Synthèse en cours...
+                      </>
+                    ) : (
+                      <>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                        </svg>
+                        Générer la Revue IA
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Liste des cartes d'articles */}
+                <div className={styles.articlesList}>
+                  {articles.map((art) => {
+                    const isSelected = selectedPmids.includes(art.pmid);
+                    const isExpanded = expandedAbstracts[art.pmid] ?? false;
+
+                    return (
+                      <div
+                        key={art.pmid}
+                        className={`${styles.articleCard} ${isSelected ? styles.articleCardSelected : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          className={styles.checkbox}
+                          checked={isSelected}
+                          onChange={() => toggleSelectArticle(art.pmid)}
+                        />
+
+                        <div className={styles.articleContent}>
+                          <div className={styles.articleHeader}>
+                            <h3 className={styles.articleTitle}>{art.title}</h3>
+                          </div>
+
+                          <div className={styles.pubMeta}>
+                            <span className={styles.journalTag}>{art.journal}</span>
+                            <span>• {art.year}</span>
+                            {art.pubTypes.map((pt, i) => (
+                              <span key={i} className={styles.pubTypeBadge}>
+                                {pt}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className={styles.authorsList}>
+                            {art.authors.slice(0, 5).join(', ')}
+                            {art.authors.length > 5 ? ' et al.' : ''}
+                          </div>
+
+                          {/* Action afficher/masquer abstract */}
+                          <button
+                            className={styles.toggleAbstractBtn}
+                            onClick={() => toggleAbstract(art.pmid)}
+                          >
+                            {isExpanded ? '▲ Masquer le résumé' : '▼ Voir le résumé (Abstract)'}
+                          </button>
+
+                          {isExpanded && (
+                            <div className={styles.abstractBox}>
+                              {art.abstract}
+                            </div>
+                          )}
+
+                          <div className={styles.articleFooter}>
+                            <a
+                              href={art.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.linkBtn}
+                            >
+                              PMID: {art.pmid} ↗
+                            </a>
+
+                            {art.doi && (
+                              <a
+                                href={`https://doi.org/${art.doi}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.linkBtn}
+                              >
+                                DOI ↗
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </section>
+
+          {/* Colonne Droite : Revue de la littérature IA */}
+          {(isSynthesizing || synthesisResult) && (
+            <section className={styles.card}>
+              <h2 className={styles.cardTitle}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+                Revue Bibliographique Générée
+              </h2>
+
+              {isSynthesizing ? (
+                <div className={styles.pulseBox}>
+                  🤖 Analyse de {selectedPmids.length} résumés PubMed en cours par Qwen / l'IA...
+                  <br />
+                  <span style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.5rem', display: 'inline-block' }}>
+                    Extraction des résultats, tableau comparatif et rédaction du rationnel scientifique...
+                  </span>
+                </div>
+              ) : (
+                <div className={styles.synthesisContainer}>
+                  {/* En-tête des actions */}
+                  <div className={styles.synthesisHeader}>
+                    <span className={styles.providerBadge}>
+                      Moteur : {synthesisProvider || 'IA RECIF'}
+                    </span>
+
+                    <div className={styles.actionsGroup}>
+                      <button className={styles.actionBtn} onClick={handleCopy}>
+                        {copied ? '✓ Copié !' : '📋 Copier'}
+                      </button>
+                      <button className={styles.actionBtn} onClick={handleDownload}>
+                        📥 Télécharger (.md)
+                      </button>
+                      <button
+                        className={styles.actionBtn}
+                        style={{ background: 'rgba(14, 165, 233, 0.25)', borderColor: '#38bdf8' }}
+                        onClick={handleTransferToProtocol}
+                      >
+                        ⚡ Utiliser dans mon Protocole
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Corps de la synthèse rendu */}
+                  <div className={styles.synthesisBody}>
+                    {renderMarkdown(synthesisResult || '')}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/**
+ * Fonction simple et robuste pour rendre le Markdown sans dépendance lourde externe
+ */
+function renderMarkdown(mdText: string) {
+  if (!mdText) return null;
+
+  const lines = mdText.split('\n');
+  const elements: React.ReactNode[] = [];
+
+  let inTable = false;
+  let tableRows: string[][] = [];
+  let tableHeader: string[] = [];
+
+  const flushTable = (key: string) => {
+    if (tableHeader.length > 0 || tableRows.length > 0) {
+      elements.push(
+        <div key={key} style={{ overflowX: 'auto', margin: '1rem 0' }}>
+          <table>
+            {tableHeader.length > 0 && (
+              <thead>
+                <tr>
+                  {tableHeader.map((h, i) => (
+                    <th key={i}>{h.trim()}</th>
+                  ))}
+                </tr>
+              </thead>
+            )}
+            <tbody>
+              {tableRows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={cellIndex}>{cell.trim()}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      tableHeader = [];
+      tableRows = [];
+      inTable = false;
+    }
+  };
+
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+
+    // Gestion des tableaux Markdown
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      if (trimmed.includes('---')) {
+        // Ligne de séparation de tableau, ignorer
+        return;
+      }
+
+      const cells = trimmed
+        .split('|')
+        .slice(1, -1)
+        .map(c => c.trim());
+
+      if (!inTable) {
+        inTable = true;
+        tableHeader = cells;
+      } else {
+        tableRows.push(cells);
+      }
+      return;
+    } else if (inTable) {
+      flushTable(`table-${idx}`);
+    }
+
+    // Titres H2 / H3
+    if (trimmed.startsWith('## ')) {
+      elements.push(
+        <h2 key={idx}>{trimmed.replace('## ', '')}</h2>
+      );
+    } else if (trimmed.startsWith('### ')) {
+      elements.push(
+        <h3 key={idx}>{trimmed.replace('### ', '')}</h3>
+      );
+    } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      elements.push(
+        <li key={idx} style={{ marginLeft: '1rem' }}>
+          {formatInlineFormatting(trimmed.substring(2))}
+        </li>
+      );
+    } else if (trimmed.length > 0) {
+      elements.push(
+        <p key={idx} style={{ marginBottom: '0.75rem' }}>
+          {formatInlineFormatting(trimmed)}
+        </p>
+      );
+    }
+  });
+
+  if (inTable) {
+    flushTable('table-final');
+  }
+
+  return elements;
+}
+
+function formatInlineFormatting(text: string): React.ReactNode {
+  // Format des puces en gras **texte**
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
