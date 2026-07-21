@@ -509,20 +509,28 @@ export default function ArticleGenerator() {
             {/* 1. Titre & Résumé */}
             {activeTab === 'info' && (
               <>
-                <div className="form-group">
-                  <label htmlFor="art-title">Titre de l'article (Critère STROBE 1)</label>
-                  <input
-                    type="text"
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-title" className={styles.strobeLabel}>Titre de l'article</label>
+                    <span className={styles.strobeBadge}>STROBE 1</span>
+                  </div>
+                  <textarea
                     id="art-title"
+                    className={styles.strobeTextarea}
+                    rows={2}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Ex: Facteurs associés à la mortalité par maladies cardiovasculaires en Algérie : étude transversale..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-type">Type d'étude observationnelle (Critère STROBE 1)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-type" className={styles.strobeLabel}>Type d'étude observationnelle</label>
+                    <span className={styles.strobeBadge}>STROBE 1</span>
+                  </div>
                   <select
                     id="art-type"
+                    className={styles.strobeSelect}
                     value={studyType}
                     onChange={(e) => setStudyType(e.target.value as any)}
                   >
@@ -531,10 +539,14 @@ export default function ArticleGenerator() {
                     <option value="cross-sectional">Étude Transversale (Observation à un instant t)</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-abstract">Résumé structuré (Critère STROBE 2)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-abstract" className={styles.strobeLabel}>Résumé structuré</label>
+                    <span className={styles.strobeBadge}>STROBE 2</span>
+                  </div>
                   <textarea
                     id="art-abstract"
+                    className={styles.strobeTextarea}
                     rows={6}
                     value={abstract}
                     onChange={(e) => setAbstract(e.target.value)}
@@ -547,21 +559,29 @@ export default function ArticleGenerator() {
             {/* 2. Introduction */}
             {activeTab === 'intro' && (
               <>
-                <div className="form-group">
-                  <label htmlFor="art-rationale">Contexte & Justification (Critère STROBE 3)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-rationale" className={styles.strobeLabel}>Contexte & Justification</label>
+                    <span className={styles.strobeBadge}>STROBE 3</span>
+                  </div>
                   <textarea
                     id="art-rationale"
-                    rows={6}
+                    className={styles.strobeTextarea}
+                    rows={5}
                     value={rationale}
                     onChange={(e) => setRationale(e.target.value)}
                     placeholder="Expliquer le contexte scientifique, les motifs de la recherche et l'état actuel des connaissances..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-objectives">Objectifs & Hypothèses (Critère STROBE 4)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-objectives" className={styles.strobeLabel}>Objectifs & Hypothèses</label>
+                    <span className={styles.strobeBadge}>STROBE 4</span>
+                  </div>
                   <textarea
                     id="art-objectives"
-                    rows={5}
+                    className={styles.strobeTextarea}
+                    rows={4}
                     value={objectives}
                     onChange={(e) => setObjectives(e.target.value)}
                     placeholder="Indiquer les objectifs spécifiques, y compris toute hypothèse pré-spécifiée..."
@@ -573,90 +593,126 @@ export default function ArticleGenerator() {
             {/* 3. Méthodes */}
             {activeTab === 'methodo' && (
               <>
-                <div className="form-group">
-                  <label htmlFor="art-design">Schéma d'étude (Critère STROBE 5)</label>
-                  <input
-                    type="text"
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-design" className={styles.strobeLabel}>Schéma d'étude</label>
+                    <span className={styles.strobeBadge}>STROBE 5</span>
+                  </div>
+                  <textarea
                     id="art-design"
+                    className={styles.strobeTextarea}
+                    rows={3}
                     value={design}
                     onChange={(e) => setDesign(e.target.value)}
                     placeholder="Ex: Étude observationnelle transversale multicentrique..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-setting">Cadre (dates, lieux, recrutement) (Critère STROBE 6)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-setting" className={styles.strobeLabel}>Cadre (dates, lieux, recrutement)</label>
+                    <span className={styles.strobeBadge}>STROBE 6</span>
+                  </div>
                   <textarea
                     id="art-setting"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={setting}
                     onChange={(e) => setSetting(e.target.value)}
                     placeholder="Décrire le cadre, les lieux et les dates importantes (recrutement, expositions, collecte)..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-participants">Sélection des participants & Éligibilité (Critère STROBE 6)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-participants" className={styles.strobeLabel}>Sélection des participants & Éligibilité</label>
+                    <span className={styles.strobeBadge}>STROBE 6</span>
+                  </div>
                   <textarea
                     id="art-participants"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={participants}
                     onChange={(e) => setParticipants(e.target.value)}
                     placeholder="Critères d'éligibilité, sources et méthodes de sélection des participants..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-variables">Variables étudiées (Critère STROBE 7)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-variables" className={styles.strobeLabel}>Variables étudiées</label>
+                    <span className={styles.strobeBadge}>STROBE 7</span>
+                  </div>
                   <textarea
                     id="art-variables"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={variables}
                     onChange={(e) => setVariables(e.target.value)}
                     placeholder="Définir clairement toutes les variables : exposition, critères d'évaluation, confusion..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-datasources">Sources de données & Mesures (Critère STROBE 8)</label>
-                  <input
-                    type="text"
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-datasources" className={styles.strobeLabel}>Sources de données & Mesures</label>
+                    <span className={styles.strobeBadge}>STROBE 8</span>
+                  </div>
+                  <textarea
                     id="art-datasources"
+                    className={styles.strobeTextarea}
+                    rows={3}
                     value={dataSources}
                     onChange={(e) => setDataSources(e.target.value)}
                     placeholder="Indiquer les sources des données et le détail des méthodes d'évaluation (mesures)..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-bias">Efforts contre les biais (Critère STROBE 9)</label>
-                  <input
-                    type="text"
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-bias" className={styles.strobeLabel}>Efforts contre les biais</label>
+                    <span className={styles.strobeBadge}>STROBE 9</span>
+                  </div>
+                  <textarea
                     id="art-bias"
+                    className={styles.strobeTextarea}
+                    rows={3}
                     value={bias}
                     onChange={(e) => setBias(e.target.value)}
                     placeholder="Décrire toutes les mesures prises pour faire face aux biais potentiels..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-size">Taille de l'étude (Critère STROBE 10)</label>
-                  <input
-                    type="text"
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-size" className={styles.strobeLabel}>Taille de l'étude</label>
+                    <span className={styles.strobeBadge}>STROBE 10</span>
+                  </div>
+                  <textarea
                     id="art-size"
+                    className={styles.strobeTextarea}
+                    rows={3}
                     value={studySize}
                     onChange={(e) => setStudySize(e.target.value)}
                     placeholder="Expliquer comment la taille de l'échantillon a été déterminée (formule, logiciel)..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-quantitative">Variables quantitatives (Critère STROBE 11)</label>
-                  <input
-                    type="text"
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-quantitative" className={styles.strobeLabel}>Variables quantitatives</label>
+                    <span className={styles.strobeBadge}>STROBE 11</span>
+                  </div>
+                  <textarea
                     id="art-quantitative"
+                    className={styles.strobeTextarea}
+                    rows={3}
                     value={quantitativeVariables}
                     onChange={(e) => setQuantitativeVariables(e.target.value)}
                     placeholder="Expliquer comment les variables quantitatives ont été traitées dans les analyses..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-statistical">Méthodes statistiques (Critère STROBE 12)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-statistical" className={styles.strobeLabel}>Méthodes statistiques</label>
+                    <span className={styles.strobeBadge}>STROBE 12</span>
+                  </div>
                   <textarea
                     id="art-statistical"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={statisticalMethods}
                     onChange={(e) => setStatisticalMethods(e.target.value)}
@@ -669,50 +725,70 @@ export default function ArticleGenerator() {
             {/* 4. Résultats */}
             {activeTab === 'results' && (
               <>
-                <div className="form-group">
-                  <label htmlFor="art-flow">Flux des participants (Critère STROBE 13)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-flow" className={styles.strobeLabel}>Flux des participants</label>
+                    <span className={styles.strobeBadge}>STROBE 13</span>
+                  </div>
                   <textarea
                     id="art-flow"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={participantsFlow}
                     onChange={(e) => setParticipantsFlow(e.target.value)}
                     placeholder="Donner le nombre de participants à chaque étape (éligibles, inclus, suivis, analysés)..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-descriptive">Données descriptives (Critère STROBE 14)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-descriptive" className={styles.strobeLabel}>Données descriptives</label>
+                    <span className={styles.strobeBadge}>STROBE 14</span>
+                  </div>
                   <textarea
                     id="art-descriptive"
+                    className={styles.strobeTextarea}
                     rows={4}
                     value={descriptiveData}
                     onChange={(e) => setDescriptiveData(e.target.value)}
                     placeholder="Donner les caractéristiques des participants (démographiques, cliniques, sociales) et les expositions..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-outcomes">Données sur les résultats (Critère STROBE 15)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-outcomes" className={styles.strobeLabel}>Données sur les résultats</label>
+                    <span className={styles.strobeBadge}>STROBE 15</span>
+                  </div>
                   <textarea
                     id="art-outcomes"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={outcomeData}
                     onChange={(e) => setOutcomeData(e.target.value)}
                     placeholder="Nombre d'événements d'intérêt ou mesures de résumé au fil du temps..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-mainresults">Résultats principaux (Critère STROBE 16)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-mainresults" className={styles.strobeLabel}>Résultats principaux</label>
+                    <span className={styles.strobeBadge}>STROBE 16</span>
+                  </div>
                   <textarea
                     id="art-mainresults"
+                    className={styles.strobeTextarea}
                     rows={4}
                     value={mainResults}
                     onChange={(e) => setMainResults(e.target.value)}
                     placeholder="Donner les estimations non ajustées et, le cas échéant, ajustées, avec les intervalles de confiance à 95%..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-otheranalyses">Analyses secondaires (Critère STROBE 17)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-otheranalyses" className={styles.strobeLabel}>Analyses secondaires</label>
+                    <span className={styles.strobeBadge}>STROBE 17</span>
+                  </div>
                   <textarea
                     id="art-otheranalyses"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={otherAnalyses}
                     onChange={(e) => setOtherAnalyses(e.target.value)}
@@ -725,40 +801,56 @@ export default function ArticleGenerator() {
             {/* 5. Discussion */}
             {activeTab === 'discussion' && (
               <>
-                <div className="form-group">
-                  <label htmlFor="art-keyresults">Résultats clés (Critère STROBE 18)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-keyresults" className={styles.strobeLabel}>Résultats clés</label>
+                    <span className={styles.strobeBadge}>STROBE 18</span>
+                  </div>
                   <textarea
                     id="art-keyresults"
+                    className={styles.strobeTextarea}
                     rows={4}
                     value={keyResults}
                     onChange={(e) => setKeyResults(e.target.value)}
                     placeholder="Résumer les principaux résultats en lien avec les objectifs de l'étude..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-limitations">Limites de l'étude (Critère STROBE 19)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-limitations" className={styles.strobeLabel}>Limites de l'étude</label>
+                    <span className={styles.strobeBadge}>STROBE 19</span>
+                  </div>
                   <textarea
                     id="art-limitations"
+                    className={styles.strobeTextarea}
                     rows={4}
                     value={limitations}
                     onChange={(e) => setLimitations(e.target.value)}
                     placeholder="Discuter des limites de l'étude, en tenant compte des sources de biais potentiels ou d'imprécision..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-interpretation">Interprétation des résultats (Critère STROBE 20)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-interpretation" className={styles.strobeLabel}>Interprétation des résultats</label>
+                    <span className={styles.strobeBadge}>STROBE 20</span>
+                  </div>
                   <textarea
                     id="art-interpretation"
+                    className={styles.strobeTextarea}
                     rows={4}
                     value={interpretation}
                     onChange={(e) => setInterpretation(e.target.value)}
                     placeholder="Donner une interprétation globale et prudente des résultats en s'appuyant sur d'autres études..."
                   />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="art-generalisability">Généralisabilité (Critère STROBE 21)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-generalisability" className={styles.strobeLabel}>Généralisabilité</label>
+                    <span className={styles.strobeBadge}>STROBE 21</span>
+                  </div>
                   <textarea
                     id="art-generalisability"
+                    className={styles.strobeTextarea}
                     rows={3}
                     value={generalisability}
                     onChange={(e) => setGeneralisability(e.target.value)}
@@ -771,11 +863,15 @@ export default function ArticleGenerator() {
             {/* 6. Financement */}
             {activeTab === 'funding' && (
               <>
-                <div className="form-group">
-                  <label htmlFor="art-funding">Sources de financement (Critère STROBE 22)</label>
+                <div className={styles.strobeFormGroup}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-funding" className={styles.strobeLabel}>Sources de financement</label>
+                    <span className={styles.strobeBadge}>STROBE 22</span>
+                  </div>
                   <textarea
                     id="art-funding"
-                    rows={5}
+                    className={styles.strobeTextarea}
+                    rows={4}
                     value={funding}
                     onChange={(e) => setFunding(e.target.value)}
                     placeholder="Indiquer les sources de financement et le rôle des financeurs pour la recherche présente..."

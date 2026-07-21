@@ -1125,33 +1125,43 @@ export default function ProtocoleGenerator() {
                   </div>
                 )}
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="title">Titre Complet de l'étude *</label>
-                  <input
+                {/* 1. Informations Générales */}
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="title">Titre Complet de l'étude *</label>
+                    <span className={styles.protoBadge}>RECIF Titre</span>
+                  </div>
+                  <textarea
                     id="title"
-                    type="text"
-                    className="form-input"
-                    placeholder="ex. Évaluation de l'efficacité de la thérapie X..."
+                    className={styles.protoTextarea}
+                    rows={2}
+                    placeholder="ex. Évaluation de l'efficacité de la thérapie X chez les patients atteints de Y..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="acronym">Acronyme</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="acronym">Acronyme</label>
+                    <span className={styles.protoBadge}>Identification</span>
+                  </div>
                   <input
                     id="acronym"
                     type="text"
-                    className="form-input"
+                    className={styles.protoInput}
                     placeholder="ex. COVID-CARE"
                     value={acronym}
                     onChange={(e) => setAcronym(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="methodology">Type de Recherche (Méthodologie)</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="methodology">Type de Recherche (Méthodologie)</label>
+                    <span className={styles.protoBadge}>Schéma Clinique</span>
+                  </div>
                   <select
                     id="methodology"
-                    className="form-select"
+                    className={styles.protoSelect}
                     value={methodology}
                     onChange={(e) => setMethodology(e.target.value as 'interventional' | 'observational')}
                   >
@@ -1159,11 +1169,14 @@ export default function ProtocoleGenerator() {
                     <option value="interventional">Étude clinique interventionnelle (Essai thérapeutique, diagnostique ou préventif)</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="benefitType">Bénéfice individuel attendu (Loi n° 18-11)</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="benefitType">Bénéfice individuel attendu</label>
+                    <span className={styles.protoBadge}>Loi n° 18-11</span>
+                  </div>
                   <select
                     id="benefitType"
-                    className="form-select"
+                    className={styles.protoSelect}
                     value={benefitType}
                     onChange={(e) => setBenefitType(e.target.value as 'bid' | 'sbid')}
                   >
@@ -1174,53 +1187,73 @@ export default function ProtocoleGenerator() {
               </>
             )}
 
+            {/* 2. Méthodologie */}
             {activeTab === 'methodo' && (
               <>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="question">Question de recherche principale *</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="question">Question de recherche principale *</label>
+                    <span className={styles.protoBadge}>FINE & PICOT</span>
+                  </div>
                   <textarea
                     id="question"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Quelle est la question clinique précise à laquelle l'étude doit répondre ?"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="justification">Justification de l'étude (Le "Pourquoi")</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="justification">Justification de l'étude (Rationnel scientifique)</label>
+                    <span className={styles.protoBadge}>Justification</span>
+                  </div>
                   <textarea
                     id="justification"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={4}
                     placeholder="Pourquoi cette étude est-elle importante ? Originalité, urgence ou saisine d'hôpitaux..."
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="objectives">Objectifs secondaires</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="objectives">Objectifs secondaires</label>
+                    <span className={styles.protoBadge}>Objectifs</span>
+                  </div>
                   <textarea
                     id="objectives"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Décrivez les objectifs secondaires ou intermédiaires..."
                     value={objectives}
                     onChange={(e) => setObjectives(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="hypothesis">Hypothèse(s) de recherche</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="hypothesis">Hypothèse(s) de recherche</label>
+                    <span className={styles.protoBadge}>Hypothèse</span>
+                  </div>
                   <textarea
                     id="hypothesis"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Quelle est la réponse théorique ou l'hypothèse principale à valider ?"
                     value={hypothesis}
                     onChange={(e) => setHypothesis(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="design">Schéma d'étude préconisé</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="design">Schéma d'étude préconisé</label>
+                    <span className={styles.protoBadge}>Design</span>
+                  </div>
                   <select
                     id="design"
-                    className="form-select"
+                    className={styles.protoSelect}
                     value={design}
                     onChange={(e) => setDesign(e.target.value)}
                   >
@@ -1234,11 +1267,15 @@ export default function ProtocoleGenerator() {
                     <option value="Méta-analyse">Méta-analyse (Revue systématique quantitative)</option>
                   </select>
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="intervention">Description de l'intervention ou de l'exposition</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="intervention">Description de l'intervention ou de l'exposition</label>
+                    <span className={styles.protoBadge}>Intervention</span>
+                  </div>
                   <textarea
                     id="intervention"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Décrivez précisément le traitement, le protocole de soin ou le paramètre évalué..."
                     value={intervention}
                     onChange={(e) => setIntervention(e.target.value)}
@@ -1247,76 +1284,102 @@ export default function ProtocoleGenerator() {
               </>
             )}
 
+            {/* 3. Population & Critères */}
             {activeTab === 'endpoints' && (
               <>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="pop">Population cible</label>
-                  <input
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="pop">Population cible</label>
+                    <span className={styles.protoBadge}>Population</span>
+                  </div>
+                  <textarea
                     id="pop"
-                    type="text"
-                    className="form-input"
-                    placeholder="ex. Patients adultes atteints de diabète de type 2..."
+                    className={styles.protoTextarea}
+                    rows={3}
+                    placeholder="ex. Patients adultes de 18 à 75 ans atteints de diabète de type 2 réfractaire..."
                     value={population}
                     onChange={(e) => setPopulation(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="primary">Critère de Jugement Principal *</label>
-                  <input
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="primary">Critère de Jugement Principal *</label>
+                    <span className={styles.protoBadge}>Critère Principal</span>
+                  </div>
+                  <textarea
                     id="primary"
-                    type="text"
-                    className="form-input"
-                    placeholder="Mesure clé (ex. Taux d'HbA1c à 6 mois)"
+                    className={styles.protoTextarea}
+                    rows={3}
+                    placeholder="Mesure clé objective (ex. Variation du taux d'HbA1c à 6 mois par rapport à l'inclusion)"
                     value={primaryEndpoint}
                     onChange={(e) => setPrimaryEndpoint(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="secondary">Critères de Jugement Secondaires</label>
-                  <input
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="secondary">Critères de Jugement Secondaires</label>
+                    <span className={styles.protoBadge}>Critères Secondaires</span>
+                  </div>
+                  <textarea
                     id="secondary"
-                    type="text"
-                    className="form-input"
-                    placeholder="ex. Tolérance biologique, qualité de vie, coûts"
+                    className={styles.protoTextarea}
+                    rows={3}
+                    placeholder="ex. Tolérance biologique, fréquence des accès d'hypoglycémie, qualité de vie (EQ-5D), analyse médico-économique"
                     value={secondaryEndpoints}
                     onChange={(e) => setSecondaryEndpoints(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="inclusion">Critères d'inclusion principaux (un par ligne)</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="inclusion">Critères d'inclusion principaux (un par ligne)</label>
+                    <span className={styles.protoBadge}>Inclusion</span>
+                  </div>
                   <textarea
                     id="inclusion"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="ex. Âge >= 18 ans&#10;Diagnostic confirmé depuis > 1 an"
                     value={inclusion}
                     onChange={(e) => setInclusion(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="exclusion">Critères d'exclusion (un par ligne)</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="exclusion">Critères d'exclusion (un par ligne)</label>
+                    <span className={styles.protoBadge}>Exclusion</span>
+                  </div>
                   <textarea
                     id="exclusion"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="ex. Insuffisance rénale sévère&#10;Grossesse ou allaitement"
                     value={exclusion}
                     onChange={(e) => setExclusion(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="samplingStrategy">Stratégie d'échantillonnage</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="samplingStrategy">Stratégie d'échantillonnage</label>
+                    <span className={styles.protoBadge}>Échantillonnage</span>
+                  </div>
                   <textarea
                     id="samplingStrategy"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="ex. Échantillonnage aléatoire simple, échantillonnage consécutif, échantillonnage de convenance..."
                     value={samplingStrategy}
                     onChange={(e) => setSamplingStrategy(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="bias">Biais de recherche et facteurs de confusion</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="bias">Biais de recherche et facteurs de confusion</label>
+                    <span className={styles.protoBadge}>Contrôle des Biais</span>
+                  </div>
                   <textarea
                     id="bias"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="ex. Biais de mémorisation, biais de sélection lié à la clandestinité..."
                     value={bias}
                     onChange={(e) => setBias(e.target.value)}
@@ -1325,63 +1388,88 @@ export default function ProtocoleGenerator() {
               </>
             )}
 
+            {/* 4. Logistique & Analyse */}
             {activeTab === 'logistics' && (
               <>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="dataCollection">Collecte des données</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="dataCollection">Collecte des données</label>
+                    <span className={styles.protoBadge}>Recueil</span>
+                  </div>
                   <textarea
                     id="dataCollection"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Méthode et outils de collecte (ex. questionnaires standardisés, dossiers médicaux électroniques, observations directes...)"
                     value={dataCollection}
                     onChange={(e) => setDataCollection(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="logistics">Récolte des données & Étude pilote</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="logistics">Récolte des données & Étude pilote</label>
+                    <span className={styles.protoBadge}>Logistique</span>
+                  </div>
                   <textarea
                     id="logistics"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Logistique pratique, chaîne du froid, stockage, validation des questionnaires via une étude pilote..."
                     value={logistics}
                     onChange={(e) => setLogistics(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="dataAnalysis">Analyse des données (Plan statistique)</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="dataAnalysis">Analyse des données (Plan statistique)</label>
+                    <span className={styles.protoBadge}>Statistiques</span>
+                  </div>
                   <textarea
                     id="dataAnalysis"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Méthodes d'analyse statistique prévues (ex. tests bilatéraux, régression logistique, seuil de significativité p < 0.05...)"
                     value={dataAnalysis}
                     onChange={(e) => setDataAnalysis(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="personnel">Personnel et rôles requis</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="personnel">Personnel et rôles requis</label>
+                    <span className={styles.protoBadge}>Équipe</span>
+                  </div>
                   <textarea
                     id="personnel"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Qui participe (ARC, statisticiens, enquêteurs, psychologue clinicien...) et quels sont leurs rôles ?"
                     value={personnel}
                     onChange={(e) => setPersonnel(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="budget">Budget et Financement</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="budget">Budget et Financement</label>
+                    <span className={styles.protoBadge}>Budget</span>
+                  </div>
                   <textarea
                     id="budget"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Chiffrage estimé (dosages, chélatants, licences de tests, promoteurs) et sources de financement..."
                     value={budget}
                     onChange={(e) => setBudget(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="calendar">Calendrier prévisionnel</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="calendar">Calendrier prévisionnel</label>
+                    <span className={styles.protoBadge}>Chronogramme</span>
+                  </div>
                   <textarea
                     id="calendar"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Jalons principaux, recrutement, délais éthiques, soumissions et rédaction..."
                     value={calendar}
                     onChange={(e) => setCalendar(e.target.value)}
@@ -1390,33 +1478,46 @@ export default function ProtocoleGenerator() {
               </>
             )}
 
+            {/* 5. Éthique & Annexes */}
             {activeTab === 'finance' && (
               <>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="ethics">Considérations éthiques supplémentaires</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="ethics">Considérations éthiques supplémentaires</label>
+                    <span className={styles.protoBadge}>Éthique</span>
+                  </div>
                   <textarea
                     id="ethics"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Détails sur l'anonymisation, la notice d'information ou les dilemmes éthiques spécifiques..."
                     value={ethics}
                     onChange={(e) => setEthics(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="references">Références bibliographiques</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="references">Références bibliographiques</label>
+                    <span className={styles.protoBadge}>Bibliographie</span>
+                  </div>
                   <textarea
                     id="references"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Études de référence, articles scientifiques, recommandations ou directives réglementaires..."
                     value={references}
                     onChange={(e) => setReferences(e.target.value)}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="annexes">Annexes (à lister ou citer)</label>
+                <div className={styles.protoFormGroup}>
+                  <div className={styles.protoLabelHeader}>
+                    <label className={styles.protoLabel} htmlFor="annexes">Annexes (à lister ou citer)</label>
+                    <span className={styles.protoBadge}>Annexes</span>
+                  </div>
                   <textarea
                     id="annexes"
-                    className="form-textarea"
+                    className={styles.protoTextarea}
+                    rows={3}
                     placeholder="Listez les documents annexes (ex: Formulaire de consentement éclairé, Grille de recueil, Questionnaire, Fiche d'information)..."
                     value={annexes}
                     onChange={(e) => setAnnexes(e.target.value)}

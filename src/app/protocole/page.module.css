@@ -336,3 +336,71 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Protocol Form Styles */
+.protoFormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.35rem;
+}
+
+.protoLabelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.protoLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.protoBadge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  background: rgba(13, 148, 136, 0.15);
+  color: var(--accent-secondary, #2dd4bf);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.protoInput, .protoSelect, .protoTextarea {
+  width: 100%;
+  background: var(--bg-tertiary, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-primary, #f3f4f6);
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  transition: border-color var(--transition-fast, 0.2s), box-shadow var(--transition-fast, 0.2s);
+}
+
+.protoInput:focus, .protoSelect:focus, .protoTextarea:focus {
+  outline: none;
+  border-color: var(--accent-secondary, #2dd4bf);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2);
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.protoTextarea {
+  resize: vertical;
+  min-height: 90px;
+  overflow-y: auto;
+}
+
+.protoHelpText {
+  font-size: 0.78rem;
+  color: var(--text-muted, #9ca3af);
+  margin-top: 0.15rem;
+}
+
