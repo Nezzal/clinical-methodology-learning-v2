@@ -33,6 +33,57 @@ export default function BiblioPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Assistant de requêtes MeSH par IA
+  const [naturalLanguageQuestion, setNaturalLanguageQuestion] = useState('');
+  const [isGeneratingMesh, setIsGeneratingMesh] = useState(false);
+  const [showMeshHelper, setShowMeshHelper] = useState(false);
+
+  // Générer la requête MeSH PubMed via l'IA (Qwen / Gemini)
+  const handleGenerateMesh = async () => {
+    if (!naturalLanguageQuestion.trim()) return;
+    setIsGeneratingMesh(true);
+    setError(null);
+
+    try {
+      let token = '';
+      if (user) {
+        token = await user.getIdToken();
+      }
+
+      const aiProvider = localStorage.getItem('recif_ai_provider') || 'openrouter';
+      const ollamaModel = localStorage.getItem('recif_ollama_model') || '';
+
+      const res = await fetch('/api/pubmed/mesh-query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-ai-provider': aiProvider,
+          'x-ollama-model': ollamaModel,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          question: naturalLanguageQuestion.trim(),
+          modelProvider: aiProvider,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Échec de la génération de la requête MeSH');
+      }
+
+      if (data.query) {
+        setQuery(data.query);
+        setShowMeshHelper(false);
+      }
+    } catch (err: any) {
+      console.error('Erreur génération MeSH:', err);
+      setError(err.message || 'Erreur lors de la génération de la requête MeSH.');
+    } finally {
+      setIsGeneratingMesh(false);
+    }
+  };
+
   // Recherche PubMed
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -225,6 +276,49 @@ export default function BiblioPage() {
                 )}
               </button>
             </div>
+
+            {/* Assistant MeSH par IA */}
+            <div className={styles.meshHelperRow}>
+              <button
+                type="button"
+                className={styles.meshHelperToggleBtn}
+                onClick={() => setShowMeshHelper(!showMeshHelper)}
+              >
+                💡 {showMeshHelper ? "Masquer l'assistant de requête MeSH par IA" : "Besoin d'aide ? Générer une requête MeSH PubMed avec l'IA"}
+              </button>
+            </div>
+
+            {showMeshHelper && (
+              <div className={styles.meshHelperBox}>
+                <p className={styles.meshHelperDesc}>
+                  Saisissez votre question ou sujet de recherche en langage naturel. L'IA traduira vos concepts médicaux en anglais et structurera une commande PubMed professionnelle avec les descripteurs <strong>MeSH</strong> officiels.
+                </p>
+                <div className={styles.meshHelperInputArea}>
+                  <textarea
+                    className={styles.meshHelperInput}
+                    placeholder="Ex : Rédige avec les MeSH de Pubmed une commande de recherche sur l'intoxication mercurielle chronique des orpailleurs et mineurs d'or depuis 2000 à 2026..."
+                    value={naturalLanguageQuestion}
+                    onChange={e => setNaturalLanguageQuestion(e.target.value)}
+                    rows={3}
+                  />
+                  <button
+                    type="button"
+                    className={styles.meshHelperSubmitBtn}
+                    onClick={handleGenerateMesh}
+                    disabled={isGeneratingMesh || !naturalLanguageQuestion.trim()}
+                  >
+                    {isGeneratingMesh ? (
+                      <>
+                        <span className={styles.loadingSpinner} />
+                        Génération...
+                      </>
+                    ) : (
+                      "Générer la requête"
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Filtres de recherche */}
             <div className={styles.filtersGrid}>
