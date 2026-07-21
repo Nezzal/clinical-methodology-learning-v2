@@ -238,7 +238,20 @@ a {
     overflow: visible !important;
   }
   
-  main, .animate-fade-in {
+  .app-layout-wrapper,
+  div[style*="display: flex"],
+  div[style*="display:flex"] {
+    display: block !important;
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+  }
+
+  main,
+  main[style*="flex"],
+  .animate-fade-in {
     background: white !important;
     color: black !important;
     margin-left: 0 !important;
@@ -253,6 +266,10 @@ a {
     opacity: 1 !important;
     overflow: visible !important;
     display: block !important;
+    flex: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
   }
   
   .no-print, .faq-fab, .faq-drawer, [class*="faq-fab"], [class*="faq-drawer"], button, aside {

@@ -560,7 +560,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
 
   // Rendu par défaut de l'application avec la Sidebar
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="app-layout-wrapper" style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
       <main style={{ 
         flex: 1, 

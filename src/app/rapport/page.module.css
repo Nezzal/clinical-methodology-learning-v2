@@ -226,14 +226,24 @@
 /* Print specific styles */
 @media print {
   .container {
+    display: block !important;
     gap: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
   .reportPaper {
+    display: block !important;
     border: none !important;
     padding: 0 !important;
     box-shadow: none !important;
     background: transparent !important;
     color: black !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
   .reportPaper h1, .reportPaper h2, .reportPaper h3 {
     color: black !important;
@@ -245,12 +255,14 @@
   
   /* Print Radar Overrides */
   .printRadarContainer {
-    display: flex !important;
-    margin-bottom: 1.5rem !important;
+    display: block !important;
+    text-align: center !important;
+    margin: 0 auto 1.5rem auto !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
   .printRadarBox {
+    display: inline-block !important;
     background: transparent !important;
     border: 1px solid #ccc !important;
     color: black !important;
