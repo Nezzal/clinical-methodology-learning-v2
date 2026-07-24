@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import styles from './ChangelogModal.module.css';
+import { APP_VERSION } from '@/utils/constants';
 
 interface ChangelogModalProps {
   isOpen: boolean;
@@ -19,8 +20,20 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.6.1',
+    version: 'v1.7.0',
     isCurrent: true,
+    date: '24 Juillet 2026',
+    title: 'Recherche PubMed IA & Bilan Pédagogique Interactif v2',
+    tags: ['PubMed', 'IA MeSH', 'Synthèse Biblio', 'Rapport v2'],
+    features: [
+      'Nouveau module de recherche PubMed en direct avec limite étendue à 50 articles et suppression locale.',
+      'Générateur automatique de requêtes MeSH structurées par IA (Gemini / Qwen).',
+      'Module de synthèse bibliographique IA multi-sources pour revue de la littérature.',
+      'Génération interactive du Bilan Pédagogique section par section (5 sections sur 4 pages PDF).'
+    ]
+  },
+  {
+    version: 'v1.6.1',
     date: '21 Juillet 2026',
     title: 'Optimisations Ergonomiques & Champs Extensibles',
     tags: ['Ergonomie', 'Formulaires', 'Badges'],
@@ -146,7 +159,7 @@ export default function ChangelogModal({ isOpen, onClose }: ChangelogModalProps)
         </div>
 
         <footer className={styles.modalFooter}>
-          <span>Methodo&Clinique Éducation v1.6.1</span>
+          <span>Methodo&Clinique Éducation v{APP_VERSION}</span>
           <span>Plateforme Pédagogique & Recherche Clinique</span>
         </footer>
       </div>
