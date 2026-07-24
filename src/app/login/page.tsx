@@ -156,7 +156,8 @@ export default function Login() {
           country: requestCountry.trim(),
           email: requestEmail.trim(),
           phone: requestPhone.trim(),
-          requestedRole: requestedRole
+          requestedRole: requestedRole,
+          requestedTier: requestedTier
         })
       });
       
@@ -532,16 +533,47 @@ export default function Login() {
                         />
                       </div>
                       <div className={styles.inputGroup}>
-                        <label htmlFor="requestCountry">Pays <span style={{color:'#e11d48'}}>*</span></label>
-                        <input
-                          type="text"
+                        <label htmlFor="requestCountry">Pays / Zone de Résidence <span style={{color:'#e11d48'}}>*</span></label>
+                        <select
                           id="requestCountry"
-                          placeholder="Algérie"
                           value={requestCountry}
                           onChange={(e) => setRequestCountry(e.target.value)}
                           required
                           disabled={submitting}
-                        />
+                          style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', padding: '0.65rem', borderRadius: '8px' }}
+                        >
+                          <option value="" disabled style={{ background: '#1a1a2e' }}>-- Sélectionnez votre pays --</option>
+                          <optgroup label="🇩🇿 Algérie" style={{ background: '#1a1a2e', color: '#38bdf8' }}>
+                            <option value="Algérie" style={{ background: '#1a1a2e' }}>🇩🇿 Algérie</option>
+                          </optgroup>
+                          <optgroup label="🌍 Zone Afrique (Hors Algérie)" style={{ background: '#1a1a2e', color: '#2dd4bf' }}>
+                            <option value="Côte d'Ivoire" style={{ background: '#1a1a2e' }}>🇨🇮 Côte d'Ivoire</option>
+                            <option value="Sénégal" style={{ background: '#1a1a2e' }}>🇸🇳 Sénégal</option>
+                            <option value="Cameroun" style={{ background: '#1a1a2e' }}>🇨🇲 Cameroun</option>
+                            <option value="Mali" style={{ background: '#1a1a2e' }}>🇲🇱 Mali</option>
+                            <option value="Gabon" style={{ background: '#1a1a2e' }}>🇬🇦 Gabon</option>
+                            <option value="Maroc" style={{ background: '#1a1a2e' }}>🇲🇦 Maroc</option>
+                            <option value="Tunisie" style={{ background: '#1a1a2e' }}>🇹🇳 Tunisie</option>
+                            <option value="Guinée" style={{ background: '#1a1a2e' }}>🇬🇳 Guinée</option>
+                            <option value="Bénin" style={{ background: '#1a1a2e' }}>🇧🇯 Bénin</option>
+                            <option value="Togo" style={{ background: '#1a1a2e' }}>🇹🇬 Togo</option>
+                            <option value="Congo RDC" style={{ background: '#1a1a2e' }}>🇨🇩 Congo (RDC)</option>
+                            <option value="Congo Brazzaville" style={{ background: '#1a1a2e' }}>🇨🇬 Congo (Brazzaville)</option>
+                            <option value="Burkina Faso" style={{ background: '#1a1a2e' }}>🇧🇫 Burkina Faso</option>
+                            <option value="Niger" style={{ background: '#1a1a2e' }}>🇳🇪 Niger</option>
+                            <option value="Tchad" style={{ background: '#1a1a2e' }}>🇹🇩 Tchad</option>
+                            <option value="Mauritanie" style={{ background: '#1a1a2e' }}>🇲🇷 Mauritanie</option>
+                            <option value="Autre Afrique" style={{ background: '#1a1a2e' }}>🌍 Autre pays d'Afrique</option>
+                          </optgroup>
+                          <optgroup label="🇪🇺🇨🇦 Europe & Occident" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
+                            <option value="France" style={{ background: '#1a1a2e' }}>🇫🇷 France</option>
+                            <option value="Belgique" style={{ background: '#1a1a2e' }}>🇧🇪 Belgique</option>
+                            <option value="Suisse" style={{ background: '#1a1a2e' }}>🇨🇭 Suisse</option>
+                            <option value="Canada" style={{ background: '#1a1a2e' }}>🇨🇦 Canada</option>
+                            <option value="Luxembourg" style={{ background: '#1a1a2e' }}>🇱🇺 Luxembourg</option>
+                            <option value="Autre Occident" style={{ background: '#1a1a2e' }}>🌐 Autre pays (Europe / Occident)</option>
+                          </optgroup>
+                        </select>
                       </div>
                     </div>
 
