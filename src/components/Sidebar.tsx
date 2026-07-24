@@ -8,6 +8,7 @@ import { getProgress } from '@/utils/storage';
 import { loadUserProfile, listenToUnreadMessages } from '@/utils/firestore';
 import { APP_VERSION } from '@/utils/constants';
 import ChangelogModal from './ChangelogModal';
+import SubscriptionModal from './SubscriptionModal';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -17,6 +18,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [level, setLevel] = useState('Débutant');
 
   const [profileName, setProfileName] = useState('');
@@ -568,6 +570,16 @@ export default function Sidebar() {
         <div className={styles.footer}>
           <button
             className={styles.versionBtn}
+            onClick={() => setShowSubscriptionModal(true)}
+            style={{ background: 'rgba(13,148,136,0.15)', color: '#2dd4bf', border: '1px solid rgba(13,148,136,0.3)', marginBottom: '6px' }}
+            title="Consulter les formules d'abonnement et le RIP"
+          >
+            <span>💳</span>
+            <span>Formules & Tarifs</span>
+          </button>
+
+          <button
+            className={styles.versionBtn}
             onClick={() => setShowChangelog(true)}
             title="Voir les nouveautés et l'historique des versions"
           >
@@ -580,6 +592,11 @@ export default function Sidebar() {
       <ChangelogModal
         isOpen={showChangelog}
         onClose={() => setShowChangelog(false)}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
       />
     </>
   );

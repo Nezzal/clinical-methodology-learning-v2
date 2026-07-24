@@ -19,6 +19,31 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, isFirebaseEnabled, auth, firebaseConfig } from './firebase';
 import { LocalStats } from './storage';
+import { UserSubscription, UserType, SubscriptionTier, QuotaUsage, TIER_LIMITS } from '@/types/subscription';
+
+export function createInitialSubscription(): UserSubscription {
+  const now = new Date();
+  const validUntil = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // 3 jours d'essai gratuit
+  const todayStr = now.toISOString().split('T')[0];
+  const monthStr = todayStr.substring(0, 7);
+
+  return {
+    tier: 'découverte',
+    status: 'trialing',
+    startDate: now.toISOString(),
+    validUntil: validUntil.toISOString(),
+    paymentVerified: false,
+    quotas: {
+      questionsToday: 0,
+      lastQuestionDate: todayStr,
+      protocolsThisMonth: 0,
+      strobeThisMonth: 0,
+      synthesesThisMonth: 0,
+      reportsThisMonth: 0,
+      lastResetMonth: monthStr,
+    }
+  };
+}
 
 const isOfflineAdmin = (): boolean => {
   return typeof window !== 'undefined' && window.localStorage.getItem('offline_admin_active') === 'true';
@@ -90,6 +115,8 @@ export interface FirestoreUser {
   requirePasswordChange?: boolean;
   lastActive?: any;
   role?: 'admin' | 'teacher' | 'student';
+  userType?: UserType;
+  subscription?: UserSubscription;
   assignedTeacherUid?: string;
   assignedTeacherName?: string;
 }
@@ -187,7 +214,11 @@ export async function loadUserProfile(uid: string): Promise<FirestoreUser | null
     const userDocRef = doc(db, 'users', uid);
     const snap = await getDocWithCacheFallback(userDocRef);
     if (snap && snap.exists()) {
-      return snap.data() as FirestoreUser;
+      const data = snap.data() as FirestoreUser;
+      if (!data.subscription) {
+        data.subscription = createInitialSubscription();
+      }
+      return data;
     }
   } catch (error) {
     console.warn('⚠️ Erreur loadUserProfile (mode hors-ligne ou problème cache/réseau):', error);
@@ -977,5 +1008,54 @@ export function listenToUnreadMessages(
     console.warn("⚠️ Impossible d'écouter les messages de support en temps réel:", err);
     onUpdate(0);
     return () => {};
+  }
+}
+
+export async function activateUserSubscriptionInFirestore(
+  targetUid: string,
+  tier: SubscriptionTier,
+  durationMonths: number
+) {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const userDocRef = doc(db, 'users', targetUid);
+    const now = new Date();
+    
+    // Calculer jours bonus (7j pour pro, 14j pour ultra)
+    let bonusDays = 0;
+    if (tier === 'pro') bonusDays = 7;
+    if (tier === 'ultra') bonusDays = 14;
+
+    const expiry = new Date(now.getTime());
+    expiry.setMonth(expiry.getMonth() + durationMonths);
+    expiry.setDate(expiry.getDate() + bonusDays);
+
+    const todayStr = now.toISOString().split('T')[0];
+    const monthStr = todayStr.substring(0, 7);
+
+    const newSubscription: UserSubscription = {
+      tier,
+      status: 'active',
+      startDate: now.toISOString(),
+      validUntil: expiry.toISOString(),
+      durationMonths,
+      bonusDaysAdded: bonusDays,
+      paymentVerified: true,
+      quotas: {
+        questionsToday: 0,
+        lastQuestionDate: todayStr,
+        protocolsThisMonth: 0,
+        strobeThisMonth: 0,
+        synthesesThisMonth: 0,
+        reportsThisMonth: 0,
+        lastResetMonth: monthStr,
+      }
+    };
+
+    await setDoc(userDocRef, { subscription: newSubscription }, { merge: true });
+    return newSubscription;
+  } catch (error) {
+    console.error('❌ Erreur activateUserSubscriptionInFirestore:', error);
+    throw error;
   }
 }

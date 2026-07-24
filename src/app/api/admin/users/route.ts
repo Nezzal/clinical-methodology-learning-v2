@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, email, role } = await req.json();
+    const { name, email, role, tier = 'pro', durationMonths = 12 } = await req.json();
 
     if (!name || !name.trim() || !email || !email.trim()) {
       return NextResponse.json({ error: "Le nom et l'adresse e-mail sont requis." }, { status: 400 });
@@ -44,6 +44,39 @@ export async function POST(req: Request) {
     const cleanEmail = email.toLowerCase().trim();
     const cleanName = name.trim();
     const cleanRole = (role === 'teacher' || role === 'admin') ? role : 'student';
+
+    // Calcul de l'abonnement activé par le paiement reçu (+7j Pro / +14j Ultra)
+    const now = new Date();
+    let bonusDays = 0;
+    const selectedTier = (tier === 'ultra' || tier === 'institution') ? tier : 'pro';
+    if (selectedTier === 'pro') bonusDays = 7;
+    if (selectedTier === 'ultra') bonusDays = 14;
+
+    const expiry = new Date(now.getTime());
+    expiry.setMonth(expiry.getMonth() + Number(durationMonths));
+    expiry.setDate(expiry.getDate() + bonusDays);
+
+    const todayStr = now.toISOString().split('T')[0];
+    const monthStr = todayStr.substring(0, 7);
+
+    const subscription = {
+      tier: selectedTier,
+      status: 'active',
+      startDate: now.toISOString(),
+      validUntil: expiry.toISOString(),
+      durationMonths: Number(durationMonths),
+      bonusDaysAdded: bonusDays,
+      paymentVerified: true,
+      quotas: {
+        questionsToday: 0,
+        lastQuestionDate: todayStr,
+        protocolsThisMonth: 0,
+        strobeThisMonth: 0,
+        synthesesThisMonth: 0,
+        reportsThisMonth: 0,
+        lastResetMonth: monthStr,
+      }
+    };
 
     // 2. Vérifier si l'utilisateur existe déjà dans Firebase Authentication
     try {
@@ -69,7 +102,7 @@ export async function POST(req: Request) {
     // 5. Attribuer le Custom Claim
     await adminAuth.setCustomUserClaims(userRecord.uid, { role: cleanRole });
 
-    // 6. Créer le profil initial dans Firestore
+    // 6. Créer le profil initial dans Firestore avec abonnement activé
     await adminDb.collection('users').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email: cleanEmail,
@@ -77,6 +110,7 @@ export async function POST(req: Request) {
       photoURL: null,
       level: 'Débutant',
       role: cleanRole,
+      subscription,
       stats: {
         questionsAsked: 0,
         protocolsGenerated: 0,
