@@ -19,7 +19,8 @@ export async function POST(req: Request) {
       country,
       email,
       phone,
-      requestedRole
+      requestedRole,
+      requestedTier = 'découverte'
     } = body;
 
     // Validations
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     if (!profession?.trim()) errors.push("La profession est requise.");
     if (!city?.trim()) errors.push("La ville est requise.");
     if (!country?.trim()) errors.push("Le pays est requis.");
+    if (!phone?.trim()) errors.push("Le téléphone est requis.");
 
     if (errors.length > 0) {
       return NextResponse.json({ error: errors.join(' ') }, { status: 400 });
@@ -94,6 +96,7 @@ export async function POST(req: Request) {
     }
 
     const cleanRole = requestedRole === 'teacher' ? 'teacher' : 'student';
+    const cleanTier = (['découverte', 'pro', 'ultra', 'institution'].includes(requestedTier)) ? requestedTier : 'découverte';
 
     // 3. Insérer la demande dans Firestore
     const requestData = {
@@ -104,8 +107,9 @@ export async function POST(req: Request) {
       city: city.trim(),
       country: country.trim(),
       email: cleanEmail,
-      phone: phone?.trim() || '',
+      phone: phone.trim(),
       requestedRole: cleanRole,
+      requestedTier: cleanTier,
       status: 'pending',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       paymentReceivedAt: null,
@@ -130,14 +134,18 @@ export async function POST(req: Request) {
           auth: { user: smtpUser, pass: smtpPass }
         });
 
+        const isB2bOrUltra = cleanTier === 'ultra' || cleanTier === 'institution';
+
         await transporter.sendMail({
           from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: cleanEmail,
-          subject: "Votre demande d'accès - Plateforme Methodo&Clinique",
+          subject: isB2bOrUltra 
+            ? `Réception de votre demande (Formule ${cleanTier.toUpperCase()}) - Methodo&Clinique`
+            : "Confirmation de votre demande d'accès - Methodo&Clinique",
           html: `
             <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 620px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc;">
               <div style="text-align: center; margin-bottom: 24px;">
-                <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: linear-gradient(135deg, #2563EB, #1d4ed8); border-radius: 14px; margin-bottom: 12px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: linear-gradient(135deg, #0d9488, #0284c7); border-radius: 14px; margin-bottom: 12px;">
                   <span style="color: white; font-size: 24px;">⚕</span>
                 </div>
                 <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 600;">Plateforme Methodo&Clinique</h1>
@@ -145,10 +153,12 @@ export async function POST(req: Request) {
               </div>
 
               <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px;">
-                <p style="margin: 0; color: #0f766e; font-weight: 600; font-size: 0.9rem;">Votre demande d'accès a bien été enregistrée</p>
+                <p style="margin: 0; color: #0f766e; font-weight: 600; font-size: 0.9rem;">
+                  Votre demande d'accès (${cleanTier.toUpperCase()}) a bien été enregistrée
+                </p>
               </div>
 
-              <p style="color: #334155; font-size: 0.92rem; line-height: 1.6;">Nous avons bien reçu votre demande d'inscription à la plateforme Methodo-Clinique. Voici les informations que vous avez fournies :</p>
+              <p style="color: #334155; font-size: 0.92rem; line-height: 1.6;">Bonjour <strong>${firstName.trim()} ${lastName.trim()}</strong>,</p>
 
               <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88rem;">
                 <tr style="background: #f8fafc;">
@@ -160,34 +170,31 @@ export async function POST(req: Request) {
                   <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${institution.trim()}</td>
                 </tr>
                 <tr style="background: #f8fafc;">
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Profession</td>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${profession.trim()}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Ville / Pays</td>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${city.trim()}, ${country.trim()}</td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">E-mail</td>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${cleanEmail}</td>
-                </tr>
-                ${phone?.trim() ? `
-                <tr>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Téléphone</td>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${phone.trim()}</td>
-                </tr>` : ''}
-                <tr style="background: #f8fafc;">
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Type d'accès</td>
-                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b; font-weight: bold;">${cleanRole === 'teacher' ? '👨‍🏫 Enseignant / Superviseur' : '🎓 Étudiant'}</td>
+                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Formule Demandée</td>
+                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #0d9488; font-weight: bold;">Formule ${cleanTier.toUpperCase()}</td>
                 </tr>
               </table>
 
-              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 14px 16px; margin: 20px 0;">
-                <p style="margin: 0; color: #1e40af; font-size: 0.88rem; line-height: 1.6;">Le contenu de la plateforme et son fonctionnement, ainsi que les modalités d'abonnement et de paiement spécifiques au profil <strong>${cleanRole === 'teacher' ? 'Enseignant / Superviseur' : 'Étudiant'}</strong> vous seront précisés dans le second mail qui suit.</p>
+              ${isB2bOrUltra ? `
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <p style="margin: 0; color: #1e40af; font-size: 0.9rem; line-height: 1.6;">
+                  Un e-mail de confirmation vous est envoyé pour vous confirmer la bonne réception de votre demande. Un administrateur prendra directement contact avec vous par e-mail afin de vous transmettre les coordonnées de l'administrateur et étudier avec vous les modalités d'accès sur-mesure pour la <strong>Formule ${cleanTier.toUpperCase()}</strong>.
+                </p>
               </div>
+              ` : `
+              <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0; color: #0f766e; font-size: 0.9rem; line-height: 1.6;">
+                  Vous recevrez par e-mail vos identifiants gratuits pour le test découverte (3 jours). Pour valider votre abonnement définitif et bénéficier des jours bonus, voici les coordonnées pour effectuer votre virement bancaire / CCP (RIP) :
+                </p>
+                <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
+                  <strong>RIP / CCP :</strong> 17978545 Clé 42<br />
+                  <strong>Titulaire :</strong> Methodo&Clinique Éducation
+                </div>
+              </div>
+              `}
 
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
-              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement suite à votre demande d'inscription sur la Plateforme Methodo&Clinique.</p>
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Message automatique — Ne pas répondre directement.</p>
             </div>
           `
         });

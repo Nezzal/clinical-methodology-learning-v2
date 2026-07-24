@@ -419,6 +419,7 @@ export interface AccessRequest {
   email: string;
   phone: string;
   requestedRole?: 'student' | 'teacher';
+  requestedTier?: 'découverte' | 'pro' | 'ultra' | 'institution';
   status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
   createdAt: any;
   paymentReceivedAt: any;

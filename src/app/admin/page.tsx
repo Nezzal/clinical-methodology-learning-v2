@@ -1249,6 +1249,21 @@ Votre superviseur`;
                                   )}
                                 </div>
                                 <span className={styles.studentEmail}>{student.email}</span>
+                                <div style={{ marginTop: '2px' }}>
+                                  <span style={{ 
+                                    display: 'inline-block', 
+                                    background: student.subscription?.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription?.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription?.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                    border: student.subscription?.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription?.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription?.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                    padding: '1px 6px', 
+                                    borderRadius: '4px', 
+                                    fontSize: '0.68rem',
+                                    fontWeight: 'bold',
+                                    color: student.subscription?.tier === 'ultra' ? '#fbbf24' : student.subscription?.tier === 'institution' ? '#c084fc' : student.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
+                                    textTransform: 'uppercase'
+                                  }}>
+                                    Formule : {student.subscription?.tier ? student.subscription.tier.toUpperCase() : 'DÉCOUVERTE'}
+                                  </span>
+                                </div>
                                 <span className={styles.lastActiveTime}>{lastActiveStr}</span>
                               </div>
                             </td>
@@ -1337,16 +1352,16 @@ Votre superviseur`;
                             <div style={{ marginTop: '5px' }}>
                               <span style={{ 
                                 display: 'inline-block', 
-                                background: req.requestedRole === 'teacher' ? 'rgba(99, 102, 241, 0.12)' : 'rgba(56, 189, 248, 0.12)', 
-                                border: req.requestedRole === 'teacher' ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid rgba(56, 189, 248, 0.25)',
+                                background: req.requestedTier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : req.requestedTier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : req.requestedTier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                border: req.requestedTier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : req.requestedTier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : req.requestedTier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
                                 padding: '2px 8px', 
                                 borderRadius: '4px', 
                                 fontSize: '0.72rem',
                                 fontWeight: 'bold',
-                                color: req.requestedRole === 'teacher' ? '#818cf8' : '#38bdf8',
+                                color: req.requestedTier === 'ultra' ? '#fbbf24' : req.requestedTier === 'institution' ? '#c084fc' : req.requestedTier === 'pro' ? '#2dd4bf' : '#38bdf8',
                                 textTransform: 'uppercase'
                               }}>
-                                {req.requestedRole === 'teacher' ? 'Enseignant' : 'Étudiant'}
+                                Formule : {req.requestedTier ? req.requestedTier.toUpperCase() : (req.requestedRole === 'teacher' ? 'ULTRA' : 'PRO')}
                               </span>
                             </div>
                           </td>
