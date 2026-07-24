@@ -10,6 +10,7 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
+  const [residence, setResidence] = useState<'dz' | 'international'>('dz');
   const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('12m');
   const [copiedRip, setCopiedRip] = useState(false);
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
@@ -19,7 +20,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   if (!isOpen) return null;
 
   const handleCopyRip = () => {
-    navigator.clipboard.writeText('RIP/CCP: 17978545 Clé 42 - Methodo&Clinique');
+    navigator.clipboard.writeText(residence === 'dz' ? 'RIP/CCP: 17978545 Clé 42 - Methodo&Clinique' : 'IBAN: DZ59 0010 0000 1797 8545 4233 - SWIFT: BEXADZAL - Methodo&Clinique');
     setCopiedRip(true);
     setTimeout(() => setCopiedRip(false), 2500);
   };
@@ -50,6 +51,23 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         </header>
 
         <div className={styles.modalBody}>
+          {/* Sélecteur de Résidence (Algérie vs International) */}
+          <div className={styles.residenceSelector}>
+            <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem', fontWeight: 600 }}>Votre Lieu de Résidence :</span>
+            <button
+              className={`${styles.residenceBtn} ${residence === 'dz' ? styles.residenceBtnActive : ''}`}
+              onClick={() => setResidence('dz')}
+            >
+              🇩🇿 Résident en Algérie (DZD / RIP CCP)
+            </button>
+            <button
+              className={`${styles.residenceBtn} ${residence === 'international' ? styles.residenceBtnActive : ''}`}
+              onClick={() => setResidence('international')}
+            >
+              🌍 International / Hors Algérie (€ EUR / $ USD)
+            </button>
+          </div>
+
           {/* Durées d'abonnement */}
           <div className={styles.durationSelector}>
             <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem' }}>Durée souhaitée :</span>
@@ -74,6 +92,9 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.planHeader}>
                 <div className={styles.planName}>🟢 Découverte</div>
                 <div className={styles.planSubtitle}>Accès Test (3 Jours)</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399', margin: '4px 0' }}>
+                  Gratuit
+                </div>
                 <span className={styles.planBadgeBonus}>Automatique à l'inscription</span>
               </div>
               <ul className={styles.featureList}>
@@ -97,6 +118,19 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.planHeader}>
                 <div className={styles.planName} style={{ color: '#2dd4bf' }}>🔷 PRO</div>
                 <div className={styles.planSubtitle}>Internes, Résidents & Doctorants</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#38bdf8', margin: '4px 0' }}>
+                  {residence === 'dz' ? (
+                    selectedDuration === '1m' ? '1 500 DZD / mois' :
+                    selectedDuration === '3m' ? '3 900 DZD (1 300/m)' :
+                    selectedDuration === '6m' ? '6 900 DZD (1 150/m)' :
+                    '11 900 DZD / an (990/m)'
+                  ) : (
+                    selectedDuration === '1m' ? '15 € / mois' :
+                    selectedDuration === '3m' ? '39 € (13 €/m)' :
+                    selectedDuration === '6m' ? '69 € (11,5 €/m)' :
+                    '119 € / an (9,9 €/m)'
+                  )}
+                </div>
                 <span className={styles.planBadgeBonus}>🎁 + 7 jours offerts sur virement</span>
               </div>
               <ul className={styles.featureList}>
@@ -126,6 +160,9 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.planHeader}>
                 <div className={styles.planName} style={{ color: '#fbbf24' }}>👑 ULTRA</div>
                 <div className={styles.planSubtitle}>Enseignants & Encadreurs</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fbbf24', margin: '4px 0' }}>
+                  {residence === 'dz' ? 'À partir de 2 500 DZD / mois' : 'À partir de 25 € / mois'}
+                </div>
                 <span className={styles.planBadgeBonus}>🎁 + 14 jours offerts sur virement</span>
               </div>
               <ul className={styles.featureList}>
@@ -152,6 +189,9 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.planHeader}>
                 <div className={styles.planName}>🏛️ INSTITUTION</div>
                 <div className={styles.planSubtitle}>Facultés, Hôpitaux, Labos de recherche & Entreprises</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#c084fc', margin: '4px 0' }}>
+                  {residence === 'dz' ? 'Sur Devis (DZD)' : 'Sur Devis (€ / $)'}
+                </div>
                 <span className={styles.planBadgeBonus}>Multi-sièges & Devis</span>
               </div>
               <ul className={styles.featureList}>
@@ -228,32 +268,60 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
             </div>
           )}
 
-          {/* Section RIP / CCP pour Virement */}
-          <div id="rip-section" className={styles.ripBox}>
-            <div className={styles.ripTitle}>
-              <span>💳</span>
-              <span>Instructions pour Virement bancaire / CCP (RIP)</span>
-            </div>
-            <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-              Pour activer votre formule <strong>PRO</strong> ou <strong>ULTRA</strong>, effectuez votre virement vers les coordonnées ci-dessous, puis envoyez le reçu à l'administrateur.
-            </p>
-            <div className={styles.ripDetails}>
-              <div>
-                <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>RIB / RIP CCP :</span>
-                <strong>17978545 Clé 42</strong>
+          {/* Section Instructions de Paiement / Virement */}
+          {residence === 'dz' ? (
+            <div id="rip-section" className={styles.ripBox}>
+              <div className={styles.ripTitle}>
+                <span>💳</span>
+                <span>Instructions pour Virement bancaire / CCP (Algérie)</span>
               </div>
-              <div>
-                <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Titulaire du compte :</span>
-                <strong>Methodo&Clinique Éducation</strong>
+              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
+                Pour activer votre formule <strong>PRO</strong> ou <strong>ULTRA</strong> en Algérie, effectuez votre virement vers les coordonnées ci-dessous, puis envoyez la copie du reçu par e-mail.
+              </p>
+              <div className={styles.ripDetails}>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>RIB / RIP CCP :</span>
+                  <strong>17978545 Clé 42</strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Titulaire du compte :</span>
+                  <strong>Methodo&Clinique Éducation</strong>
+                </div>
+                <button className={styles.copyBtn} onClick={handleCopyRip}>
+                  {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP'}
+                </button>
               </div>
-              <button className={styles.copyBtn} onClick={handleCopyRip}>
-                {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP'}
-              </button>
+              <p style={{ fontSize: '0.78rem', color: '#34d399', margin: 0, fontStyle: 'italic' }}>
+                ⚡ Dès réception et validation du virement par l'administrateur, votre accès s'active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
+              </p>
             </div>
-            <p style={{ fontSize: '0.78rem', color: '#34d399', margin: 0, fontStyle: 'italic' }}>
-              ⚡ Dès réception et validation du virement par l'administrateur, votre accès s'active immédiatement avec les jours bonus inclus (7j Pro / 14j Ultra) !
-            </p>
-          </div>
+          ) : (
+            <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(2, 132, 199, 0.4)' }}>
+              <div className={styles.ripTitle} style={{ color: '#38bdf8' }}>
+                <span>🌐</span>
+                <span>Instructions Virement International (Hors Algérie)</span>
+              </div>
+              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
+                Pour activer votre formule depuis l'international (€ / $), effectuez votre virement bancaire SWIFT / IBAN ou contactez-nous pour un lien de paiement par Carte / PayPal.
+              </p>
+              <div className={styles.ripDetails}>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN / SWIFT International :</span>
+                  <strong>DZ59 0010 0000 1797 8545 4233 (BEXADZAL)</strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Bénéficiaire :</span>
+                  <strong>Methodo&Clinique International</strong>
+                </div>
+                <button className={styles.copyBtn} onClick={handleCopyRip}>
+                  {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: '#38bdf8', margin: 0, fontStyle: 'italic' }}>
+                🌍 Un e-mail avec les modalités du virement international vous sera transmis dès la validation de votre demande.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
