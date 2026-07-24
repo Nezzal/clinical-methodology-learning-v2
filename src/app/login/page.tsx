@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 import styles from './page.module.css';
+import SubscriptionModal from '@/components/SubscriptionModal';
 
 export default function Login() {
   const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
   const router = useRouter();
 
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [requestedRole, setRequestedRole] = useState<'student' | 'teacher'>('student');
@@ -686,6 +688,24 @@ export default function Login() {
                             👨‍🏫 Accès Enseignant
                           </button>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowSubscriptionModal(true)}
+                          style={{
+                            marginTop: '0.8rem',
+                            width: '100%',
+                            background: 'rgba(13, 148, 136, 0.12)',
+                            color: '#2dd4bf',
+                            border: '1px dashed rgba(13, 148, 136, 0.4)',
+                            padding: '0.55rem',
+                            borderRadius: '8px',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          💳 Découvrir les Formules & Tarifs (Pro, Ultra, Institution)
+                        </button>
                       </div>
                     )}
                   </div>
@@ -696,6 +716,11 @@ export default function Login() {
         </div>
 
       </div>
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </div>
   );
 }
