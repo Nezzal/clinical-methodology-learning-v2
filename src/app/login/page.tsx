@@ -317,7 +317,13 @@ export default function Login() {
                 {isForgotPassword 
                   ? 'Réinitialiser le mot de passe' 
                   : isRequestAccess 
-                    ? `Demander un Accès (${requestedTier === 'découverte' ? 'Offre Test 3j' : 'Offre ' + requestedTier.toUpperCase()})` 
+                    ? (requestedTier === 'découverte'
+                        ? 'Demander un Accès (Offre Test 3j)'
+                        : requestedTier === 'pro'
+                          ? 'Demander un Accès (Offre PRO)'
+                          : requestedTier === 'ultra'
+                            ? 'Demander un Accès (Offre ULTRA Encadreur)'
+                            : 'Demande de Devis (Formule INSTITUTION)')
                     : 'Connexion Utilisateur'
                 }
               </h1>
@@ -325,7 +331,9 @@ export default function Login() {
                 {isForgotPassword
                   ? 'Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation.'
                   : isRequestAccess 
-                    ? 'Remplissez ce formulaire pour soumettre votre demande d\'inscription. Vous recevrez les conditions d\'abonnement par e-mail.' 
+                    ? ((requestedTier === 'ultra' || requestedTier === 'institution')
+                        ? 'Un e-mail de confirmation vous sera envoyé. L\'administrateur prendra directement contact avec vous par e-mail pour étudier vos besoins et vous transmettre les modalités d\'accès sur-mesure.'
+                        : 'Remplissez ce formulaire pour recevoir vos identifiants d\'essai par e-mail ainsi que les coordonnées du RIP pour le virement.') 
                     : 'Accédez à vos quiz, vos flashcards, échangez avec votre assistant et concevez vos protocoles cliniques.'
                 }
               </p>
@@ -392,8 +400,11 @@ export default function Login() {
                 ) : isRequestAccess ? (
                   // Formulaire de demande d'accès
                   <form className={styles.form} onSubmit={handleRequestAccessSubmit}>
-                    <div style={{ marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.2)', color: 'var(--accent-primary)', fontSize: '0.9rem', fontWeight: '600', textAlign: 'center' }}>
-                      Type d'accès demandé : {requestedRole === 'student' ? '🎓 Accès Étudiant' : '👨‍🏫 Accès Enseignant'}
+                    <div style={{ marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '8px', background: 'rgba(13, 148, 136, 0.12)', border: '1px solid rgba(13, 148, 136, 0.3)', color: '#2dd4bf', fontSize: '0.9rem', fontWeight: '600', textAlign: 'center' }}>
+                      {requestedTier === 'découverte' && '🟢 Formule Sélectionnée : Découverte (3 jours d\'essai gratuit)'}
+                      {requestedTier === 'pro' && '🔷 Formule Sélectionnée : PRO (Internes, Résidents & Doctorants)'}
+                      {requestedTier === 'ultra' && '👑 Formule Sélectionnée : ULTRA (Enseignants & Encadreurs)'}
+                      {requestedTier === 'institution' && '🏛️ Formule Sélectionnée : INSTITUTION (Facultés & CHU)'}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <div className={styles.inputGroup}>
