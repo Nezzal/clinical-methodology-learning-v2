@@ -10,7 +10,7 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
-  const [residence, setResidence] = useState<'dz' | 'africa' | 'western'>('dz');
+  const [residence, setResidence] = useState<'dz' | 'africa' | 'western' | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('12m');
   const [copiedRip, setCopiedRip] = useState(false);
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
@@ -51,30 +51,78 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         </header>
 
         <div className={styles.modalBody}>
-          {/* Sélecteur de Résidence à 3 Zones */}
-          <div className={styles.residenceSelector}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem', fontWeight: 600 }}>Votre Zone Régionale :</span>
-            <button
-              className={`${styles.residenceBtn} ${residence === 'dz' ? styles.residenceBtnActive : ''}`}
-              onClick={() => setResidence('dz')}
-            >
-              🇩🇿 Algérie (DZD / RIP CCP)
-            </button>
-            <button
-              className={`${styles.residenceBtn} ${residence === 'africa' ? styles.residenceBtnActive : ''}`}
-              onClick={() => setResidence('africa')}
-            >
-              🌍 Afrique (EUR € / FCFA)
-            </button>
-            <button
-              className={`${styles.residenceBtn} ${residence === 'western' ? styles.residenceBtnActive : ''}`}
-              onClick={() => setResidence('western')}
-            >
-              🇪🇺🇨🇦 Europe & Occident (€ / $ / CAD)
-            </button>
-          </div>
+          {/* ÉTAPE 1 : CHOIX OBLIGATOIRE DE LA ZONE RÉGIONALE (EN GRAND) */}
+          {residence === null ? (
+            <div className={styles.zoneStepContainer}>
+              <h3 className={styles.zoneStepTitle}>Étape 1 : Choisissez votre Zone Régionale de Résidence</h3>
+              <p className={styles.zoneStepSubtitle}>
+                Sélectionnez votre zone géographique pour afficher les tarifs dans votre monnaie locale ainsi que les moyens de paiement adaptés.
+              </p>
 
-          {/* Durées d'abonnement */}
+              <div className={styles.zoneStepGrid}>
+                {/* Carte Zone 1 : Algérie */}
+                <div className={styles.zoneCard} onClick={() => setResidence('dz')}>
+                  <div className={styles.zoneCardIcon}>🇩🇿</div>
+                  <div className={styles.zoneCardTitle}>Algérie</div>
+                  <div className={styles.zoneCardSubtitle}>Dinars Algériens (DZD / DA)</div>
+                  <div className={styles.zoneCardDesc}>
+                    Tarifs locaux adaptés aux étudiants, résidents et enseignants en Algérie. Règlement direct par Virement bancaire / CCP (RIP) & BaridiMob.
+                  </div>
+                  <button className={styles.zoneCardBtn}>
+                    Sélectionner la Zone Algérie ➔
+                  </button>
+                </div>
+
+                {/* Carte Zone 2 : Afrique Hors Algérie */}
+                <div className={styles.zoneCard} onClick={() => setResidence('africa')}>
+                  <div className={styles.zoneCardIcon}>🌍</div>
+                  <div className={styles.zoneCardTitle}>Afrique (Hors Algérie)</div>
+                  <div className={styles.zoneCardSubtitle}>Euros (€) & Francs CFA (FCFA)</div>
+                  <div className={styles.zoneCardDesc}>
+                    Tarifs préférentiels Zone Afrique Subsaharienne et Maghreb. Règlement par Mobile Money (Wave, Orange, MTN, Moov) & Virement.
+                  </div>
+                  <button className={styles.zoneCardBtn} style={{ background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)' }}>
+                    Sélectionner la Zone Afrique ➔
+                  </button>
+                </div>
+
+                {/* Carte Zone 3 : Europe & Occident */}
+                <div className={styles.zoneCard} onClick={() => setResidence('western')}>
+                  <div className={styles.zoneCardIcon}>🇪🇺🇨🇦</div>
+                  <div className={styles.zoneCardTitle}>Europe & Occident</div>
+                  <div className={styles.zoneCardSubtitle}>Euros (€), Dollars ($ USD / CAD)</div>
+                  <div className={styles.zoneCardDesc}>
+                    France, Belgique, Suisse, Canada... Règlement sécurisé par Virement SEPA / SWIFT, Carte bancaire internationale ou PayPal.
+                  </div>
+                  <button className={styles.zoneCardBtn} style={{ background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)' }}>
+                    Sélectionner Zone Occident ➔
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Bannière de rappel de la zone sélectionnée */}
+              <div className={styles.selectedZoneBanner}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <span style={{ fontSize: '1.4rem' }}>
+                    {residence === 'dz' ? '🇩🇿' : residence === 'africa' ? '🌍' : '🇪🇺🇨🇦'}
+                  </span>
+                  <div>
+                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#ffffff', display: 'block' }}>
+                      Zone Sélectionnée : {residence === 'dz' ? 'Algérie (DZD)' : residence === 'africa' ? 'Afrique (EUR € / FCFA)' : 'Europe & Occident (€ / $ / CAD)'}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      Les tarifs ci-dessous sont calculés spécialement pour votre zone régionale.
+                    </span>
+                  </div>
+                </div>
+                <button className={styles.changeZoneBtn} onClick={() => setResidence(null)}>
+                  🔄 Changer de Zone
+                </button>
+              </div>
+
+              {/* Durées d'abonnement */}
           <div className={styles.durationSelector}>
             <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem' }}>Durée souhaitée :</span>
             {(['1m', '3m', '6m', '12m'] as const).map((dur) => (
@@ -366,6 +414,8 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 🌐 Facture officielle et coordonnées envoyées par e-mail immédiatement après soumission de votre demande.
               </p>
             </div>
+          )}
+            </>
           )}
         </div>
       </div>
