@@ -10,7 +10,7 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
-  const [residence, setResidence] = useState<'dz' | 'international'>('dz');
+  const [residence, setResidence] = useState<'dz' | 'africa' | 'western'>('dz');
   const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('12m');
   const [copiedRip, setCopiedRip] = useState(false);
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
@@ -51,20 +51,26 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         </header>
 
         <div className={styles.modalBody}>
-          {/* Sélecteur de Résidence (Algérie vs International) */}
+          {/* Sélecteur de Résidence à 3 Zones */}
           <div className={styles.residenceSelector}>
-            <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem', fontWeight: 600 }}>Votre Lieu de Résidence :</span>
+            <span style={{ fontSize: '0.85rem', color: '#94a3b8', marginRight: '0.5rem', fontWeight: 600 }}>Votre Zone Régionale :</span>
             <button
               className={`${styles.residenceBtn} ${residence === 'dz' ? styles.residenceBtnActive : ''}`}
               onClick={() => setResidence('dz')}
             >
-              🇩🇿 Résident en Algérie (DZD / RIP CCP)
+              🇩🇿 Algérie (DZD / RIP CCP)
             </button>
             <button
-              className={`${styles.residenceBtn} ${residence === 'international' ? styles.residenceBtnActive : ''}`}
-              onClick={() => setResidence('international')}
+              className={`${styles.residenceBtn} ${residence === 'africa' ? styles.residenceBtnActive : ''}`}
+              onClick={() => setResidence('africa')}
             >
-              🌍 International / Hors Algérie (€ EUR / $ USD)
+              🌍 Afrique (EUR € / FCFA)
+            </button>
+            <button
+              className={`${styles.residenceBtn} ${residence === 'western' ? styles.residenceBtnActive : ''}`}
+              onClick={() => setResidence('western')}
+            >
+              🇪🇺🇨🇦 Europe & Occident (€ / $ / CAD)
             </button>
           </div>
 
@@ -124,11 +130,16 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                     selectedDuration === '3m' ? '3 900 DZD (1 300/m)' :
                     selectedDuration === '6m' ? '6 900 DZD (1 150/m)' :
                     '11 900 DZD / an (990/m)'
+                  ) : residence === 'africa' ? (
+                    selectedDuration === '1m' ? '8 € / mois (~5 200 FCFA)' :
+                    selectedDuration === '3m' ? '21 € (~13 700 FCFA)' :
+                    selectedDuration === '6m' ? '39 € (~25 500 FCFA)' :
+                    '69 € / an (~45 000 FCFA)'
                   ) : (
-                    selectedDuration === '1m' ? '15 € / mois' :
-                    selectedDuration === '3m' ? '39 € (13 €/m)' :
-                    selectedDuration === '6m' ? '69 € (11,5 €/m)' :
-                    '119 € / an (9,9 €/m)'
+                    selectedDuration === '1m' ? '19 € / mois' :
+                    selectedDuration === '3m' ? '49 € (16,3 €/m)' :
+                    selectedDuration === '6m' ? '89 € (14,8 €/m)' :
+                    '149 € / an (12,4 €/m)'
                   )}
                 </div>
                 <span className={styles.planBadgeBonus}>🎁 + 7 jours offerts sur virement</span>
@@ -161,7 +172,11 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <div className={styles.planName} style={{ color: '#fbbf24' }}>👑 ULTRA</div>
                 <div className={styles.planSubtitle}>Enseignants & Encadreurs</div>
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fbbf24', margin: '4px 0' }}>
-                  {residence === 'dz' ? 'À partir de 2 500 DZD / mois' : 'À partir de 25 € / mois'}
+                  {residence === 'dz' 
+                    ? 'À partir de 2 500 DZD / mois' 
+                    : residence === 'africa' 
+                    ? 'À partir de 15 € / mois (~9 800 FCFA)' 
+                    : 'À partir de 29 € / mois'}
                 </div>
                 <span className={styles.planBadgeBonus}>🎁 + 14 jours offerts sur virement</span>
               </div>
@@ -190,7 +205,11 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <div className={styles.planName}>🏛️ INSTITUTION</div>
                 <div className={styles.planSubtitle}>Facultés, Hôpitaux, Labos de recherche & Entreprises</div>
                 <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#c084fc', margin: '4px 0' }}>
-                  {residence === 'dz' ? 'Sur Devis (DZD)' : 'Sur Devis (€ / $)'}
+                  {residence === 'dz' 
+                    ? 'Sur Devis (DZD)' 
+                    : residence === 'africa' 
+                    ? 'Sur Devis Zone Afrique (€ / FCFA)' 
+                    : 'Sur Devis (€ / $ / CAD)'}
                 </div>
                 <span className={styles.planBadgeBonus}>Multi-sièges & Devis</span>
               </div>
@@ -295,30 +314,56 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 ⚡ Dès réception et validation du virement par l'administrateur, votre accès s'active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
               </p>
             </div>
-          ) : (
-            <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(2, 132, 199, 0.4)' }}>
-              <div className={styles.ripTitle} style={{ color: '#38bdf8' }}>
-                <span>🌐</span>
-                <span>Instructions Virement International (Hors Algérie)</span>
+          ) : residence === 'africa' ? (
+            <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(13, 148, 136, 0.4)' }}>
+              <div className={styles.ripTitle} style={{ color: '#2dd4bf' }}>
+                <span>🌍</span>
+                <span>Instructions Virement Zone Afrique (Hors Algérie)</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour activer votre formule depuis l'international (€ / $), effectuez votre virement bancaire SWIFT / IBAN ou contactez-nous pour un lien de paiement par Carte / PayPal.
+                Pour l'Afrique francophone (Cote d'Ivoire, Sénégal, Cameroun, Mali, Gabon...), réglez par Virement bancaire, Wave, Orange Money ou carte.
               </p>
               <div className={styles.ripDetails}>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN / SWIFT International :</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN / SWIFT Afrique :</span>
+                  <strong>DZ59 0010 0000 1797 8545 4233 (SWIFT: BEXADZAL)</strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Options de règlement :</span>
+                  <strong>Virement bancaire / Mobile Money / Transfert</strong>
+                </div>
+                <button className={styles.copyBtn} onClick={handleCopyRip}>
+                  {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: '#2dd4bf', margin: 0, fontStyle: 'italic' }}>
+                🌍 Un e-mail avec les coordonnées et instructions adaptées à votre pays vous sera envoyé après votre demande.
+              </p>
+            </div>
+          ) : (
+            <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(2, 132, 199, 0.4)' }}>
+              <div className={styles.ripTitle} style={{ color: '#38bdf8' }}>
+                <span>🇪🇺🇨🇦</span>
+                <span>Instructions Virement Europe & Occident (France, Canada, Belgique...)</span>
+              </div>
+              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
+                Pour l'Europe et l'Occident (€ / $ / CAD), effectuez votre virement SWIFT / SEPA ou demandez un lien de règlement sécurisé par Carte / PayPal.
+              </p>
+              <div className={styles.ripDetails}>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN SEPA / SWIFT International :</span>
                   <strong>DZ59 0010 0000 1797 8545 4233 (BEXADZAL)</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Bénéficiaire :</span>
-                  <strong>Methodo&Clinique International</strong>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Modes acceptés :</span>
+                  <strong>Virement SEPA / Carte Internationale / PayPal</strong>
                 </div>
                 <button className={styles.copyBtn} onClick={handleCopyRip}>
                   {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
                 </button>
               </div>
               <p style={{ fontSize: '0.78rem', color: '#38bdf8', margin: 0, fontStyle: 'italic' }}>
-                🌍 Un e-mail avec les modalités du virement international vous sera transmis dès la validation de votre demande.
+                🌐 Facture officielle et coordonnées envoyées par e-mail immédiatement après soumission de votre demande.
               </p>
             </div>
           )}
