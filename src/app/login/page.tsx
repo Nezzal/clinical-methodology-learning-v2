@@ -15,6 +15,15 @@ export default function Login() {
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [requestedRole, setRequestedRole] = useState<'student' | 'teacher'>('student');
+  const [requestedTier, setRequestedTier] = useState<string>('découverte');
+
+  const handleSelectPlanFromModal = (tier: 'découverte' | 'pro' | 'ultra' | 'institution', role: 'student' | 'teacher') => {
+    setRequestedRole(role);
+    setRequestedTier(tier);
+    setIsRequestAccess(true);
+    setIsForgotPassword(false);
+    setShowSubscriptionModal(false);
+  };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [requestFirstName, setRequestFirstName] = useState('');
@@ -308,7 +317,7 @@ export default function Login() {
                 {isForgotPassword 
                   ? 'Réinitialiser le mot de passe' 
                   : isRequestAccess 
-                    ? 'Demander un Accès' 
+                    ? `Demander un Accès (${requestedTier === 'découverte' ? 'Offre Test 3j' : 'Offre ' + requestedTier.toUpperCase()})` 
                     : 'Connexion Utilisateur'
                 }
               </h1>
@@ -655,56 +664,27 @@ export default function Login() {
                       </p>
                     ) : (
                       <div className={styles.requestAccessCTA}>
-                        <p>Nouveau sur la plateforme ? Demandez votre accès :</p>
-                        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', width: '100%' }}>
-                          <button 
-                            type="button" 
-                            className={styles.requestAccessBtn}
-                            onClick={() => {
-                              setIsRequestAccess(true);
-                              setIsForgotPassword(false);
-                              setRequestedRole('student');
-                              setRequestProfession('');
-                              setRequestOtherText('');
-                            }} 
-                            disabled={submitting}
-                            style={{ flex: 1, padding: '0.7rem 0.5rem', fontSize: '0.85rem' }}
-                          >
-                            🎓 Accès Étudiant
-                          </button>
-                          <button 
-                            type="button" 
-                            className={styles.requestAccessBtn}
-                            onClick={() => {
-                              setIsRequestAccess(true);
-                              setIsForgotPassword(false);
-                              setRequestedRole('teacher');
-                              setRequestProfession('');
-                              setRequestOtherText('');
-                            }} 
-                            disabled={submitting}
-                            style={{ flex: 1, padding: '0.7rem 0.5rem', fontSize: '0.85rem', background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }}
-                          >
-                            👨‍🏫 Accès Enseignant
-                          </button>
-                        </div>
+                        <p style={{ margin: 0, fontWeight: 600, color: '#f8fafc' }}>Nouveau sur la plateforme ?</p>
+                        <p style={{ margin: '4px 0 12px 0', fontSize: '0.82rem', color: '#94a3b8' }}>
+                          Découvrez nos formules d'abonnement (Découverte 3j, Pro, Ultra, Institution) et demandez votre accès :
+                        </p>
                         <button
                           type="button"
+                          className={styles.submitBtn}
                           onClick={() => setShowSubscriptionModal(true)}
                           style={{
-                            marginTop: '0.8rem',
                             width: '100%',
-                            background: 'rgba(13, 148, 136, 0.12)',
-                            color: '#2dd4bf',
-                            border: '1px dashed rgba(13, 148, 136, 0.4)',
-                            padding: '0.55rem',
-                            borderRadius: '8px',
-                            fontSize: '0.82rem',
-                            fontWeight: 600,
+                            background: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
+                            color: '#ffffff',
+                            padding: '0.8rem 1rem',
+                            borderRadius: '10px',
+                            fontSize: '0.92rem',
+                            fontWeight: 700,
+                            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
                             cursor: 'pointer'
                           }}
                         >
-                          💳 Découvrir les Formules & Tarifs (Pro, Ultra, Institution)
+                          ✨ Voir les Formules & Demander un Accès
                         </button>
                       </div>
                     )}
@@ -720,6 +700,7 @@ export default function Login() {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
+        onSelectPlan={handleSelectPlanFromModal}
       />
     </div>
   );

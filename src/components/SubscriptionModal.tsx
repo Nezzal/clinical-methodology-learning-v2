@@ -6,9 +6,10 @@ import styles from './SubscriptionModal.module.css';
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSelectPlan?: (tier: 'découverte' | 'pro' | 'ultra' | 'institution', role: 'student' | 'teacher') => void;
 }
 
-export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModalProps) {
+export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
   const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('12m');
   const [copiedRip, setCopiedRip] = useState(false);
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
@@ -82,8 +83,11 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <li><span>•</span> 1 synthèse bibliographique</li>
                 <li><span>•</span> Calculateur NSN démo</li>
               </ul>
-              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={onClose}>
-                Inclus pour le test
+              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={() => {
+                if (onSelectPlan) onSelectPlan('découverte', 'student');
+                onClose();
+              }}>
+                Tester l'Offre Découverte (3j)
               </button>
             </div>
 
@@ -105,10 +109,15 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <li><span>✓</span> 5 bilans pédagogiques/mois</li>
               </ul>
               <button className={styles.actionBtn} onClick={() => {
-                const ripElement = document.getElementById('rip-section');
-                if (ripElement) ripElement.scrollIntoView({ behavior: 'smooth' });
+                if (onSelectPlan) {
+                  onSelectPlan('pro', 'student');
+                  onClose();
+                } else {
+                  const ripElement = document.getElementById('rip-section');
+                  if (ripElement) ripElement.scrollIntoView({ behavior: 'smooth' });
+                }
               }}>
-                M'abonner en PRO
+                Demander l'Offre PRO
               </button>
             </div>
 
@@ -126,8 +135,15 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <li><span>✓</span> PDF HD sans filigrane</li>
                 <li><span>✓</span> Support prioritaire</li>
               </ul>
-              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={() => setContactMode('ultra')}>
-                Modalités Encadreur
+              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={() => {
+                if (onSelectPlan) {
+                  onSelectPlan('ultra', 'teacher');
+                  onClose();
+                } else {
+                  setContactMode('ultra');
+                }
+              }}>
+                Demander l'Offre ULTRA
               </button>
             </div>
 
@@ -144,8 +160,15 @@ export default function SubscriptionModal({ isOpen, onClose }: SubscriptionModal
                 <li><span>🏛️</span> Logo institutionnel sur PDF</li>
                 <li><span>🏛️</span> Accompagnement dédié</li>
               </ul>
-              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={() => setContactMode('institution')}>
-                Nous contacter
+              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={() => {
+                if (onSelectPlan) {
+                  onSelectPlan('institution', 'teacher');
+                  onClose();
+                } else {
+                  setContactMode('institution');
+                }
+              }}>
+                Demander un Devis
               </button>
             </div>
           </div>
