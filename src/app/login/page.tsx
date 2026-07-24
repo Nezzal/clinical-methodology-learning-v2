@@ -129,7 +129,7 @@ export default function Login() {
 
     if (!requestFirstName.trim() || !requestLastName.trim() || !requestInstitution.trim() || 
         !requestProfession.trim() || !requestCity.trim() || !requestCountry.trim() || 
-        !requestEmail.trim()) {
+        !requestEmail.trim() || !requestPhone.trim()) {
       setErrorMsg('Veuillez remplir tous les champs obligatoires (marqués d\'un *).');
       return;
     }
@@ -559,13 +559,14 @@ export default function Login() {
                     </div>
 
                     <div className={styles.inputGroup}>
-                      <label htmlFor="requestPhone">Téléphone <span style={{color:'var(--text-muted)', fontSize:'0.8rem'}}>(facultatif)</span></label>
+                      <label htmlFor="requestPhone">Téléphone <span style={{color:'#e11d48'}}>*</span></label>
                       <input
                         type="tel"
                         id="requestPhone"
                         placeholder="+213 555 123 456"
                         value={requestPhone}
                         onChange={(e) => setRequestPhone(e.target.value)}
+                        required
                         disabled={submitting}
                       />
                     </div>
