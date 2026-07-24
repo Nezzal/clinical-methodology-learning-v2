@@ -79,7 +79,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <div className={styles.zoneCardTitle}>Afrique (Hors Algérie)</div>
                   <div className={styles.zoneCardSubtitle}>Euros (€) & Francs CFA (FCFA)</div>
                   <div className={styles.zoneCardDesc}>
-                    Tarifs préférentiels Zone Afrique Subsaharienne et Maghreb. Règlement par Mobile Money (Wave, Orange, MTN, Moov) & Virement.
+                    Tarifs préférentiels Zone Afrique Subsaharienne et Maghreb. Règlement par Mobile Money (Wave, Orange, MTN, Moov), PayPal, Western Union & Virement.
                   </div>
                   <button className={styles.zoneCardBtn} style={{ background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)' }}>
                     Sélectionner la Zone Afrique ➔
@@ -92,7 +92,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <div className={styles.zoneCardTitle}>Europe & Occident</div>
                   <div className={styles.zoneCardSubtitle}>Euros (€), Dollars ($ USD / CAD)</div>
                   <div className={styles.zoneCardDesc}>
-                    France, Belgique, Suisse, Canada... Règlement sécurisé par Virement SEPA / SWIFT, Carte bancaire internationale ou PayPal.
+                    France, Belgique, Suisse, Canada... Virement SEPA / SWIFT, Carte bancaire internationale, PayPal ou Western Union.
                   </div>
                   <button className={styles.zoneCardBtn} style={{ background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)' }}>
                     Sélectionner Zone Occident ➔
@@ -369,7 +369,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <span>Instructions Virement Zone Afrique (Hors Algérie)</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour l'Afrique francophone (Cote d'Ivoire, Sénégal, Cameroun, Mali, Gabon...), réglez par Virement bancaire, Wave, Orange Money ou carte.
+                Pour l'Afrique francophone (Côte d'Ivoire, Sénégal, Cameroun, Mali, Gabon...), réglez par Virement bancaire, Wave, Orange Money, PayPal, Western Union ou carte.
               </p>
               <div className={styles.ripDetails}>
                 <div>
@@ -378,7 +378,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Options de règlement :</span>
-                  <strong>Virement bancaire / Mobile Money / Transfert</strong>
+                  <strong>Virement bancaire / Mobile Money / PayPal / Western Union</strong>
                 </div>
                 <button className={styles.copyBtn} onClick={handleCopyRip}>
                   {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
@@ -395,7 +395,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <span>Instructions Virement Europe & Occident (France, Canada, Belgique...)</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour l'Europe et l'Occident (€ / $ / CAD), effectuez votre virement SWIFT / SEPA ou demandez un lien de règlement sécurisé par Carte / PayPal.
+                Pour l'Europe et l'Occident (€ / $ / CAD), effectuez votre virement SWIFT / SEPA ou réglez par Carte, PayPal ou Western Union.
               </p>
               <div className={styles.ripDetails}>
                 <div>
@@ -404,7 +404,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Modes acceptés :</span>
-                  <strong>Virement SEPA / Carte Internationale / PayPal</strong>
+                  <strong>Virement SEPA / Carte Internationale / PayPal / Western Union</strong>
                 </div>
                 <button className={styles.copyBtn} onClick={handleCopyRip}>
                   {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
