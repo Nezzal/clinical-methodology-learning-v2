@@ -151,7 +151,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
             <div className={styles.planCard}>
               <div className={styles.planHeader}>
                 <div className={styles.planName}>🏛️ INSTITUTION</div>
-                <div className={styles.planSubtitle}>Facultés, CHU & Labos</div>
+                <div className={styles.planSubtitle}>Facultés, Hôpitaux, Labos de recherche & Entreprises</div>
                 <span className={styles.planBadgeBonus}>Multi-sièges & Devis</span>
               </div>
               <ul className={styles.featureList}>

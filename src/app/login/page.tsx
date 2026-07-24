@@ -404,7 +404,7 @@ export default function Login() {
                       {requestedTier === 'découverte' && '🟢 Formule Sélectionnée : Découverte (3 jours d\'essai gratuit)'}
                       {requestedTier === 'pro' && '🔷 Formule Sélectionnée : PRO (Internes, Résidents & Doctorants)'}
                       {requestedTier === 'ultra' && '👑 Formule Sélectionnée : ULTRA (Enseignants & Encadreurs)'}
-                      {requestedTier === 'institution' && '🏛️ Formule Sélectionnée : INSTITUTION (Facultés & CHU)'}
+                      {requestedTier === 'institution' && '🏛️ Formule Sélectionnée : INSTITUTION (Facultés, Hôpitaux, Labos de recherche & Entreprises)'}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <div className={styles.inputGroup}>
