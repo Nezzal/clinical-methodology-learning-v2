@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import styles from './SubscriptionModal.module.css';
+import { sendSupportMessage } from '@/utils/firestore';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -16,6 +17,12 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', studentCount: '' });
   const [submittedMessage, setSubmittedMessage] = useState(false);
+
+  // Transmission Reçu BaridiMob
+  const [receiptEmail, setReceiptEmail] = useState('');
+  const [receiptTxId, setReceiptTxId] = useState('');
+  const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
+  const [receiptSuccess, setReceiptSuccess] = useState(false);
 
   if (!isOpen) return null;
 
@@ -32,6 +39,38 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
       setSubmittedMessage(false);
       setContactMode(null);
     }, 3000);
+  };
+
+  const handleReceiptSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!receiptEmail.trim() || !receiptTxId.trim()) return;
+
+    setIsSubmittingReceipt(true);
+    try {
+      await sendSupportMessage(
+        'guest',
+        receiptEmail.trim(),
+        receiptEmail.trim(),
+        'student',
+        'admin',
+        undefined,
+        `📲 Reçu de Virement BaridiMob - ${receiptEmail.trim()}`,
+        `Bonjour, je vous transmets mon justificatif de virement BaridiMob.\n\n` +
+        `• Adresse E-mail : ${receiptEmail.trim()}\n` +
+        `• N° de Transaction / Reçu BaridiMob : ${receiptTxId.trim()}`
+      );
+
+      setReceiptSuccess(true);
+      setTimeout(() => {
+        setReceiptSuccess(false);
+        setReceiptTxId('');
+        setReceiptEmail('');
+      }, 4000);
+    } catch (err) {
+      alert("Erreur lors de la transmission du reçu.");
+    } finally {
+      setIsSubmittingReceipt(false);
+    }
   };
 
   return (
@@ -428,9 +467,48 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP BaridiMob'}
                 </button>
               </div>
-              <p style={{ fontSize: '0.78rem', color: '#34d399', margin: 0, fontStyle: 'italic' }}>
+              <p style={{ fontSize: '0.78rem', color: '#34d399', margin: '0 0 10px 0', fontStyle: 'italic' }}>
                 ⚡ Dès réception et validation du virement BaridiMob par l'administrateur, votre accès s'active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
               </p>
+
+              {/* Formulaire direct de transmission de Reçu BaridiMob */}
+              <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.12)' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', marginBottom: '8px' }}>
+                  📩 Transmettre la preuve de votre virement BaridiMob :
+                </div>
+
+                {receiptSuccess ? (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
+                    ✓ Reçu de paiement BaridiMob transmis avec succès ! Activation sous 24h.
+                  </div>
+                ) : (
+                  <form onSubmit={handleReceiptSubmit} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Votre e-mail de compte *"
+                      value={receiptEmail}
+                      onChange={e => setReceiptEmail(e.target.value)}
+                      style={{ flex: '1 1 180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '0.82rem' }}
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="N° de reçu ou transaction *"
+                      value={receiptTxId}
+                      onChange={e => setReceiptTxId(e.target.value)}
+                      style={{ flex: '1 1 180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '0.82rem' }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSubmittingReceipt}
+                      style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #0d9488, #0284c7)', color: 'white', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                    >
+                      {isSubmittingReceipt ? 'Envoi...' : 'Transmettre le Reçu'}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           ) : residence === 'africa' ? (
             <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(13, 148, 136, 0.4)' }}>
