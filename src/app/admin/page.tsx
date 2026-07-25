@@ -505,11 +505,6 @@ export default function AdminDashboard() {
   };
 
   const handleExportRequestsCSV = () => {
-    if (!accessRequests || accessRequests.length === 0) {
-      alert("Aucune demande d'accès à exporter.");
-      return;
-    }
-
     const headers = [
       "ID Demande",
       "Prénom",
@@ -527,7 +522,7 @@ export default function AdminDashboard() {
       "Référence Paiement / Reçu BaridiMob"
     ];
 
-    const rows = accessRequests.map(r => {
+    const rows = (accessRequests || []).map(r => {
       const createdStr = r.createdAt?.seconds ? new Date(r.createdAt.seconds * 1000).toLocaleString('fr-FR') : '—';
       const expiryStr = r.expiresAt?.seconds ? new Date(r.expiresAt.seconds * 1000).toLocaleString('fr-FR') : '—';
 
@@ -1923,43 +1918,41 @@ Votre superviseur`;
                   Demandes d'accès et d'essai ({accessRequests.length} enregistrées)
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      fontSize: '0.78rem',
+                      background: 'rgba(52, 211, 153, 0.12)',
+                      color: '#34d399',
+                      border: '1px solid rgba(52, 211, 153, 0.3)',
+                      borderRadius: '6px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    onClick={handleExportRequestsCSV}
+                    title="Télécharger l'historique des demandes au format CSV"
+                  >
+                    📥 Exporter Demandes (CSV)
+                  </button>
                   {accessRequests.length > 0 && (
-                    <>
-                      <button
-                        className="btn btn-secondary"
-                        style={{
-                          padding: '0.4rem 0.8rem',
-                          fontSize: '0.78rem',
-                          background: 'rgba(52, 211, 153, 0.12)',
-                          color: '#34d399',
-                          border: '1px solid rgba(52, 211, 153, 0.3)',
-                          borderRadius: '6px',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                        onClick={handleExportRequestsCSV}
-                        title="Télécharger toutes les demandes au format CSV"
-                      >
-                        📥 Exporter Demandes (CSV)
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        style={{
-                          padding: '0.4rem 0.8rem',
-                          fontSize: '0.78rem',
-                          background: 'rgba(239, 68, 68, 0.12)',
-                          color: '#f87171',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          borderRadius: '6px',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                        onClick={handleCleanOldRequests}
-                        disabled={actionPending}
-                      >
-                        🗑️ Nettoyer anciennes (+7j/rejetées)
-                      </button>
-                    </>
+                    <button
+                      className="btn btn-secondary"
+                      style={{
+                        padding: '0.4rem 0.8rem',
+                        fontSize: '0.78rem',
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        color: '#f87171',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                      onClick={handleCleanOldRequests}
+                      disabled={actionPending}
+                    >
+                      🗑️ Nettoyer anciennes (+7j/rejetées)
+                    </button>
                   )}
                 </div>
               </div>
