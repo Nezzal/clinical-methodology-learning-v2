@@ -180,14 +180,14 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                     '11 900 DZD / an (990/m)'
                   ) : residence === 'africa' ? (
                     selectedDuration === '1m' ? '20 € / mois (~13 120 FCFA)' :
-                    selectedDuration === '3m' ? '40 € (~26 240 FCFA - 13,3 €/m)' :
-                    selectedDuration === '6m' ? '120 € (~78 715 FCFA - 20 €/m)' :
-                    '200 € / an (~131 190 FCFA - 16,7 €/m)'
+                    selectedDuration === '3m' ? '45 € (~29 520 FCFA - 15 €/m)' :
+                    selectedDuration === '6m' ? '72 € (~47 230 FCFA - 12 €/m)' :
+                    '120 € / an (~78 715 FCFA - 10 €/m)'
                   ) : (
-                    selectedDuration === '1m' ? '100 € / mois' :
-                    selectedDuration === '3m' ? '200 € (66,7 €/m)' :
-                    selectedDuration === '6m' ? '500 € (83,3 €/m)' :
-                    '1 000 € / an (83,3 €/m)'
+                    selectedDuration === '1m' ? '59 € / mois' :
+                    selectedDuration === '3m' ? '147 € (49 €/m)' :
+                    selectedDuration === '6m' ? '234 € (39 €/m)' :
+                    '348 € / an (29 €/m)'
                   )}
                 </div>
                 <span className={styles.planBadgeBonus}>🎁 + 7 jours offerts sur virement</span>
