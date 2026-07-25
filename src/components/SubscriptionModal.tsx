@@ -266,23 +266,32 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fbbf24', margin: '6px 0', lineHeight: '1.3' }}>
                   {residence === 'dz' ? (
                     <>
-                      <div>2 500 DZD / mois</div>
+                      <div>3 500 DZD / mois</div>
                       <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
-                        + 1 000 DZD / mois par étudiant inscrit
+                        Base (2 500 DA) + 1er étudiant inclus (1 000 DA)
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '2px' }}>
+                        + 1 000 DA/mois par étudiant supp.
                       </div>
                     </>
                   ) : residence === 'africa' ? (
                     <>
-                      <div>À partir de 20 € / mois <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>(~13 120 FCFA)</span></div>
+                      <div>37 € / mois <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>(~24 270 FCFA)</span></div>
                       <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
-                        + 17 € / mois <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>(~11 150 FCFA)</span> par étudiant inscrit
+                        Base (20 €) + 1er étudiant inclus (17 €)
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '2px' }}>
+                        + 17 €/mois par étudiant supp.
                       </div>
                     </>
                   ) : (
                     <>
-                      <div>À partir de 59 € / mois</div>
+                      <div>104 € / mois</div>
                       <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
-                        + 45 € / mois par étudiant inscrit
+                        Base (59 €) + 1er étudiant inclus (45 €)
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '2px' }}>
+                        + 45 €/mois par étudiant supp.
                       </div>
                     </>
                   )}

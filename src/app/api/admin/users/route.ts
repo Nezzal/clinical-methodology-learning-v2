@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, email, role, tier = 'pro', durationMonths = 12 } = await req.json();
+    const { name, email, role, tier = 'ultra', durationMonths = 12, assignedTeacherUid, assignedTeacherName } = await req.json();
 
     if (!name || !name.trim() || !email || !email.trim()) {
       return NextResponse.json({ error: "Le nom et l'adresse e-mail sont requis." }, { status: 400 });
@@ -44,6 +44,25 @@ export async function POST(req: Request) {
     const cleanEmail = email.toLowerCase().trim();
     const cleanName = name.trim();
     const cleanRole = (role === 'teacher' || role === 'admin') ? role : 'student';
+
+    // Si la demande émane d'un enseignant, forcer le raccordement à son UID et vérifier son quota
+    const isTeacherUser = decodedToken.role === 'teacher';
+    const teacherUid = isTeacherUser ? decodedToken.uid : assignedTeacherUid;
+
+    if (isTeacherUser && teacherUid) {
+      const teacherSnap = await adminDb.collection('users').doc(teacherUid).get();
+      if (teacherSnap.exists) {
+        const teacherData = teacherSnap.data();
+        const quotaStudents = teacherData?.subscription?.quotaStudents || 1;
+        
+        const studentsSnap = await adminDb.collection('users').where('assignedTeacherUid', '==', teacherUid).get();
+        if (studentsSnap.size >= quotaStudents) {
+          return NextResponse.json({ 
+            error: `Quota d'étudiants d'encadrement atteint (${studentsSnap.size}/${quotaStudents}). Veuillez demander une extension de capacité (+1 000 DZD/mois) à l'administrateur.` 
+          }, { status: 400 });
+        }
+      }
+    }
 
     // Calcul de l'abonnement activé par le paiement reçu (+7j Pro / +14j Ultra)
     const now = new Date();
@@ -111,6 +130,8 @@ export async function POST(req: Request) {
       level: 'Débutant',
       role: cleanRole,
       subscription,
+      ...(teacherUid ? { assignedTeacherUid: teacherUid } : {}),
+      ...(assignedTeacherName ? { assignedTeacherName } : {}),
       stats: {
         questionsAsked: 0,
         protocolsGenerated: 0,

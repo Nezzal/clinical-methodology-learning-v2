@@ -60,7 +60,7 @@ function renderMarkdown(text: string): string {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, loading: authLoading, isAdmin: authIsAdmin, role } = useAuth();
+  const { user, profile, loading: authLoading, isAdmin: authIsAdmin, role } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -176,6 +176,166 @@ export default function AdminDashboard() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
+  // States pour la gestion des étudiants et réabonnements ULTRA (Enseignant)
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [studentFirstName, setStudentFirstName] = useState('');
+  const [studentLastName, setStudentLastName] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
+  const [isAddingStudent, setIsAddingStudent] = useState(false);
+  const [addStudentError, setAddStudentError] = useState('');
+
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [renewalTxId, setRenewalTxId] = useState('');
+  const [renewalMessage, setRenewalMessage] = useState('');
+  const [isSubmittingRenewal, setIsSubmittingRenewal] = useState(false);
+  const [renewalSuccess, setRenewalSuccess] = useState(false);
+
+  const [showQuotaExtensionModal, setShowQuotaExtensionModal] = useState(false);
+  const [extensionTxId, setExtensionTxId] = useState('');
+  const [extensionCount, setExtensionCount] = useState(1);
+  const [isSubmittingExtension, setIsSubmittingExtension] = useState(false);
+  const [extensionSuccess, setExtensionSuccess] = useState(false);
+
+  const handleAddStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentFirstName.trim() || !studentLastName.trim() || !studentEmail.trim()) {
+      setAddStudentError("Tous les champs sont obligatoires.");
+      return;
+    }
+
+    setIsAddingStudent(true);
+    setAddStudentError('');
+
+    try {
+      if (!user) throw new Error("Session expirée");
+      const idToken = await user.getIdToken(true);
+
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          name: `${studentFirstName.trim()} ${studentLastName.trim()}`,
+          email: studentEmail.trim(),
+          role: 'student',
+          tier: 'ultra',
+          durationMonths: profile?.subscription?.durationMonths || 1,
+          assignedTeacherUid: user.uid,
+          assignedTeacherName: profile?.displayName || user.email
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Impossible d'inscrire cet étudiant.");
+      }
+
+      setSuccessModalData({
+        name: data.name,
+        email: data.email,
+        tempPassword: data.tempPassword
+      });
+
+      setStudentFirstName('');
+      setStudentLastName('');
+      setStudentEmail('');
+      setShowAddStudentModal(false);
+      fetchStudents();
+    } catch (err: any) {
+      setAddStudentError(err.message || "Erreur lors de la création du compte étudiant.");
+    } finally {
+      setIsAddingStudent(false);
+    }
+  };
+
+  const handleRenewalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renewalTxId.trim()) {
+      alert("Veuillez saisir le numéro de reçu ou référence du virement BaridiMob.");
+      return;
+    }
+
+    setIsSubmittingRenewal(true);
+    try {
+      if (!user) throw new Error("Session expirée");
+
+      const studentCount = visibleStudents.length || 1;
+      const basePrice = 2500;
+      const studentPrice = studentCount * 1000;
+      const totalPrice = basePrice + studentPrice;
+
+      await sendSupportMessage(
+        user.uid,
+        profile?.displayName || user.email || 'Enseignant ULTRA',
+        user.email || '',
+        'teacher',
+        'admin',
+        undefined,
+        `🔄 Demande de Renouvellement Abonnement ULTRA (${totalPrice} DZD)`,
+        `Bonjour, je demande le renouvellement de mon abonnement ULTRA Enseignant.\n\n` +
+        `• Nom Enseignant : ${profile?.displayName || user.email}\n` +
+        `• Nombre d'étudiants sous ma responsabilité : ${studentCount}\n` +
+        `• Montant total réglé via BaridiMob : ${totalPrice} DZD\n` +
+        `• Référence / N° de transaction BaridiMob : ${renewalTxId.trim()}\n` +
+        (renewalMessage.trim() ? `• Message additionnel : ${renewalMessage.trim()}` : '')
+      );
+
+      setRenewalSuccess(true);
+      setTimeout(() => {
+        setRenewalSuccess(false);
+        setShowRenewalModal(false);
+        setRenewalTxId('');
+        setRenewalMessage('');
+      }, 3000);
+    } catch (err: any) {
+      alert("Erreur lors de l'envoi de la demande : " + err.message);
+    } finally {
+      setIsSubmittingRenewal(false);
+    }
+  };
+
+  const handleExtensionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!extensionTxId.trim()) {
+      alert("Veuillez saisir la référence ou numéro de transaction BaridiMob.");
+      return;
+    }
+
+    setIsSubmittingExtension(true);
+    try {
+      if (!user) throw new Error("Session expirée");
+      const addedPrice = extensionCount * 1000;
+
+      await sendSupportMessage(
+        user.uid,
+        profile?.displayName || user.email || 'Enseignant ULTRA',
+        user.email || '',
+        'teacher',
+        'admin',
+        undefined,
+        `➕ Extension de Quota Étudiants (+${extensionCount} étudiant(s) - ${addedPrice} DZD)`,
+        `Bonjour, je demande une extension de ma capacité d'encadrement étudiants.\n\n` +
+        `• Enseignant : ${profile?.displayName || user.email}\n` +
+        `• Nombre d'étudiants supplémentaires demandés : +${extensionCount}\n` +
+        `• Montant BaridiMob réglé : ${addedPrice} DZD\n` +
+        `• Référence / N° de transaction : ${extensionTxId.trim()}`
+      );
+
+      setExtensionSuccess(true);
+      setTimeout(() => {
+        setExtensionSuccess(false);
+        setShowQuotaExtensionModal(false);
+        setExtensionTxId('');
+      }, 3000);
+    } catch (err: any) {
+      alert("Erreur : " + err.message);
+    } finally {
+      setIsSubmittingExtension(false);
+    }
+  };
 
   const handleToggleSuspension = async (uid: string, newStatus: 'active' | 'suspended') => {
     const confirmMsg = newStatus === 'suspended'
@@ -1191,6 +1351,94 @@ Votre superviseur`;
         </div>
       </header>
 
+      {/* Widget Supervision Enseignant ULTRA */}
+      {role === 'teacher' && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(30, 41, 59, 0.6))',
+          border: '1px solid rgba(251, 191, 36, 0.3)',
+          borderRadius: '16px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '1.2rem' }}>👑</span>
+              <h3 style={{ color: '#fbbf24', fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>
+                Espace Encadrement ULTRA — Prof. {profile?.displayName || user?.email}
+              </h3>
+            </div>
+            <p style={{ color: '#cbd5e1', fontSize: '0.88rem', margin: 0 }}>
+              Capacité d'étudiants encadrés : <strong>{visibleStudents.length} / {profile?.subscription?.quotaStudents || 1}</strong> étudiant(s) inscrit(s)
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            {visibleStudents.length < (profile?.subscription?.quotaStudents || 1) ? (
+              <button
+                onClick={() => setShowAddStudentModal(true)}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                ➕ Inscrire un Étudiant
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowQuotaExtensionModal(true)}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(251, 191, 36, 0.4)',
+                  background: 'rgba(251, 191, 36, 0.15)',
+                  color: '#fbbf24',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer'
+                }}
+              >
+                ➕ Demander +1 Étudiant (+1 000 DZD/m)
+              </button>
+            )}
+
+            <button
+              onClick={() => setShowRenewalModal(true)}
+              style={{
+                padding: '10px 18px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              🔄 Renouveler mon Abonnement ULTRA
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Cartes KPI Collectifs */}
       <section className={styles.kpiGrid}>
         <div className="glass-card styles.kpiCard" style={{ padding: '1.25rem' }}>
@@ -2029,6 +2277,230 @@ Votre superviseur`;
                 Fermer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Inscription Étudiant Enseignant ULTRA */}
+      {showAddStudentModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(6px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowAddStudentModal(false)}>
+          <div style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', maxWidth: '480px', width: '100%', padding: '1.75rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.15rem', fontWeight: 700 }}>
+                ➕ Inscrire un Étudiant (Contrat ULTRA)
+              </h3>
+              <button style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setShowAddStudentModal(false)}>✕</button>
+            </div>
+
+            <form onSubmit={handleAddStudentSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Prénom de l'étudiant *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex : Amina"
+                  value={studentFirstName}
+                  onChange={e => setStudentFirstName(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Nom de famille *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ex : Benali"
+                  value={studentLastName}
+                  onChange={e => setStudentLastName(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Adresse e-mail de l'étudiant *</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="Ex : amina.benali@univ-alger.dz"
+                  value={studentEmail}
+                  onChange={e => setStudentEmail(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                />
+              </div>
+
+              {addStudentError && (
+                <div style={{ color: '#fca5a5', fontSize: '0.85rem', background: 'rgba(239,68,68,0.15)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(239,68,68,0.3)' }}>
+                  ⚠️ {addStudentError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="submit"
+                  disabled={isAddingStudent}
+                  style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {isAddingStudent ? 'Création en cours...' : 'Inscrire cet Étudiant'}
+                </button>
+                <button
+                  type="button"
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
+                  onClick={() => setShowAddStudentModal(false)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Renouvellement Abonnement ULTRA */}
+      {showRenewalModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(6px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowRenewalModal(false)}>
+          <div style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', maxWidth: '520px', width: '100%', padding: '1.75rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, color: '#38bdf8', fontSize: '1.15rem', fontWeight: 700 }}>
+                🔄 Renouvellement de l'Abonnement ULTRA
+              </h3>
+              <button style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setShowRenewalModal(false)}>✕</button>
+            </div>
+
+            {renewalSuccess ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#34d399' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
+                <h4 style={{ margin: '0 0 0.5rem 0' }}>Demande transmise avec succès !</h4>
+                <p style={{ fontSize: '0.88rem', color: '#cbd5e1' }}>L'administrateur a été notifié et validera la prolongation de votre compte et de vos étudiants sous 24h.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleRenewalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ background: 'rgba(2, 132, 199, 0.12)', border: '1px solid rgba(2, 132, 199, 0.3)', padding: '12px 14px', borderRadius: '10px', fontSize: '0.88rem', color: '#e0f2fe' }}>
+                  <div style={{ fontWeight: 700, marginBottom: '4px' }}>📊 Détail du Montant Mensuel à Régler :</div>
+                  <div>• Formule de Base Enseignant : <strong>2 500 DZD</strong></div>
+                  <div>• Étudiants sous responsabilité : <strong>{visibleStudents.length || 1} × 1 000 DZD = {(visibleStudents.length || 1) * 1000} DZD</strong></div>
+                  <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed rgba(2, 132, 199, 0.3)', fontSize: '1rem', fontWeight: 800, color: '#38bdf8' }}>
+                    Total à régler : {2500 + ((visibleStudents.length || 1) * 1000)} DZD / mois
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '2px' }}>Compte BaridiMob Officiel :</div>
+                  <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#34d399', fontFamily: 'monospace' }}>RIP : 00799999000041210947</div>
+                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Titulaire : Professeur Nezzal Abdelmalek</div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>N° de transaction ou reçu BaridiMob *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex : N° Reçu 987654321..."
+                    value={renewalTxId}
+                    onChange={e => setRenewalTxId(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Message facultatif</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Ajouter une remarque pour l'administrateur..."
+                    value={renewalMessage}
+                    onChange={e => setRenewalMessage(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingRenewal}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {isSubmittingRenewal ? 'Transmission...' : 'Envoyer la preuve de paiement'}
+                  </button>
+                  <button
+                    type="button"
+                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
+                    onClick={() => setShowRenewalModal(false)}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Demande d'Extension d'Étudiants */}
+      {showQuotaExtensionModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(6px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setShowQuotaExtensionModal(false)}>
+          <div style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', maxWidth: '480px', width: '100%', padding: '1.75rem', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ margin: 0, color: '#fbbf24', fontSize: '1.15rem', fontWeight: 700 }}>
+                ➕ Demander des Étudiants Supplémentaires
+              </h3>
+              <button style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setShowQuotaExtensionModal(false)}>✕</button>
+            </div>
+
+            {extensionSuccess ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem', color: '#34d399' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
+                <h4 style={{ margin: '0 0 0.5rem 0' }}>Demande d'extension envoyée !</h4>
+                <p style={{ fontSize: '0.88rem', color: '#cbd5e1' }}>L'administrateur ajustera votre capacité d'encadrement dès confirmation du virement.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleExtensionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Nombre d'étudiants supplémentaires</label>
+                  <select
+                    value={extensionCount}
+                    onChange={e => setExtensionCount(Number(e.target.value))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                  >
+                    <option value={1}>+ 1 Étudiant (+1 000 DZD/mois)</option>
+                    <option value={2}>+ 2 Étudiants (+2 000 DZD/mois)</option>
+                    <option value={3}>+ 3 Étudiants (+3 000 DZD/mois)</option>
+                    <option value={5}>+ 5 Étudiants (+5 000 DZD/mois)</option>
+                  </select>
+                </div>
+
+                <div style={{ background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', padding: '12px', borderRadius: '8px', color: '#fcd34d', fontSize: '0.85rem' }}>
+                  Montant additionnel à régler sur BaridiMob (RIP 00799999000041210947) : <strong>{extensionCount * 1000} DZD / mois</strong>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>N° de transaction BaridiMob *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex : Reçu virement N°..."
+                    value={extensionTxId}
+                    onChange={e => setExtensionTxId(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                  <button
+                    type="submit"
+                    disabled={isSubmittingExtension}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#1e1b4b', fontWeight: 800, cursor: 'pointer' }}
+                  >
+                    {isSubmittingExtension ? 'Envoi...' : 'Demander l\'extension'}
+                  </button>
+                  <button
+                    type="button"
+                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
+                    onClick={() => setShowQuotaExtensionModal(false)}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

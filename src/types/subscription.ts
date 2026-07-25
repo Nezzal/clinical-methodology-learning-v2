@@ -21,6 +21,7 @@ export interface UserSubscription {
   validUntil: string; // ISO String
   durationMonths?: number;
   bonusDaysAdded?: number; // 7j pour Pro, 14j pour Ultra
+  quotaStudents?: number; // Capacité d'étudiants d'encadrement (par défaut 1 pour Ultra)
   paymentVerified: boolean;
   quotas: QuotaUsage;
 }
