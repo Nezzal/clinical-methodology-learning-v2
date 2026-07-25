@@ -959,29 +959,12 @@ Votre superviseur`;
         const email = (u.email || '').toLowerCase();
         const displayName = (u.displayName || '').toLowerCase();
         
-        if (u.role === 'admin' || u.role === 'teacher') {
+        // Seul le compte administrateur principal est exclu de la liste globale
+        if (u.role === 'admin' || email === 'admin@recif.dz') {
           return false;
         }
 
-        if (email.endsWith('@recif.dz') || displayName.endsWith('@recif.dz')) {
-          return false;
-        }
-        
-        if (
-          email.includes('admin') || 
-          email.includes('enseignant') || 
-          email.includes('superviseur') ||
-          email.includes('supervisor')
-        ) {
-          return false;
-        }
-        
-        if (
-          displayName.includes('admin') || 
-          displayName.includes('enseignant') || 
-          displayName.includes('superviseur') ||
-          displayName.includes('supervisor')
-        ) {
+        if (email.endsWith('@recif.dz') && email !== 'admin@recif.dz') {
           return false;
         }
         
@@ -1008,10 +991,8 @@ Votre superviseur`;
           const onlyStudents = JSON.parse(cached).filter((u: any) => {
             const email = (u.email || '').toLowerCase();
             const displayName = (u.displayName || '').toLowerCase();
-            if (u.role === 'admin' || u.role === 'teacher') return false;
-            if (email.endsWith('@recif.dz') || displayName.endsWith('@recif.dz')) return false;
-            if (email.includes('admin') || email.includes('enseignant') || email.includes('superviseur') || email.includes('supervisor')) return false;
-            if (displayName.includes('admin') || displayName.includes('enseignant') || displayName.includes('superviseur') || displayName.includes('supervisor')) return false;
+            if (u.role === 'admin' || email === 'admin@recif.dz') return false;
+            if (email.endsWith('@recif.dz') && email !== 'admin@recif.dz') return false;
             if (user && (email === user.email?.toLowerCase() || u.uid === user.uid)) return false;
             return true;
           });
@@ -1558,7 +1539,12 @@ Votre superviseur`;
                               <div className={styles.studentInfo}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                                   <span className={`${styles.statusDot} ${online ? styles.statusDotOnline : styles.statusDotOffline}`} title={online ? "En ligne" : "Hors ligne"} />
-                                  <span className={styles.studentName}>{student.displayName || 'Étudiant'}</span>
+                                  <span className={styles.studentName}>{student.displayName || 'Utilisateur'}</span>
+                                  {student.role === 'teacher' && (
+                                    <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
+                                      👨‍🏫 Enseignant
+                                    </span>
+                                  )}
                                   {student.status === 'suspended' && (
                                     <span className={styles.miniSuspendedBadge}>Suspendu</span>
                                   )}
