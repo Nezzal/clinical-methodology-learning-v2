@@ -20,7 +20,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   if (!isOpen) return null;
 
   const handleCopyRip = () => {
-    navigator.clipboard.writeText(residence === 'dz' ? 'RIP/CCP: 17978545 Clé 42 - Methodo&Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo&Clinique');
+    navigator.clipboard.writeText(residence === 'dz' ? 'RIP/CCP: XXXXXXXXXXXXXXXX Clé XX - Methodo&Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo&Clinique');
     setCopiedRip(true);
     setTimeout(() => setCopiedRip(false), 2500);
   };
@@ -348,7 +348,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.ripDetails}>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>RIB / RIP CCP :</span>
-                  <strong>17978545 Clé 42</strong>
+                  <strong>XXXXXXXXXXXXXXXX Clé XX</strong>
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Titulaire du compte :</span>

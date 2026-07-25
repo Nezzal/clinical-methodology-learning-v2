@@ -187,7 +187,7 @@ export async function POST(req: Request) {
                   Vous recevrez par e-mail vos identifiants gratuits pour le test découverte (3 jours). Pour valider votre abonnement définitif et bénéficier des jours bonus, voici les coordonnées pour effectuer votre virement bancaire / CCP (RIP) :
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
-                  <strong>RIP / CCP :</strong> 17978545 Clé 42<br />
+                  <strong>RIP / CCP :</strong> XXXXXXXXXXXXXXXX Clé XX<br />
                   <strong>Titulaire :</strong> Methodo&Clinique Éducation
                 </div>
               </div>
