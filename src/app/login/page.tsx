@@ -40,11 +40,17 @@ export default function Login() {
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Reçu BaridiMob pour accès direct payant
-  const [submittedPaidTier, setSubmittedPaidTier] = useState<{ email: string; tier: string } | null>(null);
+  // Reçu BaridiMob / PayPal / Western Union pour accès direct payant
+  const [submittedPaidTier, setSubmittedPaidTier] = useState<{ email: string; tier: string; country: string } | null>(null);
   const [receiptTxIdInput, setReceiptTxIdInput] = useState('');
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [receiptSubmittedSuccess, setReceiptSubmittedSuccess] = useState(false);
+
+  const isAlgeriaCountry = (c: string) => {
+    if (!c) return true;
+    const cleanC = c.toLowerCase().trim();
+    return cleanC === 'algérie' || cleanC === 'algerie' || cleanC === 'dz' || cleanC === 'algeria';
+  };
 
   const handleDirectReceiptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,8 +213,9 @@ export default function Login() {
         setEmail(requestEmail.trim());
         setSuccessMsg(`🟢 Votre accès Test Découverte (3 jours) est actif !\nVous pouvez vous connecter directement avec votre e-mail ${requestEmail.trim()} et votre mot de passe habituel.`);
       } else {
-        setSubmittedPaidTier({ email: requestEmail.trim(), tier: requestedTier });
-        setSuccessMsg(`Demande d'accès (${requestedTier.toUpperCase()}) enregistrée ! Les instructions BaridiMob sont affichées ci-dessous et envoyées par e-mail.`);
+        const isDz = isAlgeriaCountry(requestCountry.trim());
+        setSubmittedPaidTier({ email: requestEmail.trim(), tier: requestedTier, country: requestCountry.trim() });
+        setSuccessMsg(`Demande d'accès (${requestedTier.toUpperCase()}) enregistrée ! Les instructions de règlement (${isDz ? 'BaridiMob' : 'PayPal / Western Union'}) sont affichées ci-dessous et envoyées par e-mail.`);
       }
 
       setRequestFirstName('');
@@ -432,7 +439,7 @@ export default function Login() {
                 {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
                 {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
 
-                {/* Encadré d'instructions BaridiMob et soumission de reçu pour demande d'accès payante */}
+                {/* Encadré d'instructions BaridiMob / PayPal / Western Union et soumission de reçu */}
                 {submittedPaidTier && (
                   <div style={{
                     marginTop: '1rem',
@@ -444,32 +451,64 @@ export default function Login() {
                     boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
                     textAlign: 'left'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#2dd4bf', fontWeight: 700, fontSize: '0.95rem' }}>
-                      <span>📲</span>
-                      <span>Instructions de Paiement BaridiMob ({submittedPaidTier.tier.toUpperCase()})</span>
-                    </div>
-                    
-                    <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '12px', lineHeight: 1.5 }}>
-                      Pour activer votre abonnement <strong>{submittedPaidTier.tier.toUpperCase()}</strong> et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), effectuez votre virement vers le RIP BaridiMob ci-dessous :
-                    </div>
+                    {isAlgeriaCountry(submittedPaidTier.country) ? (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#2dd4bf', fontWeight: 700, fontSize: '0.95rem' }}>
+                          <span>📲</span>
+                          <span>Instructions de Paiement BaridiMob ({submittedPaidTier.tier.toUpperCase()})</span>
+                        </div>
+                        
+                        <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '12px', lineHeight: 1.5 }}>
+                          Pour activer votre abonnement <strong>{submittedPaidTier.tier.toUpperCase()}</strong> et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), effectuez votre virement vers le RIP BaridiMob ci-dessous :
+                        </div>
 
-                    <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px dashed #0d9488', padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', fontFamily: 'monospace', fontSize: '0.88rem', color: '#2dd4bf' }}>
-                      <div><strong>RIP BaridiMob :</strong> 00799999000041210947</div>
-                      <div><strong>Titulaire :</strong> Professeur Nezzal Abdelmalek</div>
-                    </div>
+                        <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px dashed #0d9488', padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', fontFamily: 'monospace', fontSize: '0.88rem', color: '#2dd4bf' }}>
+                          <div><strong>RIP BaridiMob :</strong> 00799999000041210947</div>
+                          <div><strong>Titulaire :</strong> Professeur Nezzal Abdelmalek</div>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#38bdf8', fontWeight: 700, fontSize: '0.95rem' }}>
+                          <span>🌍</span>
+                          <span>Instructions de Paiement International ({submittedPaidTier.tier.toUpperCase()})</span>
+                        </div>
+                        
+                        <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '12px', lineHeight: 1.5 }}>
+                          Pour activer votre abonnement <strong>{submittedPaidTier.tier.toUpperCase()}</strong> depuis <strong>{submittedPaidTier.country}</strong>, effectuez votre règlement via <strong>PayPal</strong> ou <strong>Western Union</strong> ci-dessous :
+                        </div>
+
+                        <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px dashed #0284c7', padding: '12px 14px', borderRadius: '8px', marginBottom: '14px', fontSize: '0.86rem', color: '#e2e8f0', lineHeight: 1.6 }}>
+                          <div style={{ marginBottom: '6px', color: '#38bdf8' }}>
+                            <strong>💳 Compte PayPal :</strong> <span style={{ fontFamily: 'monospace', background: 'rgba(56, 189, 248, 0.15)', padding: '2px 6px', borderRadius: '4px', color: '#38bdf8', fontWeight: 'bold' }}>nezzal.abdelmalek@gmail.com</span>
+                          </div>
+                          <div style={{ color: '#fbbf24' }}>
+                            <strong>💸 Western Union :</strong>
+                          </div>
+                          <div style={{ paddingLeft: '12px', fontSize: '0.83rem', color: '#cbd5e1' }}>
+                            • <strong>Nom du Bénéficiaire :</strong> Nezzal Hanane Hayette<br />
+                            • <strong>Destination :</strong> Quebec Brossard, Canada
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     {receiptSubmittedSuccess ? (
                       <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, textAlign: 'center' }}>
-                        ✓ Reçu N° {receiptTxIdInput} transmis à l'administrateur ! Votre compte sera activé sous 24h.
+                        ✓ Justificatif N° {receiptTxIdInput} transmis à l'administrateur ! Votre compte sera activé sous 24h.
                       </div>
                     ) : (
                       <form onSubmit={handleDirectReceiptSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600 }}>Vous avez effectué votre virement ? Saisissez votre N° de reçu ci-dessous :</label>
+                        <label style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600 }}>
+                          {isAlgeriaCountry(submittedPaidTier.country)
+                            ? 'Vous avez effectué votre virement BaridiMob ? Saisissez votre N° de reçu :'
+                            : 'Vous avez effectué votre règlement ? Saisissez la référence PayPal ou MTCN Western Union :'}
+                        </label>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <input
                             type="text"
                             required
-                            placeholder="Ex : Reçu N° 987654321..."
+                            placeholder={isAlgeriaCountry(submittedPaidTier.country) ? "Ex : Reçu N° 987654321..." : "Ex : Réf PayPal / MTCN Western Union..."}
                             value={receiptTxIdInput}
                             onChange={e => setReceiptTxIdInput(e.target.value)}
                             style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15,23,42,0.9)', color: 'white', fontSize: '0.85rem' }}

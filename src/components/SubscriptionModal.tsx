@@ -513,46 +513,48 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
             <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(13, 148, 136, 0.4)' }}>
               <div className={styles.ripTitle} style={{ color: '#2dd4bf' }}>
                 <span>🌍</span>
-                <span>Instructions Virement Zone Afrique (Hors Algérie)</span>
+                <span>Instructions de Paiement Zone Afrique (Mali, Sénégal, Côte d'Ivoire...)</span>
               </div>
-              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour l'Afrique francophone (Côte d'Ivoire, Sénégal, Cameroun, Mali, Gabon...), réglez par PayPal, Western Union ou carte bancaire.
+              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: '0 0 10px 0' }}>
+                Pour la zone Afrique (hors Algérie), vous pouvez régler votre abonnement par <strong>PayPal</strong> ou <strong>Western Union</strong> :
               </p>
               <div className={styles.ripDetails}>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN / SWIFT Afrique :</span>
-                  <strong>XXXXXXXXXXXXXXXXXXXXXXX (SWIFT: XXXXXXX)</strong>
+                  <span style={{ color: '#38bdf8', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💳 Compte PayPal :</span>
+                  <strong style={{ fontFamily: 'monospace', color: '#2dd4bf' }}>nezzal.abdelmalek@gmail.com</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Options de règlement :</span>
-                  <strong>PayPal / Western Union / Carte bancaire</strong>
+                  <span style={{ color: '#fbbf24', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💸 Western Union :</span>
+                  <strong style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>Bénéficiaire : Nezzal Hanane Hayette</strong>
+                  <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Destination : Quebec Brossard, Canada</div>
                 </div>
               </div>
-              <p style={{ fontSize: '0.78rem', color: '#2dd4bf', margin: 0, fontStyle: 'italic' }}>
-                🌍 Un e-mail avec les coordonnées et instructions adaptées à votre pays vous sera envoyé après votre demande.
+              <p style={{ fontSize: '0.78rem', color: '#2dd4bf', margin: '10px 0 0 0', fontStyle: 'italic' }}>
+                🌍 Dès réception de votre règlement, votre compte sera activé sous 24h avec vos jours bonus offerts !
               </p>
             </div>
           ) : (
             <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(2, 132, 199, 0.4)' }}>
               <div className={styles.ripTitle} style={{ color: '#38bdf8' }}>
                 <span>🇪🇺🇨🇦</span>
-                <span>Instructions Virement Europe & Occident (France, Canada, Belgique...)</span>
+                <span>Instructions de Paiement Europe & Occident (France, Canada, Belgique...)</span>
               </div>
-              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour l'Europe et l'Occident (€ / $ / CAD), effectuez votre virement SWIFT / SEPA ou réglez par Carte, PayPal ou Western Union.
+              <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: '0 0 10px 0' }}>
+                Pour la zone Europe & Occident (€ / $ / CAD), effectuez votre règlement par <strong>PayPal</strong> ou <strong>Western Union</strong> :
               </p>
               <div className={styles.ripDetails}>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN SEPA / SWIFT International :</span>
-                  <strong>XXXXXXXXXXXXXXXXXXXXXXX (SWIFT: XXXXXXX)</strong>
+                  <span style={{ color: '#38bdf8', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💳 Compte PayPal :</span>
+                  <strong style={{ fontFamily: 'monospace', color: '#38bdf8' }}>nezzal.abdelmalek@gmail.com</strong>
                 </div>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Modes acceptés :</span>
-                  <strong>Virement SEPA / Carte Internationale / PayPal / Western Union</strong>
+                  <span style={{ color: '#fbbf24', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💸 Western Union :</span>
+                  <strong style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>Bénéficiaire : Nezzal Hanane Hayette</strong>
+                  <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Destination : Quebec Brossard, Canada</div>
                 </div>
               </div>
-              <p style={{ fontSize: '0.78rem', color: '#38bdf8', margin: 0, fontStyle: 'italic' }}>
-                🌐 Facture officielle et coordonnées envoyées par e-mail immédiatement après soumission de votre demande.
+              <p style={{ fontSize: '0.78rem', color: '#38bdf8', margin: '10px 0 0 0', fontStyle: 'italic' }}>
+                🌐 Facture officielle et confirmation d'activation transmises sous 24h après validation du paiement.
               </p>
             </div>
           )}

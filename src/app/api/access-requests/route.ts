@@ -216,6 +216,24 @@ export async function POST(req: Request) {
           hour: '2-digit', minute: '2-digit'
         });
 
+        const isDz = (!country || country.toLowerCase().trim() === 'algérie' || country.toLowerCase().trim() === 'algerie' || country.toLowerCase().trim() === 'dz' || country.toLowerCase().trim() === 'algeria');
+
+        const paymentInstructionsHtml = isDz ? `
+          <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
+            <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
+            <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
+          </div>
+        ` : `
+          <div style="background: #ffffff; border: 1px dashed #0284c7; padding: 12px 14px; border-radius: 6px; font-size: 0.9rem; color: #1e293b;">
+            <div style="margin-bottom: 6px; color: #0369a1;"><strong>💳 Compte PayPal :</strong> <code style="background: #e0f2fe; padding: 3px 8px; border-radius: 4px; color: #0369a1; font-weight: bold;">nezzal.abdelmalek@gmail.com</code></div>
+            <div style="color: #b45309; margin-top: 6px;"><strong>💸 Western Union :</strong></div>
+            <div style="padding-left: 12px; margin-top: 4px; font-size: 0.85rem; color: #475569;">
+              • <strong>Bénéficiaire :</strong> Nezzal Hanane Hayette<br />
+              • <strong>Destination :</strong> Quebec Brossard, Canada
+            </div>
+          </div>
+        `;
+
         await transporter.sendMail({
           from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: cleanEmail,
@@ -250,6 +268,10 @@ export async function POST(req: Request) {
                 <tr style="background: #f8fafc;">
                   <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Formule Demandée</td>
                   <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #0d9488; font-weight: bold;">Formule ${cleanTier.toUpperCase()}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 600; color: #475569;">Pays / Zone</td>
+                  <td style="padding: 10px 14px; border: 1px solid #e2e8f0; color: #1e293b;">${country.trim()}</td>
                 </tr>
               </table>
 
@@ -300,45 +322,33 @@ export async function POST(req: Request) {
                 <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 14px 0;" />
 
                 <p style="margin: 0 0 6px 0; color: #0f766e; font-size: 0.85rem; font-weight: 600;">
-                  📲 Règlement par BaridiMob
+                  📲 Règlement (${isDz ? 'BaridiMob' : 'PayPal / Western Union'})
                 </p>
                 <p style="margin: 0 0 10px 0; color: #64748b; font-size: 0.82rem; line-height: 1.5;">
-                  Pour passer à un accès complet (Formule PRO, EXPERT ou ULTRA), lever les filigranes et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement par BaridiMob :
+                  Pour passer à un accès complet (Formule PRO, EXPERT ou ULTRA), lever les filigranes et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement :
                 </p>
-                <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; color: #0f766e;">
-                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
-                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
-                </div>
+                ${paymentInstructionsHtml}
               </div>
               ` : isPro ? `
               <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0; color: #0f766e; font-size: 0.9rem; line-height: 1.6;">
-                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule PRO (1 500 DZD / mois)</strong> et bénéficier des <strong>+7 jours bonus offerts</strong>, voici les coordonnées BaridiMob :
+                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule PRO (${isDz ? '1 500 DZD / mois' : '20 € / mois'})</strong> et bénéficier des <strong>+7 jours bonus offerts</strong>, voici vos coordonnées de règlement :
                 </p>
-                <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
-                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
-                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
-                </div>
+                ${paymentInstructionsHtml}
               </div>
               ` : isExpert ? `
               <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0; color: #a16207; font-size: 0.9rem; line-height: 1.6;">
-                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule EXPERT (3 500 DZD / mois — Illimité & PDF HD sans filigrane)</strong>, voici les coordonnées BaridiMob :
+                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule EXPERT (${isDz ? '3 500 DZD / mois' : '34 € / mois'} — Illimité & PDF HD sans filigrane)</strong>, voici vos coordonnées de règlement :
                 </p>
-                <div style="background: #ffffff; border: 1px dashed #ca8a04; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #a16207;">
-                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
-                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
-                </div>
+                ${paymentInstructionsHtml}
               </div>
               ` : isUltra ? `
               <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0; color: #b45309; font-size: 0.9rem; line-height: 1.6;">
-                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule ULTRA Enseignant (3 500 DZD / mois — 1er étudiant encadré inclus + Espace Supervision)</strong> et bénéficier des <strong>+14 jours bonus offerts</strong>, voici les coordonnées BaridiMob :
+                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule ULTRA Enseignant (${isDz ? '3 500 DZD / mois' : '37 € / mois'} — 1er étudiant encadré inclus + Espace Supervision)</strong> et bénéficier des <strong>+14 jours bonus offerts</strong>, voici vos coordonnées de règlement :
                 </p>
-                <div style="background: #ffffff; border: 1px dashed #d97706; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #b45309;">
-                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
-                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
-                </div>
+                ${paymentInstructionsHtml}
               </div>
               ` : `
               <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0;">
