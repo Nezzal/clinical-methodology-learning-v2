@@ -135,13 +135,34 @@ export async function POST(req: Request) {
         });
 
         const isB2bOrUltra = cleanTier === 'ultra' || cleanTier === 'institution';
+        const isDecouverte = cleanTier === 'découverte';
+
+        // Calcul exact de la date et heure d'expiration (72 heures = 3 jours)
+        const now = new Date();
+        const expiryDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+        const formattedNow = now.toLocaleDateString('fr-FR', {
+          day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        const formattedNowTime = now.toLocaleTimeString('fr-FR', {
+          hour: '2-digit', minute: '2-digit'
+        });
+
+        const formattedExpiryDate = expiryDate.toLocaleDateString('fr-FR', {
+          day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+        const formattedExpiryTime = expiryDate.toLocaleTimeString('fr-FR', {
+          hour: '2-digit', minute: '2-digit'
+        });
 
         await transporter.sendMail({
           from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: cleanEmail,
-          subject: isB2bOrUltra 
-            ? `Réception de votre demande (Formule ${cleanTier.toUpperCase()}) - Methodo&Clinique`
-            : "Confirmation de votre demande d'accès - Methodo&Clinique",
+          subject: isDecouverte 
+            ? "Confirmation de votre demande d'accès Test Découverte (3j) - Methodo&Clinique"
+            : isB2bOrUltra 
+              ? `Réception de votre demande (${cleanTier.toUpperCase()}) - Methodo&Clinique`
+              : "Confirmation de votre demande d'accès PRO - Methodo&Clinique",
           html: `
             <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 620px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc;">
               <div style="text-align: center; margin-bottom: 24px;">
@@ -175,19 +196,63 @@ export async function POST(req: Request) {
                 </tr>
               </table>
 
-              ${isB2bOrUltra ? `
+              ${isDecouverte ? `
+              <div style="background: #f0fdfa; border: 1.5px solid #0d9488; border-radius: 10px; padding: 18px; margin: 20px 0;">
+                <h3 style="margin: 0 0 12px 0; color: #0f766e; font-size: 1.05rem;">
+                  🟢 Conditions de l'Offre Test Découverte (3 Jours)
+                </h3>
+                
+                <p style="margin: 0 0 12px 0; color: #334155; font-size: 0.9rem; line-height: 1.5;">
+                  Votre demande d'accès test gratuit de <strong>3 jours (72 heures)</strong> est enregistrée. Vos identifiants vous permettent de découvrir gratuitement les fonctionnalités majeures de la plateforme.
+                </p>
+
+                <!-- Encadré d'expiration -->
+                <div style="background: #ffffff; border: 2px solid #0d9488; border-radius: 8px; padding: 14px; margin-bottom: 14px; text-align: center;">
+                  <div style="font-size: 0.78rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Période de Validité du Test</div>
+                  <div style="font-size: 0.88rem; color: #334155; margin: 4px 0;">
+                    Demande enregistrée le : <strong>${formattedNow} à ${formattedNowTime}</strong>
+                  </div>
+                  <div style="font-size: 1.05rem; color: #0f766e; font-weight: 800; margin-top: 6px; background: #e6fffa; padding: 8px; border-radius: 6px; border: 1px dashed #0d9488;">
+                    ⏰ Date & Heure Expiration : ${formattedExpiryDate} à ${formattedExpiryTime}
+                  </div>
+                  <div style="font-size: 0.76rem; color: #64748b; margin-top: 4px;">(Accès automatiquement limité après cette échéance)</div>
+                </div>
+
+                <div style="font-size: 0.88rem; color: #1e293b; font-weight: 700; margin-bottom: 6px;">Fonctionnalités incluses durant vos 3 jours d'essai :</div>
+                <ul style="margin: 0 0 14px 0; padding-left: 20px; color: #475569; font-size: 0.86rem; line-height: 1.7;">
+                  <li>5 questions / jour avec l'Assistant IA en Méthodologie</li>
+                  <li>1 protocole de recherche clinique (export avec filigrane)</li>
+                  <li>1 article STROBE (export avec filigrane)</li>
+                  <li>1 synthèse bibliographique PubMed</li>
+                  <li>Calculateur NSN (Version Démo)</li>
+                </ul>
+
+                <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 14px 0;" />
+
+                <p style="margin: 0 0 6px 0; color: #0f766e; font-size: 0.85rem; font-weight: 600;">
+                  💡 Passer à un accès complet illimité (Formule PRO / ULTRA) ?
+                </p>
+                <p style="margin: 0 0 10px 0; color: #64748b; font-size: 0.82rem; line-height: 1.5;">
+                  Pour lever les filigranes, bénéficier de l'IA en illimité et recevoir vos jours bonus offerts (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement bancaire ou CCP :
+                </p>
+                <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; color: #0f766e;">
+                  <strong>RIP / CCP (Algérie) :</strong> XXXXXXXXXXXXXXXX Clé XX<br />
+                  <strong>Titulaire :</strong> Methodo&Clinique Éducation
+                </div>
+              </div>
+              ` : isB2bOrUltra ? `
               <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0; color: #1e40af; font-size: 0.9rem; line-height: 1.6;">
-                  Un e-mail de confirmation vous est envoyé pour vous confirmer la bonne réception de votre demande. Un administrateur prendra directement contact avec vous par e-mail afin de vous transmettre les coordonnées de l'administrateur et étudier avec vous les modalités d'accès sur-mesure pour la <strong>Formule ${cleanTier.toUpperCase()}</strong>.
+                  Un e-mail de confirmation vous est envoyé pour vous confirmer la bonne réception de votre demande. Un administrateur prendra directement contact avec vous par e-mail afin d'étudier vos besoins et vous transmettre les modalités d'accès sur-mesure pour la <strong>Formule ${cleanTier.toUpperCase()}</strong>.
                 </p>
               </div>
               ` : `
               <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0; color: #0f766e; font-size: 0.9rem; line-height: 1.6;">
-                  Vous recevrez par e-mail vos identifiants gratuits pour le test découverte (3 jours). Pour valider votre abonnement définitif et bénéficier des jours bonus, voici les coordonnées pour effectuer votre virement bancaire / CCP (RIP) :
+                  Merci pour votre confiance. Pour valider votre abonnement définitif et bénéficier des <strong>+7 jours bonus offerts sur virement</strong>, voici les coordonnées bancaires / CCP :
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
-                  <strong>RIP / CCP :</strong> XXXXXXXXXXXXXXXX Clé XX<br />
+                  <strong>RIP / CCP (Algérie) :</strong> XXXXXXXXXXXXXXXX Clé XX<br />
                   <strong>Titulaire :</strong> Methodo&Clinique Éducation
                 </div>
               </div>
