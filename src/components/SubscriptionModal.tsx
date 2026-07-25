@@ -219,12 +219,29 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.planHeader}>
                 <div className={styles.planName} style={{ color: '#fbbf24' }}>👑 ULTRA</div>
                 <div className={styles.planSubtitle}>Enseignants & Encadreurs</div>
-                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fbbf24', margin: '4px 0' }}>
-                  {residence === 'dz' 
-                    ? 'À partir de 2 500 DZD / mois' 
-                    : residence === 'africa' 
-                    ? 'À partir de 15 € / mois (~9 800 FCFA)' 
-                    : 'À partir de 29 € / mois'}
+                <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fbbf24', margin: '6px 0', lineHeight: '1.3' }}>
+                  {residence === 'dz' ? (
+                    <>
+                      <div>2 500 DZD / mois</div>
+                      <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
+                        + 1 000 DZD / mois par étudiant inscrit
+                      </div>
+                    </>
+                  ) : residence === 'africa' ? (
+                    <>
+                      <div>À partir de 20 € / mois <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>(~13 120 FCFA)</span></div>
+                      <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
+                        + 17 € / mois <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>(~11 150 FCFA)</span> par étudiant inscrit
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>À partir de 59 € / mois</div>
+                      <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
+                        + 45 € / mois par étudiant inscrit
+                      </div>
+                    </>
+                  )}
                 </div>
                 <span className={styles.planBadgeBonus}>🎁 + 14 jours offerts sur virement</span>
               </div>
