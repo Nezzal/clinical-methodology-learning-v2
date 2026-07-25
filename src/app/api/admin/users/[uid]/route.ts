@@ -38,33 +38,36 @@ export async function PATCH(
   const uid = resolvedParams.uid;
 
   try {
-    const { status } = await req.json();
+    const { status, tier } = await req.json();
 
-    if (status !== 'active' && status !== 'suspended') {
-      return NextResponse.json({ error: "Statut invalide. Les choix sont : active, suspended." }, { status: 400 });
-    }
-
-    console.log(`⏳ Modification du statut de l'utilisateur ${uid} vers : ${status}`);
-
-    // A. Mettre à jour Firebase Auth (Désactiver ou réactiver le compte pour bloquer la connexion)
-    await adminAuth.updateUser(uid, {
-      disabled: status === 'suspended'
-    });
-
-    // B. Mettre à jour Firestore
-    const userDocRef = adminDb.collection('users').doc(uid);
-    await userDocRef.update({
-      status,
+    const updates: Record<string, any> = {
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    };
 
-    // Optionnel : Révoquer les tokens de session actifs de l'utilisateur suspendu pour le forcer à se déconnecter
-    if (status === 'suspended') {
-      await adminAuth.revokeRefreshTokens(uid);
+    if (status) {
+      if (status !== 'active' && status !== 'suspended') {
+        return NextResponse.json({ error: "Statut invalide. Les choix sont : active, suspended." }, { status: 400 });
+      }
+      await adminAuth.updateUser(uid, { disabled: status === 'suspended' });
+      updates.status = status;
+      if (status === 'suspended') {
+        await adminAuth.revokeRefreshTokens(uid);
+      }
     }
 
-    console.log(`✅ Statut de l'utilisateur ${uid} mis à jour avec succès.`);
-    return NextResponse.json({ success: true, message: `Statut utilisateur mis à jour vers : ${status}` });
+    if (tier) {
+      const validTiers = ['découverte', 'pro', 'expert', 'ultra', 'institution'];
+      if (!validTiers.includes(tier)) {
+        return NextResponse.json({ error: "Formule invalide." }, { status: 400 });
+      }
+      updates['subscription.tier'] = tier;
+    }
+
+    const userDocRef = adminDb.collection('users').doc(uid);
+    await userDocRef.update(updates);
+
+    console.log(`✅ Utilisateur ${uid} mis à jour avec succès.`);
+    return NextResponse.json({ success: true, message: `Utilisateur mis à jour avec succès.` });
   } catch (error: any) {
     console.error("❌ Erreur lors de la modification du statut utilisateur :", error);
     return NextResponse.json({ error: error?.message || "Une erreur interne est survenue." }, { status: 500 });

@@ -580,7 +580,8 @@ Votre superviseur`;
         body: JSON.stringify({ 
           name: `${req.firstName} ${req.lastName}`, 
           email: req.email,
-          role: req.requestedRole || 'student'
+          role: req.requestedRole || 'student',
+          tier: req.requestedTier || (req.requestedRole === 'teacher' ? 'ultra' : 'pro')
         })
       });
 

@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, email, role, tier = 'ultra', durationMonths = 12, assignedTeacherUid, assignedTeacherName } = await req.json();
+    const { name, email, role, tier = 'pro', durationMonths = 12, assignedTeacherUid, assignedTeacherName } = await req.json();
 
     if (!name || !name.trim() || !email || !email.trim()) {
       return NextResponse.json({ error: "Le nom et l'adresse e-mail sont requis." }, { status: 400 });
@@ -64,11 +64,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // Calcul de l'abonnement activé par le paiement reçu (+7j Pro / +14j Ultra)
+    // Calcul de l'abonnement activé par le paiement reçu (+7j Pro/Expert / +14j Ultra)
     const now = new Date();
     let bonusDays = 0;
-    const selectedTier = (tier === 'ultra' || tier === 'institution') ? tier : 'pro';
-    if (selectedTier === 'pro') bonusDays = 7;
+    const validTiers = ['découverte', 'pro', 'expert', 'ultra', 'institution'];
+    const selectedTier = validTiers.includes(tier) ? tier : 'pro';
+    if (selectedTier === 'pro' || selectedTier === 'expert') bonusDays = 7;
     if (selectedTier === 'ultra') bonusDays = 14;
 
     const expiry = new Date(now.getTime());
