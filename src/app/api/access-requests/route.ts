@@ -187,9 +187,17 @@ export async function POST(req: Request) {
           auth: { user: smtpUser, pass: smtpPass }
         });
 
-        const isB2bOrUltra = cleanTier === 'ultra' || cleanTier === 'institution';
         const isDecouverte = cleanTier === 'découverte';
+        const isPro = cleanTier === 'pro';
+        const isExpert = cleanTier === 'expert';
+        const isUltra = cleanTier === 'ultra';
+        const isInstitution = cleanTier === 'institution';
 
+        let emailSubject = "Confirmation de votre demande d'accès - Methodo&Clinique";
+        if (isDecouverte) emailSubject = "Confirmation de votre demande d'accès Test Découverte (3j) - Methodo&Clinique";
+        else if (isPro) emailSubject = "Confirmation de votre demande d'accès PRO - Methodo&Clinique";
+        else if (isExpert) emailSubject = "Confirmation de votre demande d'accès EXPERT - Methodo&Clinique";
+        else if (isUltra) emailSubject = "Confirmation de votre demande d'accès ULTRA Enseignant - Methodo&Clinique";
         // Calcul exact de la date et heure d'expiration (72 heures = 3 jours)
         const now = new Date();
         const expiryDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
@@ -211,11 +219,7 @@ export async function POST(req: Request) {
         await transporter.sendMail({
           from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: cleanEmail,
-          subject: isDecouverte 
-            ? "Confirmation de votre demande d'accès Test Découverte (3j) - Methodo&Clinique"
-            : isB2bOrUltra 
-              ? `Réception de votre demande (${cleanTier.toUpperCase()}) - Methodo&Clinique`
-              : "Confirmation de votre demande d'accès PRO - Methodo&Clinique",
+          subject: emailSubject,
           html: `
             <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 620px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fafbfc;">
               <div style="text-align: center; margin-bottom: 24px;">
@@ -299,28 +303,48 @@ export async function POST(req: Request) {
                   📲 Règlement par BaridiMob
                 </p>
                 <p style="margin: 0 0 10px 0; color: #64748b; font-size: 0.82rem; line-height: 1.5;">
-                  Pour passer à un accès complet illimité (Formule PRO / ULTRA), lever les filigranes et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement par BaridiMob :
+                  Pour passer à un accès complet (Formule PRO, EXPERT ou ULTRA), lever les filigranes et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement par BaridiMob :
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; color: #0f766e;">
                   <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
                   <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
                 </div>
               </div>
-              ` : isB2bOrUltra ? `
-              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0;">
-                <p style="margin: 0; color: #1e40af; font-size: 0.9rem; line-height: 1.6;">
-                  Un e-mail de confirmation vous est envoyé pour vous confirmer la bonne réception de votre demande. Un administrateur prendra directement contact avec vous par e-mail afin d'étudier vos besoins et vous transmettre les modalités d'accès sur-mesure pour la <strong>Formule ${cleanTier.toUpperCase()}</strong>.
-                </p>
-              </div>
-              ` : `
+              ` : isPro ? `
               <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0; color: #0f766e; font-size: 0.9rem; line-height: 1.6;">
-                  Merci pour votre confiance. Pour valider votre abonnement définitif et bénéficier des <strong>+7 jours bonus offerts sur BaridiMob</strong>, voici les coordonnées BaridiMob :
+                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule PRO (1 500 DZD / mois)</strong> et bénéficier des <strong>+7 jours bonus offerts</strong>, voici les coordonnées BaridiMob :
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
                   <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
                   <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
                 </div>
+              </div>
+              ` : isExpert ? `
+              <div style="background: #fefce8; border: 1px solid #fef08a; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0; color: #a16207; font-size: 0.9rem; line-height: 1.6;">
+                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule EXPERT (3 500 DZD / mois — Illimité & PDF HD sans filigrane)</strong>, voici les coordonnées BaridiMob :
+                </p>
+                <div style="background: #ffffff; border: 1px dashed #ca8a04; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #a16207;">
+                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
+                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
+                </div>
+              </div>
+              ` : isUltra ? `
+              <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0; color: #b45309; font-size: 0.9rem; line-height: 1.6;">
+                  Merci pour votre demande. Pour valider votre abonnement <strong>Formule ULTRA Enseignant (3 500 DZD / mois — 1er étudiant encadré inclus + Espace Supervision)</strong> et bénéficier des <strong>+14 jours bonus offerts</strong>, voici les coordonnées BaridiMob :
+                </p>
+                <div style="background: #ffffff; border: 1px dashed #d97706; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #b45309;">
+                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
+                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
+                </div>
+              </div>
+              ` : `
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                <p style="margin: 0; color: #1e40af; font-size: 0.9rem; line-height: 1.6;">
+                  Un e-mail de confirmation vous est envoyé pour vous confirmer la bonne réception de votre demande. Un administrateur prendra directement contact avec vous par e-mail ou téléphone afin d'étudier vos besoins et vous transmettre une proposition sur-mesure pour la <strong>Formule INSTITUTION</strong>.
+                </p>
               </div>
               `}
 
