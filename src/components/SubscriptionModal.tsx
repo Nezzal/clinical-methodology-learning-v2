@@ -139,34 +139,37 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
             ))}
           </div>
 
-          {/* Grille des 4 Formules */}
-          <div className={styles.plansGrid}>
-            {/* 1. Découverte */}
-            <div className={styles.planCard}>
-              <div className={styles.planHeader}>
-                <div className={styles.planName}>🟢 Découverte</div>
-                <div className={styles.planSubtitle}>Accès Test (3 Jours)</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399', margin: '4px 0' }}>
-                  Gratuit
-                </div>
-                <span className={styles.planBadgeBonus}>Automatique à l'inscription</span>
+          {/* 1. Offre Découverte Horizon (Bannière supérieure pleine largeur) */}
+          <div className={styles.decouverteBanner}>
+            <div className={styles.decouverteBannerInfo}>
+              <div className={styles.decouverteTitleRow}>
+                <span className={styles.decouverteTitle}>🟢 Formule Découverte</span>
+                <span className={styles.decouverteSubtitle}>Accès Test (3 Jours)</span>
               </div>
-              <ul className={styles.featureList}>
-                <li><span>•</span> 5 questions IA par jour</li>
-                <li><span>•</span> 1 protocole (avec filigrane)</li>
-                <li><span>•</span> 1 article STROBE (avec filigrane)</li>
-                <li><span>•</span> 1 synthèse bibliographique</li>
-                <li><span>•</span> Calculateur NSN démo</li>
-              </ul>
-              <button className={`${styles.actionBtn} ${styles.contactBtn}`} onClick={() => {
-                if (onSelectPlan) onSelectPlan('découverte', 'student');
-                onClose();
-              }}>
-                Tester l'Offre Découverte (3j)
-              </button>
+              <div className={styles.decouvertePriceBadge}>
+                Gratuit <span className={styles.decouverteAutoBadge}>Automatique à l'inscription</span>
+              </div>
             </div>
 
-            {/* 2. PRO */}
+            <div className={styles.decouverteFeaturesList}>
+              <div className={styles.decouverteFeatureTag}><span>•</span> 5 questions IA / jour</div>
+              <div className={styles.decouverteFeatureTag}><span>•</span> 1 protocole (avec filigrane)</div>
+              <div className={styles.decouverteFeatureTag}><span>•</span> 1 article STROBE (avec filigrane)</div>
+              <div className={styles.decouverteFeatureTag}><span>•</span> 1 synthèse bibliographique</div>
+              <div className={styles.decouverteFeatureTag}><span>•</span> Calculateur NSN démo</div>
+            </div>
+
+            <button className={styles.decouverteActionBtn} onClick={() => {
+              if (onSelectPlan) onSelectPlan('découverte', 'student');
+              onClose();
+            }}>
+              Tester l'Offre Découverte (3j)
+            </button>
+          </div>
+
+          {/* Grille des 4 Formules (PRO, EXPERT, ULTRA, INSTITUTION sur 4 colonnes) */}
+          <div className={styles.plansGrid}>
+            {/* 1. PRO */}
             <div className={styles.planCard} style={{ borderColor: '#0d9488' }}>
               <span className={styles.popularBadge}>Recommandé</span>
               <div className={styles.planHeader}>
@@ -214,7 +217,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               </button>
             </div>
 
-            {/* 3. EXPERT (Individuel Illimité & PDF Propres) */}
+            {/* 2. EXPERT (Individuel Illimité & PDF Propres) */}
             <div className={styles.planCard} style={{ borderColor: '#a855f7' }}>
               <span className={styles.popularBadge} style={{ background: 'linear-gradient(135deg, #9333ea, #c084fc)' }}>Illimité Solo</span>
               <div className={styles.planHeader}>
@@ -255,7 +258,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               </button>
             </div>
 
-            {/* 4. ULTRA ENSEIGNANT */}
+            {/* 3. ULTRA ENSEIGNANT */}
             <div className={styles.planCard}>
               <div className={styles.planHeader}>
                 <div className={styles.planName} style={{ color: '#fbbf24' }}>👑 ULTRA</div>
