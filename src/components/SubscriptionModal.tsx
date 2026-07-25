@@ -20,7 +20,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   if (!isOpen) return null;
 
   const handleCopyRip = () => {
-    navigator.clipboard.writeText(residence === 'dz' ? 'RIP/CCP: 17978545 Clé 42 - Methodo&Clinique' : 'IBAN: DZ59 0010 0000 1797 8545 4233 - SWIFT: BEXADZAL - Methodo&Clinique');
+    navigator.clipboard.writeText(residence === 'dz' ? 'RIP/CCP: 17978545 Clé 42 - Methodo&Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo&Clinique');
     setCopiedRip(true);
     setTimeout(() => setCopiedRip(false), 2500);
   };
@@ -374,7 +374,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.ripDetails}>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN / SWIFT Afrique :</span>
-                  <strong>DZ59 0010 0000 1797 8545 4233 (SWIFT: BEXADZAL)</strong>
+                  <strong>XXXXXXXXXXXXXXXXXXXXXXX (SWIFT: XXXXXXX)</strong>
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Options de règlement :</span>
@@ -400,7 +400,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               <div className={styles.ripDetails}>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>IBAN SEPA / SWIFT International :</span>
-                  <strong>DZ59 0010 0000 1797 8545 4233 (BEXADZAL)</strong>
+                  <strong>XXXXXXXXXXXXXXXXXXXXXXX (SWIFT: XXXXXXX)</strong>
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Modes acceptés :</span>
