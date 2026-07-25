@@ -314,6 +314,31 @@ export default function Login() {
                 />
                 <span className={styles.logoText}>Methodo&Clinique</span>
               </div>
+
+              {/* BLOC NOUVEAU SUR LA PLATEFORME (PLACÉ EN HAUT ET EN COULEURS ATTRAYANTES) */}
+              {!isRequestAccess && !isForgotPassword && (
+                <div className={styles.requestAccessCTA}>
+                  <div className={styles.ctaBadge}>✨ DECOUVRIR LES FORMULES</div>
+                  <h3 className={styles.ctaTitle}>Nouveau sur la plateforme ?</h3>
+                  <p className={styles.ctaSubtitle}>
+                    Découvrez nos formules d'abonnement (Découverte 3j gratuit, Pro, Ultra, Institution) et demandez votre accès instantanément :
+                  </p>
+                  <button
+                    type="button"
+                    className={styles.ctaBtn}
+                    onClick={() => setShowSubscriptionModal(true)}
+                  >
+                    ✨ Voir les Formules & Demander un Accès ➔
+                  </button>
+                </div>
+              )}
+
+              {!isRequestAccess && !isForgotPassword && (
+                <div className={styles.divider} style={{ margin: '1.25rem 0 1rem 0' }}>
+                  <span>Déjà un compte ? Connexion ci-dessous</span>
+                </div>
+              )}
+
               <h1 className={styles.title}>
                 {isForgotPassword 
                   ? 'Réinitialiser le mot de passe' 
@@ -689,49 +714,22 @@ export default function Login() {
                   </>
                 )}
 
-                {!isForgotPassword && (
+                {!isForgotPassword && isRequestAccess && (
                   <div className={styles.toggleMode}>
-                    {isRequestAccess ? (
-                      <p>
-                        Vous avez déjà un compte ?{' '}
-                        <button 
-                          type="button" 
-                          className={styles.toggleLinkBtn} 
-                          onClick={() => {
-                            setIsRequestAccess(false);
-                            setIsForgotPassword(false);
-                          }} 
-                          disabled={submitting}
-                        >
-                          Se connecter
-                        </button>
-                      </p>
-                    ) : (
-                      <div className={styles.requestAccessCTA}>
-                        <p style={{ margin: 0, fontWeight: 600, color: '#f8fafc' }}>Nouveau sur la plateforme ?</p>
-                        <p style={{ margin: '4px 0 12px 0', fontSize: '0.82rem', color: '#94a3b8' }}>
-                          Découvrez nos formules d'abonnement (Découverte 3j, Pro, Ultra, Institution) et demandez votre accès :
-                        </p>
-                        <button
-                          type="button"
-                          className={styles.submitBtn}
-                          onClick={() => setShowSubscriptionModal(true)}
-                          style={{
-                            width: '100%',
-                            background: 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
-                            color: '#ffffff',
-                            padding: '0.8rem 1rem',
-                            borderRadius: '10px',
-                            fontSize: '0.92rem',
-                            fontWeight: 700,
-                            boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          ✨ Voir les Formules & Demander un Accès
-                        </button>
-                      </div>
-                    )}
+                    <p>
+                      Vous avez déjà un compte ?{' '}
+                      <button 
+                        type="button" 
+                        className={styles.toggleLinkBtn} 
+                        onClick={() => {
+                          setIsRequestAccess(false);
+                          setIsForgotPassword(false);
+                        }} 
+                        disabled={submitting}
+                      >
+                        Se connecter
+                      </button>
+                    </p>
                   </div>
                 )}
               </>
