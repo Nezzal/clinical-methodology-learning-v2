@@ -21,6 +21,7 @@ import {
   loadSupportMessages,
   FirestoreSupportMessage
 } from '@/utils/firestore';
+import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
 
 // Simple markdown formatter helper for protocol preview
@@ -174,6 +175,7 @@ export default function AdminDashboard() {
   // States pour le rejet avec motif
   const [rejectionReason, setRejectionReason] = useState('');
   const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const handleToggleSuspension = async (uid: string, newStatus: 'active' | 'suspended') => {
     const confirmMsg = newStatus === 'suspended'
@@ -1143,20 +1145,32 @@ Votre superviseur`;
 
   if (!isAdmin) {
     return (
-      <div className={`${styles.deniedCard} glass-card`}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent-danger)" strokeWidth="1.5">
-          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-          <line x1="15" y1="9" x2="9" y2="15" />
-          <line x1="9" y1="9" x2="15" y2="15" />
-        </svg>
-        <h2>Accès Restreint</h2>
-        <p>Cet espace est exclusivement réservé aux enseignants et superviseurs de la plateforme Methodo&Clinique.</p>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Pour y accéder, veuillez vous connecter avec un compte email se terminant par <strong>@recif.dz</strong>.
-        </p>
-        <button className="btn btn-primary" onClick={() => router.push('/')}>
-          Retour au Tableau de bord Étudiant
-        </button>
+      <div className={styles.container} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '85vh', padding: '2rem' }}>
+        <div className={`${styles.deniedCard} glass-card`} style={{ maxWidth: '580px', padding: '2.5rem', textAlign: 'center', borderRadius: '20px' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>👑</div>
+          <h2 style={{ color: '#ffffff', fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+            Espace Supervision Réservé aux Formules ULTRA Enseignant & INSTITUTION
+          </h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+            L'Espace Supervision est exclusivement réservé aux <strong>Enseignants indépendants, Encadreurs et Institutions</strong> (Formules <strong>ULTRA Enseignant</strong> et <strong>INSTITUTION</strong>) pour inscrire, superviser et valider des groupes d'étudiants.
+          </p>
+          <div style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '1.5rem', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            Les Formules <strong>DÉCOUVERTE</strong>, <strong>PRO</strong> et <strong>EXPERT</strong> sont destinées à un usage individuel et n'incluent pas l'Espace Supervision.
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              className="btn"
+              onClick={() => setShowSubscriptionModal(true)}
+              style={{ padding: '10px 20px', borderRadius: '10px', background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#1e1b4b', fontWeight: 800, border: 'none', cursor: 'pointer' }}
+            >
+              🚀 Découvrir l'Offre ULTRA Enseignant
+            </button>
+            <button className="btn btn-secondary" onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>
+              Retour au Tableau de bord
+            </button>
+          </div>
+        </div>
+        <SubscriptionModal isOpen={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
       </div>
     );
   }

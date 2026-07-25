@@ -369,7 +369,10 @@ export default function Sidebar() {
     )
   };
 
-  const activeLinks = isAdmin ? [...links, adminLink, adminMessagesLink] : [...links, contactLink];
+  const userTier = (profile?.subscription?.tier || '').toLowerCase().trim();
+  const canAccessSupervision = role === 'admin' || userTier === 'ultra' || userTier === 'institution' || (profile?.role === 'teacher' && (userTier === 'ultra' || userTier === 'institution'));
+
+  const activeLinks = canAccessSupervision ? [...links, adminLink, adminMessagesLink] : [...links, contactLink];
 
   return (
     <>
