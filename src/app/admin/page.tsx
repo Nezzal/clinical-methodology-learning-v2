@@ -1047,8 +1047,11 @@ Votre superviseur`;
     setMessagingSuccess('');
     
     const supervisorRole = role === 'admin' ? 'admin' : 'teacher';
-    const isUnread = (role === 'admin' && !msg.adminRead && msg.recipientRole === 'admin') || 
-                     (role === 'teacher' && !msg.teacherRead && msg.recipientRole === 'teacher');
+    const isUnread = msg.senderUid !== user?.uid && (
+      (role === 'admin' && !msg.adminRead) || 
+      (role === 'teacher' && !msg.teacherRead)
+    );
+
     if (isUnread) {
       try {
         await markMessageReadState(msg.id, supervisorRole);
@@ -1062,6 +1065,32 @@ Votre superviseur`;
       } catch (e) {
         console.error("Erreur marquage message lu:", e);
       }
+    }
+  };
+
+  const handleMarkAllMessagesRead = async () => {
+    if (!user || supportMessages.length === 0) return;
+    const supervisorRole = role === 'admin' ? 'admin' : 'teacher';
+    
+    const unreadList = supportMessages.filter(m => {
+      if (m.senderUid === user.uid) return false;
+      if (role === 'admin') return !m.adminRead;
+      return !m.teacherRead;
+    });
+
+    if (unreadList.length === 0) return;
+
+    try {
+      await Promise.all(unreadList.map(m => markMessageReadState(m.id, supervisorRole)));
+      setSupportMessages(prev => prev.map(m => ({
+        ...m,
+        adminRead: role === 'admin' ? true : m.adminRead,
+        teacherRead: role === 'teacher' ? true : m.teacherRead,
+        status: 'read'
+      })));
+      window.dispatchEvent(new Event('progress_changed'));
+    } catch (e) {
+      console.error("Erreur lors du marquage de tous les messages comme lus:", e);
     }
   };
 
@@ -1539,9 +1568,15 @@ Votre superviseur`;
   const totalStudents = visibleStudents.length;
   const totalProtocols = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.protocolsGenerated || 0), 0);
   const totalQuestions = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.questionsAsked || 0), 0);
-  const unreadMessagesCount = supportMessages.filter(m => 
-    (role === 'admin' && !m.adminRead) || (role === 'teacher' && !m.teacherRead)
-  ).length;
+  const unreadMessagesCount = supportMessages.filter(m => {
+    if (!user) return false;
+    if (m.senderUid === user.uid) return false;
+    if (role === 'admin') {
+      return !m.adminRead && (m.recipientRole === 'admin' || !m.recipientRole);
+    } else {
+      return !m.teacherRead && (m.recipientRole === 'teacher' || m.recipientUid === user.uid);
+    }
+  }).length;
   
   const totalQuizCorrect = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.quizCorrect || 0), 0);
   const totalQuizTotal = visibleStudents.reduce((acc, curr) => acc + (curr.stats?.quizTotal || 0), 0);
@@ -2251,18 +2286,27 @@ Votre superviseur`;
               {messagingError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#ef4444', fontSize: '0.85rem' }}>{messagingError}</div>}
               {messagingSuccess && <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#10b981', fontSize: '0.85rem' }}>{messagingSuccess}</div>}
               
-              {role === 'admin' && (
-                <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {role === 'admin' && (
                   <select
                     value={adminMessageFilter}
                     onChange={(e) => setAdminMessageFilter(e.target.value as 'admin' | 'all')}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.5rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                    style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.5rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
                   >
                     <option value="admin" style={{ background: '#1a1a2e' }}>Messages pour moi (Admin)</option>
                     <option value="all" style={{ background: '#1a1a2e' }}>Tous les messages</option>
                   </select>
-                </div>
-              )}
+                )}
+                {unreadMessagesCount > 0 && (
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleMarkAllMessagesRead}
+                    style={{ padding: '0.5rem 0.8rem', fontSize: '0.78rem', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '6px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    ✓ Tout marquer comme lu ({unreadMessagesCount})
+                  </button>
+                )}
+              </div>
 
               {loadingMessages ? (
                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Chargement des messages...</p>
@@ -2272,7 +2316,7 @@ Votre superviseur`;
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '400px', overflowY: 'auto' }}>
                   {supportMessages.map((msg) => {
                     const isActive = activeSupportMessage?.id === msg.id;
-                    const isUnread = (role === 'admin' && !msg.adminRead && msg.recipientRole === 'admin') || (role === 'teacher' && !msg.teacherRead && msg.recipientRole === 'teacher');
+                    const isUnread = msg.senderUid !== user?.uid && ((role === 'admin' && !msg.adminRead) || (role === 'teacher' && !msg.teacherRead));
                     return (
                       <div
                         key={msg.id}
