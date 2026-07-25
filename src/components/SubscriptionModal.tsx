@@ -369,7 +369,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Titulaire du compte :</span>
-                  <strong>Methodo&Clinique Éducation</strong>
+                  <strong>Professeur Nezzal Abdelmalek</strong>
                 </div>
                 <button className={styles.copyBtn} onClick={handleCopyRip}>
                   {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP BaridiMob'}

@@ -240,7 +240,7 @@ export async function POST(req: Request) {
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; color: #0f766e;">
                   <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
-                  <strong>Titulaire :</strong> Methodo&Clinique Éducation
+                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
                 </div>
               </div>
               ` : isB2bOrUltra ? `
@@ -256,7 +256,7 @@ export async function POST(req: Request) {
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
                   <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
-                  <strong>Titulaire :</strong> Methodo&Clinique Éducation
+                  <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek
                 </div>
               </div>
               `}
