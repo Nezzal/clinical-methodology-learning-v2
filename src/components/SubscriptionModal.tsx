@@ -380,9 +380,6 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Options de règlement :</span>
                   <strong>Virement bancaire / Mobile Money / PayPal / Western Union</strong>
                 </div>
-                <button className={styles.copyBtn} onClick={handleCopyRip}>
-                  {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
-                </button>
               </div>
               <p style={{ fontSize: '0.78rem', color: '#2dd4bf', margin: 0, fontStyle: 'italic' }}>
                 🌍 Un e-mail avec les coordonnées et instructions adaptées à votre pays vous sera envoyé après votre demande.
@@ -406,9 +403,6 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Modes acceptés :</span>
                   <strong>Virement SEPA / Carte Internationale / PayPal / Western Union</strong>
                 </div>
-                <button className={styles.copyBtn} onClick={handleCopyRip}>
-                  {copiedRip ? 'Copie effectuée ✓' : 'Copier l\'IBAN'}
-                </button>
               </div>
               <p style={{ fontSize: '0.78rem', color: '#38bdf8', margin: 0, fontStyle: 'italic' }}>
                 🌐 Facture officielle et coordonnées envoyées par e-mail immédiatement après soumission de votre demande.
