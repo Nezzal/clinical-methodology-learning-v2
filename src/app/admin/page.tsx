@@ -1204,7 +1204,49 @@ Votre superviseur`;
         
         return true;
       });
-      setStudents(onlyStudents);
+
+      // Enrichissement automatique des profils si des demandes d'accès correspondantes existent
+      const enrichedStudents: FirestoreUser[] = onlyStudents.map(u => {
+        const uEmail = (u.email || '').toLowerCase();
+        const matchingReq = accessRequests.find(r => (r.email || '').toLowerCase() === uEmail);
+        if (matchingReq) {
+          const updatedUser: FirestoreUser = {
+            ...u,
+            phone: u.phone || matchingReq.phone || '',
+            profession: u.profession || matchingReq.profession || u.userType || '',
+            institution: u.institution || matchingReq.institution || '',
+            city: u.city || matchingReq.city || '',
+            country: u.country || matchingReq.country || u.residence || '',
+            subscription: u.subscription ? {
+              ...u.subscription,
+              paymentReceiptRef: u.subscription.paymentReceiptRef || matchingReq.paymentReceiptRef || ''
+            } : undefined
+          };
+
+          // Rétro-sauvegarde en arrière-plan dans Firestore si de nouveaux champs ont été récupérés
+          if ((!u.phone && matchingReq.phone) || (!u.institution && matchingReq.institution) || (!u.profession && matchingReq.profession)) {
+            user?.getIdToken(true).then(idToken => {
+              fetch(`/api/admin/users/${u.uid}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                body: JSON.stringify({
+                  phone: matchingReq.phone || '',
+                  profession: matchingReq.profession || '',
+                  institution: matchingReq.institution || '',
+                  city: matchingReq.city || '',
+                  country: matchingReq.country || '',
+                  paymentReceiptRef: matchingReq.paymentReceiptRef || ''
+                })
+              }).catch(e => console.warn("Auto-backfill failed for", u.uid, e));
+            });
+          }
+
+          return updatedUser;
+        }
+        return u;
+      });
+
+      setStudents(enrichedStudents);
       
       const onlyTeachers = finalData.filter(u => {
         const email = (u.email || '').toLowerCase();
