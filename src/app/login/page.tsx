@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 
 import styles from './page.module.css';
 import SubscriptionModal from '@/components/SubscriptionModal';
+import { sendSupportMessage } from '@/utils/firestore';
 
 export default function Login() {
   const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
@@ -38,6 +39,40 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Reçu BaridiMob pour accès direct payant
+  const [submittedPaidTier, setSubmittedPaidTier] = useState<{ email: string; tier: string } | null>(null);
+  const [receiptTxIdInput, setReceiptTxIdInput] = useState('');
+  const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
+  const [receiptSubmittedSuccess, setReceiptSubmittedSuccess] = useState(false);
+
+  const handleDirectReceiptSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!submittedPaidTier?.email || !receiptTxIdInput.trim()) return;
+
+    setIsSubmittingReceipt(true);
+    try {
+      await sendSupportMessage(
+        'guest',
+        submittedPaidTier.email,
+        submittedPaidTier.email,
+        'student',
+        'admin',
+        undefined,
+        `📲 Reçu de Virement BaridiMob (${submittedPaidTier.tier.toUpperCase()}) - ${submittedPaidTier.email}`,
+        `Bonjour, je vous transmets mon justificatif de virement BaridiMob pour la Formule ${submittedPaidTier.tier.toUpperCase()}.\n\n` +
+        `• Adresse E-mail : ${submittedPaidTier.email}\n` +
+        `• Formule demandée : ${submittedPaidTier.tier.toUpperCase()}\n` +
+        `• N° de Transaction / Reçu BaridiMob : ${receiptTxIdInput.trim()}`
+      );
+
+      setReceiptSubmittedSuccess(true);
+    } catch (err) {
+      alert("Erreur lors de la transmission du reçu.");
+    } finally {
+      setIsSubmittingReceipt(false);
+    }
+  };
 
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +209,8 @@ export default function Login() {
         setEmail(requestEmail.trim());
         setSuccessMsg(`🟢 Votre accès Test Découverte (3 jours) est actif !\nVous pouvez vous connecter directement avec votre e-mail ${requestEmail.trim()} et votre mot de passe habituel.`);
       } else {
-        setSuccessMsg('Votre demande a été enregistrée ! Consultez votre boîte e-mail pour recevoir les conditions d\'abonnement et les instructions BaridiMob.');
+        setSubmittedPaidTier({ email: requestEmail.trim(), tier: requestedTier });
+        setSuccessMsg(`Demande d'accès (${requestedTier.toUpperCase()}) enregistrée ! Les instructions BaridiMob sont affichées ci-dessous et envoyées par e-mail.`);
       }
 
       setRequestFirstName('');
@@ -397,6 +433,61 @@ export default function Login() {
               <>
                 {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
                 {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
+
+                {/* Encadré d'instructions BaridiMob et soumission de reçu pour demande d'accès payante */}
+                {submittedPaidTier && (
+                  <div style={{
+                    marginTop: '1rem',
+                    marginBottom: '1rem',
+                    background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.15), rgba(30, 41, 59, 0.8))',
+                    border: '1px solid rgba(45, 212, 191, 0.4)',
+                    borderRadius: '12px',
+                    padding: '1.25rem',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    textAlign: 'left'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: '#2dd4bf', fontWeight: 700, fontSize: '0.95rem' }}>
+                      <span>📲</span>
+                      <span>Instructions de Paiement BaridiMob ({submittedPaidTier.tier.toUpperCase()})</span>
+                    </div>
+                    
+                    <div style={{ fontSize: '0.85rem', color: '#e2e8f0', marginBottom: '12px', lineHeight: 1.5 }}>
+                      Pour activer votre abonnement <strong>{submittedPaidTier.tier.toUpperCase()}</strong> et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), effectuez votre virement vers le RIP BaridiMob ci-dessous :
+                    </div>
+
+                    <div style={{ background: 'rgba(15,23,42,0.8)', border: '1px dashed #0d9488', padding: '10px 14px', borderRadius: '8px', marginBottom: '14px', fontFamily: 'monospace', fontSize: '0.88rem', color: '#2dd4bf' }}>
+                      <div><strong>RIP BaridiMob :</strong> 00799999000041210947</div>
+                      <div><strong>Titulaire :</strong> Professeur Nezzal Abdelmalek</div>
+                    </div>
+
+                    {receiptSubmittedSuccess ? (
+                      <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, textAlign: 'center' }}>
+                        ✓ Reçu N° {receiptTxIdInput} transmis à l'administrateur ! Votre compte sera activé sous 24h.
+                      </div>
+                    ) : (
+                      <form onSubmit={handleDirectReceiptSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600 }}>Vous avez effectué votre virement ? Saisissez votre N° de reçu ci-dessous :</label>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ex : Reçu N° 987654321..."
+                            value={receiptTxIdInput}
+                            onChange={e => setReceiptTxIdInput(e.target.value)}
+                            style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15,23,42,0.9)', color: 'white', fontSize: '0.85rem' }}
+                          />
+                          <button
+                            type="submit"
+                            disabled={isSubmittingReceipt}
+                            style={{ padding: '8px 14px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                          >
+                            {isSubmittingReceipt ? 'Envoi...' : 'Envoyer Reçu'}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                )}
 
                 {isForgotPassword ? (
                   // Formulaire de réinitialisation de mot de passe
