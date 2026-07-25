@@ -1320,13 +1320,14 @@ Votre superviseur`;
                   ) : (
                     accessRequests.map((req) => {
                       const fullName = `${req.firstName} ${req.lastName}`;
-                      const isPending = req.status === 'pending';
+                      const isFreeTest = req.requestedTier === 'découverte';
+                      const isPending = req.status === 'pending' && !isFreeTest;
                       const isPaymentReceived = req.status === 'payment_received';
                       const isRejecting = rejectingRequestId === req.id;
 
                       return (
                         <tr key={req.id} style={{ 
-                          background: isPaymentReceived ? 'rgba(16, 185, 129, 0.05)' : 'transparent' 
+                          background: isFreeTest ? 'rgba(52, 211, 153, 0.04)' : isPaymentReceived ? 'rgba(16, 185, 129, 0.05)' : 'transparent' 
                         }}>
                           <td>
                             <div style={{ marginBottom: '4px' }}>
@@ -1369,7 +1370,20 @@ Votre superviseur`;
                             {req.city}, {req.country}
                           </td>
                           <td>
-                            {isPending && (
+                            {isFreeTest ? (
+                              <span style={{ 
+                                display: 'inline-block', 
+                                background: 'rgba(52, 211, 153, 0.15)', 
+                                color: '#34d399', 
+                                padding: '3px 10px', 
+                                borderRadius: '12px', 
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                border: '1px solid rgba(52, 211, 153, 0.3)'
+                              }}>
+                                🟢 Test 3j Actif (Gratuit)
+                              </span>
+                            ) : isPending ? (
                               <span style={{ 
                                 display: 'inline-block', 
                                 background: 'rgba(251, 191, 36, 0.1)', 
@@ -1381,8 +1395,7 @@ Votre superviseur`;
                               }}>
                                 En attente de paiement
                               </span>
-                            )}
-                            {isPaymentReceived && (
+                            ) : isPaymentReceived ? (
                               <span style={{ 
                                 display: 'inline-block', 
                                 background: 'rgba(16, 185, 129, 0.1)', 
@@ -1394,6 +1407,18 @@ Votre superviseur`;
                               }}>
                                 Paiement reçu ✓
                               </span>
+                            ) : (
+                              <span style={{ 
+                                display: 'inline-block', 
+                                background: 'rgba(16, 185, 129, 0.1)', 
+                                color: '#10b981', 
+                                padding: '3px 10px', 
+                                borderRadius: '12px', 
+                                fontSize: '0.78rem',
+                                fontWeight: 600 
+                              }}>
+                                Validé ✓
+                              </span>
                             )}
                           </td>
                           <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
@@ -1404,7 +1429,20 @@ Votre superviseur`;
                           </td>
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
-                              {isPending && (
+                              {isFreeTest ? (
+                                <span style={{ 
+                                  display: 'inline-block',
+                                  padding: '0.35rem 0.7rem',
+                                  fontSize: '0.75rem',
+                                  color: '#34d399',
+                                  background: 'rgba(52, 211, 153, 0.1)',
+                                  border: '1px solid rgba(52, 211, 153, 0.3)',
+                                  borderRadius: '6px',
+                                  fontWeight: 600
+                                }}>
+                                  ⚡ Accès Instantané Actif
+                                </span>
+                              ) : isPending ? (
                                 <>
                                   <button
                                     className="btn btn-secondary"
@@ -1423,8 +1461,7 @@ Votre superviseur`;
                                     ✕ Rejeter
                                   </button>
                                 </>
-                              )}
-                              {isPaymentReceived && (
+                              ) : isPaymentReceived ? (
                                 <button
                                   className="btn btn-secondary"
                                   style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(13,148,136,0.15)', color: '#0d9488', border: '1px solid rgba(13,148,136,0.4)', fontWeight: 600 }}
@@ -1433,8 +1470,7 @@ Votre superviseur`;
                                 >
                                   ✓ Valider & créer le compte
                                 </button>
-                              )}
-                              {!isPending && !isPaymentReceived && (
+                              ) : (
                                 <button
                                   className="btn btn-secondary"
                                   style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", width: "100%", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}

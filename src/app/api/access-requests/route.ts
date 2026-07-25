@@ -99,6 +99,8 @@ export async function POST(req: Request) {
     const cleanTier = (['découverte', 'pro', 'ultra', 'institution'].includes(requestedTier)) ? requestedTier : 'découverte';
 
     // 3. Insérer la demande dans Firestore
+    const isFreeTest = cleanTier === 'découverte';
+
     const requestData = {
       firstName: firstName.trim(),
       lastName: lastName.trim(),
@@ -110,8 +112,9 @@ export async function POST(req: Request) {
       phone: phone.trim(),
       requestedRole: cleanRole,
       requestedTier: cleanTier,
-      status: 'pending',
+      status: isFreeTest ? 'approved' : 'pending',
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      approvedAt: isFreeTest ? admin.firestore.FieldValue.serverTimestamp() : null,
       paymentReceivedAt: null,
       paymentReceivedBy: null,
       rejectedAt: null,
