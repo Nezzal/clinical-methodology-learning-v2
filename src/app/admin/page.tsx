@@ -132,9 +132,12 @@ export default function AdminDashboard() {
   const [studentChats, setStudentChats] = useState<any[]>([]);
   const [studentArticles, setStudentArticles] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'protocols' | 'chats' | 'ai-report' | 'articles'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'profile' | 'protocols' | 'chats' | 'ai-report' | 'articles'>('stats');
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [loadingAiReport, setLoadingAiReport] = useState(false);
+
+  // Modal de consultation détaillée de demande d'accès
+  const [selectedRequestDetail, setSelectedRequestDetail] = useState<AccessRequest | null>(null);
 
   // Preview modals
   const [activeProtocol, setActiveProtocol] = useState<FirestoreProtocol | null>(null);
@@ -1843,6 +1846,14 @@ Votre superviseur`;
                             </td>
                             <td>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', width: '100%', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 600 }}
+                                  onClick={() => setSelectedRequestDetail(req)}
+                                >
+                                  👁️ Fiche Demandeur
+                                </button>
+
                                 {isFreeTest ? (
                                   <span style={{ 
                                     display: 'inline-block',
@@ -2112,6 +2123,7 @@ Votre superviseur`;
             {/* Onglets de détail */}
             <div className={styles.tabs} style={{ marginBottom: '1rem' }}>
               <button className={`${styles.tabBtn} ${activeTab === 'stats' ? styles.activeTab : ''}`} onClick={() => setActiveTab('stats')}>Stats</button>
+              <button className={`${styles.tabBtn} ${activeTab === 'profile' ? styles.activeTab : ''}`} onClick={() => setActiveTab('profile')}>👤 Fiche Profil</button>
               <button className={`${styles.tabBtn} ${activeTab === 'protocols' ? styles.activeTab : ''}`} onClick={() => setActiveTab('protocols')}>Protocoles ({studentProtocols.length})</button>
               <button className={`${styles.tabBtn} ${activeTab === 'chats' ? styles.activeTab : ''}`} onClick={() => setActiveTab('chats')}>Tuteur ({studentChats.length})</button>
               <button className={`${styles.tabBtn} ${activeTab === 'ai-report' ? styles.activeTab : ''}`} onClick={() => setActiveTab('ai-report')}>Bilan IA</button>
@@ -2150,6 +2162,74 @@ Votre superviseur`;
                   <button className="btn btn-secondary" style={{ fontSize: '0.78rem', padding: '0.3rem 0.6rem', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }} onClick={() => handleDeleteStudentData(selectedStudent.uid)} disabled={actionPending}>
                     Supprimer définitivement
                   </button>
+                </div>
+              </div>
+            ) : activeTab === 'profile' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>👤 Coordonnées Personnelles</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Nom Complet</span>
+                      <strong style={{ color: '#f8fafc' }}>{selectedStudent.displayName || 'Utilisateur'}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>E-mail</span>
+                      <span style={{ color: '#38bdf8' }}>{selectedStudent.email}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Téléphone</span>
+                      <span style={{ color: '#cbd5e1' }}>{selectedStudent.phone || 'Non renseigné'}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Localisation</span>
+                      <span style={{ color: '#cbd5e1' }}>{[selectedStudent.city, selectedStudent.country || selectedStudent.residence].filter(Boolean).join(', ') || 'Non renseignée'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🎓 Profil Professionnel & Institution</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Profession / Rôle</span>
+                      <span style={{ color: '#cbd5e1' }}>{selectedStudent.profession || selectedStudent.userType || selectedStudent.role || 'Étudiant'}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Institution / Faculté</span>
+                      <span style={{ color: '#cbd5e1' }}>{selectedStudent.institution || 'Non renseignée'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(13,148,136,0.06)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(13,148,136,0.2)' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#2dd4bf', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>💳 Abonnement & Règlement</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Active</span>
+                      <span style={{ fontWeight: 800, color: selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
+                        Formule {selectedStudent.subscription?.tier || 'DÉCOUVERTE'}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Statut du Compte</span>
+                      <span style={{ color: selectedStudent.status === 'suspended' ? '#f87171' : '#34d399', fontWeight: 600 }}>
+                        {selectedStudent.status === 'suspended' ? '🔴 Suspendu' : '🟢 Actif'}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Date d'Échéance</span>
+                      <span style={{ color: '#cbd5e1' }}>
+                        {selectedStudent.subscription?.validUntil ? new Date(selectedStudent.subscription.validUntil).toLocaleDateString('fr-FR') : 'Illimité'}
+                      </span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Référence / N° Reçu</span>
+                      <span style={{ color: '#cbd5e1', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                        {selectedStudent.subscription?.paymentReceiptRef || 'Validation Directe Admin'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : activeTab === 'protocols' ? (
@@ -2601,6 +2681,169 @@ Votre superviseur`;
                 );
               })()
             )}
+          </div>
+        </div>
+      )}
+      {/* Modal Fiche Détaillée du Demandeur d'Accès */}
+      {selectedRequestDetail && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(15, 23, 42, 0.85)', 
+            backdropFilter: 'blur(8px)', 
+            zIndex: 10000, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '1rem' 
+          }} 
+          onClick={() => setSelectedRequestDetail(null)}
+        >
+          <div 
+            style={{ 
+              background: '#1e293b', 
+              border: '1px solid rgba(255,255,255,0.15)', 
+              borderRadius: '16px', 
+              maxWidth: '560px', 
+              width: '100%', 
+              padding: '1.75rem', 
+              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.6)' 
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <h3 style={{ margin: 0, color: '#38bdf8', fontSize: '1.2rem', fontWeight: 700 }}>
+                  📋 Fiche Complète du Demandeur
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Réf Demande : {selectedRequestDetail.id}</span>
+              </div>
+              <button 
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.2rem', cursor: 'pointer' }} 
+                onClick={() => setSelectedRequestDetail(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Carte Identité */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>👤 Coordonnées du Demandeur</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Nom Complet</span>
+                    <strong style={{ color: '#f8fafc', fontSize: '0.95rem' }}>{selectedRequestDetail.firstName} {selectedRequestDetail.lastName}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>E-mail</span>
+                    <span style={{ color: '#38bdf8' }}>{selectedRequestDetail.email}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Téléphone</span>
+                    <span style={{ color: '#cbd5e1' }}>{selectedRequestDetail.phone || 'Non renseigné'}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Localisation</span>
+                    <span style={{ color: '#cbd5e1' }}>{[selectedRequestDetail.city, selectedRequestDetail.country].filter(Boolean).join(', ') || 'Non renseignée'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte Professionnelle */}
+              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🎓 Profil Professionnel & Établissement</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Profession / Rôle</span>
+                    <span style={{ color: '#cbd5e1' }}>{selectedRequestDetail.profession || 'Non renseignée'}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Institution / Faculté</span>
+                    <span style={{ color: '#cbd5e1' }}>{selectedRequestDetail.institution || 'Non renseignée'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Carte Demande & Paiement */}
+              <div style={{ background: 'rgba(13,148,136,0.06)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(13,148,136,0.2)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#2dd4bf', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>💳 Formule Demandée & Détails Virement</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Choisie</span>
+                    <span style={{ 
+                      fontWeight: 800, 
+                      color: selectedRequestDetail.requestedTier === 'ultra' ? '#fbbf24' : selectedRequestDetail.requestedTier === 'expert' ? '#c084fc' : selectedRequestDetail.requestedTier === 'pro' ? '#2dd4bf' : '#38bdf8', 
+                      textTransform: 'uppercase' 
+                    }}>
+                      Formule {selectedRequestDetail.requestedTier || 'DÉCOUVERTE'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Statut de la Demande</span>
+                    <span style={{ color: selectedRequestDetail.status === 'payment_received' ? '#34d399' : selectedRequestDetail.status === 'accepted' ? '#38bdf8' : selectedRequestDetail.status === 'rejected' ? '#f87171' : '#fcd34d', fontWeight: 600 }}>
+                      {selectedRequestDetail.status === 'payment_received' ? '💰 Virement Reçu' : selectedRequestDetail.status === 'accepted' ? '✓ Compte Validé' : selectedRequestDetail.status === 'rejected' ? '✕ Rejetée' : '⏳ En attente virement'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Date de Soumission</span>
+                    <span style={{ color: '#cbd5e1' }}>
+                      {selectedRequestDetail.createdAt?.seconds ? new Date(selectedRequestDetail.createdAt.seconds * 1000).toLocaleString('fr-FR') : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Référence / Reçu Transmis</span>
+                    <span style={{ color: '#cbd5e1', fontSize: '0.85rem', fontFamily: 'monospace', fontWeight: 700 }}>
+                      {selectedRequestDetail.paymentReceiptRef ? (
+                        (['algérie', 'dz', 'algeria'].includes((selectedRequestDetail.country || '').toLowerCase()) || !selectedRequestDetail.country)
+                          ? `📲 Reçu BaridiMob N° : ${selectedRequestDetail.paymentReceiptRef}`
+                          : `💳 Réf Paiement : ${selectedRequestDetail.paymentReceiptRef}`
+                      ) : 'Aucun reçu téléversé'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Rapides */}
+              <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                {selectedRequestDetail.status === 'pending' && selectedRequestDetail.requestedTier !== 'découverte' && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.4)', fontWeight: 700 }}
+                    onClick={async () => {
+                      await handleMarkPaymentReceived(selectedRequestDetail);
+                      setSelectedRequestDetail(null);
+                    }}
+                    disabled={actionPending}
+                  >
+                    💰 Marquer paiement reçu
+                  </button>
+                )}
+
+                {(selectedRequestDetail.status === 'payment_received' || selectedRequestDetail.requestedTier === 'découverte') && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(13,148,136,0.2)', color: '#2dd4bf', border: '1px solid rgba(13,148,136,0.5)', fontWeight: 800 }}
+                    onClick={async () => {
+                      await handleAcceptRequest(selectedRequestDetail);
+                      setSelectedRequestDetail(null);
+                    }}
+                    disabled={actionPending}
+                  >
+                    ✓ Valider & Créer le Compte
+                  </button>
+                )}
+
+                <button
+                  className="btn btn-secondary"
+                  style={{ padding: '10px 16px', fontSize: '0.82rem', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.15)' }}
+                  onClick={() => setSelectedRequestDetail(null)}
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

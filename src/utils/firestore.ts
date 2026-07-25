@@ -121,6 +121,10 @@ export interface FirestoreUser {
   assignedTeacherName?: string;
   country?: string;
   residence?: string;
+  phone?: string;
+  institution?: string;
+  profession?: string;
+  city?: string;
 }
 
 export interface FirestoreChat {
@@ -421,7 +425,7 @@ export interface AccessRequest {
   email: string;
   phone: string;
   requestedRole?: 'student' | 'teacher';
-  requestedTier?: 'découverte' | 'pro' | 'ultra' | 'institution';
+  requestedTier?: 'découverte' | 'pro' | 'expert' | 'ultra' | 'institution';
   status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
   createdAt: any;
   expiresAt?: any;
