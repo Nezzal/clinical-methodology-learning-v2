@@ -52,23 +52,21 @@ export default function Login() {
 
     setIsSubmittingReceipt(true);
     try {
-      await sendSupportMessage(
-        'guest',
-        submittedPaidTier.email,
-        submittedPaidTier.email,
-        'student',
-        'admin',
-        undefined,
-        `📲 Reçu de Virement BaridiMob (${submittedPaidTier.tier.toUpperCase()}) - ${submittedPaidTier.email}`,
-        `Bonjour, je vous transmets mon justificatif de virement BaridiMob pour la Formule ${submittedPaidTier.tier.toUpperCase()}.\n\n` +
-        `• Adresse E-mail : ${submittedPaidTier.email}\n` +
-        `• Formule demandée : ${submittedPaidTier.tier.toUpperCase()}\n` +
-        `• N° de Transaction / Reçu BaridiMob : ${receiptTxIdInput.trim()}`
-      );
+      const res = await fetch('/api/access-requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: submittedPaidTier.email,
+          receiptTxId: receiptTxIdInput.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Impossible d'enregistrer le reçu.");
 
       setReceiptSubmittedSuccess(true);
-    } catch (err) {
-      alert("Erreur lors de la transmission du reçu.");
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de la transmission du reçu.");
     } finally {
       setIsSubmittingReceipt(false);
     }

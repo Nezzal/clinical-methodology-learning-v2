@@ -408,3 +408,78 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error?.message || "Une erreur interne est survenue. Veuillez réessayer." }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  loadEnvLocal();
+  try {
+    const { email, receiptTxId } = await req.json();
+
+    if (!email || !receiptTxId || !receiptTxId.trim()) {
+      return NextResponse.json({ error: "L'adresse e-mail et le N° de reçu BaridiMob sont requis." }, { status: 400 });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const docId = cleanEmail.replace(/[^a-z0-9]/g, '_');
+    const requestDocRef = adminDb.collection('access_requests').doc(docId);
+    const docSnap = await requestDocRef.get();
+
+    if (!docSnap.exists) {
+      const querySnap = await adminDb.collection('access_requests').where('email', '==', cleanEmail).get();
+      if (querySnap.empty) {
+        return NextResponse.json({ error: "Aucune demande d'accès trouvée pour cet e-mail." }, { status: 404 });
+      }
+      const targetDoc = querySnap.docs[0];
+      await targetDoc.ref.update({
+        status: 'payment_received',
+        paymentReceiptRef: receiptTxId.trim(),
+        paymentSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    } else {
+      await requestDocRef.update({
+        status: 'payment_received',
+        paymentReceiptRef: receiptTxId.trim(),
+        paymentSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+    // Email admin notification
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_NOTIFICATION_EMAIL || smtpUser;
+
+    if (smtpUser && smtpPass && adminEmail) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true,
+          auth: { user: smtpUser, pass: smtpPass }
+        });
+
+        await transporter.sendMail({
+          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
+          to: adminEmail,
+          subject: `📲 Reçu BaridiMob Soumis - ${cleanEmail}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #0d9488; margin-top: 0;">Justificatif de paiement BaridiMob soumis</h2>
+              <p>Un utilisateur a soumis son N° de reçu BaridiMob pour sa demande d'accès :</p>
+              <ul>
+                <li><strong>E-mail :</strong> ${cleanEmail}</li>
+                <li><strong>N° / Référence Reçu BaridiMob :</strong> <code style="font-size: 1.1rem; color: #0d9488; font-weight: bold;">${receiptTxId.trim()}</code></li>
+              </ul>
+              <p>Le statut de sa demande a été mis à jour à "Paiement reçu" dans l'Espace Superviseur.</p>
+            </div>
+          `
+        });
+      } catch (mailErr) {
+        console.error("Erreur notification mail admin pour reçu:", mailErr);
+      }
+    }
+
+    return NextResponse.json({ success: true, message: "Reçu BaridiMob enregistré avec succès." });
+  } catch (err: any) {
+    console.error("Erreur enregistrement reçu BaridiMob:", err);
+    return NextResponse.json({ error: err.message || "Erreur serveur lors de l'enregistrement du reçu." }, { status: 500 });
+  }
+}

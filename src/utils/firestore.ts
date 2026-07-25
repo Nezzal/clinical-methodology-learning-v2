@@ -423,6 +423,7 @@ export interface AccessRequest {
   status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
   createdAt: any;
   expiresAt?: any;
+  paymentReceiptRef?: string;
   paymentReceivedAt: any;
   paymentReceivedBy: string | null;
   rejectedAt: any;

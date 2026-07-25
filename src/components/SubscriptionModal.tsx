@@ -47,18 +47,17 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
 
     setIsSubmittingReceipt(true);
     try {
-      await sendSupportMessage(
-        'guest',
-        receiptEmail.trim(),
-        receiptEmail.trim(),
-        'student',
-        'admin',
-        undefined,
-        `📲 Reçu de Virement BaridiMob - ${receiptEmail.trim()}`,
-        `Bonjour, je vous transmets mon justificatif de virement BaridiMob.\n\n` +
-        `• Adresse E-mail : ${receiptEmail.trim()}\n` +
-        `• N° de Transaction / Reçu BaridiMob : ${receiptTxId.trim()}`
-      );
+      const res = await fetch('/api/access-requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: receiptEmail.trim(),
+          receiptTxId: receiptTxId.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Impossible d'enregistrer le reçu.");
 
       setReceiptSuccess(true);
       setTimeout(() => {
@@ -66,8 +65,8 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         setReceiptTxId('');
         setReceiptEmail('');
       }, 4000);
-    } catch (err) {
-      alert("Erreur lors de la transmission du reçu.");
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de la transmission du reçu.");
     } finally {
       setIsSubmittingReceipt(false);
     }

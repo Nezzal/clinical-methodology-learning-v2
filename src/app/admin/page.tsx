@@ -1780,6 +1780,11 @@ Votre superviseur`;
                                   Validé ✓
                                 </span>
                               )}
+                              {req.paymentReceiptRef && (
+                                <div style={{ marginTop: '5px', fontSize: '0.74rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 600 }}>
+                                  📲 Reçu BaridiMob N° : {req.paymentReceiptRef}
+                                </div>
+                              )}
                             </td>
                             <td style={{ fontSize: '0.82rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                               {req.createdAt?.seconds ? (
