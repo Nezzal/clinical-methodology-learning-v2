@@ -436,6 +436,131 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleExportUsersCSV = () => {
+    if (!students || students.length === 0) {
+      alert("Aucun utilisateur à exporter.");
+      return;
+    }
+
+    const headers = [
+      "UID",
+      "Nom Complexe",
+      "E-mail",
+      "Téléphone",
+      "Rôle",
+      "Profession",
+      "Institution",
+      "Ville",
+      "Pays",
+      "Formule Abonnement",
+      "Statut Compte",
+      "Date Inscription",
+      "Date Échéance Expiration",
+      "Référence Paiement / Reçu",
+      "Enseignant Encadrant",
+      "Score Quiz (%)",
+      "Protocoles Générés",
+      "Questions Tuteur"
+    ];
+
+    const rows = students.map(u => {
+      const quizCorrect = u.stats?.quizCorrect || 0;
+      const quizTotal = u.stats?.quizTotal || 0;
+      const quizPct = quizTotal > 0 ? Math.round((quizCorrect / quizTotal) * 100) : 0;
+      const createdDate = u.subscription?.startDate ? new Date(u.subscription.startDate).toLocaleDateString('fr-FR') : '—';
+      const validUntilDate = u.subscription?.validUntil ? new Date(u.subscription.validUntil).toLocaleDateString('fr-FR') : 'Illimité';
+
+      return [
+        `"${u.uid || ''}"`,
+        `"${(u.displayName || '').replace(/"/g, '""')}"`,
+        `"${(u.email || '').replace(/"/g, '""')}"`,
+        `"${(u.phone || '').replace(/"/g, '""')}"`,
+        `"${u.role === 'teacher' ? 'Enseignant' : u.role === 'admin' ? 'Administrateur' : 'Étudiant'}"`,
+        `"${(u.profession || u.userType || '').replace(/"/g, '""')}"`,
+        `"${(u.institution || '').replace(/"/g, '""')}"`,
+        `"${(u.city || '').replace(/"/g, '""')}"`,
+        `"${(u.country || u.residence || '').replace(/"/g, '""')}"`,
+        `"${(u.subscription?.tier || 'découverte').toUpperCase()}"`,
+        `"${u.status === 'suspended' ? 'Suspendu' : 'Actif'}"`,
+        `"${createdDate}"`,
+        `"${validUntilDate}"`,
+        `"${(u.subscription?.paymentReceiptRef || '').replace(/"/g, '""')}"`,
+        `"${(u.assignedTeacherName || '').replace(/"/g, '""')}"`,
+        `"${quizPct}%"`,
+        `"${u.stats?.protocolsGenerated || 0}"`,
+        `"${u.stats?.questionsAsked || 0}"`
+      ].join(';');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const todayStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `recif_utilisateurs_inscrits_${todayStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportRequestsCSV = () => {
+    if (!accessRequests || accessRequests.length === 0) {
+      alert("Aucune demande d'accès à exporter.");
+      return;
+    }
+
+    const headers = [
+      "ID Demande",
+      "Prénom",
+      "Nom",
+      "E-mail",
+      "Téléphone",
+      "Profession",
+      "Institution",
+      "Ville",
+      "Pays",
+      "Formule Demandée",
+      "Statut Demande",
+      "Date & Heure Soumission",
+      "Date Expiration Prévisionnelle",
+      "Référence Paiement / Reçu BaridiMob"
+    ];
+
+    const rows = accessRequests.map(r => {
+      const createdStr = r.createdAt?.seconds ? new Date(r.createdAt.seconds * 1000).toLocaleString('fr-FR') : '—';
+      const expiryStr = r.expiresAt?.seconds ? new Date(r.expiresAt.seconds * 1000).toLocaleString('fr-FR') : '—';
+
+      return [
+        `"${r.id || ''}"`,
+        `"${(r.firstName || '').replace(/"/g, '""')}"`,
+        `"${(r.lastName || '').replace(/"/g, '""')}"`,
+        `"${(r.email || '').replace(/"/g, '""')}"`,
+        `"${(r.phone || '').replace(/"/g, '""')}"`,
+        `"${(r.profession || '').replace(/"/g, '""')}"`,
+        `"${(r.institution || '').replace(/"/g, '""')}"`,
+        `"${(r.city || '').replace(/"/g, '""')}"`,
+        `"${(r.country || '').replace(/"/g, '""')}"`,
+        `"${(r.requestedTier || 'découverte').toUpperCase()}"`,
+        `"${r.status === 'payment_received' ? 'Virement Reçu' : r.status === 'accepted' ? 'Validé' : r.status === 'rejected' ? 'Rejeté' : 'En attente'}"`,
+        `"${createdStr}"`,
+        `"${expiryStr}"`,
+        `"${(r.paymentReceiptRef || '').replace(/"/g, '""')}"`
+      ].join(';');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const todayStr = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `recif_demandes_acces_${todayStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleToggleSuspension = async (uid: string, newStatus: 'active' | 'suspended') => {
     const confirmMsg = newStatus === 'suspended'
       ? "Êtes-vous sûr de vouloir suspendre temporairement l'activité de cet étudiant ? Il ne pourra plus accéder à l'application."
@@ -1599,7 +1724,7 @@ Votre superviseur`;
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <select
                     className={styles.presenceSelect}
                     value={presenceFilter}
@@ -1608,6 +1733,27 @@ Votre superviseur`;
                     <option value="all">Tous les utilisateurs</option>
                     <option value="online">En ligne uniquement 🟢</option>
                   </select>
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(52, 211, 153, 0.12)',
+                      color: '#34d399',
+                      border: '1px solid rgba(52, 211, 153, 0.3)',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={handleExportUsersCSV}
+                    title="Télécharger la liste complète des utilisateurs au format CSV (Excel)"
+                  >
+                    📥 Exporter en CSV (Excel)
+                  </button>
                 </div>
               </div>
 
@@ -1734,25 +1880,46 @@ Votre superviseur`;
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                   Demandes d'accès et d'essai ({accessRequests.length} enregistrées)
                 </div>
-                {accessRequests.length > 0 && (
-                  <button
-                    className="btn btn-secondary"
-                    style={{
-                      padding: '0.4rem 0.8rem',
-                      fontSize: '0.78rem',
-                      background: 'rgba(239, 68, 68, 0.12)',
-                      color: '#f87171',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: '6px',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                    onClick={handleCleanOldRequests}
-                    disabled={actionPending}
-                  >
-                    🗑️ Nettoyer les anciennes demandes (+7j ou rejetées)
-                  </button>
-                )}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {accessRequests.length > 0 && (
+                    <>
+                      <button
+                        className="btn btn-secondary"
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.78rem',
+                          background: 'rgba(52, 211, 153, 0.12)',
+                          color: '#34d399',
+                          border: '1px solid rgba(52, 211, 153, 0.3)',
+                          borderRadius: '6px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={handleExportRequestsCSV}
+                        title="Télécharger toutes les demandes au format CSV"
+                      >
+                        📥 Exporter Demandes (CSV)
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          fontSize: '0.78rem',
+                          background: 'rgba(239, 68, 68, 0.12)',
+                          color: '#f87171',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          borderRadius: '6px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={handleCleanOldRequests}
+                        disabled={actionPending}
+                      >
+                        🗑️ Nettoyer anciennes (+7j/rejetées)
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className={styles.tableContainer}>
