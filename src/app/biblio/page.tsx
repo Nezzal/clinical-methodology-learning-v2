@@ -11,6 +11,21 @@ import { QuotaModal } from '@/components/QuotaModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
 
+const getBiblioCount = (): number => {
+  if (typeof window === 'undefined') return 0;
+  const countStr = localStorage.getItem('recif_biblio_count') || localStorage.getItem('recif_biblio_syntheses_count') || '0';
+  const val = parseInt(countStr, 10);
+  return isNaN(val) ? 0 : val;
+};
+
+const incrementBiblioCount = () => {
+  if (typeof window === 'undefined') return;
+  const current = getBiblioCount();
+  const next = current + 1;
+  localStorage.setItem('recif_biblio_count', next.toString());
+  localStorage.setItem('recif_biblio_syntheses_count', next.toString());
+};
+
 export default function BiblioPage() {
   const router = useRouter();
   const { user, profile } = useAuth();
@@ -46,6 +61,14 @@ export default function BiblioPage() {
   // Générer la requête MeSH PubMed via l'IA (Qwen / Gemini)
   const handleGenerateMesh = async () => {
     if (!naturalLanguageQuestion.trim()) return;
+
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
+    if (getBiblioCount() >= quotaConfig.biblioMax) {
+      setShowQuotaModal(true);
+      return;
+    }
+
     setIsGeneratingMesh(true);
     setError(null);
 
@@ -93,6 +116,13 @@ export default function BiblioPage() {
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!query.trim()) return;
+
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
+    if (getBiblioCount() >= quotaConfig.biblioMax) {
+      setShowQuotaModal(true);
+      return;
+    }
 
     setIsSearching(true);
     setError(null);
@@ -173,9 +203,8 @@ export default function BiblioPage() {
 
     const userTier = getUserTier(profile);
     const quotaConfig = getQuotaConfig(userTier);
-    const synthesesCount = parseInt(localStorage.getItem('recif_biblio_syntheses_count') || '0', 10);
 
-    if (synthesesCount >= quotaConfig.biblioMax) {
+    if (getBiblioCount() >= quotaConfig.biblioMax) {
       setShowQuotaModal(true);
       return;
     }
@@ -215,6 +244,7 @@ export default function BiblioPage() {
 
       setSynthesisResult(data.synthesis);
       setSynthesisProvider(data.provider);
+      incrementBiblioCount();
     } catch (err: any) {
       console.error('Erreur synthèse IA:', err);
       setError(err.message || 'Erreur lors de la génération de la synthèse.');
