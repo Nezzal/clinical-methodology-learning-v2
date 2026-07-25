@@ -230,13 +230,13 @@ export async function POST(req: Request) {
                 <hr style="border: 0; border-top: 1px dashed #cbd5e1; margin: 14px 0;" />
 
                 <p style="margin: 0 0 6px 0; color: #0f766e; font-size: 0.85rem; font-weight: 600;">
-                  💡 Passer à un accès complet illimité (Formule PRO / ULTRA) ?
+                  📲 Règlement par BaridiMob
                 </p>
                 <p style="margin: 0 0 10px 0; color: #64748b; font-size: 0.82rem; line-height: 1.5;">
-                  Pour lever les filigranes, bénéficier de l'IA en illimité et recevoir vos jours bonus offerts (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement bancaire ou CCP :
+                  Pour passer à un accès complet illimité (Formule PRO / ULTRA), lever les filigranes et bénéficier de vos jours bonus (+7j Pro / +14j Ultra), vous pouvez effectuer votre virement par BaridiMob :
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 10px 14px; border-radius: 6px; font-family: monospace; font-size: 0.88rem; color: #0f766e;">
-                  <strong>RIP / CCP (Algérie) :</strong> XXXXXXXXXXXXXXXX Clé XX<br />
+                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
                   <strong>Titulaire :</strong> Methodo&Clinique Éducation
                 </div>
               </div>
@@ -249,10 +249,10 @@ export async function POST(req: Request) {
               ` : `
               <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 16px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0; color: #0f766e; font-size: 0.9rem; line-height: 1.6;">
-                  Merci pour votre confiance. Pour valider votre abonnement définitif et bénéficier des <strong>+7 jours bonus offerts sur virement</strong>, voici les coordonnées bancaires / CCP :
+                  Merci pour votre confiance. Pour valider votre abonnement définitif et bénéficier des <strong>+7 jours bonus offerts sur BaridiMob</strong>, voici les coordonnées BaridiMob :
                 </p>
                 <div style="background: #ffffff; border: 1px dashed #0d9488; padding: 12px 14px; border-radius: 6px; font-family: monospace; font-size: 0.92rem; color: #0f766e;">
-                  <strong>RIP / CCP (Algérie) :</strong> XXXXXXXXXXXXXXXX Clé XX<br />
+                  <strong>BaridiMob (RIP) :</strong> 00799999000041210947<br />
                   <strong>Titulaire :</strong> Methodo&Clinique Éducation
                 </div>
               </div>

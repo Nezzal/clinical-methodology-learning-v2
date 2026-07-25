@@ -20,7 +20,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   if (!isOpen) return null;
 
   const handleCopyRip = () => {
-    navigator.clipboard.writeText(residence === 'dz' ? 'RIP/CCP: XXXXXXXXXXXXXXXX Clé XX - Methodo&Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo&Clinique');
+    navigator.clipboard.writeText(residence === 'dz' ? 'BaridiMob (RIP): 00799999000041210947 - Methodo&Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo&Clinique');
     setCopiedRip(true);
     setTimeout(() => setCopiedRip(false), 2500);
   };
@@ -66,7 +66,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <div className={styles.zoneCardTitle}>Algérie</div>
                   <div className={styles.zoneCardSubtitle}>Dinars Algériens (DZD / DA)</div>
                   <div className={styles.zoneCardDesc}>
-                    Tarifs locaux adaptés aux étudiants, résidents et enseignants en Algérie. Règlement direct par Virement bancaire / CCP (RIP) & BaridiMob.
+                    Tarifs locaux adaptés aux étudiants, résidents et enseignants en Algérie. Règlement direct par BaridiMob (RIP).
                   </div>
                   <button className={styles.zoneCardBtn}>
                     Sélectionner la Zone Algérie ➔
@@ -339,27 +339,27 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
           {residence === 'dz' ? (
             <div id="rip-section" className={styles.ripBox}>
               <div className={styles.ripTitle}>
-                <span>💳</span>
-                <span>Instructions pour Virement bancaire / CCP (Algérie)</span>
+                <span>📲</span>
+                <span>Instructions de paiement BaridiMob (Algérie)</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour activer votre formule <strong>PRO</strong> ou <strong>ULTRA</strong> en Algérie, effectuez votre virement vers les coordonnées ci-dessous, puis envoyez la copie du reçu par e-mail.
+                Pour activer votre formule <strong>PRO</strong> ou <strong>ULTRA</strong> en Algérie, effectuez votre virement BaridiMob vers le RIP ci-dessous, puis envoyez la copie du reçu par e-mail.
               </p>
               <div className={styles.ripDetails}>
                 <div>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>RIB / RIP CCP :</span>
-                  <strong>XXXXXXXXXXXXXXXX Clé XX</strong>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>RIP BaridiMob :</span>
+                  <strong>00799999000041210947</strong>
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Titulaire du compte :</span>
                   <strong>Methodo&Clinique Éducation</strong>
                 </div>
                 <button className={styles.copyBtn} onClick={handleCopyRip}>
-                  {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP'}
+                  {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP BaridiMob'}
                 </button>
               </div>
               <p style={{ fontSize: '0.78rem', color: '#34d399', margin: 0, fontStyle: 'italic' }}>
-                ⚡ Dès réception et validation du virement par l'administrateur, votre accès s'active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
+                ⚡ Dès réception et validation du virement BaridiMob par l'administrateur, votre accès s'active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
               </p>
             </div>
           ) : residence === 'africa' ? (
