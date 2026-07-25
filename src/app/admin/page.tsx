@@ -1783,7 +1783,9 @@ Votre superviseur`;
                               )}
                               {req.paymentReceiptRef && (
                                 <div style={{ marginTop: '5px', fontSize: '0.74rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 600 }}>
-                                  📲 Reçu BaridiMob N° : {req.paymentReceiptRef}
+                                  {req.country && (req.country.toLowerCase().includes('algér') || req.country.toLowerCase().includes('dz') || req.country.toLowerCase().includes('algerie'))
+                                    ? `📲 Reçu BaridiMob N° : ${req.paymentReceiptRef}`
+                                    : `💳 Réf Paiement : ${req.paymentReceiptRef}`}
                                 </div>
                               )}
                             </td>
