@@ -35,7 +35,22 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { name, email, role, tier = 'pro', durationMonths = 12, assignedTeacherUid, assignedTeacherName } = await req.json();
+    const { 
+      name, 
+      email, 
+      role, 
+      tier = 'pro', 
+      durationMonths = 12, 
+      assignedTeacherUid, 
+      assignedTeacherName,
+      phone,
+      institution,
+      profession,
+      city,
+      country,
+      residence,
+      paymentReceiptRef
+    } = await req.json();
 
     if (!name || !name.trim() || !email || !email.trim()) {
       return NextResponse.json({ error: "Le nom et l'adresse e-mail sont requis." }, { status: 400 });
@@ -79,7 +94,7 @@ export async function POST(req: Request) {
     const todayStr = now.toISOString().split('T')[0];
     const monthStr = todayStr.substring(0, 7);
 
-    const subscription = {
+    const subscription: any = {
       tier: selectedTier,
       status: 'active',
       startDate: now.toISOString(),
@@ -87,6 +102,7 @@ export async function POST(req: Request) {
       durationMonths: Number(durationMonths),
       bonusDaysAdded: bonusDays,
       paymentVerified: true,
+      ...(paymentReceiptRef ? { paymentReceiptRef } : {}),
       quotas: {
         questionsToday: 0,
         lastQuestionDate: todayStr,
@@ -131,6 +147,12 @@ export async function POST(req: Request) {
       level: 'Débutant',
       role: cleanRole,
       subscription,
+      ...(phone ? { phone } : {}),
+      ...(institution ? { institution } : {}),
+      ...(profession ? { profession } : {}),
+      ...(city ? { city } : {}),
+      ...(country ? { country } : {}),
+      ...(residence ? { residence } : {}),
       ...(teacherUid ? { assignedTeacherUid: teacherUid } : {}),
       ...(assignedTeacherName ? { assignedTeacherName } : {}),
       stats: {

@@ -38,7 +38,18 @@ export async function PATCH(
   const uid = resolvedParams.uid;
 
   try {
-    const { status, tier } = await req.json();
+    const { 
+      status, 
+      tier, 
+      displayName, 
+      phone, 
+      profession, 
+      institution, 
+      city, 
+      country, 
+      residence,
+      paymentReceiptRef
+    } = await req.json();
 
     const updates: Record<string, any> = {
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -62,6 +73,22 @@ export async function PATCH(
       }
       updates['subscription.tier'] = tier;
     }
+
+    if (displayName !== undefined) {
+      updates.displayName = displayName;
+      try {
+        await adminAuth.updateUser(uid, { displayName });
+      } catch (e) {
+        console.warn("N'a pas pu mettre à jour Auth displayName:", e);
+      }
+    }
+    if (phone !== undefined) updates.phone = phone;
+    if (profession !== undefined) updates.profession = profession;
+    if (institution !== undefined) updates.institution = institution;
+    if (city !== undefined) updates.city = city;
+    if (country !== undefined) updates.country = country;
+    if (residence !== undefined) updates.residence = residence;
+    if (paymentReceiptRef !== undefined) updates['subscription.paymentReceiptRef'] = paymentReceiptRef;
 
     const userDocRef = adminDb.collection('users').doc(uid);
     await userDocRef.update(updates);

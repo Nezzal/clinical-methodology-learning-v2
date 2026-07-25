@@ -167,6 +167,69 @@ export default function AdminDashboard() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState('');
 
+  // States et fonction pour l'édition dynamique du profil utilisateur (Admin)
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editPhone, setEditPhone] = useState('');
+  const [editProfession, setEditProfession] = useState('');
+  const [editInstitution, setEditInstitution] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editCountry, setEditCountry] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const handleSaveProfile = async () => {
+    if (!selectedStudent || !user) return;
+    setIsSavingProfile(true);
+    try {
+      const idToken = await user.getIdToken(true);
+      const res = await fetch(`/api/admin/users/${selectedStudent.uid}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({
+          phone: editPhone.trim(),
+          profession: editProfession.trim(),
+          institution: editInstitution.trim(),
+          city: editCity.trim(),
+          country: editCountry.trim(),
+          residence: editCountry.trim()
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erreur de mise à jour du profil");
+      }
+
+      setSelectedStudent(prev => prev ? ({
+        ...prev,
+        phone: editPhone.trim(),
+        profession: editProfession.trim(),
+        institution: editInstitution.trim(),
+        city: editCity.trim(),
+        country: editCountry.trim(),
+        residence: editCountry.trim()
+      }) : null);
+
+      setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? {
+        ...s,
+        phone: editPhone.trim(),
+        profession: editProfession.trim(),
+        institution: editInstitution.trim(),
+        city: editCity.trim(),
+        country: editCountry.trim(),
+        residence: editCountry.trim()
+      } : s));
+
+      setIsEditingProfile(false);
+    } catch (e: any) {
+      alert("Erreur lors de la mise à jour du profil : " + e.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   // Modal de succès création compte et copie invitation
   const [successModalData, setSuccessModalData] = useState<{
     name: string;
@@ -185,6 +248,11 @@ export default function AdminDashboard() {
   const [studentFirstName, setStudentFirstName] = useState('');
   const [studentLastName, setStudentLastName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
+  const [studentPhone, setStudentPhone] = useState('');
+  const [studentProfession, setStudentProfession] = useState('Étudiant en Médecine');
+  const [studentInstitution, setStudentInstitution] = useState('');
+  const [studentCity, setStudentCity] = useState('');
+  const [studentCountry, setStudentCountry] = useState('Algérie');
   const [isAddingStudent, setIsAddingStudent] = useState(false);
   const [addStudentError, setAddStudentError] = useState('');
 
@@ -203,7 +271,7 @@ export default function AdminDashboard() {
   const handleAddStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!studentFirstName.trim() || !studentLastName.trim() || !studentEmail.trim()) {
-      setAddStudentError("Tous les champs sont obligatoires.");
+      setAddStudentError("Le nom, prénom et e-mail sont obligatoires.");
       return;
     }
 
@@ -227,7 +295,12 @@ export default function AdminDashboard() {
           tier: 'ultra',
           durationMonths: profile?.subscription?.durationMonths || 1,
           assignedTeacherUid: user.uid,
-          assignedTeacherName: profile?.displayName || user.email
+          assignedTeacherName: profile?.displayName || user.email,
+          phone: studentPhone.trim(),
+          profession: studentProfession.trim(),
+          institution: studentInstitution.trim(),
+          city: studentCity.trim(),
+          country: studentCountry.trim()
         })
       });
 
@@ -245,6 +318,11 @@ export default function AdminDashboard() {
       setStudentFirstName('');
       setStudentLastName('');
       setStudentEmail('');
+      setStudentPhone('');
+      setStudentProfession('Étudiant en Médecine');
+      setStudentInstitution('');
+      setStudentCity('');
+      setStudentCountry('Algérie');
       setShowAddStudentModal(false);
       fetchStudents();
     } catch (err: any) {
@@ -602,7 +680,13 @@ Votre superviseur`;
           name: `${req.firstName} ${req.lastName}`, 
           email: req.email,
           role: req.requestedRole || 'student',
-          tier: req.requestedTier || (req.requestedRole === 'teacher' ? 'ultra' : 'pro')
+          tier: req.requestedTier || (req.requestedRole === 'teacher' ? 'ultra' : 'pro'),
+          phone: req.phone || '',
+          institution: req.institution || '',
+          profession: req.profession || '',
+          city: req.city || '',
+          country: req.country || '',
+          paymentReceiptRef: req.paymentReceiptRef || ''
         })
       });
 
@@ -1027,6 +1111,12 @@ Votre superviseur`;
 
   const handleSelectStudent = async (student: FirestoreUser) => {
     setSelectedStudent(student);
+    setEditPhone(student.phone || '');
+    setEditProfession(student.profession || student.userType || '');
+    setEditInstitution(student.institution || '');
+    setEditCity(student.city || '');
+    setEditCountry(student.country || student.residence || '');
+    setIsEditingProfile(false);
     setLoadingDetails(true);
     setStudentProtocols([]);
     setStudentChats([]);
@@ -2166,71 +2256,184 @@ Votre superviseur`;
               </div>
             ) : activeTab === 'profile' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>👤 Coordonnées Personnelles</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Nom Complet</span>
-                      <strong style={{ color: '#f8fafc' }}>{selectedStudent.displayName || 'Utilisateur'}</strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>E-mail</span>
-                      <span style={{ color: '#38bdf8' }}>{selectedStudent.email}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Téléphone</span>
-                      <span style={{ color: '#cbd5e1' }}>{selectedStudent.phone || 'Non renseigné'}</span>
-                    </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Localisation</span>
-                      <span style={{ color: '#cbd5e1' }}>{[selectedStudent.city, selectedStudent.country || selectedStudent.residence].filter(Boolean).join(', ') || 'Non renseignée'}</span>
-                    </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>
+                    {isEditingProfile ? '✏️ Mode Édition du Profil' : '📋 Fiche Signalétique Utilisateur'}
                   </div>
+                  {!isEditingProfile ? (
+                    <button
+                      className="btn btn-secondary"
+                      style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 600 }}
+                      onClick={() => {
+                        setEditPhone(selectedStudent.phone || '');
+                        setEditProfession(selectedStudent.profession || selectedStudent.userType || '');
+                        setEditInstitution(selectedStudent.institution || '');
+                        setEditCity(selectedStudent.city || '');
+                        setEditCountry(selectedStudent.country || selectedStudent.residence || '');
+                        setIsEditingProfile(true);
+                      }}
+                    >
+                      ✏️ Éditer la Fiche Profil
+                    </button>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button
+                        className="btn btn-primary"
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', fontWeight: 700 }}
+                        onClick={handleSaveProfile}
+                        disabled={isSavingProfile}
+                      >
+                        {isSavingProfile ? 'Enregistrement...' : '✓ Enregistrer'}
+                      </button>
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
+                        onClick={() => setIsEditingProfile(false)}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🎓 Profil Professionnel & Institution</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Profession / Rôle</span>
-                      <span style={{ color: '#cbd5e1' }}>{selectedStudent.profession || selectedStudent.userType || selectedStudent.role || 'Étudiant'}</span>
+                {!isEditingProfile ? (
+                  <>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>👤 Coordonnées Personnelles</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Nom Complet</span>
+                          <strong style={{ color: '#f8fafc' }}>{selectedStudent.displayName || 'Utilisateur'}</strong>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>E-mail</span>
+                          <span style={{ color: '#38bdf8' }}>{selectedStudent.email}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Téléphone</span>
+                          <span style={{ color: '#cbd5e1' }}>{selectedStudent.phone || 'Non renseigné'}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Localisation</span>
+                          <span style={{ color: '#cbd5e1' }}>{[selectedStudent.city, selectedStudent.country || selectedStudent.residence].filter(Boolean).join(', ') || 'Non renseignée'}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Institution / Faculté</span>
-                      <span style={{ color: '#cbd5e1' }}>{selectedStudent.institution || 'Non renseignée'}</span>
-                    </div>
-                  </div>
-                </div>
 
-                <div style={{ background: 'rgba(13,148,136,0.06)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(13,148,136,0.2)' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#2dd4bf', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>💳 Abonnement & Règlement</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Active</span>
-                      <span style={{ fontWeight: 800, color: selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
-                        Formule {selectedStudent.subscription?.tier || 'DÉCOUVERTE'}
-                      </span>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🎓 Profil Professionnel & Institution</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Profession / Rôle</span>
+                          <span style={{ color: '#cbd5e1' }}>{selectedStudent.profession || selectedStudent.userType || selectedStudent.role || 'Étudiant'}</span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Institution / Faculté</span>
+                          <span style={{ color: '#cbd5e1' }}>{selectedStudent.institution || 'Non renseignée'}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Statut du Compte</span>
-                      <span style={{ color: selectedStudent.status === 'suspended' ? '#f87171' : '#34d399', fontWeight: 600 }}>
-                        {selectedStudent.status === 'suspended' ? '🔴 Suspendu' : '🟢 Actif'}
-                      </span>
+
+                    <div style={{ background: 'rgba(13,148,136,0.06)', borderRadius: '10px', padding: '14px', border: '1px solid rgba(13,148,136,0.2)' }}>
+                      <div style={{ fontSize: '0.78rem', color: '#2dd4bf', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>💳 Abonnement & Règlement</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Active</span>
+                          <span style={{ fontWeight: 800, color: selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
+                            Formule {selectedStudent.subscription?.tier || 'DÉCOUVERTE'}
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Statut du Compte</span>
+                          <span style={{ color: selectedStudent.status === 'suspended' ? '#f87171' : '#34d399', fontWeight: 600 }}>
+                            {selectedStudent.status === 'suspended' ? '🔴 Suspendu' : '🟢 Actif'}
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Date d'Échéance</span>
+                          <span style={{ color: '#cbd5e1' }}>
+                            {selectedStudent.subscription?.validUntil ? new Date(selectedStudent.subscription.validUntil).toLocaleDateString('fr-FR') : 'Illimité'}
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Référence / N° Reçu</span>
+                          <span style={{ color: '#cbd5e1', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                            {selectedStudent.subscription?.paymentReceiptRef || 'Validation Directe Admin'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+                  </>
+                ) : (
+                  <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '16px', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                     <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Date d'Échéance</span>
-                      <span style={{ color: '#cbd5e1' }}>
-                        {selectedStudent.subscription?.validUntil ? new Date(selectedStudent.subscription.validUntil).toLocaleDateString('fr-FR') : 'Illimité'}
-                      </span>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Téléphone</label>
+                      <input
+                        type="tel"
+                        value={editPhone}
+                        onChange={e => setEditPhone(e.target.value)}
+                        placeholder="Ex : +213 6 61 00 00 00"
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.85rem' }}
+                      />
                     </div>
+
                     <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Référence / N° Reçu</span>
-                      <span style={{ color: '#cbd5e1', fontSize: '0.8rem', fontFamily: 'monospace' }}>
-                        {selectedStudent.subscription?.paymentReceiptRef || 'Validation Directe Admin'}
-                      </span>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Profession / Qualité / Rôle</label>
+                      <input
+                        type="text"
+                        value={editProfession}
+                        onChange={e => setEditProfession(e.target.value)}
+                        placeholder="Ex : Médecin Généraliste, Resident, Enseignant..."
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Institution / Faculté / Établissement</label>
+                      <input
+                        type="text"
+                        value={editInstitution}
+                        onChange={e => setEditInstitution(e.target.value)}
+                        placeholder="Ex : CHU de Paris, Faculté de Médecine d'Alger..."
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Ville</label>
+                        <input
+                          type="text"
+                          value={editCity}
+                          onChange={e => setEditCity(e.target.value)}
+                          placeholder="Ex : Paris, Alger..."
+                          style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.85rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Pays</label>
+                        <input
+                          type="text"
+                          value={editCountry}
+                          onChange={e => setEditCountry(e.target.value)}
+                          placeholder="Ex : France, Algérie, Mali..."
+                          style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.85rem' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                      <button
+                        className="btn btn-primary"
+                        style={{ flex: 1, padding: '10px', fontSize: '0.85rem', fontWeight: 700 }}
+                        onClick={handleSaveProfile}
+                        disabled={isSavingProfile}
+                      >
+                        {isSavingProfile ? 'Enregistrement...' : 'Enregistrer la Fiche Profil'}
+                      </button>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             ) : activeTab === 'protocols' ? (
               <div>
@@ -2461,6 +2664,62 @@ Votre superviseur`;
                   onChange={e => setStudentEmail(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
                 />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Numéro de téléphone</label>
+                <input
+                  type="tel"
+                  placeholder="Ex : +213 6 61 00 00 00"
+                  value={studentPhone}
+                  onChange={e => setStudentPhone(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Profession / Rôle / Année</label>
+                <input
+                  type="text"
+                  placeholder="Ex : Étudiant 5ème année Médecine, Resident, Doctorant..."
+                  value={studentProfession}
+                  onChange={e => setStudentProfession(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Institution / Faculté / Établissement</label>
+                <input
+                  type="text"
+                  placeholder="Ex : Faculté de Médecine d'Alger, CHU Mustapha..."
+                  value={studentInstitution}
+                  onChange={e => setStudentInstitution(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Ville</label>
+                  <input
+                    type="text"
+                    placeholder="Ex : Alger"
+                    value={studentCity}
+                    onChange={e => setStudentCity(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Pays</label>
+                  <input
+                    type="text"
+                    placeholder="Ex : Algérie, Mali, France..."
+                    value={studentCountry}
+                    onChange={e => setStudentCountry(e.target.value)}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                  />
+                </div>
               </div>
 
               {addStudentError && (
