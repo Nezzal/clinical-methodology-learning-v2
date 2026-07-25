@@ -161,12 +161,22 @@ export default function Login() {
         })
       });
       
+      const data = await res.json();
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Impossible de soumettre la demande d'accès.");
+        throw new Error(data.error || "Impossible de soumettre la demande d'accès.");
       }
 
-      setSuccessMsg('Votre demande a été enregistrée ! Consultez votre boîte e-mail pour recevoir les conditions d\'abonnement et les modalités de paiement.');
+      if (data.credentials) {
+        setEmail(data.credentials.email);
+        setPassword(data.credentials.tempPassword);
+        setSuccessMsg(`🟢 Votre accès Test Découverte (3 jours) est activé !\n\n🔑 Vos identifiants d'accès :\n• E-mail : ${data.credentials.email}\n• Mot de passe : ${data.credentials.tempPassword}\n\nUn e-mail de confirmation vous a également été envoyé.`);
+      } else if (requestedTier === 'découverte') {
+        setEmail(requestEmail.trim());
+        setSuccessMsg(`🟢 Votre accès Test Découverte (3 jours) est actif !\nVous pouvez vous connecter directement avec votre e-mail ${requestEmail.trim()} et votre mot de passe habituel.`);
+      } else {
+        setSuccessMsg('Votre demande a été enregistrée ! Consultez votre boîte e-mail pour recevoir les conditions d\'abonnement et les instructions BaridiMob.');
+      }
+
       setRequestFirstName('');
       setRequestLastName('');
       setRequestInstitution('');
@@ -178,8 +188,7 @@ export default function Login() {
       setRequestOtherText('');
       setTimeout(() => {
         setIsRequestAccess(false);
-        setSuccessMsg('');
-      }, 8000);
+      }, 12000);
     } catch (error: any) {
       console.warn("Erreur soumission demande d'accès:", error.message);
       setErrorMsg(error.message || 'Impossible de soumettre la demande. Veuillez réessayer.');

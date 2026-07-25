@@ -98,8 +98,58 @@ export async function POST(req: Request) {
     const cleanRole = requestedRole === 'teacher' ? 'teacher' : 'student';
     const cleanTier = (['découverte', 'pro', 'ultra', 'institution'].includes(requestedTier)) ? requestedTier : 'découverte';
 
-    // 3. Insérer la demande dans Firestore
+    // 3. Insérer la demande dans Firestore et créer le compte automatique si Découverte
     const isFreeTest = cleanTier === 'découverte';
+    let tempPassword = '';
+    let isNewAccountCreated = false;
+
+    if (isFreeTest) {
+      try {
+        let userRecord;
+        try {
+          userRecord = await adminAuth.getUserByEmail(cleanEmail);
+        } catch (authErr: any) {
+          if (authErr.code === 'auth/user-not-found') {
+            // Générer un mot de passe temporaire à 6 caractères lisibles
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            tempPassword = "Test3j-";
+            for (let i = 0; i < 4; i++) {
+              tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            userRecord = await adminAuth.createUser({
+              email: cleanEmail,
+              password: tempPassword,
+              displayName: `${firstName.trim()} ${lastName.trim()}`,
+              emailVerified: true
+            });
+            await adminAuth.setCustomUserClaims(userRecord.uid, { role: cleanRole });
+            isNewAccountCreated = true;
+          } else {
+            throw authErr;
+          }
+        }
+
+        // Créer/mettre à jour le document utilisateur dans Firestore
+        const expiresAtDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        await adminDb.collection('users').doc(userRecord.uid).set({
+          uid: userRecord.uid,
+          email: cleanEmail,
+          displayName: `${firstName.trim()} ${lastName.trim()}`,
+          role: cleanRole,
+          subscription: {
+            tier: 'découverte',
+            status: 'active',
+            startDate: admin.firestore.FieldValue.serverTimestamp(),
+            expiresAt: admin.firestore.Timestamp.fromDate(expiresAtDate)
+          },
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+      } catch (authCreateErr) {
+        console.error("Erreur création automatique compte Découverte:", authCreateErr);
+      }
+    }
 
     const requestData = {
       firstName: firstName.trim(),
@@ -205,9 +255,22 @@ export async function POST(req: Request) {
                   🟢 Conditions de l'Offre Test Découverte (3 Jours)
                 </h3>
                 
-                <p style="margin: 0 0 12px 0; color: #334155; font-size: 0.9rem; line-height: 1.5;">
-                  Votre demande d'accès test gratuit de <strong>3 jours (72 heures)</strong> est enregistrée. Vos identifiants vous permettent de découvrir gratuitement les fonctionnalités majeures de la plateforme.
+                <p style="margin: 0 0 14px 0; color: #334155; font-size: 0.9rem; line-height: 1.5;">
+                  Votre demande d'accès test gratuit de <strong>3 jours (72 heures)</strong> est enregistrée et validée automatiquement.
                 </p>
+
+                <!-- Encadré des Identifiants d'Accès -->
+                <div style="background: #ffffff; border: 2px solid #10b981; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; text-align: left;">
+                  <div style="font-size: 0.88rem; color: #047857; font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">
+                    🔑 Vos Identifiants d'Accès Instantané
+                  </div>
+                  <div style="margin: 4px 0; font-size: 0.9rem; color: #1e293b;">
+                    <strong>E-mail :</strong> <code style="background: #f1f5f9; padding: 3px 8px; border-radius: 4px; color: #0f766e; font-size: 0.95rem; font-weight: 600;">${cleanEmail}</code>
+                  </div>
+                  <div style="margin: 6px 0; font-size: 0.9rem; color: #1e293b;">
+                    <strong>Mot de passe :</strong> <code style="background: #e6fffa; border: 1px solid #0d9488; padding: 4px 10px; border-radius: 4px; color: #0f766e; font-size: 0.98rem; font-weight: bold;">${isNewAccountCreated ? tempPassword : '(Utilisez votre mot de passe habituel)'}</code>
+                  </div>
+                </div>
 
                 <!-- Encadré d'expiration -->
                 <div style="background: #ffffff; border: 2px solid #0d9488; border-radius: 8px; padding: 14px; margin-bottom: 14px; text-align: center;">
@@ -311,7 +374,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Votre demande d'accès a été enregistrée. Un courrier de confirmation vous a été envoyé par e-mail."
+      message: isFreeTest 
+        ? "Votre accès Découverte (3 jours) est activé ! Vos identifiants ont été envoyés par e-mail." 
+        : "Demande enregistrée.",
+      credentials: isFreeTest && isNewAccountCreated ? { email: cleanEmail, tempPassword } : null
     });
   } catch (error: any) {
     console.error("Erreur lors de la soumission de la demande d'accès:", error);
