@@ -79,7 +79,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <div className={styles.zoneCardTitle}>Afrique (Hors Algérie)</div>
                   <div className={styles.zoneCardSubtitle}>Euros (€) & Francs CFA (FCFA)</div>
                   <div className={styles.zoneCardDesc}>
-                    Tarifs préférentiels Zone Afrique Subsaharienne et Maghreb. Règlement par Mobile Money (Wave, Orange, MTN, Moov), PayPal, Western Union & Virement.
+                    Tarifs préférentiels Zone Afrique Subsaharienne et Maghreb. Règlement par PayPal, Western Union & Carte bancaire.
                   </div>
                   <button className={styles.zoneCardBtn} style={{ background: 'linear-gradient(135deg, #0d9488 0%, #059669 100%)' }}>
                     Sélectionner la Zone Afrique ➔
@@ -369,7 +369,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <span>Instructions Virement Zone Afrique (Hors Algérie)</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour l'Afrique francophone (Côte d'Ivoire, Sénégal, Cameroun, Mali, Gabon...), réglez par Virement bancaire, Wave, Orange Money, PayPal, Western Union ou carte.
+                Pour l'Afrique francophone (Côte d'Ivoire, Sénégal, Cameroun, Mali, Gabon...), réglez par PayPal, Western Union ou carte bancaire.
               </p>
               <div className={styles.ripDetails}>
                 <div>
@@ -378,7 +378,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 </div>
                 <div>
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Options de règlement :</span>
-                  <strong>Virement bancaire / Mobile Money / PayPal / Western Union</strong>
+                  <strong>PayPal / Western Union / Carte bancaire</strong>
                 </div>
               </div>
               <p style={{ fontSize: '0.78rem', color: '#2dd4bf', margin: 0, fontStyle: 'italic' }}>
