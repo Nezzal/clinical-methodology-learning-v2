@@ -1249,21 +1249,37 @@ Votre superviseur`;
                                   )}
                                 </div>
                                 <span className={styles.studentEmail}>{student.email}</span>
-                                <div style={{ marginTop: '2px' }}>
-                                  <span style={{ 
-                                    display: 'inline-block', 
-                                    background: student.subscription?.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription?.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription?.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                    border: student.subscription?.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription?.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription?.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                                    padding: '1px 6px', 
-                                    borderRadius: '4px', 
-                                    fontSize: '0.68rem',
-                                    fontWeight: 'bold',
-                                    color: student.subscription?.tier === 'ultra' ? '#fbbf24' : student.subscription?.tier === 'institution' ? '#c084fc' : student.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
-                                    textTransform: 'uppercase'
-                                  }}>
-                                    Formule : {student.subscription?.tier ? student.subscription.tier.toUpperCase() : 'DÉCOUVERTE'}
-                                  </span>
-                                </div>
+                                {student.subscription?.tier ? (
+                                   <div style={{ marginTop: '2px' }}>
+                                     <span style={{ 
+                                       display: 'inline-block', 
+                                       background: student.subscription.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                       border: student.subscription.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                       padding: '1px 6px', 
+                                       borderRadius: '4px', 
+                                       fontSize: '0.68rem',
+                                       fontWeight: 'bold',
+                                       color: student.subscription.tier === 'ultra' ? '#fbbf24' : student.subscription.tier === 'institution' ? '#c084fc' : student.subscription.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
+                                       textTransform: 'uppercase'
+                                     }}>
+                                       Formule : {student.subscription.tier.toUpperCase()}
+                                     </span>
+                                   </div>
+                                 ) : (
+                                   <div style={{ marginTop: '2px' }}>
+                                     <span style={{ 
+                                       display: 'inline-block', 
+                                       background: 'rgba(255, 255, 255, 0.05)', 
+                                       border: '1px solid rgba(255, 255, 255, 0.1)',
+                                       padding: '1px 6px', 
+                                       borderRadius: '4px', 
+                                       fontSize: '0.68rem',
+                                       color: '#94a3b8'
+                                     }}>
+                                       Compte Standard
+                                     </span>
+                                   </div>
+                                 )}
                                 <span className={styles.lastActiveTime}>{lastActiveStr}</span>
                               </div>
                             </td>
