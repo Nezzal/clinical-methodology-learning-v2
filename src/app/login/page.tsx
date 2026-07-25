@@ -17,7 +17,7 @@ export default function Login() {
   const [requestedRole, setRequestedRole] = useState<'student' | 'teacher'>('student');
   const [requestedTier, setRequestedTier] = useState<string>('découverte');
 
-  const handleSelectPlanFromModal = (tier: 'découverte' | 'pro' | 'ultra' | 'institution', role: 'student' | 'teacher') => {
+  const handleSelectPlanFromModal = (tier: 'découverte' | 'pro' | 'expert' | 'ultra' | 'institution', role: 'student' | 'teacher') => {
     setRequestedRole(role);
     setRequestedTier(tier);
     setIsRequestAccess(true);

@@ -1308,13 +1308,13 @@ Votre superviseur`;
                                    <div style={{ marginTop: '2px' }}>
                                      <span style={{ 
                                        display: 'inline-block', 
-                                       background: student.subscription.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                       border: student.subscription.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                       background: student.subscription.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription.tier === 'expert' ? 'rgba(168, 85, 247, 0.15)' : student.subscription.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                       border: student.subscription.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription.tier === 'expert' ? '1px solid rgba(168, 85, 247, 0.3)' : student.subscription.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
                                        padding: '1px 6px', 
                                        borderRadius: '4px', 
                                        fontSize: '0.68rem',
                                        fontWeight: 'bold',
-                                       color: student.subscription.tier === 'ultra' ? '#fbbf24' : student.subscription.tier === 'institution' ? '#c084fc' : student.subscription.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
+                                       color: student.subscription.tier === 'ultra' ? '#fbbf24' : student.subscription.tier === 'expert' ? '#c084fc' : student.subscription.tier === 'institution' ? '#c084fc' : student.subscription.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
                                        textTransform: 'uppercase'
                                      }}>
                                        Formule : {student.subscription.tier.toUpperCase()}

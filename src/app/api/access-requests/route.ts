@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     }
 
     const cleanRole = requestedRole === 'teacher' ? 'teacher' : 'student';
-    const cleanTier = (['découverte', 'pro', 'ultra', 'institution'].includes(requestedTier)) ? requestedTier : 'découverte';
+    const cleanTier = (['découverte', 'pro', 'expert', 'ultra', 'institution'].includes(requestedTier)) ? requestedTier : 'découverte';
 
     // 3. Insérer la demande dans Firestore et créer le compte automatique si Découverte
     const isFreeTest = cleanTier === 'découverte';

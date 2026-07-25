@@ -1,6 +1,6 @@
 import { FirestoreUser } from './firestore';
 
-export type SubscriptionTier = 'découverte' | 'pro' | 'ultra' | 'institution';
+export type SubscriptionTier = 'découverte' | 'pro' | 'expert' | 'ultra' | 'institution';
 
 export interface QuotaConfig {
   tier: SubscriptionTier;
@@ -18,6 +18,7 @@ export function getUserTier(profile: FirestoreUser | null | undefined): Subscrip
     return 'découverte';
   }
   const t = profile.subscription.tier.toLowerCase().trim();
+  if (t.includes('expert')) return 'expert';
   if (t.includes('pro')) return 'pro';
   if (t.includes('ultra')) return 'ultra';
   if (t.includes('institution')) return 'institution';
@@ -48,6 +49,7 @@ export function getQuotaConfig(tier: SubscriptionTier): QuotaConfig {
         watermark: true,
         watermarkText: 'FORMULE PRO — METHODO&CLINIQUE'
       };
+    case 'expert':
     case 'ultra':
     case 'institution':
       return {

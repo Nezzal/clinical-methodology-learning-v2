@@ -1,6 +1,6 @@
 export type UserType = 'student' | 'resident' | 'doctorate' | 'teacher' | 'institution';
 
-export type SubscriptionTier = 'découverte' | 'pro' | 'ultra' | 'institution';
+export type SubscriptionTier = 'découverte' | 'pro' | 'expert' | 'ultra' | 'institution';
 
 export type SubscriptionDuration = '1m' | '3m' | '6m' | '12m';
 
@@ -55,8 +55,19 @@ export const TIER_LIMITS: Record<SubscriptionTier, PlanLimits> = {
     monthlyStrobe: 5,
     monthlySyntheses: 20,
     monthlyReports: 5,
-    allowWatermarkFreePdf: true,
+    allowWatermarkFreePdf: false,
     allowNsnCalculator: true, // ILLIMITÉ
+    allowSupervisionSpace: false,
+    allowInternalMessaging: false,
+  },
+  expert: {
+    dailyQuestions: -1,
+    monthlyProtocols: -1,
+    monthlyStrobe: -1,
+    monthlySyntheses: -1,
+    monthlyReports: -1,
+    allowWatermarkFreePdf: true,
+    allowNsnCalculator: true,
     allowSupervisionSpace: false,
     allowInternalMessaging: false,
   },

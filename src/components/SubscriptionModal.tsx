@@ -6,7 +6,7 @@ import styles from './SubscriptionModal.module.css';
 interface SubscriptionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectPlan?: (tier: 'découverte' | 'pro' | 'ultra' | 'institution', role: 'student' | 'teacher') => void;
+  onSelectPlan?: (tier: 'découverte' | 'pro' | 'expert' | 'ultra' | 'institution', role: 'student' | 'teacher') => void;
 }
 
 export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
@@ -196,8 +196,8 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <li><span>✓</span> <strong>100 Q / jour IA</strong></li>
                 <li><span>✓</span> <strong>Calculateur NSN ILLIMITÉ</strong></li>
                 <li><span>✓</span> Quiz & Flashcards illimités</li>
-                <li><span>✓</span> 5 protocoles/mois (sans filigrane)</li>
-                <li><span>✓</span> 5 articles STROBE/mois (sans filigrane)</li>
+                <li><span>✓</span> 5 protocoles/mois (avec filigrane)</li>
+                <li><span>✓</span> 5 articles STROBE/mois (avec filigrane)</li>
                 <li><span>✓</span> 20 synthèses PubMed/mois</li>
                 <li><span>✓</span> 5 bilans pédagogiques/mois</li>
               </ul>
@@ -214,11 +214,52 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               </button>
             </div>
 
-            {/* 3. ULTRA */}
+            {/* 3. EXPERT (Individuel Illimité & PDF Propres) */}
+            <div className={styles.planCard} style={{ borderColor: '#a855f7' }}>
+              <span className={styles.popularBadge} style={{ background: 'linear-gradient(135deg, #9333ea, #c084fc)' }}>Illimité Solo</span>
+              <div className={styles.planHeader}>
+                <div className={styles.planName} style={{ color: '#c084fc' }}>⚡ EXPERT</div>
+                <div className={styles.planSubtitle}>Chercheur & Praticien Solo</div>
+                <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#e9d5ff', margin: '4px 0' }}>
+                  {residence === 'dz' ? (
+                    '3 500 DZD / mois'
+                  ) : residence === 'africa' ? (
+                    '34 € / mois (~22 300 FCFA)'
+                  ) : (
+                    '69 € / mois'
+                  )}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#a7f3d0', fontWeight: 600 }}>
+                  Abonnement mensuel renouvelable
+                </div>
+                <span className={styles.planBadgeBonus}>🎁 + 10 jours offerts sur virement</span>
+              </div>
+              <ul className={styles.featureList}>
+                <li><span>⚡</span> <strong>Protocoles & Articles 100% ILLIMITÉS</strong></li>
+                <li><span>⚡</span> <strong>Synthèses PubMed & Tuteur IA ILLIMITÉS</strong></li>
+                <li><span>⚡</span> <strong>Exports PDF HD propres SANS FILIGRANE</strong></li>
+                <li><span>✓</span> Calculateur NSN, Quiz & Flashcards illimités</li>
+                <li><span>✓</span> Support prioritaire chercheurs</li>
+                <li style={{ color: '#94a3b8', fontSize: '0.78rem', fontStyle: 'italic' }}>(Sans espace supervision d'étudiants)</li>
+              </ul>
+              <button className={styles.actionBtn} style={{ background: 'linear-gradient(135deg, #9333ea, #7e22ce)' }} onClick={() => {
+                if (onSelectPlan) {
+                  onSelectPlan('expert', 'student');
+                  onClose();
+                } else {
+                  const ripElement = document.getElementById('rip-section');
+                  if (ripElement) ripElement.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}>
+                Demander l'Offre EXPERT
+              </button>
+            </div>
+
+            {/* 4. ULTRA ENSEIGNANT */}
             <div className={styles.planCard}>
               <div className={styles.planHeader}>
                 <div className={styles.planName} style={{ color: '#fbbf24' }}>👑 ULTRA</div>
-                <div className={styles.planSubtitle}>Enseignants & Encadreurs</div>
+                <div className={styles.planSubtitle}>Enseignants & Encadreurs (Supervision)</div>
                 <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fbbf24', margin: '6px 0', lineHeight: '1.3' }}>
                   {residence === 'dz' ? (
                     <>
