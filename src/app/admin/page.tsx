@@ -254,7 +254,7 @@ export default function AdminDashboard() {
   const handleRenewalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!renewalTxId.trim()) {
-      alert("Veuillez saisir le numéro de reçu ou référence du virement BaridiMob.");
+      alert("Veuillez saisir le numéro de reçu ou référence du règlement.");
       return;
     }
 
@@ -262,10 +262,17 @@ export default function AdminDashboard() {
     try {
       if (!user) throw new Error("Session expirée");
 
+      const userCountry = profile?.country || profile?.residence || '';
+      const isDzUser = (!userCountry || userCountry.toLowerCase().includes('algér') || userCountry.toLowerCase().includes('dz') || userCountry.toLowerCase().includes('algerie'));
+      const isAfricaUser = !isDzUser && (userCountry.toLowerCase().includes('mali') || userCountry.toLowerCase().includes('sénégal') || userCountry.toLowerCase().includes('senegal') || userCountry.toLowerCase().includes('afrique') || userCountry.toLowerCase().includes('africa') || userCountry.toLowerCase().includes('côte d\'ivoire') || userCountry.toLowerCase().includes('cameroun') || userCountry.toLowerCase().includes('gabon') || userCountry.toLowerCase().includes('togo') || userCountry.toLowerCase().includes('bénin'));
+
+      const perStudentPrice = isDzUser ? 1000 : isAfricaUser ? 17 : 45;
+      const baseTeacherPrice = isDzUser ? 2500 : isAfricaUser ? 20 : 59;
+      const currencyUnit = isDzUser ? 'DZD' : '€';
+      const paymentMethodLabel = isDzUser ? 'BaridiMob' : 'PayPal / Western Union';
+
       const studentCount = visibleStudents.length || 1;
-      const basePrice = 2500;
-      const studentPrice = studentCount * 1000;
-      const totalPrice = basePrice + studentPrice;
+      const totalPrice = baseTeacherPrice + (studentCount * perStudentPrice);
 
       await sendSupportMessage(
         user.uid,
@@ -274,12 +281,13 @@ export default function AdminDashboard() {
         'teacher',
         'admin',
         undefined,
-        `🔄 Demande de Renouvellement Abonnement ULTRA (${totalPrice} DZD)`,
+        `🔄 Demande de Renouvellement Abonnement ULTRA (${totalPrice} ${currencyUnit})`,
         `Bonjour, je demande le renouvellement de mon abonnement ULTRA Enseignant.\n\n` +
         `• Nom Enseignant : ${profile?.displayName || user.email}\n` +
+        `• Pays / Zone : ${userCountry || (isDzUser ? 'Algérie' : 'International')}\n` +
         `• Nombre d'étudiants sous ma responsabilité : ${studentCount}\n` +
-        `• Montant total réglé via BaridiMob : ${totalPrice} DZD\n` +
-        `• Référence / N° de transaction BaridiMob : ${renewalTxId.trim()}\n` +
+        `• Montant total réglé (${paymentMethodLabel}) : ${totalPrice} ${currencyUnit}\n` +
+        `• Référence / N° de transaction : ${renewalTxId.trim()}\n` +
         (renewalMessage.trim() ? `• Message additionnel : ${renewalMessage.trim()}` : '')
       );
 
@@ -300,14 +308,23 @@ export default function AdminDashboard() {
   const handleExtensionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!extensionTxId.trim()) {
-      alert("Veuillez saisir la référence ou numéro de transaction BaridiMob.");
+      alert("Veuillez saisir la référence ou numéro de transaction.");
       return;
     }
 
     setIsSubmittingExtension(true);
     try {
       if (!user) throw new Error("Session expirée");
-      const addedPrice = extensionCount * 1000;
+
+      const userCountry = profile?.country || profile?.residence || '';
+      const isDzUser = (!userCountry || userCountry.toLowerCase().includes('algér') || userCountry.toLowerCase().includes('dz') || userCountry.toLowerCase().includes('algerie'));
+      const isAfricaUser = !isDzUser && (userCountry.toLowerCase().includes('mali') || userCountry.toLowerCase().includes('sénégal') || userCountry.toLowerCase().includes('senegal') || userCountry.toLowerCase().includes('afrique') || userCountry.toLowerCase().includes('africa') || userCountry.toLowerCase().includes('côte d\'ivoire') || userCountry.toLowerCase().includes('cameroun') || userCountry.toLowerCase().includes('gabon') || userCountry.toLowerCase().includes('togo') || userCountry.toLowerCase().includes('bénin'));
+
+      const perStudentPrice = isDzUser ? 1000 : isAfricaUser ? 17 : 45;
+      const currencyUnit = isDzUser ? 'DZD' : '€';
+      const paymentMethodLabel = isDzUser ? 'BaridiMob' : 'PayPal / Western Union';
+
+      const addedPrice = extensionCount * perStudentPrice;
 
       await sendSupportMessage(
         user.uid,
@@ -316,11 +333,12 @@ export default function AdminDashboard() {
         'teacher',
         'admin',
         undefined,
-        `➕ Extension de Quota Étudiants (+${extensionCount} étudiant(s) - ${addedPrice} DZD)`,
+        `➕ Extension de Quota Étudiants (+${extensionCount} étudiant(s) - ${addedPrice} ${currencyUnit})`,
         `Bonjour, je demande une extension de ma capacité d'encadrement étudiants.\n\n` +
         `• Enseignant : ${profile?.displayName || user.email}\n` +
+        `• Pays / Zone : ${userCountry || (isDzUser ? 'Algérie' : 'International')}\n` +
         `• Nombre d'étudiants supplémentaires demandés : +${extensionCount}\n` +
-        `• Montant BaridiMob réglé : ${addedPrice} DZD\n` +
+        `• Montant réglé (${paymentMethodLabel}) : ${addedPrice} ${currencyUnit}\n` +
         `• Référence / N° de transaction : ${extensionTxId.trim()}`
       );
 
@@ -2410,62 +2428,91 @@ Votre superviseur`;
                 <p style={{ fontSize: '0.88rem', color: '#cbd5e1' }}>L'administrateur a été notifié et validera la prolongation de votre compte et de vos étudiants sous 24h.</p>
               </div>
             ) : (
-              <form onSubmit={handleRenewalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ background: 'rgba(2, 132, 199, 0.12)', border: '1px solid rgba(2, 132, 199, 0.3)', padding: '12px 14px', borderRadius: '10px', fontSize: '0.88rem', color: '#e0f2fe' }}>
-                  <div style={{ fontWeight: 700, marginBottom: '4px' }}>📊 Détail du Montant Mensuel à Régler :</div>
-                  <div>• Formule de Base Enseignant : <strong>2 500 DZD</strong></div>
-                  <div>• Étudiants sous responsabilité : <strong>{visibleStudents.length || 1} × 1 000 DZD = {(visibleStudents.length || 1) * 1000} DZD</strong></div>
-                  <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed rgba(2, 132, 199, 0.3)', fontSize: '1rem', fontWeight: 800, color: '#38bdf8' }}>
-                    Total à régler : {2500 + ((visibleStudents.length || 1) * 1000)} DZD / mois
-                  </div>
-                </div>
+              (() => {
+                const uC = profile?.country || profile?.residence || '';
+                const isDz = (!uC || uC.toLowerCase().includes('algér') || uC.toLowerCase().includes('dz') || uC.toLowerCase().includes('algerie'));
+                const isAf = !isDz && (uC.toLowerCase().includes('mali') || uC.toLowerCase().includes('sénégal') || uC.toLowerCase().includes('senegal') || uC.toLowerCase().includes('afrique') || uC.toLowerCase().includes('africa') || uC.toLowerCase().includes('côte d\'ivoire') || uC.toLowerCase().includes('cameroun') || uC.toLowerCase().includes('gabon') || uC.toLowerCase().includes('togo') || uC.toLowerCase().includes('bénin'));
+                const perStudent = isDz ? 1000 : isAf ? 17 : 45;
+                const baseTeacher = isDz ? 2500 : isAf ? 20 : 59;
+                const curr = isDz ? 'DZD' : '€';
+                const studentCount = visibleStudents.length || 1;
+                const total = baseTeacher + (studentCount * perStudent);
 
-                <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '2px' }}>Compte BaridiMob Officiel :</div>
-                  <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#34d399', fontFamily: 'monospace' }}>RIP : 00799999000041210947</div>
-                  <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Titulaire : Professeur Nezzal Abdelmalek</div>
-                </div>
+                return (
+                  <form onSubmit={handleRenewalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ background: 'rgba(2, 132, 199, 0.12)', border: '1px solid rgba(2, 132, 199, 0.3)', padding: '12px 14px', borderRadius: '10px', fontSize: '0.88rem', color: '#e0f2fe' }}>
+                      <div style={{ fontWeight: 700, marginBottom: '4px' }}>📊 Détail du Montant Mensuel à Régler :</div>
+                      <div>• Formule de Base Enseignant : <strong>{baseTeacher} {curr}</strong></div>
+                      <div>• Étudiants sous responsabilité : <strong>{studentCount} × {perStudent} {curr} = {studentCount * perStudent} {curr}</strong></div>
+                      <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px dashed rgba(2, 132, 199, 0.3)', fontSize: '1rem', fontWeight: 800, color: '#38bdf8' }}>
+                        Total à régler : {total} {curr} / mois
+                      </div>
+                    </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>N° de transaction ou reçu BaridiMob *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex : N° Reçu 987654321..."
-                    value={renewalTxId}
-                    onChange={e => setRenewalTxId(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
-                  />
-                </div>
+                    <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      {isDz ? (
+                        <>
+                          <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '2px' }}>Compte BaridiMob Officiel :</div>
+                          <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#34d399', fontFamily: 'monospace' }}>RIP : 00799999000041210947</div>
+                          <div style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>Titulaire : Professeur Nezzal Abdelmalek</div>
+                        </>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: '0.78rem', color: '#38bdf8', marginBottom: '4px', fontWeight: 700 }}>Instructions de Paiement International :</div>
+                          <div style={{ fontSize: '0.84rem', color: '#cbd5e1', marginBottom: '4px' }}>
+                            <strong>💳 Compte PayPal :</strong> <span style={{ fontFamily: 'monospace', color: '#38bdf8' }}>nezzal.abdelmalek@gmail.com</span>
+                          </div>
+                          <div style={{ fontSize: '0.84rem', color: '#cbd5e1' }}>
+                            <strong>💸 Western Union :</strong> Bénéficiaire: Nezzal Hanane Hayette (Quebec Brossard, Canada)
+                          </div>
+                        </>
+                      )}
+                    </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Message facultatif</label>
-                  <textarea
-                    rows={2}
-                    placeholder="Ajouter une remarque pour l'administrateur..."
-                    value={renewalMessage}
-                    onChange={e => setRenewalMessage(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
-                  />
-                </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>
+                        {isDz ? "N° de transaction ou reçu BaridiMob *" : "Référence PayPal ou MTCN Western Union *"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={isDz ? "Ex : N° Reçu 987654321..." : "Ex : Réf PayPal / MTCN Western Union..."}
+                        value={renewalTxId}
+                        onChange={e => setRenewalTxId(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                      />
+                    </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingRenewal}
-                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
-                  >
-                    {isSubmittingRenewal ? 'Transmission...' : 'Envoyer la preuve de paiement'}
-                  </button>
-                  <button
-                    type="button"
-                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
-                    onClick={() => setShowRenewalModal(false)}
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </form>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Message facultatif</label>
+                      <textarea
+                        rows={2}
+                        placeholder="Ajouter une remarque pour l'administrateur..."
+                        value={renewalMessage}
+                        onChange={e => setRenewalMessage(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                      <button
+                        type="submit"
+                        disabled={isSubmittingRenewal}
+                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: 'white', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {isSubmittingRenewal ? 'Transmission...' : 'Envoyer la preuve de paiement'}
+                      </button>
+                      <button
+                        type="button"
+                        style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
+                        onClick={() => setShowRenewalModal(false)}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </form>
+                );
+              })()
             )}
           </div>
         </div>
@@ -2489,54 +2536,70 @@ Votre superviseur`;
                 <p style={{ fontSize: '0.88rem', color: '#cbd5e1' }}>L'administrateur ajustera votre capacité d'encadrement dès confirmation du virement.</p>
               </div>
             ) : (
-              <form onSubmit={handleExtensionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Nombre d'étudiants supplémentaires</label>
-                  <select
-                    value={extensionCount}
-                    onChange={e => setExtensionCount(Number(e.target.value))}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
-                  >
-                    <option value={1}>+ 1 Étudiant (+1 000 DZD/mois)</option>
-                    <option value={2}>+ 2 Étudiants (+2 000 DZD/mois)</option>
-                    <option value={3}>+ 3 Étudiants (+3 000 DZD/mois)</option>
-                    <option value={5}>+ 5 Étudiants (+5 000 DZD/mois)</option>
-                  </select>
-                </div>
+              (() => {
+                const uC = profile?.country || profile?.residence || '';
+                const isDz = (!uC || uC.toLowerCase().includes('algér') || uC.toLowerCase().includes('dz') || uC.toLowerCase().includes('algerie'));
+                const isAf = !isDz && (uC.toLowerCase().includes('mali') || uC.toLowerCase().includes('sénégal') || uC.toLowerCase().includes('senegal') || uC.toLowerCase().includes('afrique') || uC.toLowerCase().includes('africa') || uC.toLowerCase().includes('côte d\'ivoire') || uC.toLowerCase().includes('cameroun') || uC.toLowerCase().includes('gabon') || uC.toLowerCase().includes('togo') || uC.toLowerCase().includes('bénin'));
+                const perStudent = isDz ? 1000 : isAf ? 17 : 45;
+                const curr = isDz ? 'DZD' : '€';
 
-                <div style={{ background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.3)', padding: '12px', borderRadius: '8px', color: '#fcd34d', fontSize: '0.85rem' }}>
-                  Montant additionnel à régler sur BaridiMob (RIP 00799999000041210947) : <strong>{extensionCount * 1000} DZD / mois</strong>
-                </div>
+                return (
+                  <form onSubmit={handleExtensionSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>Nombre d'étudiants supplémentaires</label>
+                      <select
+                        value={extensionCount}
+                        onChange={e => setExtensionCount(Number(e.target.value))}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                      >
+                        <option value={1}>+ 1 Étudiant (+{1 * perStudent} {curr}/mois)</option>
+                        <option value={2}>+ 2 Étudiants (+{2 * perStudent} {curr}/mois)</option>
+                        <option value={3}>+ 3 Étudiants (+{3 * perStudent} {curr}/mois)</option>
+                        <option value={5}>+ 5 Étudiants (+{5 * perStudent} {curr}/mois)</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>N° de transaction BaridiMob *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex : Reçu virement N°..."
-                    value={extensionTxId}
-                    onChange={e => setExtensionTxId(e.target.value)}
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
-                  />
-                </div>
+                    <div style={{ background: isDz ? 'rgba(251, 191, 36, 0.1)' : 'rgba(2, 132, 199, 0.12)', border: isDz ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(2, 132, 199, 0.3)', padding: '12px', borderRadius: '8px', color: isDz ? '#fcd34d' : '#e0f2fe', fontSize: '0.85rem' }}>
+                      {isDz ? (
+                        <>Montant additionnel à régler sur BaridiMob (RIP 00799999000041210947) : <strong>{extensionCount * perStudent} DZD / mois</strong></>
+                      ) : (
+                        <>Montant additionnel à régler via PayPal (<code style={{ color: '#38bdf8' }}>nezzal.abdelmalek@gmail.com</code>) ou Western Union (Nezzal Hanane Hayette, Quebec Brossard Canada) : <strong>{extensionCount * perStudent} € / mois</strong></>
+                      )}
+                    </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  <button
-                    type="submit"
-                    disabled={isSubmittingExtension}
-                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#1e1b4b', fontWeight: 800, cursor: 'pointer' }}
-                  >
-                    {isSubmittingExtension ? 'Envoi...' : 'Demander l\'extension'}
-                  </button>
-                  <button
-                    type="button"
-                    style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
-                    onClick={() => setShowQuotaExtensionModal(false)}
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </form>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '4px', fontWeight: 600 }}>
+                        {isDz ? "N° de transaction BaridiMob *" : "Référence PayPal ou MTCN Western Union *"}
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={isDz ? "Ex : Reçu virement N°..." : "Ex : Réf PayPal / MTCN Western Union..."}
+                        value={extensionTxId}
+                        onChange={e => setExtensionTxId(e.target.value)}
+                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                      <button
+                        type="submit"
+                        disabled={isSubmittingExtension}
+                        style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #fbbf24, #d97706)', color: '#1e1b4b', fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        {isSubmittingExtension ? 'Envoi...' : 'Demander l\'extension'}
+                      </button>
+                      <button
+                        type="button"
+                        style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
+                        onClick={() => setShowQuotaExtensionModal(false)}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </form>
+                );
+              })()
             )}
           </div>
         </div>

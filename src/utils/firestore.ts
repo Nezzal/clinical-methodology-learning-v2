@@ -119,6 +119,8 @@ export interface FirestoreUser {
   subscription?: UserSubscription;
   assignedTeacherUid?: string;
   assignedTeacherName?: string;
+  country?: string;
+  residence?: string;
 }
 
 export interface FirestoreChat {
