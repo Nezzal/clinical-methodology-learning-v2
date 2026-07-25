@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getProgress, LocalStats } from '@/utils/storage';
 import { APP_VERSION_LABEL } from '@/utils/constants';
 import { useAuth } from '@/context/AuthContext';
+import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import styles from './page.module.css';
 
 // Simple table rendering helper for report
@@ -422,7 +423,7 @@ const INITIAL_SECTIONS: ReportSectionState[] = [
 ];
 
 export default function RapportPage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState<LocalStats | null>(null);
   const [sections, setSections] = useState<ReportSectionState[]>(INITIAL_SECTIONS);
   const [isAutoProgressing, setIsAutoProgressing] = useState(false);
@@ -534,6 +535,8 @@ export default function RapportPage() {
   const fullReportText = combinedReportMarkdown ? `# REPORTING PÉDAGOGIQUE ET BILAN DE SUIVI\n*Plateforme d'Apprentissage RECIF*\n\n` + combinedReportMarkdown : null;
 
   const handlePrint = () => {
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
     const paperEl = document.querySelector(`.${styles.reportPaper}`);
     if (!paperEl) {
       window.print();
@@ -585,6 +588,31 @@ export default function RapportPage() {
             border-bottom: 2px solid #005a70;
             padding-bottom: 0.5rem;
             margin-bottom: 1.5rem;
+          }
+
+          @media print, screen {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            ${quotaConfig.watermark ? `
+              body::before {
+                content: "${quotaConfig.watermarkText}";
+                position: fixed;
+                top: 40%;
+                left: -10%;
+                right: -10%;
+                text-align: center;
+                font-size: 2.2rem;
+                font-weight: 800;
+                color: rgba(220, 38, 38, 0.16);
+                transform: rotate(-30deg);
+                pointer-events: none;
+                z-index: 9999;
+                letter-spacing: 3px;
+                font-family: sans-serif;
+              }
+            ` : ''}
           }
 
           h1, h2, h3, h4, h5, h6 {

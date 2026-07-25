@@ -6,6 +6,9 @@ import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreChat, loadFirestoreChats, deleteFirestoreChat, syncUserProfile } from '@/utils/firestore';
 import { APP_VERSION, APP_VERSION_LABEL } from '@/utils/constants';
+import { getUserTier, getQuotaConfig } from '@/utils/quota';
+import { QuotaModal } from '@/components/QuotaModal';
+import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
 
 interface Message {
@@ -246,8 +249,10 @@ function parseMarkdownToHtml(md: string): string {
 }
 
 export default function Tuteur() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -574,6 +579,17 @@ export default function Tuteur() {
 
   const handleSend = async (textToSend: string, forceMode?: 'free' | 'protocol') => {
     if (!textToSend.trim() || loading) return;
+
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
+    const todayKey = `recif_tuteur_q_${new Date().toISOString().slice(0, 10)}`;
+    const questionsToday = parseInt(localStorage.getItem(todayKey) || '0', 10);
+
+    if (questionsToday >= quotaConfig.tuteurDailyMax) {
+      setShowQuotaModal(true);
+      return;
+    }
+    localStorage.setItem(todayKey, (questionsToday + 1).toString());
 
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
@@ -2401,6 +2417,20 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
           )}
         </div>
       </div>
+
+      <QuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+        featureName="Questions Tuteur IA"
+        currentTier={getUserTier(profile)}
+        maxLimit={getQuotaConfig(getUserTier(profile)).tuteurDailyMax}
+        onUpgradeClick={() => setShowSubscriptionModal(true)}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </div>
   );
 }

@@ -6,11 +6,16 @@ import Sidebar from '@/components/Sidebar';
 import MobileOverlay from '@/components/MobileOverlay';
 import { PubMedArticle } from '@/utils/pubmed';
 import { useAuth } from '@/context/AuthContext';
+import { getUserTier, getQuotaConfig } from '@/utils/quota';
+import { QuotaModal } from '@/components/QuotaModal';
+import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
 
 export default function BiblioPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   // Filtres de recherche
   const [query, setQuery] = useState('');
@@ -165,6 +170,15 @@ export default function BiblioPage() {
   const handleSynthesize = async () => {
     const selectedArticles = articles.filter(a => selectedPmids.includes(a.pmid));
     if (selectedArticles.length === 0) return;
+
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
+    const synthesesCount = parseInt(localStorage.getItem('recif_biblio_syntheses_count') || '0', 10);
+
+    if (synthesesCount >= quotaConfig.biblioMax) {
+      setShowQuotaModal(true);
+      return;
+    }
 
     setIsSynthesizing(true);
     setError(null);
@@ -617,6 +631,20 @@ export default function BiblioPage() {
           )}
         </div>
       </main>
+
+      <QuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+        featureName="Synthèses Bibliographiques PubMed"
+        currentTier={getUserTier(profile)}
+        maxLimit={getQuotaConfig(getUserTier(profile)).biblioMax}
+        onUpgradeClick={() => setShowSubscriptionModal(true)}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </div>
   );
 }

@@ -6,6 +6,9 @@ import { getProgress, updateProgress, LocalStats } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile, loadFirestoreChats, deleteFirestoreProtocol } from '@/utils/firestore';
 import { APP_VERSION_LABEL } from '@/utils/constants';
+import { getUserTier, getQuotaConfig } from '@/utils/quota';
+import { QuotaModal } from '@/components/QuotaModal';
+import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
 
 function renderProtocolHtmlTable(rows: string[]): string {
@@ -122,7 +125,7 @@ function formatProtocolMarkdown(text: string): string {
 }
 
 export default function ProtocoleGenerator() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState<'info' | 'methodo' | 'endpoints' | 'logistics' | 'finance'>('info');
   
   // Form State
@@ -173,6 +176,8 @@ export default function ProtocoleGenerator() {
   const [extracting, setExtracting] = useState(false);
   const [extractionSuccess, setExtractionSuccess] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   useEffect(() => {
     const fetchTutorChats = async () => {
@@ -427,6 +432,16 @@ export default function ProtocoleGenerator() {
       dataAnalysis
     };
 
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
+    const isExistingProtocol = !!activeProtocolId;
+
+    if (!isExistingProtocol && history.length >= quotaConfig.protocolsMax) {
+      setShowQuotaModal(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const headers: Record<string, string> = { 
         'Content-Type': 'application/json',
@@ -661,6 +676,8 @@ export default function ProtocoleGenerator() {
   };
 
   const handleExportPDF = () => {
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
     const textToExport = previewMode === 'protocol' ? generatedProtocol : generatedCrf;
     if (!textToExport) return;
 
@@ -854,11 +871,29 @@ export default function ProtocoleGenerator() {
             margin: 2rem 0;
           }
 
-          @media print {
+          @media print, screen {
             body {
               margin: 0;
               padding: 0;
             }
+            ${quotaConfig.watermark ? `
+              body::before {
+                content: "${quotaConfig.watermarkText}";
+                position: fixed;
+                top: 40%;
+                left: -10%;
+                right: -10%;
+                text-align: center;
+                font-size: 2.2rem;
+                font-weight: 800;
+                color: rgba(220, 38, 38, 0.16);
+                transform: rotate(-30deg);
+                pointer-events: none;
+                z-index: 9999;
+                letter-spacing: 3px;
+                font-family: 'Outfit', sans-serif;
+              }
+            ` : ''}
           }
         </style>
       </head>
@@ -881,6 +916,12 @@ export default function ProtocoleGenerator() {
         <div class="doc-body">
           ${formattedHtml}
         </div>
+
+        ${quotaConfig.watermark ? `
+          <div style="text-align:center; font-size:8.5pt; color:#ef4444; font-weight:700; border-top:1px dashed #fca5a5; padding-top:8px; margin-top:28px; font-family: sans-serif;">
+            ⚠️ ${quotaConfig.watermarkText} — Surclassez votre compte vers la Formule ULTRA pour exporter sans filigrane
+          </div>
+        ` : ''}
 
         <script>
           window.onload = function() {
@@ -1709,6 +1750,20 @@ export default function ProtocoleGenerator() {
           </section>
         )}
       </div>
+
+      <QuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+        featureName="Protocoles de Recherche Clinique"
+        currentTier={getUserTier(profile)}
+        maxLimit={getQuotaConfig(getUserTier(profile)).protocolsMax}
+        onUpgradeClick={() => setShowSubscriptionModal(true)}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin {

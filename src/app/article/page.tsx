@@ -6,6 +6,9 @@ import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreArticle, loadFirestoreArticles, syncUserProfile, deleteFirestoreArticle } from '@/utils/firestore';
 import { APP_NAME, APP_VERSION } from '@/utils/constants';
+import { getUserTier, getQuotaConfig } from '@/utils/quota';
+import { QuotaModal } from '@/components/QuotaModal';
+import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
 
 function renderMarkdown(text: string): string {
@@ -245,7 +248,21 @@ export default function ArticleGenerator() {
     }
   };
 
+  const { profile } = useAuth();
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+
   const handleGenerateArticle = async () => {
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
+    const isExistingArticle = !!activeArticleId;
+
+    if (!isExistingArticle && articles.length >= quotaConfig.articlesMax) {
+      setShowQuotaModal(true);
+      setGenerating(false);
+      return;
+    }
+
     setGenerating(true);
     setGeneratedArticle(null);
     try {
@@ -312,6 +329,8 @@ export default function ArticleGenerator() {
 
   const handleDownloadPdf = () => {
     if (!generatedArticle) return;
+    const userTier = getUserTier(profile);
+    const quotaConfig = getQuotaConfig(userTier);
     const htmlContent = renderMarkdown(generatedArticle);
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -380,10 +399,28 @@ export default function ArticleGenerator() {
               border-top: 1px solid #eee;
               padding-top: 1rem;
             }
-            @media print {
+            @media print, screen {
               body {
                 padding: 0;
               }
+              ${quotaConfig.watermark ? `
+                body::before {
+                  content: "${quotaConfig.watermarkText}";
+                  position: fixed;
+                  top: 40%;
+                  left: -10%;
+                  right: -10%;
+                  text-align: center;
+                  font-size: 2.2rem;
+                  font-weight: 800;
+                  color: rgba(220, 38, 38, 0.16);
+                  transform: rotate(-30deg);
+                  pointer-events: none;
+                  z-index: 9999;
+                  letter-spacing: 3px;
+                  font-family: sans-serif;
+                }
+              ` : ''}
             }
           </style>
         </head>
@@ -399,6 +436,11 @@ export default function ArticleGenerator() {
           <div class="footer">
             ${APP_NAME} v${APP_VERSION}
           </div>
+          ${quotaConfig.watermark ? `
+            <div style="text-align:center; font-size:8.5pt; color:#ef4444; font-weight:700; border-top:1px dashed #fca5a5; padding-top:8px; margin-top:28px; font-family: sans-serif;">
+              ⚠️ ${quotaConfig.watermarkText} — Surclassez votre compte vers la Formule ULTRA pour exporter sans filigrane
+            </div>
+          ` : ''}
           <script>
             window.onload = function() {
               window.print();
@@ -1013,6 +1055,20 @@ export default function ArticleGenerator() {
           </div>
         </section>
       )}
+
+      <QuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+        featureName="Articles Scientifiques STROBE"
+        currentTier={getUserTier(profile)}
+        maxLimit={getQuotaConfig(getUserTier(profile)).articlesMax}
+        onUpgradeClick={() => setShowSubscriptionModal(true)}
+      />
+
+      <SubscriptionModal
+        isOpen={showSubscriptionModal}
+        onClose={() => setShowSubscriptionModal(false)}
+      />
     </div>
   );
 }
