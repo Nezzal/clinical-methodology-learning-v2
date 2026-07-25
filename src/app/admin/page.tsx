@@ -290,13 +290,68 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteRequest = async (id: string, email: string) => {
-    if (!window.confirm(`Voulez-vous rejeter et supprimer la demande d'accès de ${email} ?`)) return;
+    if (!window.confirm(`Voulez-vous supprimer définitivement la demande d'accès de ${email} ?`)) return;
     setActionPending(true);
     try {
+      if (user) {
+        const docId = email.replace(/[^a-z0-9]/g, '_');
+        const idToken = await user.getIdToken(true);
+        await fetch('/api/access-requests/payment', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ docId })
+        });
+      }
       await deleteAccessRequest(id);
       setAccessRequests(prev => prev.filter(r => r.id !== id));
     } catch (e) {
       alert("Erreur lors de la suppression de la demande : " + (e as Error).message);
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleCleanOldRequests = async () => {
+    const oldOrRejected = accessRequests.filter(r => {
+      if (r.status === 'rejected') return true;
+      if (r.createdAt?.seconds) {
+        const ageInDays = (Date.now() - r.createdAt.seconds * 1000) / (1000 * 3600 * 24);
+        return ageInDays > 7;
+      }
+      return false;
+    });
+
+    if (oldOrRejected.length === 0) {
+      alert("Aucune ancienne demande (+7 jours ou rejetée) à nettoyer.");
+      return;
+    }
+
+    if (!window.confirm(`Voulez-vous supprimer définitivement ${oldOrRejected.length} demande(s) ancienne(s) ou rejetée(s) ?`)) return;
+
+    setActionPending(true);
+    try {
+      for (const req of oldOrRejected) {
+        if (user) {
+          const docId = req.email.replace(/[^a-z0-9]/g, '_');
+          const idToken = await user.getIdToken(true);
+          await fetch('/api/access-requests/payment', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ docId })
+          });
+        }
+        await deleteAccessRequest(req.id);
+      }
+      setAccessRequests(prev => prev.filter(r => !oldOrRejected.some(o => o.id === r.id)));
+      alert(`${oldOrRejected.length} demande(s) supprimée(s) avec succès !`);
+    } catch (e) {
+      alert("Erreur lors du nettoyage : " + (e as Error).message);
     } finally {
       setActionPending(false);
     }
@@ -1314,188 +1369,214 @@ Votre superviseur`;
             </>
           ) : leftTab === 'requests' ? (
             // Demandes d'accès
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Demandeur</th>
-                    <th>Profil</th>
-                    <th>Localisation</th>
-                    <th>Statut</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accessRequests.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                        {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande d\'accès en attente.'}
-                      </td>
-                    </tr>
-                  ) : (
-                    accessRequests.map((req) => {
-                      const fullName = `${req.firstName} ${req.lastName}`;
-                      const isFreeTest = req.requestedTier === 'découverte';
-                      const isPending = req.status === 'pending' && !isFreeTest;
-                      const isPaymentReceived = req.status === 'payment_received';
-                      const isRejecting = rejectingRequestId === req.id;
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Demandes d'accès et d'essai ({accessRequests.length} enregistrées)
+                </div>
+                {accessRequests.length > 0 && (
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.4rem 0.8rem',
+                      fontSize: '0.78rem',
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      color: '#f87171',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '6px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    onClick={handleCleanOldRequests}
+                    disabled={actionPending}
+                  >
+                    🗑️ Nettoyer les anciennes demandes (+7j ou rejetées)
+                  </button>
+                )}
+              </div>
 
-                      return (
-                        <tr key={req.id} style={{ 
-                          background: isFreeTest ? 'rgba(52, 211, 153, 0.04)' : isPaymentReceived ? 'rgba(16, 185, 129, 0.05)' : 'transparent' 
-                        }}>
-                          <td>
-                            <div style={{ marginBottom: '4px' }}>
-                              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fullName}</span>
-                            </div>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{req.email}</div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.institution}</div>
-                            {req.phone && (
-                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.phone}</div>
-                            )}
-                          </td>
-                          <td>
-                            <span style={{ 
-                              display: 'inline-block', 
-                              background: 'rgba(255,255,255,0.05)', 
-                              padding: '3px 10px', 
-                              borderRadius: '12px', 
-                              fontSize: '0.8rem',
-                              color: 'var(--text-secondary)'
-                            }}>
-                              {req.profession}
-                            </span>
-                            <div style={{ marginTop: '5px' }}>
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Demandeur</th>
+                      <th>Profil</th>
+                      <th>Localisation</th>
+                      <th>Statut</th>
+                      <th>Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {accessRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                          {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande d\'accès en attente.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      accessRequests.map((req) => {
+                        const fullName = `${req.firstName} ${req.lastName}`;
+                        const isFreeTest = req.requestedTier === 'découverte';
+                        const isPending = req.status === 'pending' && !isFreeTest;
+                        const isPaymentReceived = req.status === 'payment_received';
+                        const isRejecting = rejectingRequestId === req.id;
+
+                        return (
+                          <tr key={req.id} style={{ 
+                            background: isFreeTest ? 'rgba(52, 211, 153, 0.04)' : isPaymentReceived ? 'rgba(16, 185, 129, 0.05)' : 'transparent' 
+                          }}>
+                            <td>
+                              <div style={{ marginBottom: '4px' }}>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fullName}</span>
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{req.email}</div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.institution}</div>
+                              {req.phone && (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.phone}</div>
+                              )}
+                            </td>
+                            <td>
                               <span style={{ 
                                 display: 'inline-block', 
-                                background: req.requestedTier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : req.requestedTier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : req.requestedTier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                border: req.requestedTier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : req.requestedTier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : req.requestedTier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                                padding: '2px 8px', 
-                                borderRadius: '4px', 
-                                fontSize: '0.72rem',
-                                fontWeight: 'bold',
-                                color: req.requestedTier === 'ultra' ? '#fbbf24' : req.requestedTier === 'institution' ? '#c084fc' : req.requestedTier === 'pro' ? '#2dd4bf' : '#38bdf8',
-                                textTransform: 'uppercase'
-                              }}>
-                                Formule : {req.requestedTier ? req.requestedTier.toUpperCase() : (req.requestedRole === 'teacher' ? 'ULTRA' : 'PRO')}
-                              </span>
-                            </div>
-                          </td>
-                          <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                            {req.city}, {req.country}
-                          </td>
-                          <td>
-                            {isFreeTest ? (
-                              <span style={{ 
-                                display: 'inline-block', 
-                                background: 'rgba(52, 211, 153, 0.15)', 
-                                color: '#34d399', 
+                                background: 'rgba(255,255,255,0.05)', 
                                 padding: '3px 10px', 
                                 borderRadius: '12px', 
-                                fontSize: '0.78rem',
-                                fontWeight: 600,
-                                border: '1px solid rgba(52, 211, 153, 0.3)'
+                                fontSize: '0.8rem',
+                                color: 'var(--text-secondary)'
                               }}>
-                                🟢 Test 3j Actif (Gratuit)
+                                {req.profession}
                               </span>
-                            ) : isPending ? (
-                              <span style={{ 
-                                display: 'inline-block', 
-                                background: 'rgba(251, 191, 36, 0.1)', 
-                                color: '#f59e0b', 
-                                padding: '3px 10px', 
-                                borderRadius: '12px', 
-                                fontSize: '0.78rem',
-                                fontWeight: 600 
-                              }}>
-                                En attente de paiement
-                              </span>
-                            ) : isPaymentReceived ? (
-                              <span style={{ 
-                                display: 'inline-block', 
-                                background: 'rgba(16, 185, 129, 0.1)', 
-                                color: '#10b981', 
-                                padding: '3px 10px', 
-                                borderRadius: '12px', 
-                                fontSize: '0.78rem',
-                                fontWeight: 600 
-                              }}>
-                                Paiement reçu ✓
-                              </span>
-                            ) : (
-                              <span style={{ 
-                                display: 'inline-block', 
-                                background: 'rgba(16, 185, 129, 0.1)', 
-                                color: '#10b981', 
-                                padding: '3px 10px', 
-                                borderRadius: '12px', 
-                                fontSize: '0.78rem',
-                                fontWeight: 600 
-                              }}>
-                                Validé ✓
-                              </span>
-                            )}
-                          </td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                            {req.createdAt?.seconds 
-                              ? new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR')
-                              : '—'
-                            }
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                              <div style={{ marginTop: '5px' }}>
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: req.requestedTier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : req.requestedTier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : req.requestedTier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                  border: req.requestedTier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : req.requestedTier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : req.requestedTier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                  padding: '2px 8px', 
+                                  borderRadius: '4px', 
+                                  fontSize: '0.72rem',
+                                  fontWeight: 'bold',
+                                  color: req.requestedTier === 'ultra' ? '#fbbf24' : req.requestedTier === 'institution' ? '#c084fc' : req.requestedTier === 'pro' ? '#2dd4bf' : '#38bdf8',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  Formule : {req.requestedTier ? req.requestedTier.toUpperCase() : (req.requestedRole === 'teacher' ? 'ULTRA' : 'PRO')}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                              {req.city}, {req.country}
+                            </td>
+                            <td>
                               {isFreeTest ? (
                                 <span style={{ 
-                                  display: 'inline-block',
-                                  padding: '0.35rem 0.7rem',
-                                  fontSize: '0.75rem',
-                                  color: '#34d399',
-                                  background: 'rgba(52, 211, 153, 0.1)',
-                                  border: '1px solid rgba(52, 211, 153, 0.3)',
-                                  borderRadius: '6px',
-                                  fontWeight: 600
+                                  display: 'inline-block', 
+                                  background: 'rgba(52, 211, 153, 0.15)', 
+                                  color: '#34d399', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  border: '1px solid rgba(52, 211, 153, 0.3)'
                                 }}>
-                                  ⚡ Accès Instantané Actif
+                                  🟢 Test 3j Actif (Gratuit)
                                 </span>
                               ) : isPending ? (
-                                <>
-                                  <button
-                                    className="btn btn-secondary"
-                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}
-                                    onClick={() => handleMarkPaymentReceived(req)}
-                                    disabled={actionPending}
-                                  >
-                                    💰 Paiement reçu
-                                  </button>
-                                  <button
-                                    className="btn btn-secondary"
-                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
-                                    onClick={() => { setRejectingRequestId(req.id); setRejectionReason(''); }}
-                                    disabled={actionPending}
-                                  >
-                                    ✕ Rejeter
-                                  </button>
-                                </>
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(251, 191, 36, 0.1)', 
+                                  color: '#f59e0b', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600 
+                                }}>
+                                  En attente de paiement
+                                </span>
                               ) : isPaymentReceived ? (
-                                <button
-                                  className="btn btn-secondary"
-                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(13,148,136,0.15)', color: '#0d9488', border: '1px solid rgba(13,148,136,0.4)', fontWeight: 600 }}
-                                  onClick={() => handleAcceptRequest(req)}
-                                  disabled={actionPending}
-                                >
-                                  ✓ Valider & créer le compte
-                                </button>
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(16, 185, 129, 0.1)', 
+                                  color: '#10b981', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600 
+                                }}>
+                                  Paiement reçu ✓
+                                </span>
                               ) : (
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(16, 185, 129, 0.1)', 
+                                  color: '#10b981', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600 
+                                }}>
+                                  Validé ✓
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                              {req.createdAt?.seconds 
+                                ? new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR')
+                                : '—'
+                              }
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                                {isFreeTest ? (
+                                  <span style={{ 
+                                    display: 'inline-block',
+                                    padding: '0.3rem 0.6rem',
+                                    fontSize: '0.74rem',
+                                    color: '#34d399',
+                                    background: 'rgba(52, 211, 153, 0.1)',
+                                    border: '1px solid rgba(52, 211, 153, 0.3)',
+                                    borderRadius: '6px',
+                                    fontWeight: 600
+                                  }}>
+                                    ⚡ Accès Instantané Actif
+                                  </span>
+                                ) : isPending ? (
+                                  <>
+                                    <button
+                                      className="btn btn-secondary"
+                                      style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)' }}
+                                      onClick={() => handleMarkPaymentReceived(req)}
+                                      disabled={actionPending}
+                                    >
+                                      💰 Paiement reçu
+                                    </button>
+                                    <button
+                                      className="btn btn-secondary"
+                                      style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                                      onClick={() => { setRejectingRequestId(req.id); setRejectionReason(''); }}
+                                      disabled={actionPending}
+                                    >
+                                      ✕ Rejeter
+                                    </button>
+                                  </>
+                                ) : isPaymentReceived ? (
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(13,148,136,0.15)', color: '#0d9488', border: '1px solid rgba(13,148,136,0.4)', fontWeight: 600 }}
+                                    onClick={() => handleAcceptRequest(req)}
+                                    disabled={actionPending}
+                                  >
+                                    ✓ Valider & créer le compte
+                                  </button>
+                                ) : null}
+
                                 <button
                                   className="btn btn-secondary"
-                                  style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", width: "100%", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.72rem", width: "100%", background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)", marginTop: '2px' }}
                                   onClick={() => handleDeleteRequest(req.id, req.email)}
                                   disabled={actionPending}
                                 >
                                   🗑 Supprimer
                                 </button>
-                              )}
                               {isRejecting && (
                                 <div style={{ marginTop: '4px', width: '100%' }}>
                                   <textarea
@@ -1543,7 +1624,8 @@ Votre superviseur`;
                 </tbody>
               </table>
             </div>
-          ) : (
+          </>
+        ) : (
             // Onglet Messagerie
             <div style={{ padding: '0.5rem 0' }}>
               {messagingError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#ef4444', fontSize: '0.85rem' }}>{messagingError}</div>}

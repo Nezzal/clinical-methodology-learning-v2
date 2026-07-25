@@ -62,3 +62,33 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: error?.message || "Erreur interne." }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  loadEnvLocal();
+  
+  const authCheck = await verifyUserAuth(req);
+  if (authCheck.error) {
+    return NextResponse.json({ error: authCheck.error }, { status: authCheck.status });
+  }
+
+  const decodedToken = authCheck.decodedToken;
+  if (!decodedToken || (decodedToken.role !== 'admin' && decodedToken.role !== 'teacher')) {
+    return NextResponse.json({ error: "Interdit (Droits insuffisants)" }, { status: 403 });
+  }
+
+  try {
+    const { docId } = await req.json();
+
+    if (!docId) {
+      return NextResponse.json({ error: "Identifiant de demande manquant." }, { status: 400 });
+    }
+
+    const docRef = adminDb.collection('access_requests').doc(docId);
+    await docRef.delete();
+
+    return NextResponse.json({ success: true, message: "Demande supprimée avec succès." });
+  } catch (error: any) {
+    console.error("Erreur suppression demande:", error);
+    return NextResponse.json({ error: error?.message || "Erreur interne." }, { status: 500 });
+  }
+}
