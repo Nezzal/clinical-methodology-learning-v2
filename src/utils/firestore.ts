@@ -422,6 +422,7 @@ export interface AccessRequest {
   requestedTier?: 'découverte' | 'pro' | 'ultra' | 'institution';
   status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
   createdAt: any;
+  expiresAt?: any;
   paymentReceivedAt: any;
   paymentReceivedBy: string | null;
   rejectedAt: any;

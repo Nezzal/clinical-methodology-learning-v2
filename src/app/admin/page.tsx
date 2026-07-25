@@ -1665,14 +1665,15 @@ Votre superviseur`;
                       <th>Profil</th>
                       <th>Localisation</th>
                       <th>Statut</th>
-                      <th>Date</th>
+                      <th>Date & Heure d'Accès</th>
+                      <th>Date & Heure Expiration</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {accessRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                        <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                           {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande d\'accès en attente.'}
                         </td>
                       </tr>
@@ -1780,11 +1781,53 @@ Votre superviseur`;
                                 </span>
                               )}
                             </td>
-                            <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                              {req.createdAt?.seconds 
-                                ? new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR')
-                                : '—'
-                              }
+                            <td style={{ fontSize: '0.82rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                              {req.createdAt?.seconds ? (
+                                <>
+                                  <div style={{ fontWeight: 600 }}>
+                                    {new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                  </div>
+                                  <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '2px' }}>
+                                    🕒 {new Date(req.createdAt.seconds * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </>
+                              ) : '—'}
+                            </td>
+                            <td style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
+                              {isFreeTest && req.createdAt?.seconds ? (() => {
+                                const createdMs = req.createdAt.seconds * 1000;
+                                const expiryMs = createdMs + (3 * 24 * 60 * 60 * 1000);
+                                const expiryDateObj = new Date(expiryMs);
+                                const isExpired = Date.now() > expiryMs;
+
+                                return (
+                                  <div style={{ color: isExpired ? '#f87171' : '#34d399' }}>
+                                    <div style={{ fontWeight: 600 }}>
+                                      {expiryDateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                    </div>
+                                    <div style={{ fontSize: '0.76rem', color: isExpired ? '#fca5a5' : '#a7f3d0', marginTop: '2px' }}>
+                                      ⏰ {expiryDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} {isExpired ? '(Expiré)' : ''}
+                                    </div>
+                                  </div>
+                                );
+                              })() : req.expiresAt?.seconds ? (() => {
+                                const expiryDateObj = new Date(req.expiresAt.seconds * 1000);
+                                const isExpired = Date.now() > (req.expiresAt.seconds * 1000);
+                                return (
+                                  <div style={{ color: isExpired ? '#f87171' : '#38bdf8' }}>
+                                    <div style={{ fontWeight: 600 }}>
+                                      {expiryDateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                    </div>
+                                    <div style={{ fontSize: '0.76rem', color: isExpired ? '#fca5a5' : '#cbd5e1', marginTop: '2px' }}>
+                                      🕒 {expiryDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} {isExpired ? '(Expiré)' : ''}
+                                    </div>
+                                  </div>
+                                );
+                              })() : (
+                                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                  {isPending ? 'En attente virement' : 'Illimité'}
+                                </span>
+                              )}
                             </td>
                             <td>
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
