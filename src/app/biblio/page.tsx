@@ -65,6 +65,7 @@ export default function BiblioPage() {
     const userTier = getUserTier(profile);
     const quotaConfig = getQuotaConfig(userTier);
     if (getBiblioCount() >= quotaConfig.biblioMax) {
+      setError(`Quota atteint pour la Formule ${userTier === 'découverte' ? 'Découverte (1/1 recherche/synthèse effectuée)' : 'PRO'}. Passez en Formule PRO ou ULTRA pour débloquer les recherches PubMed illimitées.`);
       setShowQuotaModal(true);
       return;
     }
@@ -120,6 +121,7 @@ export default function BiblioPage() {
     const userTier = getUserTier(profile);
     const quotaConfig = getQuotaConfig(userTier);
     if (getBiblioCount() >= quotaConfig.biblioMax) {
+      setError(`Quota atteint pour la Formule ${userTier === 'découverte' ? 'Découverte (1/1 recherche/synthèse effectuée)' : 'PRO'}. Passez en Formule PRO ou ULTRA pour débloquer les recherches PubMed illimitées.`);
       setShowQuotaModal(true);
       return;
     }
@@ -205,6 +207,7 @@ export default function BiblioPage() {
     const quotaConfig = getQuotaConfig(userTier);
 
     if (getBiblioCount() >= quotaConfig.biblioMax) {
+      setError(`Quota atteint pour la Formule ${userTier === 'découverte' ? 'Découverte (1/1 recherche/synthèse effectuée)' : 'PRO'}. Passez en Formule PRO ou ULTRA pour débloquer les recherches PubMed illimitées.`);
       setShowQuotaModal(true);
       return;
     }
@@ -288,10 +291,46 @@ export default function BiblioPage() {
       <main className={styles.mainContent} style={{ flex: 1 }}>
         {/* En-tête */}
         <header className={styles.header}>
-          <h1 className={styles.title}>Recherche Bibliographique & Revue PubMed</h1>
-          <p className={styles.subtitle}>
-            Explorez les publications scientifiques sur <strong>PubMed</strong> en temps réel et générez une revue de la littérature structurée assistée par IA (<strong>Qwen / Gemini</strong>).
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h1 className={styles.title}>Recherche Bibliographique & Revue PubMed</h1>
+              <p className={styles.subtitle}>
+                Explorez les publications scientifiques sur <strong>PubMed</strong> en temps réel et générez une revue de la littérature structurée assistée par IA (<strong>Qwen / Gemini</strong>).
+              </p>
+            </div>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              background: getBiblioCount() >= getQuotaConfig(getUserTier(profile)).biblioMax ? 'rgba(239, 68, 68, 0.15)' : 'rgba(13, 148, 136, 0.15)',
+              border: `1px solid ${getBiblioCount() >= getQuotaConfig(getUserTier(profile)).biblioMax ? 'rgba(239, 68, 68, 0.4)' : 'rgba(13, 148, 136, 0.3)'}`,
+              color: getBiblioCount() >= getQuotaConfig(getUserTier(profile)).biblioMax ? '#fca5a5' : '#2dd4bf',
+              fontSize: '0.85rem',
+              fontWeight: 600
+            }}>
+              <span>📊 Formule {getUserTier(profile) === 'découverte' ? 'Découverte (3j)' : getUserTier(profile).toUpperCase()} : {getBiblioCount()} / {getQuotaConfig(getUserTier(profile)).biblioMax === Infinity ? 'Illimité' : getQuotaConfig(getUserTier(profile)).biblioMax} recherche</span>
+              {getBiblioCount() >= getQuotaConfig(getUserTier(profile)).biblioMax && (
+                <button
+                  type="button"
+                  onClick={() => setShowSubscriptionModal(true)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '12px',
+                    border: 'none',
+                    background: '#ef4444',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🚀 Surclasser
+                </button>
+              )}
+            </div>
+          </div>
         </header>
 
         {/* Formulaire de recherche */}
@@ -439,17 +478,42 @@ export default function BiblioPage() {
           </form>
         </section>
 
-        {/* Message d'erreur */}
+        {/* Message d'erreur / Alerte de Quota */}
         {error && (
           <div style={{
-            padding: '1rem 1.25rem',
+            padding: '1.25rem',
             marginBottom: '1.5rem',
             borderRadius: '12px',
             background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            color: '#fca5a5'
+            border: '1.5px solid rgba(239, 68, 68, 0.4)',
+            color: '#fca5a5',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.75rem',
+            alignItems: 'flex-start'
           }}>
-            ⚠️ {error}
+            <div style={{ fontSize: '0.98rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              ⚠️ {error}
+            </div>
+            {error.includes('Quota') && (
+              <button
+                type="button"
+                onClick={() => setShowSubscriptionModal(true)}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #0d9488, #0284c7)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.92rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(13, 148, 136, 0.35)'
+                }}
+              >
+                🚀 Découvrir les Formules PRO & ULTRA (Accès Illimité)
+              </button>
+            )}
           </div>
         )}
 
