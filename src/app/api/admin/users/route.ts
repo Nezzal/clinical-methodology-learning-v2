@@ -49,7 +49,9 @@ export async function POST(req: Request) {
       city,
       country,
       residence,
-      paymentReceiptRef
+      paymentReceiptRef,
+      quotaStudents,
+      installationType
     } = await req.json();
 
     if (!name || !name.trim() || !email || !email.trim()) {
@@ -102,6 +104,8 @@ export async function POST(req: Request) {
       durationMonths: Number(durationMonths),
       bonusDaysAdded: bonusDays,
       paymentVerified: true,
+      quotaStudents: Number(quotaStudents || (selectedTier === 'institution' ? 100 : (selectedTier === 'ultra' ? 10 : 1))),
+      ...(installationType ? { installationType } : {}),
       ...(paymentReceiptRef ? { paymentReceiptRef } : {}),
       quotas: {
         questionsToday: 0,

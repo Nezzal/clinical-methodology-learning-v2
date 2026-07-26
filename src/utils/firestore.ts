@@ -426,7 +426,7 @@ export interface AccessRequest {
   phone: string;
   requestedRole?: 'student' | 'teacher';
   requestedTier?: 'découverte' | 'pro' | 'expert' | 'ultra' | 'institution';
-  status: 'pending' | 'payment_received' | 'accepted' | 'rejected';
+  status: 'pending' | 'payment_received' | 'accepted' | 'rejected' | 'quote_sent';
   createdAt: any;
   expiresAt?: any;
   paymentReceiptRef?: string;

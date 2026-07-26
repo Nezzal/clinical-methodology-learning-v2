@@ -43,11 +43,19 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ success: true, message: "Demande rejetée." });
     }
 
+    if (status === 'quote_sent') {
+      await docRef.update({
+        status: 'quote_sent',
+        quoteSentAt: admin.firestore.FieldValue.serverTimestamp(),
+        quoteSentBy: decodedToken.uid
+      });
+      return NextResponse.json({ success: true, message: "Demande marquée comme Devis envoyé." });
+    }
+
     // Marquer le paiement comme reçu
     if (!currentData) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
-    if (!currentData) return NextResponse.json({ error: "Demande introuvable." }, { status: 404 });
-    if (currentData.status !== 'pending') {
-      return NextResponse.json({ error: "Cette demande n'est pas en attente de paiement." }, { status: 400 });
+    if (currentData.status !== 'pending' && currentData.status !== 'quote_sent') {
+      return NextResponse.json({ error: "Cette demande n'est pas en attente de paiement ou de devis." }, { status: 400 });
     }
 
     await docRef.update({

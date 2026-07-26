@@ -379,16 +379,31 @@ export async function POST(req: Request) {
           auth: { user: smtpUser, pass: smtpPass }
         });
 
+        let adminSubject = `Nouvelle demande d'accès [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}] - ${firstName.trim()} ${lastName.trim()}`;
+        let adminHeading = `Nouvelle demande d'inscription [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}]`;
+        let adminIntro = `Un utilisateur a demandé l'accès à la Plateforme Methodo&Clinique. Le courrier de confirmation lui a été envoyé automatiquement.`;
+
+        if (cleanTier === 'institution') {
+          adminSubject = `🏛️ [DEVIS INSTITUTION] Demande de devis - ${firstName.trim()} ${lastName.trim()} (${institution.trim()})`;
+          adminHeading = `Demande de devis - Formule INSTITUTION`;
+          adminIntro = `Un établissement a soumis une demande de devis pour la <strong>Formule INSTITUTION</strong>. Un e-mail de confirmation de réception lui a été envoyé automatiquement. Veuillez prendre contact pour formuler une offre commerciale.`;
+        } else if (cleanTier === 'ultra') {
+          adminSubject = `👑 [ULTRA GROUPE] Nouvelle demande - ${firstName.trim()} ${lastName.trim()} (${institution.trim()})`;
+          adminHeading = `Demande d'accès - Formule ULTRA (Superviseur)`;
+          adminIntro = `Un enseignant/encadreur a soumis une demande d'accès pour la <strong>Formule ULTRA</strong> (permettant la supervision de groupe). Veuillez prendre contact pour établir un devis ou confirmer son paiement.`;
+        }
+
         await transporter.sendMail({
           from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
           to: adminNotificationEmail,
-          subject: `Nouvelle demande d'accès [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}] - ${firstName.trim()} ${lastName.trim()}`,
+          subject: adminSubject,
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #1e40af; margin-top: 0;">Nouvelle demande d'inscription [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}]</h2>
-              <p>Un utilisateur a demandé l'accès à la Plateforme Methodo&Clinique. Le courrier de confirmation lui a été envoyé automatiquement.</p>
+              <h2 style="color: #1e40af; margin-top: 0;">${adminHeading}</h2>
+              <p>${adminIntro}</p>
               <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin: 20px 0; font-size: 0.9rem;">
                 <strong>Type d'accès demandé :</strong> ${cleanRole === 'teacher' ? '👨‍🏫 Enseignant / Superviseur' : '🎓 Étudiant'}<br/>
+                <strong>Formule demandée :</strong> ${cleanTier.toUpperCase()}<br/>
                 <strong>Prénom :</strong> ${firstName.trim()}<br/>
                 <strong>Nom :</strong> ${lastName.trim()}<br/>
                 <strong>Institution :</strong> ${institution.trim()}<br/>

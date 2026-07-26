@@ -139,6 +139,13 @@ export default function AdminDashboard() {
   // Modal de consultation détaillée de demande d'accès
   const [selectedRequestDetail, setSelectedRequestDetail] = useState<AccessRequest | null>(null);
 
+  // States pour la modale d'activation spécifique aux Groupes/Institutions
+  const [showActivateGroupModal, setShowActivateGroupModal] = useState(false);
+  const [groupRequestToActivate, setGroupRequestToActivate] = useState<AccessRequest | null>(null);
+  const [groupQuotaInput, setGroupQuotaInput] = useState(10);
+  const [groupDurationInput, setGroupDurationInput] = useState(12);
+  const [groupInstallationType, setGroupInstallationType] = useState<'web' | 'offline_local'>('web');
+
   // Preview modals
   const [activeProtocol, setActiveProtocol] = useState<FirestoreProtocol | null>(null);
   const [activeChat, setActiveChat] = useState<any | null>(null);
@@ -149,7 +156,7 @@ export default function AdminDashboard() {
   // States pour les demandes d'accès et renommage
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [leftTab, setLeftTab] = useState<'students' | 'requests' | 'messages'>('students');
+  const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages'>('students');
 
   // States pour la messagerie
   const [teachers, setTeachers] = useState<FirestoreUser[]>([]);
@@ -911,6 +918,149 @@ Votre superviseur`;
     }
   };
 
+  const handleMarkQuoteSent = async (req: AccessRequest) => {
+    if (!window.confirm(`Marquer le devis comme envoyé à ${req.firstName} ${req.lastName} (${req.email}) ?`)) return;
+    setActionPending(true);
+    try {
+      if (!user) throw new Error("Non connecté");
+      const docId = req.email.replace(/[^a-z0-9]/g, '_');
+      const idToken = await user.getIdToken(true);
+      
+      await fetch('/api/access-requests/payment', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ 
+          docId,
+          status: 'quote_sent'
+        })
+      });
+
+      setAccessRequests(prev => prev.map(r => 
+        r.id === req.id 
+          ? { ...r, status: 'quote_sent' as any }
+          : r
+      ));
+    } catch (e: any) {
+      alert("Erreur : " + (e?.message || e));
+    } finally {
+      setActionPending(false);
+    }
+  };
+
+  const handleActivateGroupRequest = async () => {
+    if (!groupRequestToActivate) return;
+    const req = groupRequestToActivate;
+    const confirmMsg = `Confirmez l'activation de l'accès ${(req.requestedTier || 'institution').toUpperCase()} pour :\n\n${req.firstName} ${req.lastName}\n${req.email}\nCapacité : ${groupQuotaInput} étudiants\nInstallation : ${groupInstallationType === 'web' ? 'En ligne (Web)' : 'Offline (Local)'}\nDurée : ${groupDurationInput} mois\n\nUn mot de passe temporaire sera généré et envoyé par e-mail.`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setActionPending(true);
+    try {
+      if (!user) throw new Error("Utilisateur non connecté");
+      const idToken = await user.getIdToken(true);
+
+      // 1. Créer le compte via l'API serveur sécurisée
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
+        body: JSON.stringify({ 
+          name: `${req.firstName} ${req.lastName}`, 
+          email: req.email,
+          role: req.requestedRole || 'teacher',
+          tier: req.requestedTier,
+          durationMonths: groupDurationInput,
+          quotaStudents: groupQuotaInput,
+          installationType: groupInstallationType,
+          phone: req.phone || '',
+          institution: req.institution || '',
+          profession: req.profession || '',
+          city: req.city || '',
+          country: req.country || ''
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Erreur serveur lors de la création du compte.");
+      }
+
+      const accountData = await res.json();
+      const generatedTempPassword = accountData.tempPassword;
+      
+      // 2. Supprimer la demande traitée de Firestore
+      await deleteAccessRequest(req.id);
+
+      // 3. Envoyer l'email de confirmation contenant le mot de passe temporaire
+      try {
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: req.email,
+            subject: "Vos identifiants de connexion - Plateforme Methodo&Clinique",
+            html: `
+              <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fafbfc;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <h1 style="color: #0d9488; margin: 0; font-size: 1.5rem;">Plateforme Methodo&Clinique</h1>
+                  <p style="color: #64748b; margin: 4px 0 0;">Méthodologie de Recherche Clinique</p>
+                </div>
+                <div style="background: #f0fdfa; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                  <p style="margin: 0; color: #166534; font-weight: 600;">Votre demande de groupe/institution a été activée et configurée</p>
+                </div>
+                <p>Bonjour <strong>${req.firstName} ${req.lastName}</strong>,</p>
+                <p>Votre abonnement à la formule <strong>${(req.requestedTier || 'institution').toUpperCase()}</strong> a été activé avec les caractéristiques suivantes :</p>
+                <ul>
+                  <li><strong>Capacité de supervision :</strong> ${groupQuotaInput} étudiant(s) maximum</li>
+                  <li><strong>Durée d'accès :</strong> ${groupDurationInput} mois</li>
+                  <li><strong>Type d'installation :</strong> ${groupInstallationType === 'web' ? 'En ligne (Web)' : 'Offline (Local exécutable)'}</li>
+                </ul>
+                <p>Voici vos identifiants de connexion :</p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 8px; margin: 20px 0; font-family: monospace;">
+                  <p style="margin: 0 0 8px;"><strong>E-mail :</strong> ${req.email}</p>
+                  <p style="margin: 0;"><strong>Mot de passe temporaire :</strong> <span style="color: #0d9488; font-weight: bold; font-size: 1.1rem;">${generatedTempPassword}</span></p>
+                </div>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; margin: 16px 0;">
+                  <p style="margin: 0; color: #991b1b; font-size: 0.88rem;">
+                    <strong>Sécurité :</strong> Vous devez modifier ce mot de passe temporaire dès votre première connexion.
+                  </p>
+                </div>
+                <p style="text-align: center; margin: 24px 0;">
+                  <a href="${getCleanLoginUrl()}" style="display: inline-block; background: #0d9488; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">Se connecter</a>
+                </p>
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+                <p style="font-size: 0.78rem; color: #94a3b8; margin: 0;">Message automatique — Ne pas répondre directement.</p>
+              </div>
+            `
+          })
+        });
+      } catch (mailErr) {
+        console.error("Erreur lors de l'envoi de l'email d'activation de groupe:", mailErr);
+      }
+
+      // 4. Mettre à jour localement les listes
+      setAccessRequests(prev => prev.filter(r => r.id !== req.id));
+      await fetchStudents();
+
+      // Afficher le modal avec les identifiants
+      setSuccessModalData({
+        name: `${req.firstName} ${req.lastName}`,
+        email: req.email,
+        tempPassword: generatedTempPassword
+      });
+      setShowActivateGroupModal(false);
+      setGroupRequestToActivate(null);
+    } catch (e: any) {
+      alert("Erreur lors de la création du compte : " + (e?.message || e));
+    } finally {
+      setActionPending(false);
+    }
+  };
+
   const handleRejectWithReason = async (req: AccessRequest) => {
     if (!rejectionReason.trim()) {
       alert("Veuillez saisir le motif de rejet.");
@@ -985,8 +1135,12 @@ Votre superviseur`;
       const tab = params.get('tab');
       if (tab === 'messages') {
         setLeftTab('messages');
+      } else if (tab === 'requests_indiv') {
+        setLeftTab('requests_indiv');
+      } else if (tab === 'requests_group') {
+        setLeftTab('requests_group');
       } else if (tab === 'requests') {
-        setLeftTab('requests');
+        setLeftTab('requests_indiv');
       } else if (tab === 'students') {
         setLeftTab('students');
       }
@@ -1532,6 +1686,9 @@ Votre superviseur`;
     ? students.filter(s => s.assignedTeacherUid === user?.uid)
     : students;
 
+  const indivRequests = accessRequests.filter(r => r.requestedTier !== 'institution' && r.requestedTier !== 'ultra');
+  const groupRequests = accessRequests.filter(r => r.requestedTier === 'institution' || r.requestedTier === 'ultra');
+
   // Filtrer les étudiants
   const filteredStudents = visibleStudents
     .filter(s => {
@@ -1753,7 +1910,7 @@ Votre superviseur`;
         {/* Liste des étudiants / Demandes d'accès (Gauche) */}
         <div className={`${styles.studentListCard} glass-card`}>
           {/* Onglets Gauche */}
-          <div className={styles.tabs} style={{ marginBottom: '1.25rem' }}>
+          <div className={styles.tabs} style={{ marginBottom: '1.25rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'students' ? styles.activeTab : ''}`}
               onClick={() => {
@@ -1764,13 +1921,22 @@ Votre superviseur`;
               Utilisateurs inscrits ({visibleStudents.length})
             </button>
             <button 
-              className={`${styles.tabBtn} ${leftTab === 'requests' ? styles.activeTab : ''}`}
+              className={`${styles.tabBtn} ${leftTab === 'requests_indiv' ? styles.activeTab : ''}`}
               onClick={() => {
-                setLeftTab('requests');
-                router.push('/admin?tab=requests');
+                setLeftTab('requests_indiv');
+                router.push('/admin?tab=requests_indiv');
               }}
             >
-              Demandes ({accessRequests.length})
+              Demandes Indiv. ({indivRequests.length})
+            </button>
+            <button 
+              className={`${styles.tabBtn} ${leftTab === 'requests_group' ? styles.activeTab : ''}`}
+              onClick={() => {
+                setLeftTab('requests_group');
+                router.push('/admin?tab=requests_group');
+              }}
+            >
+              Groupes & Devis ({groupRequests.length})
             </button>
             <button 
               className={`${styles.tabBtn} ${leftTab === 'messages' ? styles.activeTab : ''}`}
@@ -1945,12 +2111,12 @@ Votre superviseur`;
                 </table>
               </div>
             </>
-          ) : leftTab === 'requests' ? (
+          ) : leftTab === 'requests_indiv' ? (
             // Demandes d'accès
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Demandes d'accès et d'essai ({accessRequests.length} enregistrées)
+                  Demandes d'accès individuelles ({indivRequests.length} enregistrées)
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <button
@@ -2006,14 +2172,14 @@ Votre superviseur`;
                     </tr>
                   </thead>
                   <tbody>
-                    {accessRequests.length === 0 ? (
+                    {indivRequests.length === 0 ? (
                       <tr>
                         <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                          {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande d\'accès en attente.'}
+                          {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande d\'accès individuelle en attente.'}
                         </td>
                       </tr>
                     ) : (
-                      accessRequests.map((req) => {
+                      indivRequests.map((req) => {
                         const fullName = `${req.firstName} ${req.lastName}`;
                         const isFreeTest = req.requestedTier === 'découverte';
                         const isPending = req.status === 'pending' && !isFreeTest;
@@ -2280,7 +2446,259 @@ Votre superviseur`;
               </table>
             </div>
           </>
-        ) : (
+          ) : leftTab === 'requests_group' ? (
+            // Demandes Groupes / Devis (ULTRA & INSTITUTION)
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  Demandes de groupes et devis ({groupRequests.length} enregistrées)
+                </div>
+              </div>
+
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Demandeur / Institution</th>
+                      <th>Profil</th>
+                      <th>Localisation</th>
+                      <th>Statut</th>
+                      <th>Date Demande</th>
+                      <th>Suivi Devis</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {groupRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                          {loadingRequests ? 'Chargement des demandes...' : 'Aucune demande de groupe ou devis institutionnel.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      groupRequests.map((req) => {
+                        const fullName = `${req.firstName} ${req.lastName}`;
+                        const isPending = req.status === 'pending';
+                        const isQuoteSent = req.status === 'quote_sent';
+                        const isPaymentReceived = req.status === 'payment_received';
+                        const isRejecting = rejectingRequestId === req.id;
+
+                        return (
+                          <tr key={req.id}>
+                            <td>
+                              <div style={{ marginBottom: '4px' }}>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{fullName}</span>
+                              </div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{req.email}</div>
+                              <div style={{ fontSize: '0.78rem', color: '#c084fc', fontWeight: '600' }}>🏛️ {req.institution}</div>
+                              {req.phone && (
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{req.phone}</div>
+                              )}
+                            </td>
+                            <td>
+                              <span style={{ 
+                                display: 'inline-block', 
+                                background: 'rgba(255,255,255,0.05)', 
+                                padding: '3px 10px', 
+                                borderRadius: '12px', 
+                                fontSize: '0.8rem',
+                                color: 'var(--text-secondary)'
+                              }}>
+                                {req.profession}
+                              </span>
+                              <div style={{ marginTop: '5px' }}>
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: req.requestedTier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : 'rgba(147, 51, 234, 0.15)', 
+                                  border: req.requestedTier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid rgba(147, 51, 234, 0.3)',
+                                  padding: '2px 8px', 
+                                  borderRadius: '4px', 
+                                  fontSize: '0.72rem',
+                                  fontWeight: 'bold',
+                                  color: req.requestedTier === 'ultra' ? '#fbbf24' : '#c084fc',
+                                  textTransform: 'uppercase'
+                                }}>
+                                  Formule : {req.requestedTier ? req.requestedTier.toUpperCase() : 'INSTITUTION'}
+                                </span>
+                              </div>
+                            </td>
+                            <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                              {req.city}, {req.country}
+                            </td>
+                            <td>
+                              {isPending ? (
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(147, 51, 234, 0.15)', 
+                                  color: '#c084fc', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  border: '1px solid rgba(147, 51, 234, 0.3)'
+                                }}>
+                                  ⏳ Devis à envoyer
+                                </span>
+                              ) : isQuoteSent ? (
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(56, 189, 248, 0.15)', 
+                                  color: '#38bdf8', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  border: '1px solid rgba(56, 189, 248, 0.3)'
+                                }}>
+                                  📧 Devis envoyé
+                                </span>
+                              ) : isPaymentReceived ? (
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(16, 185, 129, 0.15)', 
+                                  color: '#34d399', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600,
+                                  border: '1px solid rgba(16, 185, 129, 0.3)'
+                                }}>
+                                  💰 Paiement reçu
+                                </span>
+                              ) : (
+                                <span style={{ 
+                                  display: 'inline-block', 
+                                  background: 'rgba(16, 185, 129, 0.1)', 
+                                  color: '#10b981', 
+                                  padding: '3px 10px', 
+                                  borderRadius: '12px', 
+                                  fontSize: '0.78rem',
+                                  fontWeight: 600 
+                                }}>
+                                  Validé ✓
+                                </span>
+                              )}
+                            </td>
+                            <td style={{ fontSize: '0.82rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                              {req.createdAt?.seconds ? (
+                                <>
+                                  <div style={{ fontWeight: 600 }}>
+                                    {new Date(req.createdAt.seconds * 1000).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                  </div>
+                                  <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '2px' }}>
+                                    🕒 {new Date(req.createdAt.seconds * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                  </div>
+                                </>
+                              ) : '—'}
+                            </td>
+                            <td style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                              {isPending ? 'Attente de contact' : isQuoteSent ? 'Négociation / Proposition' : 'Paiement / Finalisation'}
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-start' }}>
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.72rem', width: '100%', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 600 }}
+                                  onClick={() => setSelectedRequestDetail(req)}
+                                >
+                                  👁️ Fiche Demandeur
+                                </button>
+
+                                {isPending && (
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(56,189,248,0.1)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.3)' }}
+                                    onClick={() => handleMarkQuoteSent(req)}
+                                    disabled={actionPending}
+                                  >
+                                    📧 Devis envoyé
+                                  </button>
+                                )}
+
+                                {(isPending || isQuoteSent || isPaymentReceived) && (
+                                  <button
+                                    className="btn btn-secondary"
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 600 }}
+                                    onClick={() => {
+                                      setGroupRequestToActivate(req);
+                                      setGroupQuotaInput(req.requestedTier === 'institution' ? 100 : 10);
+                                      setGroupDurationInput(12);
+                                      setGroupInstallationType('web');
+                                      setShowActivateGroupModal(true);
+                                    }}
+                                    disabled={actionPending}
+                                  >
+                                    ✓ Activer & Configurer
+                                  </button>
+                                )}
+
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', width: '100%', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                                  onClick={() => { setRejectingRequestId(req.id); setRejectionReason(''); }}
+                                  disabled={actionPending}
+                                >
+                                  ✕ Rejeter
+                                </button>
+
+                                <button
+                                  className="btn btn-secondary"
+                                  style={{ padding: "0.25rem 0.5rem", fontSize: "0.72rem", width: "100%", background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)", marginTop: '2px' }}
+                                  onClick={() => handleDeleteRequest(req.id, req.email)}
+                                  disabled={actionPending}
+                                >
+                                  🗑 Supprimer
+                                </button>
+
+                                {isRejecting && (
+                                  <div style={{ marginTop: '4px', width: '100%' }}>
+                                    <textarea
+                                      placeholder="Motif du rejet..."
+                                      value={rejectionReason}
+                                      onChange={(e) => setRejectionReason(e.target.value)}
+                                      style={{
+                                        width: '100%',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(239,68,68,0.3)',
+                                        borderRadius: '6px',
+                                        padding: '6px 8px',
+                                        color: 'var(--text-primary)',
+                                        fontSize: '0.78rem',
+                                        resize: 'vertical',
+                                        minHeight: '50px',
+                                        outline: 'none'
+                                      }}
+                                    />
+                                    <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                                      <button
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', flex: 1, background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }}
+                                        onClick={() => handleRejectWithReason(req)}
+                                        disabled={actionPending || !rejectionReason.trim()}
+                                      >
+                                        Confirmer
+                                      </button>
+                                      <button
+                                        className="btn btn-secondary"
+                                        style={{ padding: '0.2rem 0.5rem', fontSize: '0.72rem', flex: 1 }}
+                                        onClick={() => setRejectingRequestId(null)}
+                                      >
+                                        Annuler
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
             // Onglet Messagerie
             <div style={{ padding: '0.5rem 0' }}>
               {messagingError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#ef4444', fontSize: '0.85rem' }}>{messagingError}</div>}
@@ -3287,8 +3705,8 @@ Votre superviseur`;
                   </div>
                   <div>
                     <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Statut de la Demande</span>
-                    <span style={{ color: selectedRequestDetail.status === 'payment_received' ? '#34d399' : selectedRequestDetail.status === 'accepted' ? '#38bdf8' : selectedRequestDetail.status === 'rejected' ? '#f87171' : '#fcd34d', fontWeight: 600 }}>
-                      {selectedRequestDetail.status === 'payment_received' ? '💰 Virement Reçu' : selectedRequestDetail.status === 'accepted' ? '✓ Compte Validé' : selectedRequestDetail.status === 'rejected' ? '✕ Rejetée' : '⏳ En attente virement'}
+                    <span style={{ color: selectedRequestDetail.status === 'payment_received' ? '#34d399' : selectedRequestDetail.status === 'accepted' ? '#38bdf8' : selectedRequestDetail.status === 'rejected' ? '#f87171' : selectedRequestDetail.status === 'quote_sent' ? '#38bdf8' : '#fcd34d', fontWeight: 600 }}>
+                      {selectedRequestDetail.status === 'payment_received' ? '💰 Virement Reçu' : selectedRequestDetail.status === 'accepted' ? '✓ Compte Validé' : selectedRequestDetail.status === 'rejected' ? '✕ Rejetée' : selectedRequestDetail.status === 'quote_sent' ? '📧 Devis Envoyé' : '⏳ En attente'}
                     </span>
                   </div>
                   <div>
@@ -3312,33 +3730,79 @@ Votre superviseur`;
 
               {/* Actions Rapides */}
               <div style={{ display: 'flex', gap: '0.6rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-                {selectedRequestDetail.status === 'pending' && selectedRequestDetail.requestedTier !== 'découverte' && (
-                  <button
-                    className="btn btn-secondary"
-                    style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.4)', fontWeight: 700 }}
-                    onClick={async () => {
-                      await handleMarkPaymentReceived(selectedRequestDetail);
-                      setSelectedRequestDetail(null);
-                    }}
-                    disabled={actionPending}
-                  >
-                    💰 Marquer paiement reçu
-                  </button>
-                )}
+                {(() => {
+                  const isGroup = selectedRequestDetail.requestedTier === 'institution' || selectedRequestDetail.requestedTier === 'ultra';
+                  if (isGroup) {
+                    return (
+                      <>
+                        {selectedRequestDetail.status === 'pending' && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.4)', fontWeight: 700 }}
+                            onClick={async () => {
+                              await handleMarkQuoteSent(selectedRequestDetail);
+                              setSelectedRequestDetail(null);
+                            }}
+                            disabled={actionPending}
+                          >
+                            📧 Devis envoyé
+                          </button>
+                        )}
+                        {(selectedRequestDetail.status === 'pending' || selectedRequestDetail.status === 'quote_sent' || selectedRequestDetail.status === 'payment_received') && (
+                          <button
+                            className="btn btn-secondary"
+                            style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.4)', fontWeight: 700 }}
+                            onClick={() => {
+                              const req = selectedRequestDetail;
+                              setGroupRequestToActivate(req);
+                              setGroupQuotaInput(req.requestedTier === 'institution' ? 100 : 10);
+                              setGroupDurationInput(12);
+                              setGroupInstallationType('web');
+                              setSelectedRequestDetail(null);
+                              setShowActivateGroupModal(true);
+                            }}
+                            disabled={actionPending}
+                          >
+                            ✓ Activer & Configurer
+                          </button>
+                        )}
+                      </>
+                    );
+                  }
 
-                {(selectedRequestDetail.status === 'payment_received' || selectedRequestDetail.requestedTier === 'découverte') && (
-                  <button
-                    className="btn btn-secondary"
-                    style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(13,148,136,0.2)', color: '#2dd4bf', border: '1px solid rgba(13,148,136,0.5)', fontWeight: 800 }}
-                    onClick={async () => {
-                      await handleAcceptRequest(selectedRequestDetail);
-                      setSelectedRequestDetail(null);
-                    }}
-                    disabled={actionPending}
-                  >
-                    ✓ Valider & Créer le Compte
-                  </button>
-                )}
+                  // Demandes individuelles normales
+                  return (
+                    <>
+                      {selectedRequestDetail.status === 'pending' && selectedRequestDetail.requestedTier !== 'découverte' && (
+                        <button
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.4)', fontWeight: 700 }}
+                          onClick={async () => {
+                            await handleMarkPaymentReceived(selectedRequestDetail);
+                            setSelectedRequestDetail(null);
+                          }}
+                          disabled={actionPending}
+                        >
+                          💰 Marquer paiement reçu
+                        </button>
+                      )}
+
+                      {(selectedRequestDetail.status === 'payment_received' || selectedRequestDetail.requestedTier === 'découverte') && (
+                        <button
+                          className="btn btn-secondary"
+                          style={{ flex: 1, padding: '10px', fontSize: '0.82rem', background: 'rgba(13,148,136,0.2)', color: '#2dd4bf', border: '1px solid rgba(13,148,136,0.5)', fontWeight: 800 }}
+                          onClick={async () => {
+                            await handleAcceptRequest(selectedRequestDetail);
+                            setSelectedRequestDetail(null);
+                          }}
+                          disabled={actionPending}
+                        >
+                          ✓ Valider & Créer le Compte
+                        </button>
+                      )}
+                    </>
+                  );
+                })()}
 
                 <button
                   className="btn btn-secondary"
@@ -3346,6 +3810,114 @@ Votre superviseur`;
                   onClick={() => setSelectedRequestDetail(null)}
                 >
                   Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale d'Activation Groupes & Institutions */}
+      {showActivateGroupModal && groupRequestToActivate && (
+        <div 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} 
+          onClick={() => { setShowActivateGroupModal(false); setGroupRequestToActivate(null); }}
+        >
+          <div 
+            style={{ background: '#0f172a', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '16px', maxWidth: '520px', width: '100%', padding: '1.75rem', boxShadow: '0 25px 50px -12px rgba(147, 51, 234, 0.25)', color: 'white' }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.25rem' }}>⚙️</span>
+                <h3 style={{ margin: 0, color: '#c084fc', fontSize: '1.2rem', fontWeight: 800 }}>
+                  Configuration Accès Groupe
+                </h3>
+              </div>
+              <button 
+                onClick={() => { setShowActivateGroupModal(false); setGroupRequestToActivate(null); }}
+                style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '1.3rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Infos demandeur */}
+              <div style={{ background: 'rgba(147, 51, 234, 0.05)', border: '1px solid rgba(147, 51, 234, 0.15)', borderRadius: '8px', padding: '12px 14px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#c084fc', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '4px' }}>
+                  Établissement & Responsable
+                </div>
+                <div style={{ fontSize: '0.92rem', fontWeight: 600 }}>{groupRequestToActivate.firstName} {groupRequestToActivate.lastName}</div>
+                <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>{groupRequestToActivate.email}</div>
+                <div style={{ fontSize: '0.88rem', color: '#cbd5e1', marginTop: '6px', fontWeight: 700 }}>🏛️ {groupRequestToActivate.institution}</div>
+                <div style={{ fontSize: '0.82rem', color: '#94a3b8' }}>Profession : {groupRequestToActivate.profession}</div>
+              </div>
+
+              {/* Formulaire */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 600 }}>
+                    Capacité d'étudiants (Nombre de sièges) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={groupQuotaInput}
+                    onChange={(e) => setGroupQuotaInput(Number(e.target.value))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.9rem' }}
+                  />
+                  <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#64748b' }}>
+                    Nombre maximum de comptes étudiants que ce superviseur pourra enregistrer.
+                  </p>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 600 }}>
+                    Type d'installation requis *
+                  </label>
+                  <select
+                    value={groupInstallationType}
+                    onChange={(e) => setGroupInstallationType(e.target.value as 'web' | 'offline_local')}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: '#1e293b', color: 'white', fontSize: '0.9rem' }}
+                  >
+                    <option value="web">Accès Web en ligne classique (Portail)</option>
+                    <option value="offline_local">Offline local (Package exécutable .exe/.dmg)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '6px', fontWeight: 600 }}>
+                    Durée de validité (en mois) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={groupDurationInput}
+                    onChange={(e) => setGroupDurationInput(Number(e.target.value))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.9rem' }}
+                  />
+                </div>
+              </div>
+
+              {/* Pied de formulaire */}
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={handleActivateGroupRequest}
+                  disabled={actionPending}
+                  style={{ flex: 1, padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #c084fc, #9333ea)', color: 'white', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  {actionPending ? 'Activation...' : '⚡ Activer le Compte'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowActivateGroupModal(false); setGroupRequestToActivate(null); }}
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: '#94a3b8', cursor: 'pointer' }}
+                >
+                  Annuler
                 </button>
               </div>
             </div>
