@@ -111,6 +111,7 @@ function startNextServer(port) {
 
     // Lancement de server.js en utilisant l'exécutable d'Electron en mode interpréteur Node (ELECTRON_RUN_AS_NODE = 1)
     nextServerProcess = spawn(process.execPath, [serverPath], {
+      cwd: path.dirname(serverPath),
       env: {
         ...process.env,
         ELECTRON_RUN_AS_NODE: '1',
