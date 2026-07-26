@@ -19,6 +19,7 @@ import {
   replyToSupportMessage,
   markMessageReadState,
   loadSupportMessages,
+  deleteSupportMessage,
   FirestoreSupportMessage
 } from '@/utils/firestore';
 import SubscriptionModal from '@/components/SubscriptionModal';
@@ -1339,6 +1340,23 @@ Votre superviseur`;
       } catch (e: any) {
         setMessagingError("Erreur d'envoi : " + (e.message || e));
       }
+    }
+  };
+
+  const handleDeleteMessage = async (msgId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement ce message ?")) return;
+    setMessagingError('');
+    setMessagingSuccess('');
+    try {
+      await deleteSupportMessage(msgId);
+      if (activeSupportMessage?.id === msgId) {
+        setActiveSupportMessage(null);
+      }
+      setMessagingSuccess('Message supprimé avec succès.');
+      await fetchSupportMessages();
+    } catch (err: any) {
+      setMessagingError("Erreur lors de la suppression : " + (err.message || err));
     }
   };
 
@@ -2748,7 +2766,26 @@ Votre superviseur`;
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                           <span style={{ fontWeight: isUnread ? 700 : 500, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{msg.senderName}</span>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteMessage(msg.id, e)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#f87171',
+                                cursor: 'pointer',
+                                fontSize: '0.85rem',
+                                padding: '2px 4px',
+                                opacity: 0.8,
+                                borderRadius: '4px'
+                              }}
+                              title="Supprimer ce message"
+                            >
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                         <div style={{ fontSize: '0.82rem', fontWeight: isUnread ? 600 : 400, color: 'var(--text-secondary)', marginBottom: '2px' }}>{msg.subject}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.content}</div>
@@ -2760,7 +2797,29 @@ Votre superviseur`;
 
               {activeSupportMessage && (
                 <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
-                  <h4 style={{ fontSize: '0.95rem', marginBottom: '8px' }}>{activeSupportMessage.subject}</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ fontSize: '0.95rem', margin: 0 }}>{activeSupportMessage.subject}</h4>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMessage(activeSupportMessage.id)}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        color: '#f87171',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      title="Supprimer ce message"
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  </div>
                   <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                     <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
                       {activeSupportMessage.senderUid === user?.uid ? "Vous" : activeSupportMessage.senderName} ({activeSupportMessage.senderEmail})

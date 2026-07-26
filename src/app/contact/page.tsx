@@ -7,6 +7,7 @@ import {
   loadSupportMessages, 
   markMessageReadState, 
   replyToSupportMessage,
+  deleteSupportMessage,
   FirestoreSupportMessage 
 } from '@/utils/firestore';
 import styles from './page.module.css';
@@ -28,6 +29,22 @@ export default function ContactPage() {
   // Reply fields
   const [studentReplyText, setStudentReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
+
+  const handleDeleteMessage = async (msgId: string) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer définitivement ce message ?")) return;
+    setError('');
+    setSuccess('');
+    try {
+      await deleteSupportMessage(msgId);
+      if (activeMessage?.id === msgId) {
+        setActiveMessage(null);
+      }
+      setSuccess('Message supprimé avec succès.');
+      await fetchMessages();
+    } catch (err: any) {
+      setError("Erreur lors de la suppression : " + (err.message || err));
+    }
+  };
   
   const fetchMessages = async () => {
     if (user && !guestMode) {
@@ -273,11 +290,33 @@ export default function ContactPage() {
                 </div>
               ) : activeMessage ? (
                 <div className={styles.conversation}>
-                  <div className={styles.chatHeader}>
-                    <h3>{activeMessage.subject}</h3>
-                    <span className={styles.chatDate}>
-                      Envoyé le {activeMessage.createdAt ? new Date(activeMessage.createdAt).toLocaleString('fr-FR') : ''}
-                    </span>
+                  <div className={styles.chatHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3>{activeMessage.subject}</h3>
+                      <span className={styles.chatDate}>
+                        Envoyé le {activeMessage.createdAt ? new Date(activeMessage.createdAt).toLocaleString('fr-FR') : ''}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMessage(activeMessage.id)}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        color: '#f87171',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      title="Supprimer ce message"
+                    >
+                      🗑️ Supprimer
+                    </button>
                   </div>
 
                   <div className={styles.bubbleArea}>

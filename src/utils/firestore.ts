@@ -967,6 +967,18 @@ export async function loadSupportMessages(filters: {
   }
 }
 
+export async function deleteSupportMessage(messageId: string) {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const docRef = doc(db, 'support_messages', messageId);
+    await deleteDoc(docRef);
+    console.log(`✅ Message support ${messageId} supprimé avec succès.`);
+  } catch (error) {
+    console.error('❌ Erreur deleteSupportMessage:', error);
+    throw error;
+  }
+}
+
 export function listenToUnreadMessages(
   uid: string,
   role: 'student' | 'teacher' | 'admin',
