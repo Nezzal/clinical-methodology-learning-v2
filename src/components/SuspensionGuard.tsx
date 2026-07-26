@@ -576,6 +576,9 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
         padding: '2rem', 
         minHeight: '100vh', 
         width: isSidebarCollapsed ? 'calc(100% - 70px)' : 'calc(100% - 280px)',
+        maxWidth: isSidebarCollapsed ? 'calc(100vw - 70px)' : 'calc(100vw - 280px)',
+        overflowX: 'hidden',
+        boxSizing: 'border-box',
         transition: 'margin-left var(--transition-normal), width var(--transition-normal)'
       }}>
         {children}

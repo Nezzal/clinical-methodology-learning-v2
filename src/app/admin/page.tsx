@@ -2747,7 +2747,7 @@ Votre superviseur`;
               ) : supportMessages.length === 0 ? (
                 <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Aucun message.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '400px', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto', paddingRight: '4px' }}>
                   {supportMessages.map((msg) => {
                     const isActive = activeSupportMessage?.id === msg.id;
                     const isUnread = msg.senderUid !== user?.uid && ((role === 'admin' && !msg.adminRead) || (role === 'teacher' && !msg.teacherRead));
@@ -2756,39 +2756,52 @@ Votre superviseur`;
                         key={msg.id}
                         onClick={() => handleSelectSupportMessage(msg)}
                         style={{
-                          padding: '10px 12px',
-                          borderRadius: '8px',
-                          background: isActive ? 'rgba(13,148,136,0.1)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${isActive ? 'rgba(13,148,136,0.3)' : 'transparent'}`,
+                          padding: '12px 14px',
+                          borderRadius: '10px',
+                          background: isActive ? 'rgba(13,148,136,0.15)' : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${isActive ? 'rgba(13,148,136,0.4)' : 'rgba(255,255,255,0.08)'}`,
                           cursor: 'pointer',
-                          transition: '0.2s'
+                          transition: '0.2s',
+                          width: '100%',
+                          boxSizing: 'border-box'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                          <span style={{ fontWeight: isUnread ? 700 : 500, fontSize: '0.85rem', color: 'var(--text-primary)' }}>{msg.senderName}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}</span>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', gap: '8px' }}>
+                          <span style={{ fontWeight: isUnread ? 700 : 600, fontSize: '0.88rem', color: 'var(--text-primary)', minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {msg.senderName}
+                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                              {msg.createdAt ? new Date(msg.createdAt).toLocaleDateString('fr-FR') : ''}
+                            </span>
                             <button
                               type="button"
                               onClick={(e) => handleDeleteMessage(msg.id, e)}
                               style={{
-                                background: 'transparent',
-                                border: 'none',
+                                background: 'rgba(239, 68, 68, 0.2)',
+                                border: '1px solid rgba(239, 68, 68, 0.5)',
                                 color: '#f87171',
                                 cursor: 'pointer',
-                                fontSize: '0.85rem',
-                                padding: '2px 4px',
-                                opacity: 0.8,
-                                borderRadius: '4px'
+                                fontSize: '0.75rem',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontWeight: 600,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
                               }}
                               title="Supprimer ce message"
                             >
-                              🗑️
+                              🗑️ Supprimer
                             </button>
                           </div>
                         </div>
-                        <div style={{ fontSize: '0.82rem', fontWeight: isUnread ? 600 : 400, color: 'var(--text-secondary)', marginBottom: '2px' }}>{msg.subject}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{msg.content}</div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: isUnread ? 600 : 400, color: 'var(--accent-primary)', marginBottom: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {msg.subject}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                          {msg.content}
+                        </div>
                       </div>
                     );
                   })}
