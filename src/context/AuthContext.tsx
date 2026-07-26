@@ -121,6 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             stats: {},
             updatedAt: new Date()
           } as any);
+          setLoading(false);
           return;
         }
       } catch (err) {
@@ -156,16 +157,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         stats: {},
         updatedAt: new Date()
       } as any);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isFirebaseEnabled || !auth) {
       setLoading(false);
       return;
     }
 
+    // Si pas connecté à internet, débloquer le chargement rapidement pour éviter l'écran infini
+    if (typeof window !== 'undefined' && !navigator.onLine) {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Timer de sécurité 1.5s pour éviter d'être bloqué sur "Vérification de la session..." si Firebase stagne hors-ligne
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
+
+    if (!isFirebaseEnabled || !auth) {
+      setLoading(false);
+      clearTimeout(safetyTimer);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      clearTimeout(safetyTimer);
       // Interception pour la licence hors-ligne
       const savedLicenseStr = localStorage.getItem('recif_offline_license');
       if (typeof window !== 'undefined' && savedLicenseStr) {
