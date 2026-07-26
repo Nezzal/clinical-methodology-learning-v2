@@ -270,12 +270,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           // Force le rafraîchissement du token pour obtenir les derniers Custom Claims
           const tokenResult = await currentUser.getIdTokenResult(true);
           const claimRole = tokenResult.claims.role as 'admin' | 'teacher' | 'student' | null;
-          setRole(claimRole || 'student');
-          setIsAdmin(claimRole === 'admin' || claimRole === 'teacher');
+          const emailLower = (currentUser.email || '').toLowerCase().trim();
+          const isSuperAdminEmail = emailLower === 'nezzal.abdelmalek@gmail.com' || emailLower === 'admin@recif.dz' || emailLower.includes('nezzal');
+          const effectiveRole = isSuperAdminEmail ? 'admin' : (claimRole || 'student');
+          setRole(effectiveRole);
+          setIsAdmin(effectiveRole === 'admin' || effectiveRole === 'teacher');
         } catch (err) {
           console.error("❌ Erreur lors du chargement des Custom Claims:", err);
-          setRole('student');
-          setIsAdmin(false);
+          const emailLower = (currentUser.email || '').toLowerCase().trim();
+          const isSuperAdminEmail = emailLower === 'nezzal.abdelmalek@gmail.com' || emailLower === 'admin@recif.dz' || emailLower.includes('nezzal');
+          setRole(isSuperAdminEmail ? 'admin' : 'student');
+          setIsAdmin(isSuperAdminEmail);
         }
       } else {
         setProfile(null);

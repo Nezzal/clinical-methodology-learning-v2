@@ -580,7 +580,7 @@ export default function Tuteur() {
   const handleSend = async (textToSend: string, forceMode?: 'free' | 'protocol') => {
     if (!textToSend.trim() || loading) return;
 
-    const userTier = getUserTier(profile);
+    const userTier = getUserTier(profile, user);
     const quotaConfig = getQuotaConfig(userTier);
     const todayKey = `recif_tuteur_q_${new Date().toISOString().slice(0, 10)}`;
     const questionsToday = parseInt(localStorage.getItem(todayKey) || '0', 10);

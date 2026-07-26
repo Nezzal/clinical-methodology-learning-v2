@@ -13,10 +13,29 @@ export interface QuotaConfig {
   watermarkText: string;
 }
 
-export function getUserTier(profile: FirestoreUser | null | undefined): SubscriptionTier {
+export function getUserTier(profile?: FirestoreUser | null, user?: any): SubscriptionTier {
+  const emailLower = ((profile?.email || user?.email || '') as string).toLowerCase().trim();
+  const uid = ((profile?.uid || user?.uid || '') as string).trim();
+  const role = profile?.role;
+
+  // Accorder l'accès ILLIMITÉ (ultra) à tous les administrateurs, enseignants, Pr Nezzal et sessions hors-ligne / licences
+  const isUnlimitedUser = 
+    role === 'admin' || 
+    role === 'teacher' ||
+    emailLower === 'nezzal.abdelmalek@gmail.com' ||
+    emailLower === 'admin@recif.dz' ||
+    emailLower.includes('nezzal') ||
+    uid === 'offline_admin_uid' ||
+    uid.startsWith('offline_license_uid_');
+
+  if (isUnlimitedUser) {
+    return 'ultra';
+  }
+
   if (!profile || !profile.subscription || !profile.subscription.tier) {
     return 'découverte';
   }
+
   const t = profile.subscription.tier.toLowerCase().trim();
   if (t.includes('expert')) return 'expert';
   if (t.includes('pro')) return 'pro';
