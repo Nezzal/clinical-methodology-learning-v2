@@ -1148,11 +1148,9 @@ Votre superviseur`;
 
     handleUrlChange();
     window.addEventListener('popstate', handleUrlChange);
-    const interval = setInterval(handleUrlChange, 250);
 
     return () => {
       window.removeEventListener('popstate', handleUrlChange);
-      clearInterval(interval);
     };
   }, []);
 
