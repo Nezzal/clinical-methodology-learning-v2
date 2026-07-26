@@ -10,8 +10,8 @@
     "lint": "eslint",
     "electron:dev": "ELECTRON_DEV=1 electron .",
     "electron:build": "npm run build && node scripts/copy-standalone-assets.js",
-    "electron:package": "electron-builder build --win --publish never",
-    "electron:package:mac": "electron-builder build --mac --publish never",
+    "electron:package": "npm run electron:build && electron-builder build --win --publish never",
+    "electron:package:mac": "npm run electron:build && electron-builder build --mac --publish never",
     "zip": "zip -r clinical-methodology-learning.zip . -x \"node_modules/*\" \".next/*\" \".git/*\" \".env*\" \"clinical-methodology-learning.zip\" \"dist/*\" \"out/*\" \".venv/*\""
   },
   "dependencies": {

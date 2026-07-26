@@ -91,8 +91,16 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [error, setError] = useState('');
   const [hasMounted, setHasMounted] = useState(false);
+  const [maxWaitExceeded, setMaxWaitExceeded] = useState(false);
 
-  // États pour la FAQ flottante
+  useEffect(() => {
+    setHasMounted(true);
+    const timer = setTimeout(() => {
+      setMaxWaitExceeded(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [faqSearch, setFaqSearch] = useState('');
   const [activeFaq, setActiveFaq] = useState<{ catIndex: number; qIndex: number } | null>(null);
@@ -192,13 +200,13 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
 
   // Redirection automatique pour les utilisateurs non connectés en production (Firebase activé)
   useEffect(() => {
-    if (!loading && isFirebaseConfigured && !user && !guestMode && pathname !== '/login') {
+    if ((!loading || maxWaitExceeded) && isFirebaseConfigured && !user && !guestMode && pathname !== '/login') {
       router.push('/login');
     }
-  }, [user, loading, isFirebaseConfigured, guestMode, pathname, router]);
+  }, [user, loading, maxWaitExceeded, isFirebaseConfigured, guestMode, pathname, router]);
 
   // Écran de chargement initial pendant la vérification de la session ou le montage initial (SSR)
-  if (!hasMounted || (loading && isFirebaseConfigured)) {
+  if (!hasMounted || (loading && isFirebaseConfigured && !maxWaitExceeded)) {
     return (
       <div style={{
         display: 'flex',
