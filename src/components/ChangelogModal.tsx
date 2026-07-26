@@ -20,8 +20,21 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.7.0',
+    version: 'v1.7.1',
     isCurrent: true,
+    date: '26 Juillet 2026',
+    title: 'Acquisition de l\'Exécutable Hors-ligne & Licences',
+    tags: ['Licences', 'Hors-ligne', 'Sécurité', 'Admin'],
+    features: [
+      'Nouveau module d\'acquisition de licences de bureau hors-ligne (.exe / .app).',
+      'Intégration d\'un bouton de demande de licence interactive redirigée vers la supervision administrateur.',
+      'Refonte ergonomique de la page d\'acquisition avec explications commerciales (licence offerte pour abonnement annuel EXPERT/ULTRA).',
+      'Suppression définitive du mode invité obsolète pour simplifier les flux d\'accès.',
+      'Mise à jour des tarifs EXPERT et ULTRA variables selon la durée d\'abonnement.'
+    ]
+  },
+  {
+    version: 'v1.7.0',
     date: '24 Juillet 2026',
     title: 'Recherche PubMed IA & Bilan Pédagogique Interactif v2',
     tags: ['PubMed', 'IA MeSH', 'Synthèse Biblio', 'Rapport v2'],
