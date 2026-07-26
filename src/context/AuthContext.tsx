@@ -98,6 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             email,
             displayName,
             photoURL: null,
+            getIdToken: async () => uid,
             getIdTokenResult: async () => ({
               claims: { role: 'student' }
             })
@@ -137,6 +138,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: cachedEmail,
         displayName: isSuperAdmin ? 'Superviseur RECIF (Hors-ligne)' : 'Enseignant RECIF (Hors-ligne)',
         photoURL: null,
+        getIdToken: async () => 'offline_admin_uid',
         getIdTokenResult: async () => ({
           claims: { role: isSuperAdmin ? 'admin' : 'teacher' }
         })
@@ -180,6 +182,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               email,
               displayName,
               photoURL: null,
+              getIdToken: async () => uid,
               getIdTokenResult: async () => ({
                 claims: { role: 'student' }
               })
@@ -220,6 +223,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email: cachedEmail,
           displayName: isSuperAdmin ? 'Superviseur RECIF (Hors-ligne)' : 'Enseignant RECIF (Hors-ligne)',
           photoURL: null,
+          getIdToken: async () => 'offline_admin_uid',
           getIdTokenResult: async () => ({
             claims: { role: isSuperAdmin ? 'admin' : 'teacher' }
           })
