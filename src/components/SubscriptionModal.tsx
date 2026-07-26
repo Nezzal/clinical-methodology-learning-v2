@@ -263,15 +263,24 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <div className={styles.planSubtitle}>Chercheur & Praticien Solo</div>
                 <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#e9d5ff', margin: '4px 0' }}>
                   {residence === 'dz' ? (
-                    '3 500 DZD / mois'
+                    selectedDuration === '1m' ? '3 500 DZD / mois' :
+                    selectedDuration === '3m' ? '9 900 DZD (3 300/m)' :
+                    selectedDuration === '6m' ? '17 900 DZD (2 980/m)' :
+                    '29 900 DZD / an (2 490/m)'
                   ) : residence === 'africa' ? (
-                    '34 € / mois (~22 300 FCFA)'
+                    selectedDuration === '1m' ? '34 € / mois (~22 300 FCFA)' :
+                    selectedDuration === '3m' ? '90 € (~59 030 FCFA - 30 €/m)' :
+                    selectedDuration === '6m' ? '156 € (~102 330 FCFA - 26 €/m)' :
+                    '240 € / an (~157 430 FCFA - 20 €/m)'
                   ) : (
-                    '69 € / mois'
+                    selectedDuration === '1m' ? '69 € / mois' :
+                    selectedDuration === '3m' ? '177 € (59 €/m)' :
+                    selectedDuration === '6m' ? '294 € (49 €/m)' :
+                    '468 € / an (39 €/m)'
                   )}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#a7f3d0', fontWeight: 600 }}>
-                  Abonnement mensuel renouvelable
+                  Abonnement selon la durée sélectionnée
                 </div>
                 <span className={styles.planBadgeBonus}>🎁 + 10 jours offerts sur virement</span>
               </div>
@@ -304,32 +313,65 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fbbf24', margin: '6px 0', lineHeight: '1.3' }}>
                   {residence === 'dz' ? (
                     <>
-                      <div>3 500 DZD / mois</div>
+                      <div>
+                        {selectedDuration === '1m' ? '3 500 DZD / mois' :
+                         selectedDuration === '3m' ? '9 900 DZD (3 300/m)' :
+                         selectedDuration === '6m' ? '18 900 DZD (3 150/m)' :
+                         '30 900 DZD / an (2 575/m)'}
+                      </div>
                       <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
-                        Base (2 500 DA) + 1er étudiant inclus (1 000 DA)
+                        {selectedDuration === '1m' ? 'Base (2 500 DA) + 1er étudiant inclus (1 000 DA)' :
+                         selectedDuration === '3m' ? 'Base (6 900 DA) + 1er étudiant inclus (3 000 DA)' :
+                         selectedDuration === '6m' ? 'Base (12 900 DA) + 1er étudiant inclus (6 000 DA)' :
+                         'Base (20 900 DA) + 1er étudiant inclus (10 000 DA)'}
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '2px' }}>
-                        + 1 000 DA/mois par étudiant supp.
+                        {selectedDuration === '1m' ? '+ 1 000 DA/mois par étudiant supp.' :
+                         selectedDuration === '3m' ? '+ 3 000 DA (~1 000/m) par étudiant supp.' :
+                         selectedDuration === '6m' ? '+ 5 400 DA (~900/m) par étudiant supp.' :
+                         '+ 9 600 DA (~800/m) par étudiant supp.'}
                       </div>
                     </>
                   ) : residence === 'africa' ? (
                     <>
-                      <div>37 € / mois <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>(~24 270 FCFA)</span></div>
+                      <div>
+                        {selectedDuration === '1m' ? '37 € / mois (~24 270 FCFA)' :
+                         selectedDuration === '3m' ? '105 € (~68 870 FCFA - 35 €/m)' :
+                         selectedDuration === '6m' ? '198 € (~129 880 FCFA - 33 €/m)' :
+                         '324 € / an (~212 530 FCFA - 27 €/m)'}
+                      </div>
                       <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
-                        Base (20 €) + 1er étudiant inclus (17 €)
+                        {selectedDuration === '1m' ? 'Base (20 €) + 1er étudiant inclus (17 €)' :
+                         selectedDuration === '3m' ? 'Base (54 €) + 1er étudiant inclus (51 €)' :
+                         selectedDuration === '6m' ? 'Base (96 €) + 1er étudiant inclus (102 €)' :
+                         'Base (144 €) + 1er étudiant inclus (180 €)'}
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '2px' }}>
-                        + 17 €/mois par étudiant supp.
+                        {selectedDuration === '1m' ? '+ 17 €/mois par étudiant supp.' :
+                         selectedDuration === '3m' ? '+ 51 € (~17 €/m) par étudiant supp.' :
+                         selectedDuration === '6m' ? '+ 90 € (~15 €/m) par étudiant supp.' :
+                         '+ 144 € (~12 €/m) par étudiant supp.'}
                       </div>
                     </>
                   ) : (
                     <>
-                      <div>104 € / mois</div>
+                      <div>
+                        {selectedDuration === '1m' ? '104 € / mois' :
+                         selectedDuration === '3m' ? '282 € (94 €/m)' :
+                         selectedDuration === '6m' ? '504 € (84 €/m)' :
+                         '828 € / an (69 €/m)'}
+                      </div>
                       <div style={{ fontSize: '0.78rem', color: '#fcd34d', fontWeight: 600, marginTop: '3px' }}>
-                        Base (59 €) + 1er étudiant inclus (45 €)
+                        {selectedDuration === '1m' ? 'Base (59 €) + 1er étudiant inclus (45 €)' :
+                         selectedDuration === '3m' ? 'Base (147 €) + 1er étudiant inclus (135 €)' :
+                         selectedDuration === '6m' ? 'Base (234 €) + 1er étudiant inclus (270 €)' :
+                         'Base (348 €) + 1er étudiant inclus (480 €)'}
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#cbd5e1', marginTop: '2px' }}>
-                        + 45 €/mois par étudiant supp.
+                        {selectedDuration === '1m' ? '+ 45 €/mois par étudiant supp.' :
+                         selectedDuration === '3m' ? '+ 135 € (45 €/m) par étudiant supp.' :
+                         selectedDuration === '6m' ? '+ 240 € (40 €/m) par étudiant supp.' :
+                         '+ 360 € (30 €/m) par étudiant supp.'}
                       </div>
                     </>
                   )}
