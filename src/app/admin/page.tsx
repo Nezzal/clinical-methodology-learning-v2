@@ -2798,15 +2798,21 @@ Votre superviseur`;
                 </div>
               )}
 
-              <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-glass)', paddingTop: '16px' }}>
-                <h4 style={{ fontSize: '0.9rem', marginBottom: '10px' }}>Nouveau message</h4>
+              <div style={{ marginTop: '20px', borderTop: '1px solid var(--border-glass)', paddingTop: '16px', paddingBottom: '60px' }}>
+                <h4 style={{ fontSize: '0.95rem', marginBottom: '10px', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  Nouveau message
+                </h4>
                 <form onSubmit={handleSendNewMessage}>
                   {role === 'admin' && (
                     <select
                       value={targetTeacherUid}
                       onChange={(e) => setTargetTeacherUid(e.target.value)}
                       required
-                      style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '8px' }}
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '10px' }}
                     >
                       <option value="" disabled style={{ background: '#1a1a2e' }}>Sélectionner un destinataire</option>
                       <optgroup label="Enseignants" style={{ background: '#1a1a2e', color: 'var(--accent-primary)' }}>
@@ -2823,21 +2829,45 @@ Votre superviseur`;
                   )}
                   <input
                     type="text"
-                    placeholder="Sujet"
+                    placeholder="Sujet du message"
                     value={newMsgSubject}
                     onChange={(e) => setNewMsgSubject(e.target.value)}
                     required
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '8px', outline: 'none' }}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '10px', outline: 'none' }}
                   />
                   <textarea
                     placeholder="Votre message..."
                     value={newMsgContent}
                     onChange={(e) => setNewMsgContent(e.target.value)}
                     required
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '8px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '60px', resize: 'vertical', outline: 'none', marginBottom: '8px' }}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '80px', resize: 'vertical', outline: 'none', marginBottom: '14px' }}
                   />
-                  <button type="submit" className="btn btn-secondary" style={{ width: '100%', fontSize: '0.85rem' }} disabled={isSendingNewMsg}>
-                    {isSendingNewMsg ? 'Envoi...' : 'Envoyer le message'}
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    style={{ 
+                      width: '100%', 
+                      fontSize: '0.9rem', 
+                      padding: '12px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      gap: '8px', 
+                      background: 'linear-gradient(135deg, var(--accent-primary) 0%, #0d9488 100%)', 
+                      color: '#ffffff', 
+                      border: 'none', 
+                      borderRadius: '8px', 
+                      fontWeight: '600', 
+                      cursor: 'pointer', 
+                      boxShadow: '0 4px 14px rgba(13, 148, 136, 0.4)' 
+                    }} 
+                    disabled={isSendingNewMsg}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    {isSendingNewMsg ? 'Envoi en cours...' : 'Envoyer le message'}
                   </button>
                 </form>
               </div>

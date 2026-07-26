@@ -587,10 +587,10 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
         className="faq-fab no-print"
         style={{
           position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          width: '56px',
-          height: '56px',
+          bottom: '1.25rem',
+          right: '1.25rem',
+          width: '46px',
+          height: '46px',
           borderRadius: '50%',
           background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.95) 0%, rgba(79, 70, 229, 0.95) 100%)',
           backdropFilter: 'blur(10px)',
@@ -601,7 +601,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 9999,
+          zIndex: 1000,
           outline: 'none',
           padding: 0
         }}
