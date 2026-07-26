@@ -946,7 +946,10 @@ export async function loadSupportMessages(filters: {
     }
     if (filters.recipientRole) {
       messages = messages.filter(m => {
-        if (filters.includeSentBy && m.senderUid === filters.includeSentBy) {
+        if (
+          (filters.includeSentBy && (m.senderUid === filters.includeSentBy || m.senderRole === 'admin')) ||
+          m.senderRole === 'admin'
+        ) {
           return true;
         }
 

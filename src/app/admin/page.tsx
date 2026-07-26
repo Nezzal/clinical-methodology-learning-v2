@@ -170,7 +170,7 @@ export default function AdminDashboard() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [messagingError, setMessagingError] = useState('');
   const [messagingSuccess, setMessagingSuccess] = useState('');
-  const [adminMessageFilter, setAdminMessageFilter] = useState<'admin' | 'all'>('admin');
+  const [adminMessageFilter, setAdminMessageFilter] = useState<'admin' | 'all'>('all');
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -2709,8 +2709,8 @@ Votre superviseur`;
                     onChange={(e) => setAdminMessageFilter(e.target.value as 'admin' | 'all')}
                     style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.5rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}
                   >
-                    <option value="admin" style={{ background: '#1a1a2e' }}>Messages pour moi (Admin)</option>
-                    <option value="all" style={{ background: '#1a1a2e' }}>Tous les messages</option>
+                    <option value="all" style={{ background: '#1a1a2e' }}>Tous les messages (Reçus & Envoyés)</option>
+                    <option value="admin" style={{ background: '#1a1a2e' }}>Messages reçus uniquement</option>
                   </select>
                 )}
                 {unreadMessagesCount > 0 && (
