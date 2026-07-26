@@ -82,6 +82,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (savedGuest) {
       setGuestMode(true);
     }
+
+    const savedLicenseStr = localStorage.getItem('recif_offline_license');
+    if (savedLicenseStr) {
+      try {
+        const license = JSON.parse(savedLicenseStr);
+        if (license && license.data && license.data.expiresAt > Date.now()) {
+          const email = license.data.email;
+          const tier = license.data.tier;
+          const uid = 'offline_license_uid_' + email.replace(/[^a-z0-9]/g, '_');
+          const displayName = `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+          
+          setUser({
+            uid,
+            email,
+            displayName,
+            photoURL: null,
+            getIdTokenResult: async () => ({
+              claims: { role: 'student' }
+            })
+          } as any);
+          setRole('student');
+          setIsAdmin(false);
+          setGuestMode(false);
+          setProfile({
+            uid,
+            email,
+            displayName,
+            photoURL: null,
+            level: 'Intermédiaire',
+            role: 'student',
+            subscription: {
+              tier,
+              status: 'active',
+              expiresAt: license.data.expiresAt
+            },
+            stats: {},
+            updatedAt: new Date()
+          } as any);
+          return;
+        }
+      } catch (err) {
+        console.warn("⚠️ Erreur lecture licence locale au montage:", err);
+      }
+    }
     
     const savedOfflineAdmin = localStorage.getItem('offline_admin_active') === 'true';
     if (savedOfflineAdmin) {
@@ -120,6 +164,52 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      // Interception pour la licence hors-ligne
+      const savedLicenseStr = localStorage.getItem('recif_offline_license');
+      if (typeof window !== 'undefined' && savedLicenseStr) {
+        try {
+          const license = JSON.parse(savedLicenseStr);
+          if (license && license.data && license.data.expiresAt > Date.now()) {
+            const email = license.data.email;
+            const tier = license.data.tier;
+            const uid = 'offline_license_uid_' + email.replace(/[^a-z0-9]/g, '_');
+            const displayName = `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+            
+            setUser({
+              uid,
+              email,
+              displayName,
+              photoURL: null,
+              getIdTokenResult: async () => ({
+                claims: { role: 'student' }
+              })
+            } as any);
+            setRole('student');
+            setIsAdmin(false);
+            setGuestMode(false);
+            setProfile({
+              uid,
+              email,
+              displayName,
+              photoURL: null,
+              level: 'Intermédiaire',
+              role: 'student',
+              subscription: {
+                tier,
+                status: 'active',
+                expiresAt: license.data.expiresAt
+              },
+              stats: {},
+              updatedAt: new Date()
+            } as any);
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("⚠️ Erreur lecture licence locale dans AuthChanged:", err);
+        }
+      }
+
       // Interception pour la session admin hors-ligne persistante
       if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
         const cachedEmail = localStorage.getItem('offline_admin_email') || 'admin@recif.dz';
@@ -408,6 +498,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('guest_mode_active');
     localStorage.removeItem('offline_admin_active');
     localStorage.removeItem('offline_admin_email');
+    localStorage.removeItem('recif_offline_license');
     
     if (isFirebaseEnabled && auth) {
       try {

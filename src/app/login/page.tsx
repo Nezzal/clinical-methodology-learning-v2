@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { sendSupportMessage } from '@/utils/firestore';
+import { verifyLicense } from '@/utils/license';
 
 export default function Login() {
   const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
@@ -15,6 +16,8 @@ export default function Login() {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [isLicenseMode, setIsLicenseMode] = useState(false);
+  const [licenseKeyInput, setLicenseKeyInput] = useState('');
   const [requestedRole, setRequestedRole] = useState<'student' | 'teacher'>('student');
   const [requestedTier, setRequestedTier] = useState<string>('découverte');
 
@@ -108,6 +111,41 @@ export default function Login() {
         friendlyError = error.message;
       }
       setErrorMsg(friendlyError);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleLicenseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setSubmitting(true);
+
+    try {
+      const result = await verifyLicense(licenseKeyInput);
+      if (!result.isValid || !result.data) {
+        setErrorMsg(result.error || "Clé de licence invalide.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Enregistrer la licence localement
+      localStorage.setItem('recif_offline_license', JSON.stringify({
+        key: licenseKeyInput.trim(),
+        data: result.data
+      }));
+
+      setSuccessMsg("Licence validée avec succès ! Redirection en cours...");
+      
+      // Dispatcher l'événement pour signaler que l'auth a changé
+      window.dispatchEvent(new Event('progress_changed'));
+
+      setTimeout(() => {
+        router.push('/');
+      }, 1000);
+    } catch (err: any) {
+      setErrorMsg("Une erreur est survenue : " + (err.message || String(err)));
     } finally {
       setSubmitting(false);
     }
@@ -778,6 +816,66 @@ export default function Login() {
                       {submitting ? 'Envoi en cours...' : 'Envoyer ma demande d\'accès'}
                     </button>
                   </form>
+                ) : isLicenseMode ? (
+                  // Formulaire de validation de licence hors-ligne
+                  <form className={styles.form} onSubmit={handleLicenseSubmit}>
+                    <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '1.1rem', textAlign: 'center' }}>
+                      🔑 Activation de la Licence Hors-ligne
+                    </h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.5', textAlign: 'center' }}>
+                      Collez ci-dessous le code de licence fourni lors de l'achat de la version exécutable hors-ligne.
+                    </p>
+                    
+                    <div className={styles.inputGroup}>
+                      <label htmlFor="licenseKey">Code de Licence Hors-ligne</label>
+                      <textarea
+                        id="licenseKey"
+                        placeholder="Collez votre code de licence ici..."
+                        value={licenseKeyInput}
+                        onChange={(e) => setLicenseKeyInput(e.target.value)}
+                        required
+                        disabled={submitting}
+                        rows={6}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border-glass)',
+                          background: 'rgba(0, 0, 0, 0.2)',
+                          color: 'var(--text-primary)',
+                          fontFamily: 'monospace',
+                          fontSize: '0.85rem',
+                          resize: 'vertical'
+                        }}
+                      />
+                    </div>
+
+                    <button type="submit" className={styles.submitBtn} disabled={submitting}>
+                      {submitting ? 'Vérification...' : '⚡ Activer l\'Application'}
+                    </button>
+
+                    <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        className={styles.toggleLinkBtn}
+                        onClick={() => {
+                          setIsLicenseMode(false);
+                          setErrorMsg('');
+                          setSuccessMsg('');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--accent-primary)',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          fontWeight: '500'
+                        }}
+                      >
+                        ← Retour à la connexion en ligne
+                      </button>
+                    </div>
+                  </form>
                 ) : (
                   // Formulaire de connexion classique
                   <form className={styles.form} onSubmit={handleEmailSubmit}>
@@ -856,7 +954,32 @@ export default function Login() {
                       Se connecter avec Google
                     </button>
 
-
+                    <div style={{ marginTop: '1.25rem', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsLicenseMode(true);
+                          setIsRequestAccess(false);
+                          setIsForgotPassword(false);
+                          setErrorMsg('');
+                          setSuccessMsg('');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--accent-primary)',
+                          fontSize: '0.85rem',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.4rem',
+                          textDecoration: 'underline'
+                        }}
+                      >
+                        🔑 Activer la version Hors-ligne avec une licence
+                      </button>
+                    </div>
                   </>
                 )}
 
