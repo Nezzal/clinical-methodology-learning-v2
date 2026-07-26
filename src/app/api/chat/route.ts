@@ -4,6 +4,7 @@ import { loadEnvLocal } from '@/utils/env';
 import { verifyUserAuth } from '@/utils/firebase-admin';
 import recifKb from '@/data/recif-kb.json';
 import glossaryData from '@/data/glossary.json';
+import recifEmbeddingsData from '@/data/recif-embeddings.json';
 import fs from 'fs';
 import path from 'path';
 
@@ -55,18 +56,7 @@ interface EmbeddedChunk {
   embedding: number[];
 }
 
-let recifEmbeddings: EmbeddedChunk[] = [];
-try {
-  const filePath = path.join(process.cwd(), 'src/data/recif-embeddings.json');
-  if (fs.existsSync(filePath)) {
-    recifEmbeddings = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    console.log(`✅ ${recifEmbeddings.length} embeddings RECIF chargés avec succès.`);
-  } else {
-    console.log("⚠️ Fichier recif-embeddings.json introuvable. Le RAG fonctionnera en mode dégradé (base de connaissances fixe).");
-  }
-} catch (error) {
-  console.error("❌ Erreur lors du chargement des embeddings RECIF:", error);
-}
+let recifEmbeddings: EmbeddedChunk[] = (recifEmbeddingsData as any) || [];
 
 function getCosineSimilarity(vecA: number[], vecB: number[]): number {
   let dotProduct = 0;

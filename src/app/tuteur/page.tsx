@@ -739,7 +739,13 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
         })
       });
 
-      const data = await response.json();
+      const rawText = await response.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        data = { error: `Erreur serveur HTTP ${response.status}. (${rawText.substring(0, 150)})` };
+      }
 
       if (response.ok && !data.error) {
         const assistantMessage: Message = {
