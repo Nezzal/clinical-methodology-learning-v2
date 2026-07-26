@@ -24,6 +24,11 @@ export default function Login() {
     setIsRequestAccess(true);
     setIsForgotPassword(false);
     setShowSubscriptionModal(false);
+    setErrorMsg('');
+    setSuccessMsg('');
+    setSubmittedPaidTier(null);
+    setReceiptSubmittedSuccess(false);
+    setReceiptTxIdInput('');
   };
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -211,7 +216,11 @@ export default function Login() {
         setSuccessMsg(`🟢 Votre accès Test Découverte (3 jours) est activé !\n\n🔑 Vos identifiants d'accès :\n• E-mail : ${data.credentials.email}\n• Mot de passe : ${data.credentials.tempPassword}\n\nUn e-mail de confirmation vous a également été envoyé.`);
       } else if (requestedTier === 'découverte') {
         setEmail(requestEmail.trim());
+        setSubmittedPaidTier(null);
         setSuccessMsg(`🟢 Votre accès Test Découverte (3 jours) est actif !\nVous pouvez vous connecter directement avec votre e-mail ${requestEmail.trim()} et votre mot de passe habituel.`);
+      } else if (requestedTier === 'institution') {
+        setSubmittedPaidTier(null);
+        setSuccessMsg(`🟢 Votre demande de devis pour la Formule INSTITUTION a bien été enregistrée !\n\nUn e-mail de confirmation vous a été envoyé. Un administrateur prendra directement contact avec vous par e-mail ou téléphone afin d'étudier vos besoins et vous transmettre une proposition sur-mesure.`);
       } else {
         const isDz = isAlgeriaCountry(requestCountry.trim());
         setSubmittedPaidTier({ email: requestEmail.trim(), tier: requestedTier, country: requestCountry.trim() });
