@@ -59,6 +59,22 @@ function renderMarkdown(text: string): string {
   return formatted;
 }
 
+const isUserAdminAccount = (u: any): boolean => {
+  if (!u) return false;
+  const roleStr = String(u.role || '').toLowerCase();
+  const emailStr = String(u.email || '').toLowerCase();
+  const nameStr = String(u.displayName || '').toLowerCase();
+  const tierStr = String(u.subscription?.tier || '').toLowerCase();
+
+  return (
+    roleStr === 'admin' ||
+    tierStr === 'admin' ||
+    emailStr.includes('admin') ||
+    emailStr.includes('nezzal.abdelmalek@yahoo.fr') ||
+    nameStr.includes('admin')
+  );
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, profile, loading: authLoading, isAdmin: authIsAdmin, role } = useAuth();
@@ -488,7 +504,7 @@ export default function AdminDashboard() {
         `"${(u.institution || '').replace(/"/g, '""')}"`,
         `"${(u.city || '').replace(/"/g, '""')}"`,
         `"${(u.country || u.residence || '').replace(/"/g, '""')}"`,
-        `"${(u.role === 'admin' || u.email === 'admin@recif.dz' ? 'ADMIN' : (u.subscription?.tier || 'découverte')).toUpperCase()}"`,
+        `"${(isUserAdminAccount(u) ? 'ADMIN' : (u.subscription?.tier || 'découverte')).toUpperCase()}"`,
         `"${u.status === 'suspended' ? 'Suspendu' : 'Actif'}"`,
         `"${createdDate}"`,
         `"${validUntilDate}"`,
@@ -2065,7 +2081,7 @@ Votre superviseur`;
                                 </div>
                                 <span className={styles.studentEmail}>{student.email}</span>
                                 <div style={{ marginTop: '2px' }}>
-                                  {student.role === 'admin' || student.email === 'admin@recif.dz' ? (
+                                  {isUserAdminAccount(student) ? (
                                     <span style={{ 
                                       display: 'inline-block', 
                                       background: 'rgba(239, 68, 68, 0.15)', 
@@ -3117,8 +3133,8 @@ Votre superviseur`;
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
                         <div>
                           <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Active</span>
-                          <span style={{ fontWeight: 800, color: (selectedStudent.role === 'admin' || selectedStudent.email === 'admin@recif.dz') ? '#f87171' : selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
-                            Formule {(selectedStudent.role === 'admin' || selectedStudent.email === 'admin@recif.dz') ? 'ADMIN' : (selectedStudent.subscription?.tier?.toUpperCase() || 'DÉCOUVERTE')}
+                          <span style={{ fontWeight: 800, color: isUserAdminAccount(selectedStudent) ? '#f87171' : selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
+                            Formule {isUserAdminAccount(selectedStudent) ? 'ADMIN' : (selectedStudent.subscription?.tier?.toUpperCase() || 'DÉCOUVERTE')}
                           </span>
                         </div>
                         <div>
