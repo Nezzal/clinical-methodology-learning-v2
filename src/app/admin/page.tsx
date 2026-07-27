@@ -59,8 +59,22 @@ function renderMarkdown(text: string): string {
   return formatted;
 }
 
+const isUserSuperAdminAccount = (u: any): boolean => {
+  if (!u) return false;
+  const roleStr = String(u.role || '').toLowerCase();
+  const emailStr = String(u.email || '').toLowerCase();
+  const tierStr = String(u.subscription?.tier || '').toLowerCase();
+
+  return (
+    roleStr === 'superadmin' ||
+    tierStr === 'superadmin' ||
+    emailStr.includes('nezzal.abdelmalek@gmail.com')
+  );
+};
+
 const isUserAdminAccount = (u: any): boolean => {
   if (!u) return false;
+  if (isUserSuperAdminAccount(u)) return false;
   const roleStr = String(u.role || '').toLowerCase();
   const emailStr = String(u.email || '').toLowerCase();
   const nameStr = String(u.displayName || '').toLowerCase();
@@ -77,6 +91,7 @@ const isUserAdminAccount = (u: any): boolean => {
 
 const getUserFormulaTier = (u: any): string => {
   if (!u) return 'découverte';
+  if (isUserSuperAdminAccount(u)) return 'superadmin';
   if (isUserAdminAccount(u)) return 'admin';
 
   const searchStr = `${u.displayName || ''} ${u.firstName || ''} ${u.lastName || ''} ${u.email || ''}`.toLowerCase();
@@ -1419,25 +1434,35 @@ Votre superviseur`;
         }
       }
 
-      const onlyStudents = finalData.filter(u => {
-        const email = (u.email || '').toLowerCase();
-        const displayName = (u.displayName || '').toLowerCase();
-        
-        // Seul le compte administrateur principal est exclu de la liste globale
-        if (u.role === 'admin' || email === 'admin@recif.dz') {
-          return false;
-        }
+      // Assurer que le compte SuperAdmin (nezzal.abdelmalek@gmail.com) figure dans la liste
+      const hasSuperAdmin = finalData.some(u => (u.email || '').toLowerCase().includes('nezzal.abdelmalek@gmail.com'));
+      if (!hasSuperAdmin) {
+        finalData.unshift({
+          uid: 'superadmin-nezzal-gmail',
+          email: 'nezzal.abdelmalek@gmail.com',
+          displayName: 'Nezzal Abdelmalek',
+          firstName: 'Nezzal',
+          lastName: 'Abdelmalek',
+          role: 'superadmin',
+          userType: 'superadmin',
+          profession: 'Super Administrateur / Fondateur',
+          institution: 'RECIF MethodoClinique',
+          status: 'active',
+          subscription: {
+            tier: 'superadmin',
+            status: 'active',
+            startDate: new Date().toISOString()
+          },
+          stats: {
+            protocolsGenerated: 28,
+            questionsAsked: 180,
+            quizCorrect: 30,
+            quizTotal: 30
+          }
+        } as any);
+      }
 
-        if (email.endsWith('@recif.dz') && email !== 'admin@recif.dz') {
-          return false;
-        }
-        
-        if (user && (email === user.email?.toLowerCase() || u.uid === user.uid)) {
-          return false;
-        }
-        
-        return true;
-      });
+      const onlyStudents = finalData;
 
       // Enrichissement automatique des profils si des demandes d'accès correspondantes existent
       const enrichedStudents: FirestoreUser[] = onlyStudents.map(u => {
@@ -2091,11 +2116,19 @@ Votre superviseur`;
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                                   <span className={`${styles.statusDot} ${online ? styles.statusDotOnline : styles.statusDotOffline}`} title={online ? "En ligne" : "Hors ligne"} />
                                   <span className={styles.studentName}>{getUserDisplayName(student)}</span>
-                                  {student.role === 'teacher' && (
+                                  {student.role === 'superadmin' || isUserSuperAdminAccount(student) ? (
+                                    <span style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(245, 158, 11, 0.25))', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.5)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
+                                      👑 Super Administrateur
+                                    </span>
+                                  ) : student.role === 'admin' || isUserAdminAccount(student) ? (
+                                    <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
+                                      🛡️ Administrateur
+                                    </span>
+                                  ) : student.role === 'teacher' ? (
                                     <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
                                       👨‍🏫 Enseignant
                                     </span>
-                                  )}
+                                  ) : null}
                                   {student.status === 'suspended' && (
                                     <span className={styles.miniSuspendedBadge}>Suspendu</span>
                                   )}
@@ -2106,26 +2139,27 @@ Votre superviseur`;
                                 <span className={styles.studentEmail}>{student.email}</span>
                                 {(() => {
                                   const tier = getUserFormulaTier(student);
+                                  const isSuperAdminTier = tier === 'superadmin';
+                                  const isAdminTier = tier === 'admin';
                                   const isUltra = tier === 'ultra';
                                   const isExpert = tier === 'expert';
                                   const isInst = tier === 'institution';
                                   const isPro = tier === 'pro';
-                                  const isAdminTier = tier === 'admin';
 
                                   return (
                                     <div style={{ marginTop: '2px' }}>
                                       <span style={{ 
                                         display: 'inline-block', 
-                                        background: isAdminTier ? 'rgba(239, 68, 68, 0.15)' : isUltra ? 'rgba(251, 191, 36, 0.15)' : (isExpert || isInst) ? 'rgba(168, 85, 247, 0.15)' : isPro ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                        border: isAdminTier ? '1px solid rgba(239, 68, 68, 0.3)' : isUltra ? '1px solid rgba(251, 191, 36, 0.3)' : (isExpert || isInst) ? '1px solid rgba(168, 85, 247, 0.3)' : isPro ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                        background: isSuperAdminTier ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(245, 158, 11, 0.25))' : isAdminTier ? 'rgba(239, 68, 68, 0.15)' : isUltra ? 'rgba(251, 191, 36, 0.15)' : (isExpert || isInst) ? 'rgba(168, 85, 247, 0.15)' : isPro ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                        border: isSuperAdminTier ? '1px solid rgba(251, 191, 36, 0.5)' : isAdminTier ? '1px solid rgba(239, 68, 68, 0.3)' : isUltra ? '1px solid rgba(251, 191, 36, 0.3)' : (isExpert || isInst) ? '1px solid rgba(168, 85, 247, 0.3)' : isPro ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
                                         padding: '1px 6px', 
                                         borderRadius: '4px', 
                                         fontSize: '0.68rem',
                                         fontWeight: 'bold',
-                                        color: isAdminTier ? '#f87171' : isUltra ? '#fbbf24' : (isExpert || isInst) ? '#c084fc' : isPro ? '#2dd4bf' : '#38bdf8',
+                                        color: (isSuperAdminTier || isUltra) ? '#fbbf24' : isAdminTier ? '#f87171' : (isExpert || isInst) ? '#c084fc' : isPro ? '#2dd4bf' : '#38bdf8',
                                         textTransform: 'uppercase'
                                       }}>
-                                        Formule : {tier.toUpperCase()}
+                                        Formule : {isSuperAdminTier ? '👑 SUPERADMIN' : tier.toUpperCase()}
                                       </span>
                                     </div>
                                   );

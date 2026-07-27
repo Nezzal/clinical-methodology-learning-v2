@@ -114,7 +114,7 @@ export interface FirestoreUser {
   status?: 'active' | 'suspended';
   requirePasswordChange?: boolean;
   lastActive?: any;
-  role?: 'admin' | 'teacher' | 'student';
+  role?: 'superadmin' | 'admin' | 'teacher' | 'student';
   userType?: UserType;
   subscription?: UserSubscription;
   assignedTeacherUid?: string;
