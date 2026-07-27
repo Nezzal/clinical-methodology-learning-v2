@@ -202,27 +202,6 @@ Cordialement.`;
           </div>
         </div>
 
-        {/* Guide d'utilisation du lien GitHub Releases */}
-        <div style={{ background: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', color: '#60a5fa', fontSize: '0.98rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>💡</span> COMMENT TÉLÉCHARGER LE BON FICHIER SUR GITHUB ?
-          </h4>
-          <p style={{ margin: '0 0 0.5rem 0', color: 'var(--text-primary)', fontSize: '0.86rem', lineHeight: '1.5' }}>
-            Lorsque vous cliquez sur le bouton de votre système ci-dessous, la page officielle des releases GitHub s'ouvre :
-          </p>
-          <ol style={{ margin: 0, paddingLeft: '1.25rem', color: 'var(--text-secondary)', fontSize: '0.84rem', lineHeight: '1.6' }}>
-            <li>Repérez la version tout en haut affichant la mention verte <strong>« Latest »</strong> (ex: Release v1.8.3).</li>
-            <li>Sous le titre de cette version, dépliez la section <strong>« Assets »</strong> (fichiers téléchargeables).</li>
-            <li>Cliquez directement sur le nom du fichier correspondant à votre ordinateur pour lancer le téléchargement :
-              <ul style={{ margin: '0.25rem 0 0 0', paddingLeft: '1.25rem', listStyleType: 'disc' }}>
-                <li><strong>Fichier <code>.exe</code></strong> : Pour Windows</li>
-                <li><strong>Fichier <code>.dmg</code></strong> : Pour Mac</li>
-                <li><strong>Fichier <code>.AppImage</code> ou <code>.deb</code></strong> : Pour Linux</li>
-              </ul>
-            </li>
-          </ol>
-        </div>
-
         {/* 3 Cartes OS : Windows, macOS, Linux */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: '1rem' }}>
           
@@ -239,13 +218,13 @@ Cordialement.`;
               <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Plateforme RECIF » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique.Setup.1.8.3.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
-              style={{ textAlign: 'center', padding: '0.55rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none' }}
+              style={{ textAlign: 'center', padding: '0.65rem 0.85rem', fontSize: '0.88rem', textDecoration: 'none', fontWeight: 600 }}
             >
-              Télécharger pour Windows (.exe)
+              📥 Télécharger Directement (.exe)
             </a>
           </div>
 
@@ -262,13 +241,13 @@ Cordialement.`;
               <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l'application dans votre dossier Applications. (Si avertissement de sécurité : Clic-droit $\rightarrow$ <em>Ouvrir</em>).
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique-1.8.3-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
-              style={{ textAlign: 'center', padding: '0.55rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none' }}
+              style={{ textAlign: 'center', padding: '0.65rem 0.85rem', fontSize: '0.88rem', textDecoration: 'none', fontWeight: 600 }}
             >
-              Télécharger pour Mac (.dmg)
+              📥 Télécharger Directement (.dmg)
             </a>
           </div>
 
@@ -288,20 +267,20 @@ Cordialement.`;
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique-1.8.3.AppImage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-primary"
-                style={{ flex: 1, textAlign: 'center', padding: '0.55rem 0.4rem', fontSize: '0.78rem', textDecoration: 'none' }}
+                style={{ flex: 1, textAlign: 'center', padding: '0.55rem 0.4rem', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 600 }}
               >
                 AppImage
               </a>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique_1.8.3_amd64.deb" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
-                style={{ flex: 1, textAlign: 'center', padding: '0.55rem 0.4rem', fontSize: '0.78rem', textDecoration: 'none' }}
+                style={{ flex: 1, textAlign: 'center', padding: '0.55rem 0.4rem', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 600 }}
               >
                 Paquet .deb
               </a>
