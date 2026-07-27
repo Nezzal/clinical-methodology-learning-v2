@@ -20,8 +20,21 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.7.1',
+    version: 'v1.8.0',
     isCurrent: true,
+    date: '27 Juillet 2026',
+    title: 'Génération Intégrale des Protocoles & Historique Amélioré',
+    tags: ['Protocoles', 'STROBE', 'Calculateur NSN', 'Historique'],
+    features: [
+      'Génération intégrale des 19 sections de protocoles de recherche sans troncature et suppression du tableau lourd initial.',
+      'Génération complète des articles STROBE (critères 1 à 22) avec quota étendu à 8192 tokens.',
+      'Gestion complète de l\'historique des articles STROBE et protocoles (Boutons Ouvrir, Régénérer, Supprimer).',
+      'Correction sémantique dynamique de la taille d\'échantillon (données manquantes / dossiers inexploitables selon le type d\'étude).',
+      'Ajout de la section d\'Analyse Critique & Rigueur Méthodologique RECIF pour le calcul du Nombre de Sujets Nécessaires (NSN).'
+    ]
+  },
+  {
+    version: 'v1.7.1',
     date: '26 Juillet 2026',
     title: 'Acquisition de l\'Exécutable Hors-ligne & Licences',
     tags: ['Licences', 'Hors-ligne', 'Sécurité', 'Admin'],
