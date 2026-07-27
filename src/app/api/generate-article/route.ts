@@ -55,7 +55,7 @@ async function tryOllamaGenerateArticle(
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: { temperature: 0.5, num_ctx: 16384, num_predict: 4096 }
+        options: { temperature: 0.5, num_ctx: 16384, num_predict: 8192 }
       }),
       signal: controller.signal
     });
