@@ -165,6 +165,8 @@ function createWindow(port) {
 
   const url = `http://localhost:${port}`;
   mainWindow.loadURL(url);
+  mainWindow.show();
+  mainWindow.focus();
 
   if (isDev) {
     mainWindow.webContents.openDevTools();
@@ -203,6 +205,13 @@ function cleanUp() {
     nextServerProcess = null;
   }
 }
+
+app.on('activate', () => {
+  if (mainWindow !== null) {
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
 
 app.on('window-all-closed', () => {
   cleanUp();
