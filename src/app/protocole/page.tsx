@@ -980,9 +980,23 @@ export default function ProtocoleGenerator() {
     loadProtocolParameters(item);
   };
 
+  const handleRegenerateProtocol = async (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    if (!confirm(`Souhaitez-vous régénérer entièrement le protocole "${item.title}" avec l'IA ?`)) return;
+    
+    await loadProtocolParameters(item);
+    setActiveProtocolId(item.id);
+    setPreviewMode('protocol');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      handleGenerate();
+    }, 200);
+  };
+
   const handleDeleteProtocol = async (e: React.MouseEvent, protocolId: string) => {
     e.stopPropagation();
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce protocole ?")) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer définitivement ce protocole ?")) {
       return;
     }
 
@@ -1724,26 +1738,48 @@ export default function ProtocoleGenerator() {
                   key={h.id}
                   className={`${styles.historyItem} glass-card`}
                   onClick={() => handleSelectHistory(h)}
+                  style={{ position: 'relative', cursor: 'pointer', padding: '1.25rem' }}
                 >
-                  <div className={styles.historyMeta}>
-                    <span>{h.acronym}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span>{new Date(h.date).toLocaleDateString('fr-FR')} à {new Date(h.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                      <button
-                        className={styles.deleteBtn}
-                        onClick={(e) => handleDeleteProtocol(e, h.id)}
-                        title="Supprimer ce protocole"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          <line x1="10" y1="11" x2="10" y2="17"></line>
-                          <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
-                      </button>
-                    </div>
+                  <div className={styles.historyMeta} style={{ marginBottom: '8px' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--accent-primary)', fontSize: '0.82rem' }}>{h.acronym || 'PROTOCOLE'}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {new Date(h.date).toLocaleDateString('fr-FR')} à {new Date(h.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                  <h4 className={styles.historyTitle}>{h.title.length > 40 ? h.title.substring(0, 40) + '...' : h.title}</h4>
+                  <h4 className={styles.historyTitle} style={{ marginBottom: '12px' }}>
+                    {h.title.length > 60 ? h.title.substring(0, 60) + '...' : h.title}
+                  </h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => handleSelectHistory(h)}
+                      style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Ouvrir ce protocole dans le lecteur"
+                    >
+                      👁️ Ouvrir
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={(e) => handleRegenerateProtocol(e, h)}
+                      style={{ padding: '4px 10px', fontSize: '0.78rem', background: 'rgba(13, 148, 136, 0.15)', color: '#2dd4bf', border: '1px solid rgba(13, 148, 136, 0.4)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Régénérer ce protocole avec l'IA"
+                    >
+                      🔄 Régénérer
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={(e) => handleDeleteProtocol(e, h.id)}
+                      style={{ padding: '4px 10px', fontSize: '0.78rem', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}
+                      title="Supprimer ce protocole"
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
