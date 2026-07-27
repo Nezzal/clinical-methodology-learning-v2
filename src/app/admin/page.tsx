@@ -87,6 +87,18 @@ const getUserFormulaTier = (u: any): string => {
   return (u.subscription?.tier || 'découverte').toLowerCase();
 };
 
+const getUserDisplayName = (u: any): string => {
+  if (!u) return 'Utilisateur';
+  const email = (u.email || '').toLowerCase();
+  const name = (u.displayName || '').toLowerCase();
+
+  if (email.includes('nezzal') || email.includes('admin@recif.dz') || name.includes('admin') || u.role === 'admin' || isUserAdminAccount(u)) {
+    return 'Nezzal Abdelmalek';
+  }
+
+  return u.displayName || (u.firstName ? `${u.firstName || ''} ${u.lastName || ''}`.trim() : 'Utilisateur');
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, profile, loading: authLoading, isAdmin: authIsAdmin, role } = useAuth();
@@ -508,7 +520,7 @@ export default function AdminDashboard() {
 
       return [
         `"${u.uid || ''}"`,
-        `"${(u.displayName || '').replace(/"/g, '""')}"`,
+        `"${(getUserDisplayName(u)).replace(/"/g, '""')}"`,
         `"${(u.email || '').replace(/"/g, '""')}"`,
         `"${(u.phone || '').replace(/"/g, '""')}"`,
         `"${u.role === 'teacher' ? 'Enseignant' : u.role === 'admin' ? 'Administrateur' : 'Étudiant'}"`,
@@ -2078,7 +2090,7 @@ Votre superviseur`;
                               <div className={styles.studentInfo}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
                                   <span className={`${styles.statusDot} ${online ? styles.statusDotOnline : styles.statusDotOffline}`} title={online ? "En ligne" : "Hors ligne"} />
-                                  <span className={styles.studentName}>{student.displayName || 'Utilisateur'}</span>
+                                  <span className={styles.studentName}>{getUserDisplayName(student)}</span>
                                   {student.role === 'teacher' && (
                                     <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
                                       👨‍🏫 Enseignant
@@ -2987,7 +2999,7 @@ Votre superviseur`;
                   </div>
                 ) : (
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 600, cursor: 'pointer' }} onClick={() => { setNewName(selectedStudent.displayName || ''); setIsRenaming(true); }}>
-                    {selectedStudent.displayName || 'Étudiant'}
+                    {getUserDisplayName(selectedStudent)}
                   </h3>
                 )}
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{selectedStudent.email}</span>
@@ -3090,7 +3102,7 @@ Votre superviseur`;
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
                         <div>
                           <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Nom Complet</span>
-                          <strong style={{ color: '#f8fafc' }}>{selectedStudent.displayName || 'Utilisateur'}</strong>
+                          <strong style={{ color: '#f8fafc' }}>{getUserDisplayName(selectedStudent)}</strong>
                         </div>
                         <div>
                           <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>E-mail</span>
