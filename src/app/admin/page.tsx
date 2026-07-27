@@ -134,7 +134,7 @@ export default function AdminDashboard() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [presenceFilter, setPresenceFilter] = useState<'all' | 'online'>('all');
-  const [userSortOption, setUserSortOption] = useState<'default' | 'name_asc' | 'name_desc' | 'date_desc' | 'date_asc'>('name_asc');
+  const [userSortOption, setUserSortOption] = useState<'default' | 'name_asc' | 'name_desc' | 'date_desc' | 'date_asc' | 'role_asc' | 'role_desc'>('name_asc');
 
   const isUserOnline = (lastActive: any): boolean => {
     if (!lastActive) return false;
@@ -1806,6 +1806,34 @@ Votre superviseur`;
       return matchesSearch;
     })
     .sort((a, b) => {
+      // Tri par Rôle (SuperAdmin -> Admin -> Enseignant -> Étudiant)
+      if (userSortOption === 'role_asc') {
+        const getRolePriority = (u: FirestoreUser): number => {
+          if (isUserSuperAdminAccount(u) || u.role === 'superadmin') return 1;
+          if (isUserAdminAccount(u) || u.role === 'admin') return 2;
+          if (u.role === 'teacher') return 3;
+          return 4;
+        };
+        const pA = getRolePriority(a);
+        const pB = getRolePriority(b);
+        if (pA !== pB) return pA - pB;
+        return getUserDisplayName(a).localeCompare(getUserDisplayName(b), 'fr', { sensitivity: 'base' });
+      }
+
+      // Tri par Rôle Inverse (Étudiant -> Enseignant -> Admin -> SuperAdmin)
+      if (userSortOption === 'role_desc') {
+        const getRolePriority = (u: FirestoreUser): number => {
+          if (isUserSuperAdminAccount(u) || u.role === 'superadmin') return 1;
+          if (isUserAdminAccount(u) || u.role === 'admin') return 2;
+          if (u.role === 'teacher') return 3;
+          return 4;
+        };
+        const pA = getRolePriority(a);
+        const pB = getRolePriority(b);
+        if (pA !== pB) return pB - pA;
+        return getUserDisplayName(a).localeCompare(getUserDisplayName(b), 'fr', { sensitivity: 'base' });
+      }
+
       // Tri Alphabétique par Nom (A -> Z)
       if (userSortOption === 'name_asc') {
         const nameA = getUserDisplayName(a);
@@ -2105,6 +2133,8 @@ Votre superviseur`;
                     title="Trier la liste des utilisateurs"
                     style={{ fontWeight: 600 }}
                   >
+                    <option value="role_asc">👑 Rôle : SuperAdmin ➔ Admin ➔ Enseignant ➔ Étudiant</option>
+                    <option value="role_desc">🎓 Rôle Inverse : Étudiant ➔ Enseignant ➔ Admin ➔ SuperAdmin</option>
                     <option value="name_asc">🔤 Nom : A ➔ Z (Ordre Alphabétique)</option>
                     <option value="name_desc">🔤 Nom : Z ➔ A (Ordre Inverse)</option>
                     <option value="date_desc">📅 Date Inscription : Plus Récents 🆕</option>
