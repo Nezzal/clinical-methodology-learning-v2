@@ -185,12 +185,20 @@ Cordialement.`;
           <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-primary)', fontSize: '0.88rem', lineHeight: '1.6' }}>
             Après avoir téléchargé et lancé l'application sur votre ordinateur, un <strong>Code de Licence Hors-ligne (16 caractères)</strong> vous sera demandé lors de la première ouverture.
           </p>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-            <strong>Comment obtenir votre code de licence auprès de l'Administrateur :</strong>
-            <ol style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.25rem' }}>
-              <li>Faites défiler vers le haut et cliquez sur le bouton <strong>« 🔑 Demander l'Acquisition & Licence Hors-ligne »</strong>.</li>
-              <li>L'administrateur validera votre demande et vous transmettra votre clé d'activation individuelle utilisable sur votre machine.</li>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+            <strong>Comment obtenir et retrouver votre code de licence auprès de l'Administrateur :</strong>
+            <ol style={{ margin: '0.5rem 0 0.75rem 0', paddingLeft: '1.25rem' }}>
+              <li style={{ marginBottom: '0.35rem' }}>Faites défiler vers le haut et cliquez sur le bouton <strong>« 🔑 Demander l'Acquisition & Licence Hors-ligne »</strong>.</li>
+              <li style={{ marginBottom: '0.35rem' }}>L'administrateur valide votre demande et génère votre clé d'activation individuelle à 16 caractères.</li>
             </ol>
+
+            <div style={{ background: 'rgba(45, 212, 191, 0.08)', border: '1px solid rgba(45, 212, 191, 0.3)', borderRadius: '8px', padding: '0.75rem 1rem', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
+              📬 <strong>Où allez-vous consulter et copier votre clé de licence ?</strong>
+              <ul style={{ margin: '0.35rem 0 0 0', paddingLeft: '1.25rem' }}>
+                <li style={{ marginBottom: '0.25rem' }}><strong>Dans votre onglet Messagerie</strong> : L'administrateur vous réponds directement dans le support avec votre code de licence à 16 caractères.</li>
+                <li><strong>Par E-mail</strong> : Une notification contenant votre clé d'activation vous est également transmise sur votre adresse électronique de compte.</li>
+              </ul>
+            </div>
           </div>
         </div>
 
