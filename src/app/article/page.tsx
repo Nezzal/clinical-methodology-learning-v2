@@ -88,16 +88,23 @@ export default function ArticleGenerator() {
   // Load articles on mount
   useEffect(() => {
     const fetchArticles = async () => {
-      if (user) {
-        setLoadingArticles(true);
-        try {
+      setLoadingArticles(true);
+      try {
+        if (user) {
           const list = await loadFirestoreArticles(user.uid);
-          setArticles(list);
-        } catch (e) {
-          console.error("Error loading articles:", e);
-        } finally {
-          setLoadingArticles(false);
+          if (list && list.length > 0) {
+            setArticles(list);
+          } else {
+            setArticles(getProgress().recentArticles || []);
+          }
+        } else {
+          setArticles(getProgress().recentArticles || []);
         }
+      } catch (e) {
+        console.error("Error loading articles:", e);
+        setArticles(getProgress().recentArticles || []);
+      } finally {
+        setLoadingArticles(false);
       }
     };
     fetchArticles();
@@ -198,7 +205,6 @@ export default function ArticleGenerator() {
   };
 
   const handleSaveArticle = async (contentToSave: string) => {
-    if (!user) return;
     setSaving(true);
     const artId = activeArticleId || `article_${Math.random().toString(36).substring(7)}`;
     const artTitle = title || "Article STROBE sans titre";
@@ -217,34 +223,69 @@ export default function ArticleGenerator() {
       }
     };
 
-    try {
-      await saveFirestoreArticle(user.uid, articleData);
-      setActiveArticleId(artId);
-      
-      // Update local state
-      const list = await loadFirestoreArticles(user.uid);
-      setArticles(list);
-    } catch (e) {
-      console.error("Error saving article to Firestore:", e);
-    } finally {
-      setSaving(false);
+    updateProgress((stats) => {
+      const recent = stats.recentArticles || [];
+      const filtered = recent.filter((a) => a.id !== artId);
+      const updatedArticles = [articleData, ...filtered].slice(0, 15);
+      return {
+        ...stats,
+        recentArticles: updatedArticles
+      };
+    });
+
+    setArticles((prev) => {
+      const filtered = prev.filter((a) => a.id !== artId);
+      return [articleData, ...filtered];
+    });
+
+    if (user) {
+      try {
+        await saveFirestoreArticle(user.uid, articleData);
+        setActiveArticleId(artId);
+        const list = await loadFirestoreArticles(user.uid);
+        if (list && list.length > 0) setArticles(list);
+      } catch (e) {
+        console.error("Error saving article to Firestore:", e);
+      }
     }
+    setSaving(false);
+  };
+
+  const handleRegenerateArticle = async (e: React.MouseEvent, art: any) => {
+    e.stopPropagation();
+    if (!window.confirm(`Souhaitez-vous régénérer entièrement l'article "${art.title}" avec l'IA ?`)) return;
+
+    handleSelectArticle(art);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      handleGenerateArticle();
+    }, 200);
   };
 
   const handleDeleteArticleClick = async (e: React.MouseEvent, artId: string) => {
     e.stopPropagation();
-    if (!window.confirm("Voulez-vous vraiment supprimer cet article ?")) return;
-    if (!user) return;
+    if (!window.confirm("Voulez-vous vraiment supprimer définitivement cet article ?")) return;
 
-    try {
-      await deleteFirestoreArticle(user.uid, artId);
-      if (activeArticleId === artId) {
-        handleNewArticle();
+    setArticles((prev) => prev.filter((a) => a.id !== artId));
+
+    if (activeArticleId === artId) {
+      handleNewArticle();
+    }
+
+    updateProgress((stats) => {
+      const updatedArticles = (stats.recentArticles || []).filter((a) => a.id !== artId);
+      return {
+        ...stats,
+        recentArticles: updatedArticles
+      };
+    });
+
+    if (user) {
+      try {
+        await deleteFirestoreArticle(user.uid, artId);
+      } catch (err) {
+        console.error("Error deleting article on Firestore:", err);
       }
-      const list = await loadFirestoreArticles(user.uid);
-      setArticles(list);
-    } catch (err) {
-      console.error("Error deleting article:", err);
     }
   };
 
@@ -1019,36 +1060,62 @@ export default function ArticleGenerator() {
       {/* HISTORY SECTION */}
       {articles.length > 0 && (
         <section className={styles.historySection}>
-          <h3 style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+          <h3 style={{ borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
             Articles enregistrés
           </h3>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Sélectionnez un article sauvegardé pour le lire, le régénérer ou le supprimer.
+          </p>
           <div className={styles.historyList}>
             {articles.map((art) => (
               <div
                 key={art.id}
                 className={`${styles.historyItem} glass-card`}
                 onClick={() => handleSelectArticle(art)}
+                style={{ position: 'relative', cursor: 'pointer', padding: '1.25rem' }}
               >
-                <div className={styles.historyMeta}>
-                  <span>
-                    {art.studyType === 'cohort' ? 'Cohorte' : (art.studyType === 'case-control' ? 'Cas-témoins' : 'Transversale')}
+                <div className={styles.historyMeta} style={{ marginBottom: '8px' }}>
+                  <span style={{ fontWeight: 700, color: 'var(--accent-primary)', fontSize: '0.82rem' }}>
+                    {art.studyType === 'cohort' ? 'Étude de cohorte' : (art.studyType === 'case-control' ? 'Étude cas-témoins' : 'Étude transversale')}
                   </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Enregistré le {new Date(art.date).toLocaleDateString('fr-FR')} à {new Date(art.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <h4 className={styles.historyTitle} style={{ marginBottom: '12px' }}>
+                  {art.title.length > 60 ? art.title.substring(0, 60) + '...' : (art.title || 'Article STROBE sans titre')}
+                </h4>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
                   <button
-                    className={styles.deleteBtn}
-                    onClick={(e) => handleDeleteArticleClick(e, art.id)}
-                    title="Supprimer l'article"
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => handleSelectArticle(art)}
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    title="Ouvrir cet article dans le lecteur"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
+                    👁️ Ouvrir
                   </button>
-                </div>
-                <div className={styles.historyTitle}>
-                  {art.title.length > 50 ? art.title.substring(0, 50) + '...' : art.title}
-                </div>
-                <div className={styles.historyDesc}>
-                  Enregistré le {new Date(art.date).toLocaleDateString('fr-FR')} à {new Date(art.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={(e) => handleRegenerateArticle(e, art)}
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', background: 'rgba(13, 148, 136, 0.15)', color: '#2dd4bf', border: '1px solid rgba(13, 148, 136, 0.4)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    title="Régénérer cet article avec l'IA"
+                  >
+                    🔄 Régénérer
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={(e) => handleDeleteArticleClick(e, art.id)}
+                    style={{ padding: '4px 10px', fontSize: '0.78rem', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: 'auto' }}
+                    title="Supprimer cet article"
+                  >
+                    🗑️ Supprimer
+                  </button>
                 </div>
               </div>
             ))}

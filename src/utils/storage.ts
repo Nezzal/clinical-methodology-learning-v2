@@ -23,6 +23,14 @@ export interface LocalStats {
     crfContent?: string | null;
     formData?: any;
   }>;
+  recentArticles?: Array<{
+    id: string;
+    title: string;
+    studyType: string;
+    date: string;
+    content: string;
+    formData?: any;
+  }>;
   quizHistory?: QuizAttempt[];
 }
 
@@ -34,6 +42,7 @@ const DEFAULT_STATS: LocalStats = {
   flashcardsMastered: [],
   recentQuestions: [],
   recentProtocols: [],
+  recentArticles: [],
   quizHistory: []
 };
 
