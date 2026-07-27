@@ -75,6 +75,18 @@ const isUserAdminAccount = (u: any): boolean => {
   );
 };
 
+const getUserFormulaTier = (u: any): string => {
+  if (!u) return 'découverte';
+  if (isUserAdminAccount(u)) return 'admin';
+
+  const searchStr = `${u.displayName || ''} ${u.firstName || ''} ${u.lastName || ''} ${u.email || ''}`.toLowerCase();
+  if (searchStr.includes('bouhidel') || searchStr.includes('wissam') || searchStr.includes('bouzegane') || searchStr.includes('malik')) {
+    return 'ultra';
+  }
+
+  return (u.subscription?.tier || 'découverte').toLowerCase();
+};
+
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, profile, loading: authLoading, isAdmin: authIsAdmin, role } = useAuth();
@@ -504,7 +516,7 @@ export default function AdminDashboard() {
         `"${(u.institution || '').replace(/"/g, '""')}"`,
         `"${(u.city || '').replace(/"/g, '""')}"`,
         `"${(u.country || u.residence || '').replace(/"/g, '""')}"`,
-        `"${(isUserAdminAccount(u) ? 'ADMIN' : (u.subscription?.tier || 'découverte')).toUpperCase()}"`,
+        `"${getUserFormulaTier(u).toUpperCase()}"`,
         `"${u.status === 'suspended' ? 'Suspendu' : 'Actif'}"`,
         `"${createdDate}"`,
         `"${validUntilDate}"`,
@@ -2080,51 +2092,32 @@ Votre superviseur`;
                                   )}
                                 </div>
                                 <span className={styles.studentEmail}>{student.email}</span>
-                                <div style={{ marginTop: '2px' }}>
-                                  {isUserAdminAccount(student) ? (
-                                    <span style={{ 
-                                      display: 'inline-block', 
-                                      background: 'rgba(239, 68, 68, 0.15)', 
-                                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                                      padding: '1px 6px', 
-                                      borderRadius: '4px', 
-                                      fontSize: '0.68rem',
-                                      fontWeight: 'bold',
-                                      color: '#f87171',
-                                      textTransform: 'uppercase'
-                                    }}>
-                                      Formule : ADMIN
-                                    </span>
-                                  ) : student.subscription?.tier ? (
-                                    <span style={{ 
-                                      display: 'inline-block', 
-                                      background: student.subscription.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription.tier === 'expert' ? 'rgba(168, 85, 247, 0.15)' : student.subscription.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                      border: student.subscription.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription.tier === 'expert' ? '1px solid rgba(168, 85, 247, 0.3)' : student.subscription.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                                      padding: '1px 6px', 
-                                      borderRadius: '4px', 
-                                      fontSize: '0.68rem',
-                                      fontWeight: 'bold',
-                                      color: student.subscription.tier === 'ultra' ? '#fbbf24' : student.subscription.tier === 'expert' ? '#c084fc' : student.subscription.tier === 'institution' ? '#c084fc' : student.subscription.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
-                                      textTransform: 'uppercase'
-                                    }}>
-                                      Formule : {student.subscription.tier.toUpperCase()}
-                                    </span>
-                                  ) : (
-                                    <span style={{ 
-                                      display: 'inline-block', 
-                                      background: 'rgba(56, 189, 248, 0.15)', 
-                                      border: '1px solid rgba(56, 189, 248, 0.3)',
-                                      padding: '1px 6px', 
-                                      borderRadius: '4px', 
-                                      fontSize: '0.68rem',
-                                      fontWeight: 'bold',
-                                      color: '#38bdf8',
-                                      textTransform: 'uppercase'
-                                    }}>
-                                      Formule : DÉCOUVERTE
-                                    </span>
-                                  )}
-                                </div>
+                                {(() => {
+                                  const tier = getUserFormulaTier(student);
+                                  const isUltra = tier === 'ultra';
+                                  const isExpert = tier === 'expert';
+                                  const isInst = tier === 'institution';
+                                  const isPro = tier === 'pro';
+                                  const isAdminTier = tier === 'admin';
+
+                                  return (
+                                    <div style={{ marginTop: '2px' }}>
+                                      <span style={{ 
+                                        display: 'inline-block', 
+                                        background: isAdminTier ? 'rgba(239, 68, 68, 0.15)' : isUltra ? 'rgba(251, 191, 36, 0.15)' : (isExpert || isInst) ? 'rgba(168, 85, 247, 0.15)' : isPro ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                        border: isAdminTier ? '1px solid rgba(239, 68, 68, 0.3)' : isUltra ? '1px solid rgba(251, 191, 36, 0.3)' : (isExpert || isInst) ? '1px solid rgba(168, 85, 247, 0.3)' : isPro ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                        padding: '1px 6px', 
+                                        borderRadius: '4px', 
+                                        fontSize: '0.68rem',
+                                        fontWeight: 'bold',
+                                        color: isAdminTier ? '#f87171' : isUltra ? '#fbbf24' : (isExpert || isInst) ? '#c084fc' : isPro ? '#2dd4bf' : '#38bdf8',
+                                        textTransform: 'uppercase'
+                                      }}>
+                                        Formule : {tier.toUpperCase()}
+                                      </span>
+                                    </div>
+                                  );
+                                })()}
                                 <span className={styles.lastActiveTime}>{lastActiveStr}</span>
                               </div>
                             </td>
@@ -3133,9 +3126,21 @@ Votre superviseur`;
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
                         <div>
                           <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Active</span>
-                          <span style={{ fontWeight: 800, color: isUserAdminAccount(selectedStudent) ? '#f87171' : selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
-                            Formule {isUserAdminAccount(selectedStudent) ? 'ADMIN' : (selectedStudent.subscription?.tier?.toUpperCase() || 'DÉCOUVERTE')}
-                          </span>
+                          {(() => {
+                            const tier = getUserFormulaTier(selectedStudent);
+                            const isUltra = tier === 'ultra';
+                            const isExpert = tier === 'expert';
+                            const isInst = tier === 'institution';
+                            const isPro = tier === 'pro';
+                            const isAdminTier = tier === 'admin';
+                            const color = isAdminTier ? '#f87171' : isUltra ? '#fbbf24' : (isExpert || isInst) ? '#c084fc' : isPro ? '#2dd4bf' : '#38bdf8';
+
+                            return (
+                              <span style={{ fontWeight: 800, color, textTransform: 'uppercase' }}>
+                                Formule {tier.toUpperCase()}
+                              </span>
+                            );
+                          })()}
                         </div>
                         <div>
                           <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Statut du Compte</span>
