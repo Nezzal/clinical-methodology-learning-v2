@@ -261,9 +261,9 @@ Cordialement.`;
               </div>
             </div>
             <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
-              <strong>Instructions :</strong><br/>
-              • <code>AppImage</code> : Rendre exécutable (<code>chmod +x</code>) puis lancer.<br/>
-              • <code>.deb</code> : Installer avec <code>sudo dpkg -i</code> ou via le Centre Logiciels.
+              <strong>Instructions (dans le Terminal Linux) :</strong><br/>
+              • <code>AppImage</code> : Rendre le fichier exécutable dans le terminal (<code>chmod +x RECIF-MethodoClinique-*.AppImage</code>) puis double-cliquer pour lancer.<br/>
+              • <code>.deb</code> : Lancer la commande d'installation dans le terminal (<code>sudo dpkg -i clinical-methodology-learning_*.deb</code>) ou installer via le Centre Logiciels.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <a 
