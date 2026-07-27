@@ -94,8 +94,15 @@ service cloud.firestore {
         (resource.data.senderUid == request.auth.uid)
       );
       
-      // Pas de suppression autorisée côté client
-      allow delete: if false;
+      // Un message peut être supprimé par :
+      // - L'administrateur
+      // - L'expéditeur du message
+      // - Le destinataire du message
+      allow delete: if isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        resource.data.senderUid == request.auth.uid ||
+        resource.data.recipientUid == request.auth.uid
+      );
     }
   }
 }
