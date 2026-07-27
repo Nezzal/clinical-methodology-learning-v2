@@ -75,6 +75,41 @@ export default function CalculatorPage() {
     prevDiag, perfDiag, dDiag
   ]);
 
+  const getLostTerm = (type: StudyType) => {
+    switch (type) {
+      case 'case_control':
+        return {
+          label: "Taux estimé de données manquantes / dossiers inexploitables",
+          shortLabel: "données manquantes / dossiers inexploitables",
+          phrase: "données manquantes ou dossiers inexploitables",
+          recifAdvice: "Dans une étude Cas-Témoins (rétrospective), on n'utilise pas le terme 'perdus de vue' (réservé aux suivis prospectifs), mais 'données manquantes', 'non-répondants' ou 'dossiers inexploitables'."
+        };
+      case 'transversal':
+        return {
+          label: "Taux estimé de non-réponse / données manquantes",
+          shortLabel: "non-réponses / données manquantes",
+          phrase: "non-réponse ou de données manquantes",
+          recifAdvice: "Pour les enquêtes transversales sans suivi, l'ajustement compense le taux de non-réponse aux questionnaires ou les dossiers incomplets."
+        };
+      case 'diagnostic':
+        return {
+          label: "Taux estimé de dossiers inexploitables / examens non interprétables",
+          shortLabel: "dossiers inexploitables",
+          phrase: "dossiers inexploitables ou examens non interprétables",
+          recifAdvice: "Pour les études d'exactitude diagnostique, l'ajustement compense les prélèvements/examens non interprétables ou inexploitables."
+        };
+      case 'comparative_prop':
+      case 'comparative_mean':
+      default:
+        return {
+          label: "Taux estimé de perdus de vue (suivi longitudinal)",
+          shortLabel: "perdus de vue",
+          phrase: "perdus de vue",
+          recifAdvice: "Pour les essais et cohortes prospectifs, l'expression 'perdus de vue' convient parfaitement au suivi dans le temps."
+        };
+    }
+  };
+
   const calculateNSN = () => {
     const zAlpha = getZAlpha(alpha);
     const zBeta = getZBeta(power);
@@ -87,6 +122,7 @@ export default function CalculatorPage() {
     const alphaPct = (alpha * 100).toFixed(0);
     const powerPct = (power * 100).toFixed(0);
     const lostPct = (lostRate * 100).toFixed(0);
+    const termObj = getLostTerm(studyType);
 
     if (studyType === 'transversal') {
       // Cochran formula
@@ -101,7 +137,7 @@ export default function CalculatorPage() {
       const prevPct = (pTransversal * 100).toFixed(0);
       const precPct = (dTransversal * 100).toFixed(1);
       
-      report = `Pour estimer une prévalence attendue de ${prevPct}% avec une marge d'erreur de +/- ${precPct}% et un niveau de confiance de ${100 - alpha * 100}% (risque alpha = ${alphaPct}%), la taille d'échantillon minimale statistiquement requise est de ${raw} sujets.\n\nEn tenant compte d'un taux d'attrition/perdus de vue de ${lostPct}%, il sera nécessaire de recruter au total ${Math.ceil(raw / (1 - lostRate))} sujets.`;
+      report = `Pour estimer une prévalence attendue de ${prevPct}% avec une marge d'erreur de +/- ${precPct}% et un niveau de confiance de ${100 - alpha * 100}% (risque alpha = ${alphaPct}%), la taille d'échantillon minimale statistiquement requise est de ${raw} sujets.\n\nEn tenant compte d'un taux de ${termObj.phrase} de ${lostPct}%, il sera nécessaire de recruter au total ${Math.ceil(raw / (1 - lostRate))} sujets.`;
     } 
     else if (studyType === 'comparative_prop') {
       // Comparison of 2 proportions
@@ -166,7 +202,7 @@ export default function CalculatorPage() {
       const p0Pct = (p0CaseControl * 100).toFixed(0);
       const p1Pct = (p1 * 100).toFixed(0);
       
-      report = `Dans le cadre d'une étude Cas-Témoins, pour mettre en évidence un Odds Ratio (OR) de ${orCaseControl} avec un taux d'exposition chez les témoins estimé à ${p0Pct}% (ce qui correspond à un taux attendu de ${p1Pct}% chez les cas), avec un risque alpha bilatéral de ${alphaPct}% et une puissance statistique de ${powerPct}%, en incluant un ratio de ${kControls} Témoin(s) par Cas, l'effectif requis est de ${group1} Cas et ${group2} Témoins, soit un total de ${raw} sujets.\n\nEn prévoyant un taux d'exclusion/perdus de vue de ${lostPct}%, le recrutement devra porter sur ${Math.ceil(group1 / (1 - lostRate))} Cas et ${Math.ceil(group2 / (1 - lostRate))} Témoins, soit un total à inclure de ${Math.ceil(raw / (1 - lostRate))} sujets.`;
+      report = `Dans le cadre d'une étude Cas-Témoins, pour mettre en évidence un Odds Ratio (OR) de ${orCaseControl} avec un taux d'exposition chez les témoins estimé à ${p0Pct}% (ce qui correspond à un taux attendu de ${p1Pct}% chez les cas), avec un risque alpha bilatéral de ${alphaPct}% et une puissance statistique de ${powerPct}%, en incluant un ratio de ${kControls} Témoin(s) par Cas, l'effectif requis est de ${group1} Cas et ${group2} Témoins, soit un total de ${raw} sujets.\n\nEn prévoyant un taux de données manquantes ou dossiers inexploitables de ${lostPct}%, le recrutement devra porter sur ${Math.ceil(group1 / (1 - lostRate))} Cas et ${Math.ceil(group2 / (1 - lostRate))} Témoins, soit un total à inclure de ${Math.ceil(raw / (1 - lostRate))} sujets.`;
     } 
     else if (studyType === 'diagnostic') {
       // Diagnostic study: sensitivity/specificity estimation with prevalence
@@ -186,7 +222,7 @@ export default function CalculatorPage() {
       const precPct = (dDiag * 100).toFixed(1);
       const prevPct = (prevDiag * 100).toFixed(0);
       
-      report = `Pour évaluer les performances d'un test diagnostique avec une sensibilité ou spécificité attendue de ${perfPct}%, avec une marge d'erreur de +/- ${precPct}% et un niveau de confiance de ${100 - alpha * 100}% (alpha = ${alphaPct}%), il est indispensable d'évaluer au minimum ${group1} sujets cibles (malades ou non-malades selon le critère). En supposant une prévalence de la pathologie de ${prevPct}% dans la population d'étude, il sera nécessaire de recruter et dépister un effectif total de ${raw} patients pour obtenir l'effectif ciblé.\n\nEn compensant pour un taux de dossiers inexploitables/perdus de vue de ${lostPct}%, le recrutement devra cibler un effectif total de ${Math.ceil(raw / (1 - lostRate))} patients (dont ${Math.ceil(group1 / (1 - lostRate))} sujets cibles).`;
+      report = `Pour évaluer les performances d'un test diagnostique avec une sensibilité ou spécificité attendue de ${perfPct}%, avec une marge d'erreur de +/- ${precPct}% et un niveau de confiance de ${100 - alpha * 100}% (alpha = ${alphaPct}%), il est indispensable d'évaluer au minimum ${group1} sujets cibles (malades ou non-malades selon le critère). En supposant une prévalence de la pathologie de ${prevPct}% dans la population d'étude, il sera nécessaire de recruter et dépister un effectif total de ${raw} patients pour obtenir l'effectif ciblé.\n\nEn compensant pour un taux de dossiers inexploitables de ${lostPct}%, le recrutement devra cibler un effectif total de ${Math.ceil(raw / (1 - lostRate))} patients (dont ${Math.ceil(group1 / (1 - lostRate))} sujets cibles).`;
     }
 
     setNsnRaw(raw);
@@ -313,7 +349,7 @@ export default function CalculatorPage() {
 
                 {/* Lost to follow-up Rate */}
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Taux estimé de perdus de vue</label>
+                  <label className={styles.label}>{getLostTerm(studyType).label}</label>
                   <div className={styles.rangeContainer}>
                     <input 
                       type="range" 
@@ -570,7 +606,7 @@ export default function CalculatorPage() {
               <div className={styles.resultValue}>{nsnAdjusted}</div>
               <div className={styles.resultLabel}>Sujets à inclure au total</div>
               <div className={styles.resultSubLabel}>
-                (Dont {nsnRaw} sujets selon le calcul statistique brut, plus {(lostRate * 100).toFixed(0)}% de perdus de vue)
+                (Dont {nsnRaw} sujets selon le calcul statistique brut, plus {(lostRate * 100).toFixed(0)}% de {getLostTerm(studyType).shortLabel})
               </div>
 
               {/* Group breakdowns */}
@@ -646,6 +682,36 @@ export default function CalculatorPage() {
                   </button>
                 </div>
                 <p className={styles.reportText}>{reportText}</p>
+              </div>
+
+              {/* Analyse critique et validation méthodique (RECIF) */}
+              <div style={{ background: 'rgba(13, 148, 136, 0.08)', border: '1px solid rgba(13, 148, 136, 0.25)', borderRadius: '12px', padding: '1.25rem', marginTop: '1rem' }}>
+                <h4 style={{ margin: '0 0 0.75rem 0', color: 'var(--accent-primary)', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🔬</span> Analyse Critique & Rigueur Méthodologique RECIF
+                </h4>
+                
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: '1.6' }}>
+                  <p style={{ margin: '0 0 0.75rem 0' }}>
+                    <strong>1. Règle Sémantique :</strong> {getLostTerm(studyType).recifAdvice}
+                  </p>
+                  
+                  {studyType === 'case_control' && (
+                    <>
+                      <p style={{ margin: '0 0 0.75rem 0' }}>
+                        <strong>2. Cohérence Mathématique :</strong> Avec P₀ (exposition témoins) = {(p0CaseControl*100).toFixed(0)}% et OR = {orCaseControl}, le taux d'exposition attendu chez les cas P₁ est de {(( (orCaseControl * p0CaseControl) / (1 - p0CaseControl + orCaseControl * p0CaseControl) ) * 100).toFixed(0)}%. L'arrondi de l'ajustement de +{(lostRate*100).toFixed(0)}% ({nsnRaw} ÷ {(1 - lostRate).toFixed(2)}) donne exactement <strong>{nsnAdjusted} sujets</strong> ({nsnGroup1Adj} Cas et {nsnGroup2Adj} Témoins).
+                      </p>
+                      <p style={{ margin: '0 0 0.75rem 0' }}>
+                        <strong>3. Recommandation pour le Protocole :</strong> N'oubliez pas de spécifier la <em>source bibliographique</em> de l'exposition témoins ({ (p0CaseControl*100).toFixed(0) }%). Si vous prévoyez une <strong>régression logistique multivariée</strong> pour ajuster sur des facteurs de confusion (âge, sexe), prévoyez une majoration supplémentaire de 10% à 20% pour maintenir la puissance statistique.
+                      </p>
+                    </>
+                  )}
+
+                  {studyType !== 'case_control' && (
+                    <p style={{ margin: '0' }}>
+                      <strong>2. Recommandation pour le Protocole :</strong> Veillez à documenter la source bibliographique des hypothèses de travail (taux attendu ou écart-type) et prévoyez une majoration si une analyse multivariée est planifiée.
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Statistical reminder warning banner */}
