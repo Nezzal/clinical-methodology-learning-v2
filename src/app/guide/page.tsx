@@ -106,7 +106,7 @@ Cordialement.`;
           🔑 1. Pourquoi acquérir l'Exécutable de bureau ?
         </h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.6' }}>
-          La version exécutable de bureau (disponible au format <strong>.exe</strong> pour Windows et <strong>.app</strong> pour macOS) vous permet d'emporter toute l'intelligence méthodologique de <strong>Methodo&Clinique</strong> partout avec vous, même dans les zones blanches ou les sous-sols d'hôpitaux totalement coupés du réseau.
+          La version exécutable de bureau (disponible aux formats <strong>.exe</strong> pour Windows, <strong>.app / .dmg</strong> pour macOS et <strong>.AppImage / .deb</strong> pour Linux) vous permet d'emporter toute l'intelligence méthodologique de <strong>Methodo&Clinique</strong> partout avec vous, même dans les zones blanches ou les sous-sols d'hôpitaux totalement coupés du réseau.
         </p>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.6', fontWeight: 600 }}>

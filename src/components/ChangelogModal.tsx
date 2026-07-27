@@ -20,8 +20,19 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.0',
+    version: 'v1.8.1',
     isCurrent: true,
+    date: '27 Juillet 2026',
+    title: 'Support des Exécutables Linux (AppImage & DEB)',
+    tags: ['Linux', 'AppImage', 'DEB', 'GitHub Actions'],
+    features: [
+      'Intégration de la configuration Electron-Builder pour la plateforme Linux (.AppImage et .deb).',
+      'Ajout du workflow GitHub Actions de compilation automatique sous Linux (ubuntu-latest).',
+      'Mise à jour des informations d\'acquisition des licences d\'exécutables hors-ligne pour Linux.'
+    ]
+  },
+  {
+    version: 'v1.8.0',
     date: '27 Juillet 2026',
     title: 'Génération Intégrale des Protocoles & Historique Amélioré',
     tags: ['Protocoles', 'STROBE', 'Calculateur NSN', 'Historique'],
