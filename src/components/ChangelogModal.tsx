@@ -20,8 +20,18 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.3',
+    version: 'v1.8.4',
     isCurrent: true,
+    date: '27 Juillet 2026',
+    title: 'Correction & Publication Intégrale Linux (.AppImage & .deb)',
+    tags: ['Linux', 'Fix DEB', 'AppImage', 'Releases'],
+    features: [
+      'Ajout des informations de maintainer et d\'auteur requises pour l\'empaquetage Linux .deb.',
+      'Validation et publication automatique de l\'intégralité des bannières d\'exécutables (Windows, Mac, Linux).'
+    ]
+  },
+  {
+    version: 'v1.8.3',
     date: '27 Juillet 2026',
     title: 'Publication Automatisée des Releases GitHub',
     tags: ['GitHub Releases', 'Multi-OS', 'Automatisations'],

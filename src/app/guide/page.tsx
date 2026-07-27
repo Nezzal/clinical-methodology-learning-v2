@@ -170,7 +170,7 @@ Cordialement.`;
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          📦 2. Télécharger l'Application selon votre Système (v1.8.3)
+          📦 2. Télécharger l'Application selon votre Système (v1.8.4)
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
@@ -218,7 +218,7 @@ Cordialement.`;
               <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Plateforme RECIF » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique.Setup.1.8.3.exe" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique.Setup.1.8.4.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -241,7 +241,7 @@ Cordialement.`;
               <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l'application dans votre dossier Applications. (Si avertissement de sécurité : Clic-droit $\rightarrow$ <em>Ouvrir</em>).
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique-1.8.3-arm64.dmg" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -267,7 +267,7 @@ Cordialement.`;
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique-1.8.3.AppImage" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4.AppImage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -276,7 +276,7 @@ Cordialement.`;
                 AppImage
               </a>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.3/RECIF-MethodoClinique_1.8.3_amd64.deb" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/clinical-methodology-learning_1.8.4_amd64.deb" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-secondary"

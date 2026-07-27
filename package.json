@@ -1,7 +1,11 @@
 {
   "name": "clinical-methodology-learning",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "private": true,
+  "author": {
+    "name": "RECIF MethodoClinique",
+    "email": "contact@recif-methodoclinique.com"
+  },
   "main": "electron-main.js",
   "scripts": {
     "dev": "next dev --webpack -p 3001",
@@ -98,7 +102,8 @@
         "AppImage",
         "deb"
       ],
-      "category": "Education"
+      "category": "Education",
+      "maintainer": "RECIF MethodoClinique <contact@recif-methodoclinique.com>"
     }
   }
 }
