@@ -56,7 +56,7 @@ async function tryOllamaGenerateProtocol(
           { role: 'user', content: prompt }
         ],
         stream: false,
-        options: { temperature: 0.5, num_ctx: 16384, num_predict: 4096 }
+        options: { temperature: 0.5, num_ctx: 16384, num_predict: 8192 }
       }),
       signal: controller.signal
     });
@@ -134,40 +134,6 @@ function getStaticFallbackProtocol(
 *Généré selon les 19 sections de la grille d'évaluation du manuel RECIF et la législation algérienne*
 
  ${notice}
-
----
-
-## SYNTHÈSE DES PARAMÈTRES DU PROTOCOLE (PLAN D'ÉTUDE)
-
-| Paramètre Méthodologique | Valeur / Statut dans ce Projet |
-| :--- | :--- |
-| **Titre de l'étude** | ${title || '[Non renseigné]'} |
-| **Acronyme** | ${acronym || '[Non renseigné]'} |
-| **Question de recherche** | ${question || '[Non renseignée]'} |
-| **Objectif principal** | Évaluer l'efficacité de l'intervention/exposition sur le critère de jugement principal |
-| **Objectifs secondaires** | ${cleanObjectives} |
-| **Justification de l'étude** | ${justification || '[Non renseignée]'} |
-| **Hypothèse(s) de recherche** | ${hypothesis || '[Non renseignée(s)]'} |
-| **Schéma d'étude (Design)** | ${design || '[Non renseigné]'} |
-| **Type de recherche (Méthodologie)** | ${methodologyName} |
-| **Bénéfice individuel attendu (Loi 18-11)** | ${benefitTypeName} |
-| **Description de l'intervention** | ${intervention || '[Non renseignée]'} |
-| **Population cible** | ${population || '[Non renseignée]'} |
-| **Critères d'exclusion** | ${cleanExclusion} |
-| **Stratégie d'échantillonnage** | ${samplingStrategy || '[Non renseignée]'} |
-| **Critère de jugement principal** | ${primaryEndpoint || '[Non renseigné]'} |
-| **Critères de jugement secondaires** | ${secondaryEndpoints || '[Non renseigné]'} |
-| **Biais et facteurs de confusion** | ${bias || '[Non renseignés]'} |
-| **Taille de l'échantillon (NSN)** | Calcul statistique basé sur le critère principal |
-| **Récolte des données & Étude pilote** | ${logistics || '[Non renseignée]'} |
-| **Collecte des données** | ${dataCollection || '[Non renseignée]'} |
-| **Analyse des données** | ${dataAnalysis || '[Non renseignée]'} |
-| **Personnel et rôles requis** | ${personnel || '[Non renseigné]'} |
-| **Budget et Financement** | ${budget || '[Non renseigné]'} |
-| **Calendrier prévisionnel** | ${calendar || '[Non renseigné]'} |
-| **Considérations éthiques** | ${ethics || '[Non renseignées]'} |
-| **Références bibliographiques** | ${references || '[Non renseignées]'} |
-| **Annexes à joindre** | ${annexes || '[Non renseignées]'} |
 
 ---
 
@@ -361,42 +327,6 @@ export async function POST(req: Request) {
 CONSIGNE DE CONCISION CRITIQUE : Afin de garantir que l'intégralité du document soit générée sans troncature et rapidement, sois extrêmement synthétique, concis et précis. Évite tout bavardage, préambule ou transition inutile. Pour chaque section, formule une rédaction claire de 3 à 8 lignes maximum, reprenant les données fournies par le chercheur et les complétant de manière succincte. L'ensemble du protocole (y compris le tableau de synthèse initial) doit pouvoir être rédigé en moins de 1500 mots.
 
 CONSIGNE CRITIQUE DE STRUCTURE : Tu DOIS impérativement structurer le protocole final en suivant strictement les 19 sections de la grille d'évaluation du protocole de recherche RECIF ci-dessous, dans l'ordre, de la section 1 à la section 19. Ne saute aucune section, n'en regroupe aucune et ne t'arrête pas prématurément avant d'avoir entièrement rédigé les 19 sections. Il est obligatoire d'inclure les aspects logistiques, le personnel, le budget, le calendrier, les considérations éthiques, les annexes et les références.
-
-### DÉBUT DU DOCUMENT : PLAN DE SYNTHÈSE DES 23 PARAMÈTRES
-Génère obligatoirement au tout début du protocole (immédiatement sous le titre principal H1) un tableau Markdown de synthèse structuré exactement comme suit :
-
-| Paramètre Méthodologique | Valeur / Statut dans ce Projet |
-| :--- | :--- |
-| **Titre de l'étude** | [Insérer le titre] |
-| **Acronyme** | [Insérer l'acronyme] |
-| **Question de recherche** | [Insérer la question] |
-| **Objectif principal** | [Insérer l'objectif principal] |
-| **Objectifs secondaires** | [Insérer les objectifs secondaires] |
-| **Justification de l'étude** | [Insérer la justification] |
-| **Hypothèse(s) de recherche** | [Insérer l'hypothèse] |
-| **Schéma d'étude (Design)** | [Insérer le schéma] |
-| **Type de recherche (Méthodologie)** | [Insérer la méthodologie] |
-| **Bénéfice individuel attendu (Loi 18-11)** | [Insérer le bénéfice] |
-| **Description de l'intervention** | [Insérer l'intervention] |
-| **Population cible** | [Insérer la population] |
-| **Critères d'inclusion** | [Insérer les critères d'inclusion] |
-| **Critères d'exclusion** | [Insérer les critères d'exclusion] |
-| **Stratégie d'échantillonnage** | [Insérer la stratégie d'échantillonnage] |
-| **Critère de jugement principal** | [Insérer le critère principal] |
-| **Critères de jugement secondaires** | [Insérer les critères secondaires] |
-| **Biais et facteurs de confusion** | [Insérer les biais] |
-| **Taille de l'échantillon (NSN)** | [Insérer la taille ou estimation] |
-| **Récolte des données & Étude pilote** | [Insérer la logistique] |
-| **Collecte des données** | [Insérer la collecte des données] |
-| **Analyse des données** | [Insérer l'analyse des données] |
-| **Personnel et rôles requis** | [Insérer le personnel] |
-| **Budget et Financement** | [Insérer le budget] |
-| **Calendrier prévisionnel** | [Insérer le calendrier] |
-| **Considérations éthiques** | [Insérer l'éthique] |
-| **Références bibliographiques** | [Insérer les références] |
-| **Annexes à joindre** | [Insérer les annexes] |
-
----
 
 Voici les données saisies par le chercheur :
 - Titre proposé : ${title}
