@@ -488,7 +488,7 @@ export default function AdminDashboard() {
         `"${(u.institution || '').replace(/"/g, '""')}"`,
         `"${(u.city || '').replace(/"/g, '""')}"`,
         `"${(u.country || u.residence || '').replace(/"/g, '""')}"`,
-        `"${(u.subscription?.tier || 'découverte').toUpperCase()}"`,
+        `"${(u.role === 'admin' || u.email === 'admin@recif.dz' ? 'ADMIN' : (u.subscription?.tier || 'découverte')).toUpperCase()}"`,
         `"${u.status === 'suspended' ? 'Suspendu' : 'Actif'}"`,
         `"${createdDate}"`,
         `"${validUntilDate}"`,
@@ -2064,37 +2064,51 @@ Votre superviseur`;
                                   )}
                                 </div>
                                 <span className={styles.studentEmail}>{student.email}</span>
-                                {student.subscription?.tier ? (
-                                   <div style={{ marginTop: '2px' }}>
-                                     <span style={{ 
-                                       display: 'inline-block', 
-                                       background: student.subscription.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription.tier === 'expert' ? 'rgba(168, 85, 247, 0.15)' : student.subscription.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                       border: student.subscription.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription.tier === 'expert' ? '1px solid rgba(168, 85, 247, 0.3)' : student.subscription.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                                       padding: '1px 6px', 
-                                       borderRadius: '4px', 
-                                       fontSize: '0.68rem',
-                                       fontWeight: 'bold',
-                                       color: student.subscription.tier === 'ultra' ? '#fbbf24' : student.subscription.tier === 'expert' ? '#c084fc' : student.subscription.tier === 'institution' ? '#c084fc' : student.subscription.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
-                                       textTransform: 'uppercase'
-                                     }}>
-                                       Formule : {student.subscription.tier.toUpperCase()}
-                                     </span>
-                                   </div>
-                                 ) : (
-                                   <div style={{ marginTop: '2px' }}>
-                                     <span style={{ 
-                                       display: 'inline-block', 
-                                       background: 'rgba(255, 255, 255, 0.05)', 
-                                       border: '1px solid rgba(255, 255, 255, 0.1)',
-                                       padding: '1px 6px', 
-                                       borderRadius: '4px', 
-                                       fontSize: '0.68rem',
-                                       color: '#94a3b8'
-                                     }}>
-                                       Compte Standard
-                                     </span>
-                                   </div>
-                                 )}
+                                <div style={{ marginTop: '2px' }}>
+                                  {student.role === 'admin' || student.email === 'admin@recif.dz' ? (
+                                    <span style={{ 
+                                      display: 'inline-block', 
+                                      background: 'rgba(239, 68, 68, 0.15)', 
+                                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                                      padding: '1px 6px', 
+                                      borderRadius: '4px', 
+                                      fontSize: '0.68rem',
+                                      fontWeight: 'bold',
+                                      color: '#f87171',
+                                      textTransform: 'uppercase'
+                                    }}>
+                                      Formule : ADMIN
+                                    </span>
+                                  ) : student.subscription?.tier ? (
+                                    <span style={{ 
+                                      display: 'inline-block', 
+                                      background: student.subscription.tier === 'ultra' ? 'rgba(251, 191, 36, 0.15)' : student.subscription.tier === 'expert' ? 'rgba(168, 85, 247, 0.15)' : student.subscription.tier === 'institution' ? 'rgba(147, 51, 234, 0.15)' : student.subscription.tier === 'pro' ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
+                                      border: student.subscription.tier === 'ultra' ? '1px solid rgba(251, 191, 36, 0.3)' : student.subscription.tier === 'expert' ? '1px solid rgba(168, 85, 247, 0.3)' : student.subscription.tier === 'institution' ? '1px solid rgba(147, 51, 234, 0.3)' : student.subscription.tier === 'pro' ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
+                                      padding: '1px 6px', 
+                                      borderRadius: '4px', 
+                                      fontSize: '0.68rem',
+                                      fontWeight: 'bold',
+                                      color: student.subscription.tier === 'ultra' ? '#fbbf24' : student.subscription.tier === 'expert' ? '#c084fc' : student.subscription.tier === 'institution' ? '#c084fc' : student.subscription.tier === 'pro' ? '#2dd4bf' : '#38bdf8',
+                                      textTransform: 'uppercase'
+                                    }}>
+                                      Formule : {student.subscription.tier.toUpperCase()}
+                                    </span>
+                                  ) : (
+                                    <span style={{ 
+                                      display: 'inline-block', 
+                                      background: 'rgba(56, 189, 248, 0.15)', 
+                                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                                      padding: '1px 6px', 
+                                      borderRadius: '4px', 
+                                      fontSize: '0.68rem',
+                                      fontWeight: 'bold',
+                                      color: '#38bdf8',
+                                      textTransform: 'uppercase'
+                                    }}>
+                                      Formule : DÉCOUVERTE
+                                    </span>
+                                  )}
+                                </div>
                                 <span className={styles.lastActiveTime}>{lastActiveStr}</span>
                               </div>
                             </td>
@@ -3103,8 +3117,8 @@ Votre superviseur`;
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.85rem' }}>
                         <div>
                           <span style={{ color: '#64748b', display: 'block', fontSize: '0.75rem' }}>Formule Active</span>
-                          <span style={{ fontWeight: 800, color: selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
-                            Formule {selectedStudent.subscription?.tier || 'DÉCOUVERTE'}
+                          <span style={{ fontWeight: 800, color: (selectedStudent.role === 'admin' || selectedStudent.email === 'admin@recif.dz') ? '#f87171' : selectedStudent.subscription?.tier === 'ultra' ? '#fbbf24' : selectedStudent.subscription?.tier === 'expert' ? '#c084fc' : selectedStudent.subscription?.tier === 'pro' ? '#2dd4bf' : '#38bdf8', textTransform: 'uppercase' }}>
+                            Formule {(selectedStudent.role === 'admin' || selectedStudent.email === 'admin@recif.dz') ? 'ADMIN' : (selectedStudent.subscription?.tier?.toUpperCase() || 'DÉCOUVERTE')}
                           </span>
                         </div>
                         <div>
