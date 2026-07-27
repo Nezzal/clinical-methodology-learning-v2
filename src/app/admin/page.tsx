@@ -134,6 +134,7 @@ export default function AdminDashboard() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [presenceFilter, setPresenceFilter] = useState<'all' | 'online'>('all');
+  const [userSortOption, setUserSortOption] = useState<'default' | 'name_asc' | 'name_desc' | 'date_desc' | 'date_asc'>('name_asc');
 
   const isUserOnline = (lastActive: any): boolean => {
     if (!lastActive) return false;
@@ -1805,6 +1806,40 @@ Votre superviseur`;
       return matchesSearch;
     })
     .sort((a, b) => {
+      // Tri Alphabétique par Nom (A -> Z)
+      if (userSortOption === 'name_asc') {
+        const nameA = getUserDisplayName(a);
+        const nameB = getUserDisplayName(b);
+        return nameA.localeCompare(nameB, 'fr', { sensitivity: 'base' });
+      }
+      
+      // Tri Alphabétique Inverse (Z -> A)
+      if (userSortOption === 'name_desc') {
+        const nameA = getUserDisplayName(a);
+        const nameB = getUserDisplayName(b);
+        return nameB.localeCompare(nameA, 'fr', { sensitivity: 'base' });
+      }
+
+      const getCreationTime = (u: FirestoreUser): number => {
+        if (u.subscription?.startDate) return new Date(u.subscription.startDate).getTime();
+        if (u.updatedAt?.seconds) return u.updatedAt.seconds * 1000;
+        if (u.updatedAt) return new Date(u.updatedAt).getTime();
+        if (u.lastActive?.seconds) return u.lastActive.seconds * 1000;
+        if (u.lastActive) return new Date(u.lastActive).getTime();
+        return 0;
+      };
+
+      // Tri par Date d'Inscription : Plus Récents d'abord
+      if (userSortOption === 'date_desc') {
+        return getCreationTime(b) - getCreationTime(a);
+      }
+
+      // Tri par Date d'Inscription : Plus Anciens d'abord
+      if (userSortOption === 'date_asc') {
+        return getCreationTime(a) - getCreationTime(b);
+      }
+
+      // Tri par Défaut (En ligne puis Activité récente)
       const aOnline = isUserOnline(a.lastActive);
       const bOnline = isUserOnline(b.lastActive);
       
@@ -1818,9 +1853,7 @@ Votre superviseur`;
         return bTime - aTime;
       }
       
-      const aName = a.displayName || '';
-      const bName = b.displayName || '';
-      return aName.localeCompare(bName);
+      return getUserDisplayName(a).localeCompare(getUserDisplayName(b), 'fr', { sensitivity: 'base' });
     });
 
   // Calculs statistiques collectifs
@@ -2064,7 +2097,20 @@ Votre superviseur`;
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <select
+                    className={styles.presenceSelect}
+                    value={userSortOption}
+                    onChange={(e) => setUserSortOption(e.target.value as any)}
+                    title="Trier la liste des utilisateurs"
+                    style={{ fontWeight: 600 }}
+                  >
+                    <option value="name_asc">🔤 Nom : A ➔ Z (Ordre Alphabétique)</option>
+                    <option value="name_desc">🔤 Nom : Z ➔ A (Ordre Inverse)</option>
+                    <option value="date_desc">📅 Date Inscription : Plus Récents 🆕</option>
+                    <option value="date_asc">📅 Date Inscription : Plus Anciens ⌛</option>
+                    <option value="default">🟢 Statut : En Ligne & Activité Récente</option>
+                  </select>
                   <select
                     className={styles.presenceSelect}
                     value={presenceFilter}
