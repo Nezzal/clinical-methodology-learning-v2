@@ -20,10 +20,10 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.1',
+    version: 'v1.8.2',
     isCurrent: true,
     date: '27 Juillet 2026',
-    title: 'Support des Exécutables Linux (AppImage & DEB)',
+    title: 'Support des Exécutables Linux (.AppImage & .deb)',
     tags: ['Linux', 'AppImage', 'DEB', 'GitHub Actions'],
     features: [
       'Intégration de la configuration Electron-Builder pour la plateforme Linux (.AppImage et .deb).',
