@@ -310,35 +310,30 @@ Cordialement.`;
             <thead>
               <tr>
                 <th>Composant</th>
-                <th>Configuration Minimale (Modèles légers : 2B - 3B)</th>
-                <th>Configuration Recommandée (Modèles standards : 7B - 9B)</th>
+                <th>PC Windows & Linux (Intel / AMD / NVIDIA)</th>
+                <th>Mac Apple (Apple Silicon M1/M2/M3/M4 & Intel)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td><strong>Processeur (CPU)</strong></td>
-                <td>Intel Core i5 / AMD Ryzen 5 (Génération récente)</td>
-                <td>Apple Silicon (M1/M2/M3/M4) <strong>OU</strong> Intel Core i7 / AMD Ryzen 7</td>
+                <td>Intel Core i5 / i7 / i9 <strong>OU</strong> AMD Ryzen 5 / 7 / 9</td>
+                <td>Puce Apple Silicon (M1, M2, M3, M4) <strong>OU</strong> Intel Core i5 / i7</td>
               </tr>
               <tr>
                 <td><strong>Mémoire (RAM)</strong></td>
-                <td><strong>8 Go</strong></td>
-                <td><strong>16 Go</strong> (ou plus)</td>
+                <td><strong>8 Go</strong> (Minimale) — <strong>16 Go+</strong> (Recommandée pour l'IA)</td>
+                <td><strong>8 Go</strong> (Minimale) — <strong>16 Go+</strong> (Mémoire Unifiée Recommandée)</td>
               </tr>
               <tr>
                 <td><strong>Carte Graphique (GPU)</strong></td>
-                <td>Graphiques intégrés (Intel Iris Xe, Radeon)</td>
-                <td>Carte dédiée NVIDIA RTX (6 Go VRAM ou plus) <strong>OU</strong> GPU intégré Apple Silicon</td>
+                <td>Carte dédiée <strong>NVIDIA RTX / GTX</strong> (4-6 Go VRAM+) <strong>OU</strong> AMD Radeon <strong>OU</strong> Intel Iris Xe</td>
+                <td>GPU intégré <strong>Apple Silicon</strong> (M1/M2/M3/M4) <strong>OU</strong> AMD Radeon Mac</td>
               </tr>
               <tr>
-                <td><strong>Disque Dur</strong></td>
-                <td><strong>SSD obligatoire</strong></td>
-                <td><strong>SSD rapide (NVMe)</strong></td>
-              </tr>
-              <tr>
-                <td><strong>Espace Libre</strong></td>
-                <td>10 Go d'espace libre sur le disque</td>
-                <td>20 Go d'espace libre sur le disque</td>
+                <td><strong>Stockage (Disque)</strong></td>
+                <td><strong>SSD obligatoire</strong> (NVMe recommandé) — 15 à 20 Go d'espace libre</td>
+                <td><strong>SSD Mac obligatoire</strong> — 15 à 20 Go d'espace libre</td>
               </tr>
             </tbody>
           </table>
