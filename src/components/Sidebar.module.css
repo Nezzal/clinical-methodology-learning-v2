@@ -602,4 +602,100 @@
   }
 }
 
+/* Tooltips interactifs lors du survol en mode volet fermé (collapsed) */
+.sidebar.collapsed .navItem {
+  position: relative;
+}
+
+.sidebar.collapsed .navItem:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(9, 12, 21, 0.95);
+  color: #f8fafc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 12px rgba(56, 189, 248, 0.2);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10000;
+  backdrop-filter: blur(8px);
+  animation: tooltipFadeIn 0.15s ease-out forwards;
+}
+
+.sidebar.collapsed .navItem:hover::before {
+  content: '';
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px 6px 5px 0;
+  border-style: solid;
+  border-color: transparent rgba(56, 189, 248, 0.4) transparent transparent;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.sidebar.collapsed .aiToggleBtn {
+  position: relative;
+}
+
+.sidebar.collapsed .aiToggleBtn:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(9, 12, 21, 0.95);
+  color: #f8fafc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+.sidebar.collapsed .logoutBtn {
+  position: relative;
+}
+
+.sidebar.collapsed .logoutBtn:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(9, 12, 21, 0.95);
+  color: #f8fafc;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
 

@@ -457,8 +457,10 @@ export default function Sidebar() {
                   key={link.href}
                   className={`${styles.navItem} ${isActive ? styles.active : ''}`}
                   onClick={() => setIsOpen(false)}
+                  data-tooltip={link.label}
+                  title={isCollapsed ? link.label : undefined}
                 >
-                  <Link href={link.href} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <Link href={link.href} style={{ position: 'relative', display: 'flex', alignItems: 'center' }} title={isCollapsed ? link.label : undefined}>
                     {link.icon}
                     <span>{link.label}</span>
                     {hasBadge && <span className={styles.sidebarBadge} />}
@@ -475,7 +477,8 @@ export default function Sidebar() {
           <button 
             className={`${styles.aiToggleBtn} ${aiProvider === 'openrouter' ? styles.geminiActive : styles.ollamaActive}`} 
             onClick={handleToggleAi}
-            title={aiProvider === 'openrouter' ? "Basculer sur Ollama Local (Gemma 4)" : "Basculer sur QWEN / GLM (Cloud)"}
+            title={aiProvider === 'openrouter' ? "Moteur IA : QWEN / GLM (Cloud)" : "Moteur IA : Ollama (Local)"}
+            data-tooltip={aiProvider === 'openrouter' ? "Moteur IA : QWEN / GLM (Cloud)" : "Moteur IA : Ollama (Local)"}
           >
             <span className={styles.aiToggleIcon}>
               {aiProvider === 'openrouter' ? '☁️' : '🤖'}
@@ -533,7 +536,12 @@ export default function Sidebar() {
                   </div>
                 </div>
               </div>
-              <button className={styles.logoutBtn} onClick={handleLogout}>
+              <button 
+                className={styles.logoutBtn} 
+                onClick={handleLogout}
+                title="Se déconnecter (Quitter)"
+                data-tooltip="Se déconnecter (Quitter)"
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.logoutIcon}>
                   <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                   <polyline points="16 17 21 12 16 7" />
