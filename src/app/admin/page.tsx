@@ -2910,7 +2910,7 @@ Votre superviseur`;
                     value={newMsgContent}
                     onChange={(e) => setNewMsgContent(e.target.value)}
                     required
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '80px', resize: 'vertical', outline: 'none', marginBottom: '14px' }}
+                    style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '10px', color: 'var(--text-primary)', fontSize: '0.85rem', minHeight: '80px', resize: 'vertical', outline: 'none', marginBottom: '14px', whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'break-word' }}
                   />
                   <button 
                     type="submit" 
