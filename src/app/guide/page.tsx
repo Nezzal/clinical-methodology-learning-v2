@@ -162,6 +162,126 @@ Cordialement.`;
         </div>
       </section>
 
+      {/* Section 2 : Téléchargement des Exécutables de Bureau & Instructions par OS */}
+      <section className={styles.card}>
+        <h2 className={styles.cardTitle}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          📦 2. Télécharger l'Application selon votre Système (v1.8.2)
+        </h2>
+        
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
+          Sélectionnez ci-dessous l'exécutable correspondant à votre système d'exploitation. Tous les installateurs sont générés et certifiés automatiquement sur notre plateforme sécurisée.
+        </p>
+
+        {/* Banner OBLIGATOIRE sur la licence */}
+        <div style={{ background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#facc15', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>⚠️</span> ÉTAPE OBLIGATOIRE DE PREMIER DÉMARRAGE
+          </h4>
+          <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-primary)', fontSize: '0.88rem', lineHeight: '1.6' }}>
+            Après avoir téléchargé et lancé l'application sur votre ordinateur, un <strong>Code de Licence Hors-ligne (16 caractères)</strong> vous sera demandé lors de la première ouverture.
+          </p>
+          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+            <strong>Comment obtenir votre code de licence auprès de l'Administrateur :</strong>
+            <ol style={{ margin: '0.5rem 0 0 0', paddingLeft: '1.25rem' }}>
+              <li>Faites défiler vers le haut et cliquez sur le bouton <strong>« 🔑 Demander l'Acquisition & Licence Hors-ligne »</strong>.</li>
+              <li>L'administrateur validera votre demande et vous transmettra votre clé d'activation individuelle utilisable sur votre machine.</li>
+            </ol>
+          </div>
+        </div>
+
+        {/* 3 Cartes OS : Windows, macOS, Linux */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: '1rem' }}>
+          
+          {/* Windows */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '1.8rem' }}>🪟</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Windows (.exe)</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Windows 10 / 11 (64-bit)</span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
+              <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Plateforme RECIF » sera créé sur votre bureau.
+            </p>
+            <a 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{ textAlign: 'center', padding: '0.55rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none' }}
+            >
+              Télécharger pour Windows (.exe)
+            </a>
+          </div>
+
+          {/* macOS */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '1.8rem' }}>🍎</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>macOS (.dmg / .app)</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>macOS 11+ (Apple Silicon & Intel)</span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
+              <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l'application dans votre dossier Applications. (Si avertissement de sécurité : Clic-droit $\rightarrow$ <em>Ouvrir</em>).
+            </p>
+            <a 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{ textAlign: 'center', padding: '0.55rem 0.85rem', fontSize: '0.85rem', textDecoration: 'none' }}
+            >
+              Télécharger pour Mac (.dmg)
+            </a>
+          </div>
+
+          {/* Linux */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <span style={{ fontSize: '1.8rem' }}>🐧</span>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>Linux (.AppImage / .deb)</h3>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Ubuntu, Debian, Fedora, Arch</span>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
+              <strong>Instructions :</strong><br/>
+              • <code>AppImage</code> : Rendre exécutable (<code>chmod +x</code>) puis lancer.<br/>
+              • <code>.deb</code> : Installer avec <code>sudo dpkg -i</code> ou via le Centre Logiciels.
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <a 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ flex: 1, textAlign: 'center', padding: '0.55rem 0.4rem', fontSize: '0.78rem', textDecoration: 'none' }}
+              >
+                AppImage
+              </a>
+              <a 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="btn btn-secondary"
+                style={{ flex: 1, textAlign: 'center', padding: '0.55rem 0.4rem', fontSize: '0.78rem', textDecoration: 'none' }}
+              >
+                Paquet .deb
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* Section 2 : Prérequis Matériels */}
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>
