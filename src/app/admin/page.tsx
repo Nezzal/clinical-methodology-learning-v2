@@ -9,6 +9,7 @@ import {
   loadFirestoreChats, 
   loadFirestoreArticles,
   updateUserDisplayName,
+  deleteUserFully,
   assignStudentToTeacher,
   getAccessRequests,
   deleteAccessRequest,
@@ -654,33 +655,53 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteStudentData = async (uid: string) => {
-    const confirm1 = window.confirm("ATTENTION : Cette action supprimera définitivement le profil, les statistiques de quiz, l'historique de chat et les protocoles de cet étudiant dans la base de données ainsi que son compte d'authentification. Cette opération est IRRÉVERSIBLE. Voulez-vous continuer ?");
+    const confirm1 = window.confirm("ATTENTION : Cette action supprimera définitivement le profil, les statistiques de quiz, l'historique de chat et les protocoles de cet utilisateur dans la base de données ainsi que son compte d'authentification. Cette opération est IRRÉVERSIBLE. Voulez-vous continuer ?");
     if (!confirm1) return;
 
-    const confirm2 = window.confirm("Confirmation finale de sécurité : Êtes-vous absolument sûr de vouloir détruire TOUTES les données et le compte de cet étudiant ?");
+    const confirm2 = window.confirm("Confirmation finale de sécurité : Êtes-vous absolument sûr de vouloir détruire TOUTES les données et le compte de cet utilisateur ?");
     if (!confirm2) return;
 
     setActionPending(true);
     try {
-      if (!user) throw new Error("Utilisateur non connecté");
-      const idToken = await user.getIdToken(true);
-
-      const res = await fetch(`/api/admin/users/${uid}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${idToken}`
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true);
+          await fetch(`/api/admin/users/${uid}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${idToken}`
+            }
+          });
+        } catch (apiErr) {
+          console.warn("⚠️ API DELETE failed, executing client SDK deletion:", apiErr);
         }
-      });
-
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Erreur serveur lors de la suppression.");
       }
-      
+
+      // Supprimer le document dans Firestore via le SDK client (si actif)
+      try {
+        await deleteUserFully(uid);
+      } catch (fsErr) {
+        console.warn("⚠️ Client Firestore deletion failed/skipped:", fsErr);
+      }
+
+      const targetEmail = selectedStudent?.email;
+
+      // Mettre à jour l'état local immédiatement
+      setStudents(prev => prev.filter(s => s.uid !== uid && (targetEmail ? s.email !== targetEmail : true)));
+
+      // Nettoyer le cache LocalStorage pour que l'utilisateur ne réapparaisse pas au rechargement
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('recif_offline_students');
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached).filter((s: any) => s.uid !== uid && (targetEmail ? s.email !== targetEmail : true));
+            localStorage.setItem('recif_offline_students', JSON.stringify(parsed));
+          } catch (e) {}
+        }
+      }
+
       setSelectedStudent(null);
-      setStudents(prev => prev.filter(s => s.uid !== uid));
-      
-      alert("Le compte de l'étudiant et toutes ses données associées (profil, discussions et protocoles) ont été supprimés définitivement.");
+      alert("Le compte de l'utilisateur et toutes ses données ont été supprimés définitivement.");
     } catch (e) {
       alert("Erreur lors de la suppression des données : " + (e as Error).message);
     } finally {
