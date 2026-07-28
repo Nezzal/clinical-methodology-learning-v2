@@ -319,6 +319,8 @@ export default function AdminDashboard() {
   const [editInstitution, setEditInstitution] = useState('');
   const [editCity, setEditCity] = useState('');
   const [editCountry, setEditCountry] = useState('');
+  const [editTier, setEditTier] = useState('pro');
+  const [editRole, setEditRole] = useState('student');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const handleSaveProfile = async () => {
@@ -334,6 +336,8 @@ export default function AdminDashboard() {
         },
         body: JSON.stringify({
           displayName: editDisplayName.trim() || selectedStudent.displayName,
+          tier: editTier,
+          role: editRole,
           phone: editPhone.trim(),
           profession: editProfession.trim(),
           institution: editInstitution.trim(),
@@ -353,6 +357,11 @@ export default function AdminDashboard() {
       setSelectedStudent(prev => prev ? ({
         ...prev,
         displayName: finalName,
+        role: editRole,
+        subscription: {
+          ...(prev.subscription || {}),
+          tier: editTier
+        },
         phone: editPhone.trim(),
         profession: editProfession.trim(),
         institution: editInstitution.trim(),
@@ -364,6 +373,11 @@ export default function AdminDashboard() {
       setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? {
         ...s,
         displayName: finalName,
+        role: editRole,
+        subscription: {
+          ...(s.subscription || {}),
+          tier: editTier
+        },
         phone: editPhone.trim(),
         profession: editProfession.trim(),
         institution: editInstitution.trim(),
@@ -373,7 +387,7 @@ export default function AdminDashboard() {
       } : s));
 
       setIsEditingProfile(false);
-      alert(`✅ Profil et nom mis à jour avec succès !`);
+      alert(`✅ Profil, Nom ("${finalName}") et Formule (${editTier.toUpperCase()}) mis à jour avec succès !`);
     } catch (e: any) {
       alert("Erreur de mise à jour du profil : " + (e?.message || e));
     } finally {
@@ -3404,6 +3418,8 @@ Votre superviseur`;
                       style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 600 }}
                       onClick={() => {
                         setEditDisplayName(selectedStudent.displayName || '');
+                        setEditTier(getUserFormulaTier(selectedStudent) || 'pro');
+                        setEditRole(selectedStudent.role || 'student');
                         setEditPhone(selectedStudent.phone || '');
                         setEditProfession(selectedStudent.profession || selectedStudent.userType || '');
                         setEditInstitution(selectedStudent.institution || '');
@@ -3590,6 +3606,35 @@ Votre superviseur`;
                           placeholder="Ex : France, Algérie, Mali..."
                           style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.6)', color: 'white', fontSize: '0.85rem' }}
                         />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.78rem', color: '#fbbf24', marginBottom: '4px', fontWeight: 700 }}>💳 Formule d'Abonnement</label>
+                        <select
+                          value={editTier}
+                          onChange={e => setEditTier(e.target.value)}
+                          style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(251, 191, 36, 0.4)', background: 'rgba(15,23,42,0.9)', color: '#fbbf24', fontSize: '0.85rem', fontWeight: 700 }}
+                        >
+                          <option value="découverte">Découverte (Gratuit)</option>
+                          <option value="pro">Formule PRO</option>
+                          <option value="expert">Formule EXPERT</option>
+                          <option value="ultra">Formule ULTRA</option>
+                          <option value="institution">Formule INSTITUTION</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.78rem', color: '#c084fc', marginBottom: '4px', fontWeight: 700 }}>👤 Rôle Plateforme</label>
+                        <select
+                          value={editRole}
+                          onChange={e => setEditRole(e.target.value)}
+                          style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(192, 132, 252, 0.4)', background: 'rgba(15,23,42,0.9)', color: '#c084fc', fontSize: '0.85rem', fontWeight: 700 }}
+                        >
+                          <option value="student">Étudiant / Chercheur</option>
+                          <option value="teacher">Enseignant / Tuteur</option>
+                          <option value="admin">Administrateur</option>
+                        </select>
                       </div>
                     </div>
 

@@ -94,6 +94,20 @@ export async function PATCH(
       updates['subscription.tier'] = tier;
     }
 
+    if (role) {
+      const validRoles = ['student', 'teacher', 'admin'];
+      if (validRoles.includes(role)) {
+        updates.role = role;
+        if (adminAuth) {
+          try {
+            await adminAuth.setCustomUserClaims(uid, { role });
+          } catch (e) {
+            console.warn("⚠️ N'a pas pu mettre à jour le rôle dans Firebase Auth:", e);
+          }
+        }
+      }
+    }
+
     if (displayName !== undefined) {
       updates.displayName = displayName;
       if (adminAuth) {
