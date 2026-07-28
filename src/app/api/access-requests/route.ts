@@ -57,6 +57,13 @@ export async function POST(req: Request) {
     recentRequests.set(cleanEmail, now);
 
     // 1. Vérifier si un compte existe déjà dans Firebase Auth
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json(
+        { error: "La configuration Firebase Admin est manquante ou incomplète sur le serveur Vercel." },
+        { status: 500 }
+      );
+    }
+
     try {
       await adminAuth.getUserByEmail(cleanEmail);
       return NextResponse.json(

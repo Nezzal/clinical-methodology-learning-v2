@@ -131,7 +131,13 @@ export async function POST(req: Request) {
       }
     };
 
-    // 2. Vérifier si l'utilisateur existe déjà dans Firebase Authentication
+    // 2. Vérifier que l'Admin SDK de Firebase est bien initialisé sur le serveur
+    if (!adminAuth || !adminDb) {
+      return NextResponse.json({ 
+        error: "Configuration Firebase Admin manquante sur Vercel. Veuillez vérifier que FIREBASE_CLIENT_EMAIL et FIREBASE_PRIVATE_KEY sont bien renseignées dans Vercel > Settings > Environment Variables." 
+      }, { status: 500 });
+    }
+
     try {
       await adminAuth.getUserByEmail(cleanEmail);
       return NextResponse.json({ error: "Un compte avec cette adresse e-mail existe déjà." }, { status: 400 });
