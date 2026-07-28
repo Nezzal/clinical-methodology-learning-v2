@@ -20,8 +20,20 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.5',
+    version: 'v1.8.6',
     isCurrent: true,
+    date: '28 Juillet 2026',
+    title: 'Factures Officielles PedagogiAfrica (Logo, NIF, Exonération TVA & Sceau QR-Code)',
+    tags: ['Facturation', 'NIF', 'PedagogiAfrica', 'QR-Code', 'PDF'],
+    features: [
+      'Génération automatique de Factures Officielles avec logo PedagogiAfrica, NIF (15007180115910202380) et émetteur Pr NEZZAL Abdelmalek.',
+      'Sceau d\'authenticité avec QR-Code scannable de vérification numérique pour certifier l\'authenticité du document.',
+      'Mention obligatoire d\'exonération de TVA (0%), impression/sauvegarde directe en PDF et envoi automatique par e-mail au client.',
+      'Correction de l\'interactivité des pastilles de reçus BaridiMob et amélioration des aperçus et téléchargements sur PC.'
+    ]
+  },
+  {
+    version: 'v1.8.5',
     date: '28 Juillet 2026',
     title: 'Gestion Sécurisée des Reçus de Paiement (Upload, Téléchargement & Suppression)',
     tags: ['Reçus', 'Sécurité', 'Espace Admin', 'Cloud Storage'],
