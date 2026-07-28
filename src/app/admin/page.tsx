@@ -2551,10 +2551,43 @@ Votre superviseur`;
                                 </span>
                               )}
                               {req.paymentReceiptRef && (
-                                <div style={{ marginTop: '5px', fontSize: '0.74rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.12)', padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: 600 }}>
+                                <div 
+                                  onClick={() => {
+                                    if (req.paymentReceiptImage) {
+                                      setPreviewReceiptModal({
+                                        title: `Reçu BaridiMob - ${req.firstName} ${req.lastName}`,
+                                        image: req.paymentReceiptImage,
+                                        email: req.email
+                                      });
+                                    } else {
+                                      setSelectedRequestDetail(req);
+                                    }
+                                  }}
+                                  style={{ 
+                                    marginTop: '5px', 
+                                    fontSize: '0.74rem', 
+                                    color: '#10b981', 
+                                    background: 'rgba(16, 185, 129, 0.12)', 
+                                    padding: '4px 8px', 
+                                    borderRadius: '6px', 
+                                    border: '1px solid rgba(16, 185, 129, 0.35)', 
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    transition: 'all 0.2s ease'
+                                  }}
+                                  title={req.paymentReceiptImage ? "Cliquer pour afficher la photo du reçu en grand" : "Cliquer pour voir les détails du paiement"}
+                                >
                                   {req.country && (req.country.toLowerCase().includes('algér') || req.country.toLowerCase().includes('dz') || req.country.toLowerCase().includes('algerie'))
                                     ? `📲 Reçu BaridiMob N° : ${req.paymentReceiptRef}`
                                     : `💳 Réf Paiement : ${req.paymentReceiptRef}`}
+                                  {req.paymentReceiptImage ? (
+                                    <span style={{ fontSize: '0.8rem' }}>🖼️</span>
+                                  ) : (
+                                    <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>🔍</span>
+                                  )}
                                 </div>
                               )}
                               {req.paymentReceiptImage && (
@@ -2567,21 +2600,21 @@ Votre superviseur`;
                                       image: req.paymentReceiptImage!,
                                       email: req.email
                                     })}
-                                    style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #38bdf8', cursor: 'pointer' }}
-                                    title="Cliquer pour agrandir"
+                                    style={{ width: '38px', height: '38px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #38bdf8', cursor: 'pointer' }}
+                                    title="Cliquer pour agrandir en plein écran"
                                   />
                                   <button
                                     type="button"
                                     onClick={() => downloadImage(req.paymentReceiptImage!, `Recu_${req.lastName}_${req.firstName}_${req.paymentReceiptRef || 'BaridiMob'}.webp`)}
-                                    style={{ padding: '3px 7px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}
-                                    title="Télécharger la photo sur l'ordinateur"
+                                    style={{ padding: '4px 8px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                                    title="Télécharger la photo du reçu sur l'ordinateur"
                                   >
                                     📥 Télécharger
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteReceiptImage(req.email)}
-                                    style={{ padding: '3px 7px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}
+                                    style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
                                     title="Supprimer la photo du reçu"
                                   >
                                     🗑️ Supprimer
@@ -4132,7 +4165,7 @@ Votre superviseur`;
                   </div>
                 </div>
 
-                {selectedRequestDetail.paymentReceiptImage && (
+                {selectedRequestDetail.paymentReceiptImage ? (
                   <div style={{ marginTop: '12px', background: 'rgba(15,23,42,0.8)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
                     <div style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 700, marginBottom: '6px' }}>📷 Photo du Reçu Jointe :</div>
                     <img
@@ -4163,7 +4196,13 @@ Votre superviseur`;
                       </button>
                     </div>
                   </div>
-                )}
+                ) : selectedRequestDetail.paymentReceiptRef ? (
+                  <div style={{ marginTop: '12px', background: 'rgba(15,23,42,0.8)', padding: '10px 14px', borderRadius: '8px', border: '1px dashed rgba(56,189,248,0.3)', fontSize: '0.82rem', color: '#cbd5e1' }}>
+                    <div style={{ fontWeight: 700, color: '#38bdf8', marginBottom: '4px' }}>📲 Transaction BaridiMob déclarée sans photo :</div>
+                    <div>N° de Reçu / Transaction : <code style={{ color: '#34d399', fontWeight: 700, fontSize: '0.9rem' }}>{selectedRequestDetail.paymentReceiptRef}</code></div>
+                    <div style={{ fontSize: '0.76rem', color: '#94a3b8', marginTop: '4px' }}>L'utilisateur a saisi ce numéro lors de son inscription sans téléverser d'image.</div>
+                  </div>
+                ) : null}
               </div>
 
               {/* Actions Rapides */}
