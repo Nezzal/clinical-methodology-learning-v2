@@ -138,30 +138,38 @@ export async function POST(req: Request) {
       }, { status: 500 });
     }
 
+    // 3. Générer le mot de passe temporaire
+    const tempPassword = generateTempPassword();
+    let userRecord: any = null;
+
     try {
-      await adminAuth.getUserByEmail(cleanEmail);
-      return NextResponse.json({ error: "Un compte avec cette adresse e-mail existe déjà." }, { status: 400 });
+      userRecord = await adminAuth.getUserByEmail(cleanEmail);
+      // L'utilisateur existe déjà : mettre à jour le mot de passe, le nom d'affichage et l'email vérifié
+      await adminAuth.updateUser(userRecord.uid, {
+        password: tempPassword,
+        displayName: cleanName,
+        emailVerified: true
+      });
+      console.log(`🔄 Compte existant mis à jour dans Auth : ${cleanEmail} (UID: ${userRecord.uid})`);
     } catch (authErr: any) {
-      if (authErr.code !== 'auth/user-not-found') {
+      if (authErr.code === 'auth/user-not-found') {
+        // Créer l'utilisateur s'il n'existe pas encore
+        userRecord = await adminAuth.createUser({
+          email: cleanEmail,
+          password: tempPassword,
+          displayName: cleanName,
+          emailVerified: true
+        });
+        console.log(`✅ Nouveau compte créé dans Auth : ${cleanEmail} (UID: ${userRecord.uid})`);
+      } else {
         throw authErr;
       }
     }
 
-    // 3. Générer le mot de passe temporaire
-    const tempPassword = generateTempPassword();
-
-    // 4. Créer l'utilisateur dans Firebase Auth via l'Admin SDK
-    const userRecord = await adminAuth.createUser({
-      email: cleanEmail,
-      password: tempPassword,
-      displayName: cleanName,
-      emailVerified: true
-    });
-
     // 5. Attribuer le Custom Claim
     await adminAuth.setCustomUserClaims(userRecord.uid, { role: cleanRole });
 
-    // 6. Créer le profil initial dans Firestore avec abonnement activé
+    // 6. Créer ou mettre à jour le profil dans Firestore avec abonnement activé
     await adminDb.collection('users').doc(userRecord.uid).set({
       uid: userRecord.uid,
       email: cleanEmail,
@@ -178,18 +186,10 @@ export async function POST(req: Request) {
       ...(residence ? { residence } : {}),
       ...(teacherUid ? { assignedTeacherUid: teacherUid } : {}),
       ...(assignedTeacherName ? { assignedTeacherName } : {}),
-      stats: {
-        questionsAsked: 0,
-        protocolsGenerated: 0,
-        quizCorrect: 0,
-        quizTotal: 0,
-        flashcardsMastered: [],
-        quizHistory: []
-      },
       requirePasswordChange: true,
       status: 'active',
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true });
 
     console.log(`✅ Compte [${cleanRole}] créé avec succès : ${cleanEmail} (UID: ${userRecord.uid})`);
 
