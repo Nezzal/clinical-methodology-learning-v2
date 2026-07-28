@@ -324,15 +324,32 @@ export function generateInvoiceHTML(data: InvoiceData): string {
       ℹ️ TVA non applicable — Exonération de TVA conformément à la réglementation fiscale en vigueur (NIF : ${COMPANY_NIF}).
     </div>
 
-    <div class="footer-stamp">
-      <div>
-        <strong>PedagogiAfrica — Pr NEZZAL Abdelmalek</strong><br/>
-        Document officiel valant quittance de paiement.
+    <div class="footer-stamp" style="display: flex; justify-content: space-between; align-items: center; border-top: 2px solid #0d9488; padding-top: 16px; margin-top: 20px;">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <!-- QR Code de vérification officielle généré avec métadonnées -->
+        <img 
+          src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`VERIFICATION FACTURE OFFICIELLE\nNo Facture: ${invoiceNumber}\nEmetteur: PedagogiAfrica - Pr NEZZAL Abdelmalek\nNIF: ${COMPANY_NIF}\nClient: ${clientName} (${clientEmail})\nFormule: ${tier.toUpperCase()}\nMontant: ${amount}\nDate: ${date}\nStatut: CERTIFIE ET CONFORME`)}" 
+          alt="QR Code de Vérification Officielle" 
+          style="width: 85px; height: 85px; border: 1px solid #cbd5e1; padding: 4px; background: #ffffff; border-radius: 6px;" 
+        />
+        <div>
+          <div style="font-size: 0.78rem; font-weight: 800; color: #0d9488; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">
+            🛡️ Sceau & QR-Code de Vérification Numérique
+          </div>
+          <div style="font-size: 0.74rem; color: #64748b; font-family: monospace; line-height: 1.4;">
+            ID Certificat : VERIF-PA-${invoiceNumber.replace(/[^A-Z0-9]/gi, '')}<br/>
+            NIF Émetteur : ${COMPANY_NIF}<br/>
+            Document officiel certifié par PedagogiAfrica
+          </div>
+        </div>
       </div>
-      <div class="stamp-box">
-        <div style="fontSize: 0.78rem; color: #64748b; margin-bottom: 4px;">Cachet & Signature :</div>
-        <div class="stamp-name">Professeur NEZZAL Abdelmalek</div>
-        <div style="font-size: 0.75rem; color: #0d9488; font-weight: 700;">PedagogiAfrica — NIF ${COMPANY_NIF}</div>
+
+      <div class="stamp-box" style="text-align: right;">
+        <div style="font-size: 0.78rem; color: #64748b; margin-bottom: 4px; font-weight: 600;">Signature & Cachet Numérique :</div>
+        <div class="stamp-name" style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">Professeur NEZZAL Abdelmalek</div>
+        <div style="font-size: 0.78rem; color: #0d9488; font-weight: 700; margin-top: 2px;">
+          Fondateur PedagogiAfrica — NIF ${COMPANY_NIF}
+        </div>
       </div>
     </div>
   </div>
