@@ -331,17 +331,25 @@ export default function Login() {
         {/* Panneau de présentation marketing de gauche */}
         <div className={styles.presentationPanel}>
           <div className={styles.presentationContent}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.25rem' }}>
-              <img 
-                src="/logo_pedagogiafrica.png" 
-                alt="PedagogiAfrica" 
-                style={{ 
-                  height: '46px', 
-                  width: 'auto', 
-                  objectFit: 'contain',
-                  filter: 'drop-shadow(0 2px 10px rgba(56, 189, 248, 0.25))'
-                }} 
-              />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <div style={{ 
+                background: 'rgba(255, 255, 255, 0.95)', 
+                padding: '6px 14px', 
+                borderRadius: '12px', 
+                display: 'inline-flex', 
+                alignItems: 'center',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(56, 189, 248, 0.2)'
+              }}>
+                <img 
+                  src="/logo_pedagogiafrica.png" 
+                  alt="PedagogiAfrica" 
+                  style={{ 
+                    height: '38px', 
+                    width: 'auto', 
+                    objectFit: 'contain'
+                  }} 
+                />
+              </div>
               <div className={styles.presentationTag}>
                 <span className={styles.dotNeon}></span> PLATEFORME ACADÉMIQUE
               </div>
