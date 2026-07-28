@@ -56,27 +56,32 @@ export async function POST(req: Request) {
     }
     recentRequests.set(cleanEmail, now);
 
-    // 1. Vérifier si un compte existe déjà dans Firebase Auth
-    if (!adminAuth || !adminDb) {
-      return NextResponse.json(
-        { error: "La configuration Firebase Admin est manquante ou incomplète sur le serveur Vercel." },
-        { status: 500 }
-      );
+    // 1. Vérifier si un compte existe déjà sur la plateforme (Auth ou Firestore)
+    if (adminAuth) {
+      try {
+        await adminAuth.getUserByEmail(cleanEmail);
+        return NextResponse.json(
+          { error: "Un compte avec cette adresse e-mail existe déjà sur la plateforme. Si vous avez oublié votre mot de passe, utilisez l'option de réinitialisation." },
+          { status: 400 }
+        );
+      } catch (authErr: any) {
+        if (authErr.code !== 'auth/user-not-found') {
+          console.warn("⚠️ Firebase Auth lookup warning (non-bloquant):", authErr?.code || authErr?.message || authErr);
+        }
+      }
     }
 
-    try {
-      await adminAuth.getUserByEmail(cleanEmail);
-      return NextResponse.json(
-        { error: "Un compte avec cette adresse e-mail existe déjà sur la plateforme. Si vous avez oublié votre mot de passe, utilisez l'option de réinitialisation." },
-        { status: 400 }
-      );
-    } catch (authErr: any) {
-      if (authErr.code !== 'auth/user-not-found') {
-        console.error("❌ Erreur Firebase Auth lookup:", authErr.code, authErr.message);
-        return NextResponse.json(
-          { error: "Impossible de vérifier l'existence du compte. Veuillez réessayer dans quelques instants." },
-          { status: 503 }
-        );
+    if (adminDb) {
+      try {
+        const existingUserSnap = await adminDb.collection('users').where('email', '==', cleanEmail).limit(1).get();
+        if (!existingUserSnap.empty) {
+          return NextResponse.json(
+            { error: "Un compte avec cette adresse e-mail existe déjà sur la plateforme. Si vous avez oublié votre mot de passe, utilisez l'option de réinitialisation." },
+            { status: 400 }
+          );
+        }
+      } catch (dbErr) {
+        console.warn("⚠️ Firestore user lookup warning (non-bloquant):", dbErr);
       }
     }
 
