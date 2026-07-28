@@ -177,10 +177,25 @@ function createWindow(port) {
   });
 }
 
+// Verrou d'instance unique (Empêche d'avoir deux applications Electron en parallèle)
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  console.log("⚠️ Une instance de RECIF-MethodoClinique est déjà en cours d'exécution. Fermeture du doublon.");
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    // Si l'utilisateur tente d'ouvrir une 2ème fois, on ramène la 1ère fenêtre au premier plan
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 // Démarrage de l'application
 app.whenReady().then(() => {
-  const startPort = isDev ? DEFAULT_PORT : 0; // Utiliser un port aléatoire libre en production pour éviter les conflits
-  
   if (isDev) {
     createWindow(DEFAULT_PORT);
   } else {
@@ -201,7 +216,9 @@ app.whenReady().then(() => {
 function cleanUp() {
   if (nextServerProcess) {
     console.log('🛑 Arrêt du serveur Next.js...');
-    nextServerProcess.kill();
+    try {
+      nextServerProcess.kill('SIGKILL');
+    } catch (e) {}
     nextServerProcess = null;
   }
 }
@@ -210,14 +227,16 @@ app.on('activate', () => {
   if (mainWindow !== null) {
     mainWindow.show();
     mainWindow.focus();
+  } else {
+    findFreePort(3001, (freePort) => {
+      startNextServer(freePort).then(() => createWindow(freePort));
+    });
   }
 });
 
 app.on('window-all-closed', () => {
   cleanUp();
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('will-quit', () => {
