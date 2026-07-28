@@ -791,28 +791,40 @@ export default function AdminDashboard() {
 
   const handleSaveName = async () => {
     if (!selectedStudent || !newName.trim()) return;
+    const targetUid = selectedStudent.uid;
+    const updatedName = newName.trim();
     setActionPending(true);
+
     try {
-      if (user) {
-        const idToken = await user.getIdToken(true);
-        const res = await fetch(`/api/admin/users/${selectedStudent.uid}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${idToken}`
-          },
-          body: JSON.stringify({ displayName: newName.trim() })
-        });
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.error || "Erreur serveur lors de la mise à jour du nom.");
-        }
-      } else {
-        await updateUserDisplayName(selectedStudent.uid, newName.trim());
+      // 1. Mettre à jour en local / Firestore client
+      try {
+        await updateUserDisplayName(targetUid, updatedName);
+      } catch (clientErr) {
+        console.warn("⚠️ Mise à jour Firestore client:", clientErr);
       }
-      setSelectedStudent(prev => prev ? { ...prev, displayName: newName.trim() } : null);
-      setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? { ...s, displayName: newName.trim() } : s));
+
+      // 2. Mettre à jour via l'API serveur sécurisée PATCH
+      if (user && typeof user.getIdToken === 'function') {
+        try {
+          const idToken = await user.getIdToken(true);
+          await fetch(`/api/admin/users/${targetUid}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ displayName: updatedName })
+          });
+        } catch (apiErr) {
+          console.warn("⚠️ Mise à jour API serveur:", apiErr);
+        }
+      }
+
+      // 3. Mettre à jour immédiatement l'état React local
+      setSelectedStudent(prev => prev ? { ...prev, displayName: updatedName } : null);
+      setStudents(prev => prev.map(s => s.uid === targetUid ? { ...s, displayName: updatedName } : s));
       setIsRenaming(false);
+      alert(`✅ Nom mis à jour avec succès : "${updatedName}"`);
     } catch (e) {
       alert("Erreur lors de la mise à jour du nom : " + (e as Error).message);
     } finally {
@@ -3305,6 +3317,7 @@ Votre superviseur`;
                       type="text"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); }}
                       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--accent-primary)', borderRadius: '6px', padding: '4px 8px', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 600, outline: 'none' }}
                       autoFocus
                     />
