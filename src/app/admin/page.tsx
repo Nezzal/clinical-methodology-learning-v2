@@ -313,6 +313,7 @@ export default function AdminDashboard() {
 
   // States et fonction pour l'édition dynamique du profil utilisateur (Admin)
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editDisplayName, setEditDisplayName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editProfession, setEditProfession] = useState('');
   const [editInstitution, setEditInstitution] = useState('');
@@ -332,6 +333,7 @@ export default function AdminDashboard() {
           'Authorization': `Bearer ${idToken}`
         },
         body: JSON.stringify({
+          displayName: editDisplayName.trim() || selectedStudent.displayName,
           phone: editPhone.trim(),
           profession: editProfession.trim(),
           institution: editInstitution.trim(),
@@ -346,8 +348,11 @@ export default function AdminDashboard() {
         throw new Error(err.error || "Erreur de mise à jour du profil");
       }
 
+      const finalName = editDisplayName.trim() || selectedStudent.displayName;
+
       setSelectedStudent(prev => prev ? ({
         ...prev,
+        displayName: finalName,
         phone: editPhone.trim(),
         profession: editProfession.trim(),
         institution: editInstitution.trim(),
@@ -358,6 +363,7 @@ export default function AdminDashboard() {
 
       setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? {
         ...s,
+        displayName: finalName,
         phone: editPhone.trim(),
         profession: editProfession.trim(),
         institution: editInstitution.trim(),
@@ -367,7 +373,13 @@ export default function AdminDashboard() {
       } : s));
 
       setIsEditingProfile(false);
+      alert(`✅ Profil et nom mis à jour avec succès !`);
     } catch (e: any) {
+      alert("Erreur de mise à jour du profil : " + (e?.message || e));
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
       alert("Erreur lors de la mise à jour du profil : " + e.message);
     } finally {
       setIsSavingProfile(false);
@@ -3391,6 +3403,7 @@ Votre superviseur`;
                       className="btn btn-secondary"
                       style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: 600 }}
                       onClick={() => {
+                        setEditDisplayName(selectedStudent.displayName || '');
                         setEditPhone(selectedStudent.phone || '');
                         setEditProfession(selectedStudent.profession || selectedStudent.userType || '');
                         setEditInstitution(selectedStudent.institution || '');
@@ -3513,6 +3526,17 @@ Votre superviseur`;
                   </>
                 ) : (
                   <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '16px', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.78rem', color: '#38bdf8', marginBottom: '4px', fontWeight: 700 }}>Nom Complet (Prénom & Nom)</label>
+                      <input
+                        type="text"
+                        value={editDisplayName}
+                        onChange={e => setEditDisplayName(e.target.value)}
+                        placeholder="Ex : Malika Stick"
+                        style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.4)', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '0.9rem', fontWeight: 600 }}
+                      />
+                    </div>
+
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}>Téléphone</label>
                       <input
