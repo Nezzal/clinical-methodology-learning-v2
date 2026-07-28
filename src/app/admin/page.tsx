@@ -801,7 +801,23 @@ export default function AdminDashboard() {
     if (!selectedStudent || !newName.trim()) return;
     setActionPending(true);
     try {
-      await updateUserDisplayName(selectedStudent.uid, newName.trim());
+      if (user) {
+        const idToken = await user.getIdToken(true);
+        const res = await fetch(`/api/admin/users/${selectedStudent.uid}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${idToken}`
+          },
+          body: JSON.stringify({ displayName: newName.trim() })
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || "Erreur serveur lors de la mise à jour du nom.");
+        }
+      } else {
+        await updateUserDisplayName(selectedStudent.uid, newName.trim());
+      }
       setSelectedStudent(prev => prev ? { ...prev, displayName: newName.trim() } : null);
       setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? { ...s, displayName: newName.trim() } : s));
       setIsRenaming(false);
