@@ -20,8 +20,19 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.4',
+    version: 'v1.8.5',
     isCurrent: true,
+    date: '28 Juillet 2026',
+    title: 'Gestion Sécurisée des Reçus de Paiement (Upload, Téléchargement & Suppression)',
+    tags: ['Reçus', 'Sécurité', 'Espace Admin', 'Cloud Storage'],
+    features: [
+      'Ajout du téléversement sécurisé de la photo des reçus de paiement (BaridiMob, PayPal, Western Union) avec assainissement et compression automatique côté client.',
+      'Aperçu grand format Lightbox et téléchargement direct des photos sur l\'ordinateur de l\'administrateur.',
+      'Possibilité de supprimer définitivement les photos de reçus depuis l\'espace d\'administration.'
+    ]
+  },
+  {
+    version: 'v1.8.4',
     date: '27 Juillet 2026',
     title: 'Correction & Publication Intégrale Linux (.AppImage & .deb)',
     tags: ['Linux', 'Fix DEB', 'AppImage', 'Releases'],

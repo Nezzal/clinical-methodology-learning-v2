@@ -170,7 +170,7 @@ Cordialement.`;
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          📦 2. Télécharger l'Application selon votre Système (v1.8.4)
+          📦 2. Télécharger l'Application selon votre Système (v1.8.5)
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
