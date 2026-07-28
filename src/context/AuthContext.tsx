@@ -555,10 +555,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const sendPasswordReset = async (email: string) => {
-    if (!isFirebaseEnabled || !auth) {
-      throw new Error('Firebase non configuré');
+    const cleanEmail = email.trim();
+    if (!cleanEmail) throw new Error("Adresse e-mail requise.");
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Impossible d'envoyer l'e-mail de réinitialisation.");
+      }
+      return;
+    } catch (apiErr: any) {
+      console.warn("⚠️ API réinitialisation SMTP échouée, tentative via Firebase Client SDK:", apiErr?.message);
+      if (isFirebaseEnabled && auth) {
+        await sendPasswordResetEmail(auth, cleanEmail);
+      } else {
+        throw apiErr;
+      }
     }
-    await sendPasswordResetEmail(auth, email);
   };
 
   return (
