@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getProgress, resetProgress, saveProgress, LocalStats } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { loadUserProfile, loadFirestoreProtocols, syncUserProfile, deleteFirestoreProtocol } from '@/utils/firestore';
-import { APP_VERSION_LABEL } from '@/utils/constants';
+import { APP_VERSION_LABEL, COMPANY_NIF } from '@/utils/constants';
 import styles from './page.module.css';
 
 export default function Dashboard() {
@@ -96,9 +96,12 @@ export default function Dashboard() {
         <div className={styles.headerMain}>
           <div className={styles.headerText}>
             <h1 className={styles.title}>Méthodologie de Recherche Clinique</h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.25rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(13, 148, 136, 0.12)', color: 'var(--accent-primary)', border: '1px solid rgba(13, 148, 136, 0.25)', padding: '0.25rem 0.65rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {APP_VERSION_LABEL}
+              </span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '0.25rem 0.65rem', borderRadius: '4px', letterSpacing: '0.05em' }}>
+                🏛️ NIF : {COMPANY_NIF}
               </span>
             </div>
             <p className={styles.subtitle}>
@@ -258,12 +261,15 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Réinitialisation */}
-      <div className={styles.resetContainer}>
-        <button className={styles.resetBtn} onClick={handleResetClick}>
-          Réinitialiser toutes mes statistiques
-        </button>
-      </div>
+      {/* Pied de page Officiel avec NIF */}
+      <footer style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+        <p style={{ margin: '0 0 0.35rem 0', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          Plateforme Officielle RECIF — Méthodologie & Recherche Clinique
+        </p>
+        <p style={{ margin: 0, fontFamily: 'monospace', color: '#94a3b8', fontSize: '0.85rem' }}>
+          🏛️ Numéro d'Identification Fiscale (NIF) : <strong style={{ color: '#38bdf8', letterSpacing: '0.05em' }}>{COMPANY_NIF}</strong>
+        </p>
+      </footer>
 
       {/* Modal de Confirmation Personnalisé (Résout l'INP Issue de confirm() bloquant) */}
       {showResetModal && (

@@ -523,6 +523,10 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>Titulaire du compte :</span>
                   <strong>Professeur Nezzal Abdelmalek</strong>
                 </div>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>NIF (Fiscal) :</span>
+                  <strong style={{ fontFamily: 'monospace', color: '#38bdf8' }}>15007180115910202380</strong>
+                </div>
                 <button className={styles.copyBtn} onClick={handleCopyRip}>
                   {copiedRip ? 'Copie effectuée ✓' : 'Copier le RIP BaridiMob'}
                 </button>
