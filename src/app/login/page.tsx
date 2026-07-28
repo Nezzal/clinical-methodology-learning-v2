@@ -9,6 +9,7 @@ import SubscriptionModal from '@/components/SubscriptionModal';
 import { sendSupportMessage } from '@/utils/firestore';
 import { verifyLicense } from '@/utils/license';
 import { compressAndSanitizeImage } from '@/utils/image-utils';
+import { APP_VERSION, COMPANY_NIF } from '@/utils/constants';
 
 export default function Login() {
   const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
@@ -330,82 +331,67 @@ export default function Login() {
         {/* Panneau de présentation marketing de gauche */}
         <div className={styles.presentationPanel}>
           <div className={styles.presentationContent}>
-            <span className={styles.presentationTag}>Plateforme Académique</span>
-            <h2 className={styles.presentationTitle}>
-              MÉTHODOLOGIE <span className={styles.glowText}>de recherche clinique</span>
-            </h2>
-            <p className={styles.presentationDesc}>
-              L'outil de référence pour maîtriser la méthodologie de recherche clinique et concevoir des projets conformes aux exigences de la <strong>Loi n° 18-11 relative à la santé (Algérie)</strong>.
-            </p>
+            <div className={styles.presentationTag}>
+              <span className={styles.dotNeon}></span> PLATEFORME ACADÉMIQUE
+            </div>
             
-            <div className={styles.featuresList}>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>🎙️</div>
-                <div className={styles.featureText}>
-                  <h4>Tuteur Intelligent RECIF</h4>
-                  <p>Interagissez par écrit ou par la voix avec un assistant IA qui cite les pages précises du manuel de référence.</p>
+            <h2 className={styles.presentationTitle}>
+              Méthodologie de <span className={styles.glowText}>Recherche Clinique</span>
+            </h2>
+
+            <div className={styles.complianceBadge}>
+              📜 Conforme Loi n° 18-11 Santé (Algérie)
+            </div>
+
+            {/* Grille 2x2 épurée & ultra-attractives des fonctionnalités principales */}
+            <div className={styles.featuresGrid}>
+              <div className={styles.featureCard}>
+                <div className={styles.featureCardHeader}>
+                  <div className={styles.featureIcon}>🤖</div>
+                  <h4>Tuteur IA RECIF</h4>
                 </div>
+                <p>Assistant formé sur le manuel RECIF avec citations précises.</p>
               </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>📝</div>
-                <div className={styles.featureText}>
+
+              <div className={styles.featureCard}>
+                <div className={styles.featureCardHeader}>
+                  <div className={styles.featureIcon}>📑</div>
                   <h4>Générateur de Protocoles</h4>
-                  <p>Rédigez des protocoles méthodologiques complets étape par étape et exportez-les en format PDF officiel.</p>
                 </div>
+                <p>Rédaction méthodologique étape par étape & export PDF officiel.</p>
               </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>🧠</div>
-                <div className={styles.featureText}>
-                  <h4>Quiz & Flashcards Interactifs</h4>
-                  <p>Évaluez vos connaissances sur les biais de recherche et la puissance statistique avec des outils immersifs.</p>
+
+              <div className={styles.featureCard}>
+                <div className={styles.featureCardHeader}>
+                  <div className={styles.featureIcon}>📊</div>
+                  <h4>Calculateur NSN & Quiz</h4>
                 </div>
+                <p>Taille d&apos;échantillon, puissance statistique & maîtrise des biais.</p>
               </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>📊</div>
-                <div className={styles.featureText}>
-                  <h4>Rapport Pédagogique</h4>
-                  <p>Suivez votre progression d&apos;apprentissage et obtenez un bilan complet de vos compétences en méthodologie clinique.</p>
+
+              <div className={styles.featureCard}>
+                <div className={styles.featureCardHeader}>
+                  <div className={styles.featureIcon}>✍️</div>
+                  <h4>Rédacteur STROBE</h4>
                 </div>
-              </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>🧮</div>
-                <div className={styles.featureText}>
-                  <h4>Calculateur NSN</h4>
-                  <p>Évaluez le Nombre de Sujets Nécessaires pour vos études et générez automatiquement vos justifications statistiques.</p>
-                </div>
-              </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>📄</div>
-                <div className={styles.featureText}>
-                  <h4>Rédacteur d&apos;articles STROBE</h4>
-                  <p>Structurez vos articles scientifiques pour publication en suivant les recommandations de la grille internationale STROBE.</p>
-                </div>
-              </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>👥</div>
-                <div className={styles.featureText}>
-                  <h4>Espace Superviseur</h4>
-                  <p>Permettez à vos enseignants et superviseurs de suivre votre avancée et de valider vos travaux.</p>
-                </div>
-              </div>
-              <div className={styles.featureItem}>
-                <div className={styles.featureIcon}>💬</div>
-                <div className={styles.featureText}>
-                  <h4>Messagerie</h4>
-                  <p>Communiquez en temps réel avec vos encadrants pour poser des questions ou solliciter une validation.</p>
-                </div>
+                <p>Structure d&apos;articles scientifiques conformes à la grille STROBE.</p>
               </div>
             </div>
 
             <div className={styles.audienceSection}>
               <h4>Public cible</h4>
               <div className={styles.audienceTags}>
-                <span>Étudiants</span>
-                <span>Résidents</span>
-                <span>Médecins</span>
-                <span>Doctorants</span>
-                <span>Chercheurs</span>
+                <span>🎓 Résidents</span>
+                <span>🩺 Médecins</span>
+                <span>🔬 Chercheurs</span>
+                <span>👨‍🏫 Enseignants</span>
+                <span>📚 Étudiants</span>
               </div>
+            </div>
+
+            <div className={styles.presentationFooter}>
+              <span>Version v{APP_VERSION}</span>
+              <span>NIF : {COMPANY_NIF}</span>
             </div>
           </div>
         </div>

@@ -38,87 +38,125 @@
 
 .presentationTag {
   align-self: flex-start;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #2dd4bf;
-  background: rgba(45, 212, 191, 0.1);
-  padding: 0.35rem 0.75rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.4rem 0.85rem;
   border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dotNeon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  box-shadow: 0 0 10px #22c55e, 0 0 4px #22c55e;
+  display: inline-block;
 }
 
 .presentationTitle {
-  font-size: 2.25rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  letter-spacing: -1px;
-  color: var(--text-primary);
-  line-height: 1.15;
+  letter-spacing: -0.5px;
+  color: #ffffff;
+  line-height: 1.2;
 }
 
 .glowText {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  display: block;
 }
 
-.presentationDesc {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
+.complianceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  margin-top: -0.25rem;
 }
 
-.featuresList {
-  display: flex;
-  flex-direction: column;
+.featuresGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.85rem;
-  margin: 0.5rem 0;
+  margin: 0.75rem 0;
 }
 
-.featureItem {
+.featureCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 0.85rem;
+  transition: all 0.25s ease;
+}
+
+.featureCard:hover {
+  background: rgba(45, 212, 191, 0.05);
+  border-color: rgba(45, 212, 191, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.featureCardHeader {
   display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .featureIcon {
-  font-size: 1.3rem;
-  background: rgba(255, 255, 255, 0.02);
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: 1px solid var(--border-glass);
+  font-size: 1.15rem;
+  background: rgba(45, 212, 191, 0.12);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.featureText h4 {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.2rem;
+.featureCard h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
 }
 
-.featureText p {
-  font-size: 0.85rem;
-  line-height: 1.45;
-  color: var(--text-secondary);
+.featureCard p {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #94a3b8;
+  margin: 0;
 }
 
 .audienceSection {
   border-top: 1px solid var(--border-glass);
-  padding-top: 1.5rem;
+  padding-top: 1.25rem;
 }
 
 .audienceSection h4 {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-muted);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .audienceTags {
@@ -128,20 +166,32 @@
 }
 
 .audienceTags span {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-glass);
-  color: var(--text-secondary);
-  padding: 0.25rem 0.65rem;
+  color: #cbd5e1;
+  padding: 0.3rem 0.7rem;
   border-radius: 6px;
   transition: all var(--transition-fast);
 }
 
 .audienceTags span:hover {
-  background: rgba(45, 212, 191, 0.08);
+  background: rgba(45, 212, 191, 0.1);
   border-color: rgba(45, 212, 191, 0.3);
   color: #2dd4bf;
+}
+
+.presentationFooter {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: monospace;
 }
 
 .formPanel {
