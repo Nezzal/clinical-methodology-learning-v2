@@ -82,6 +82,7 @@ const isUserAdminAccount = (u: any): boolean => {
   const roleStr = String(u.role || '').toLowerCase();
   const emailStr = String(u.email || '').toLowerCase();
   const nameStr = String(u.displayName || '').toLowerCase();
+  const tierStr = String(u.subscription?.tier || '').toLowerCase();
 
   return (
     roleStr === 'admin' ||
@@ -354,47 +355,56 @@ export default function AdminDashboard() {
 
       const finalName = editDisplayName.trim() || selectedStudent.displayName;
 
-      setSelectedStudent(prev => prev ? ({
-        ...prev,
-        displayName: finalName,
-        role: editRole,
-        subscription: {
-          ...(prev.subscription || {}),
-          tier: editTier
-        },
-        phone: editPhone.trim(),
-        profession: editProfession.trim(),
-        institution: editInstitution.trim(),
-        city: editCity.trim(),
-        country: editCountry.trim(),
-        residence: editCountry.trim()
-      }) : null);
+      setSelectedStudent(prev => {
+        if (!prev) return null;
+        const currentSub: any = prev.subscription || {};
+        return {
+          ...prev,
+          displayName: finalName,
+          role: editRole as any,
+          subscription: {
+            ...currentSub,
+            startDate: currentSub.startDate || new Date().toISOString(),
+            validUntil: currentSub.validUntil || '',
+            status: currentSub.status || 'active',
+            tier: editTier as any
+          } as any,
+          phone: editPhone.trim(),
+          profession: editProfession.trim(),
+          institution: editInstitution.trim(),
+          city: editCity.trim(),
+          country: editCountry.trim(),
+          residence: editCountry.trim()
+        };
+      });
 
-      setStudents(prev => prev.map(s => s.uid === selectedStudent.uid ? {
-        ...s,
-        displayName: finalName,
-        role: editRole,
-        subscription: {
-          ...(s.subscription || {}),
-          tier: editTier
-        },
-        phone: editPhone.trim(),
-        profession: editProfession.trim(),
-        institution: editInstitution.trim(),
-        city: editCity.trim(),
-        country: editCountry.trim(),
-        residence: editCountry.trim()
-      } : s));
+      setStudents(prev => prev.map(s => {
+        if (s.uid !== selectedStudent.uid) return s;
+        const currentSub: any = s.subscription || {};
+        return {
+          ...s,
+          displayName: finalName,
+          role: editRole as any,
+          subscription: {
+            ...currentSub,
+            startDate: currentSub.startDate || new Date().toISOString(),
+            validUntil: currentSub.validUntil || '',
+            status: currentSub.status || 'active',
+            tier: editTier as any
+          } as any,
+          phone: editPhone.trim(),
+          profession: editProfession.trim(),
+          institution: editInstitution.trim(),
+          city: editCity.trim(),
+          country: editCountry.trim(),
+          residence: editCountry.trim()
+        };
+      }));
 
       setIsEditingProfile(false);
       alert(`✅ Profil, Nom ("${finalName}") et Formule (${editTier.toUpperCase()}) mis à jour avec succès !`);
     } catch (e: any) {
       alert("Erreur de mise à jour du profil : " + (e?.message || e));
-    } finally {
-      setIsSavingProfile(false);
-    }
-  };
-      alert("Erreur lors de la mise à jour du profil : " + e.message);
     } finally {
       setIsSavingProfile(false);
     }

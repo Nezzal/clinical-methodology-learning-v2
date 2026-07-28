@@ -54,7 +54,8 @@ export async function PATCH(
   try {
     const { 
       status, 
-      tier, 
+      tier,
+      role, 
       displayName, 
       phone, 
       profession, 
