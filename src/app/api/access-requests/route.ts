@@ -437,7 +437,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   loadEnvLocal();
   try {
-    const { email, receiptTxId } = await req.json();
+    const { email, receiptTxId, receiptImageData } = await req.json();
 
     if (!email || !receiptTxId || !receiptTxId.trim()) {
       return NextResponse.json({ error: "L'adresse e-mail et le N° de reçu BaridiMob sont requis." }, { status: 400 });
@@ -448,23 +448,24 @@ export async function PUT(req: Request) {
     const requestDocRef = adminDb.collection('access_requests').doc(docId);
     const docSnap = await requestDocRef.get();
 
+    const updatePayload: Record<string, any> = {
+      status: 'payment_received',
+      paymentReceiptRef: receiptTxId.trim(),
+      paymentSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+    if (receiptImageData) {
+      updatePayload.paymentReceiptImage = receiptImageData;
+    }
+
     if (!docSnap.exists) {
       const querySnap = await adminDb.collection('access_requests').where('email', '==', cleanEmail).get();
       if (querySnap.empty) {
         return NextResponse.json({ error: "Aucune demande d'accès trouvée pour cet e-mail." }, { status: 404 });
       }
       const targetDoc = querySnap.docs[0];
-      await targetDoc.ref.update({
-        status: 'payment_received',
-        paymentReceiptRef: receiptTxId.trim(),
-        paymentSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      await targetDoc.ref.update(updatePayload);
     } else {
-      await requestDocRef.update({
-        status: 'payment_received',
-        paymentReceiptRef: receiptTxId.trim(),
-        paymentSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
-      });
+      await requestDocRef.update(updatePayload);
     }
 
     // Email admin notification
@@ -492,6 +493,7 @@ export async function PUT(req: Request) {
               <ul>
                 <li><strong>E-mail :</strong> ${cleanEmail}</li>
                 <li><strong>N° / Référence Reçu BaridiMob :</strong> <code style="font-size: 1.1rem; color: #0d9488; font-weight: bold;">${receiptTxId.trim()}</code></li>
+                ${receiptImageData ? '<li><strong>Photo du reçu :</strong> <i>Une photo scannée/optimisée a été jointe au dossier admin.</i></li>' : ''}
               </ul>
               <p>Le statut de sa demande a été mis à jour à "Paiement reçu" dans l'Espace Superviseur.</p>
             </div>
@@ -502,9 +504,44 @@ export async function PUT(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, message: "Reçu BaridiMob enregistré avec succès." });
+    return NextResponse.json({ success: true, message: "Reçu BaridiMob et photo enregistrés avec succès." });
   } catch (err: any) {
     console.error("Erreur enregistrement reçu BaridiMob:", err);
     return NextResponse.json({ error: err.message || "Erreur serveur lors de l'enregistrement du reçu." }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  loadEnvLocal();
+  try {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email');
+
+    if (!email) {
+      return NextResponse.json({ error: "L'adresse e-mail est requise." }, { status: 400 });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const docId = cleanEmail.replace(/[^a-z0-9]/g, '_');
+    const requestDocRef = adminDb.collection('access_requests').doc(docId);
+    const docSnap = await requestDocRef.get();
+
+    if (docSnap.exists) {
+      await requestDocRef.update({
+        paymentReceiptImage: admin.firestore.FieldValue.delete()
+      });
+    } else {
+      const querySnap = await adminDb.collection('access_requests').where('email', '==', cleanEmail).get();
+      if (!querySnap.empty) {
+        await querySnap.docs[0].ref.update({
+          paymentReceiptImage: admin.firestore.FieldValue.delete()
+        });
+      }
+    }
+
+    return NextResponse.json({ success: true, message: "Photo du reçu supprimée avec succès." });
+  } catch (err: any) {
+    console.error("Erreur suppression photo reçu:", err);
+    return NextResponse.json({ error: err.message || "Erreur serveur lors de la suppression." }, { status: 500 });
   }
 }

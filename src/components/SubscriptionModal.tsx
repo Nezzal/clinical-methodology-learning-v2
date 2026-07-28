@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import styles from './SubscriptionModal.module.css';
 import { sendSupportMessage } from '@/utils/firestore';
+import { compressAndSanitizeImage } from '@/utils/image-utils';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   // Transmission Reçu BaridiMob
   const [receiptEmail, setReceiptEmail] = useState('');
   const [receiptTxId, setReceiptTxId] = useState('');
+  const [receiptImageData, setReceiptImageData] = useState<string | null>(null);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [receiptSuccess, setReceiptSuccess] = useState(false);
 
@@ -41,6 +43,21 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
     }, 3000);
   };
 
+  const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setReceiptImageData(null);
+      return;
+    }
+    try {
+      const sanitized = await compressAndSanitizeImage(file);
+      setReceiptImageData(sanitized);
+    } catch (err: any) {
+      alert(err.message || "Impossible de lire le fichier image.");
+      setReceiptImageData(null);
+    }
+  };
+
   const handleReceiptSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!receiptEmail.trim() || !receiptTxId.trim()) return;
@@ -52,7 +69,8 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: receiptEmail.trim(),
-          receiptTxId: receiptTxId.trim()
+          receiptTxId: receiptTxId.trim(),
+          receiptImageData: receiptImageData || undefined
         })
       });
 
@@ -64,6 +82,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         setReceiptSuccess(false);
         setReceiptTxId('');
         setReceiptEmail('');
+        setReceiptImageData(null);
       }, 4000);
     } catch (err: any) {
       alert(err.message || "Erreur lors de la transmission du reçu.");
@@ -493,7 +512,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <span>Instructions de paiement BaridiMob (Algérie)</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: 0 }}>
-                Pour activer votre formule <strong>PRO</strong> ou <strong>ULTRA</strong> en Algérie, effectuez votre virement BaridiMob vers le RIP ci-dessous, puis envoyez la copie du reçu par e-mail.
+                Pour activer votre formule <strong>PRO</strong> ou <strong>ULTRA</strong> en Algérie, effectuez votre virement BaridiMob vers le RIP ci-dessous.
               </p>
               <div className={styles.ripDetails}>
                 <div>
@@ -514,38 +533,78 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
 
               {/* Formulaire direct de transmission de Reçu BaridiMob */}
               <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.12)' }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#38bdf8', marginBottom: '8px' }}>
-                  📩 Transmettre la preuve de votre virement BaridiMob :
-                </div>
-
                 {receiptSuccess ? (
                   <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 600, textAlign: 'center' }}>
                     ✓ Reçu de paiement BaridiMob transmis avec succès ! Activation sous 24h.
                   </div>
                 ) : (
-                  <form onSubmit={handleReceiptSubmit} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <input
-                      type="email"
-                      required
-                      placeholder="Votre e-mail de compte *"
-                      value={receiptEmail}
-                      onChange={e => setReceiptEmail(e.target.value)}
-                      style={{ flex: '1 1 180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '0.82rem' }}
-                    />
-                    <input
-                      type="text"
-                      required
-                      placeholder="N° de reçu ou transaction *"
-                      value={receiptTxId}
-                      onChange={e => setReceiptTxId(e.target.value)}
-                      style={{ flex: '1 1 180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.8)', color: 'white', fontSize: '0.82rem' }}
-                    />
+                  <form onSubmit={handleReceiptSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <input
+                        type="email"
+                        required
+                        placeholder="Votre e-mail de compte *"
+                        value={receiptEmail}
+                        onChange={e => setReceiptEmail(e.target.value)}
+                        style={{ flex: '1 1 180px', padding: '9px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.85)', color: 'white', fontSize: '0.84rem' }}
+                      />
+                      <input
+                        type="text"
+                        required
+                        placeholder="N° de reçu ou transaction *"
+                        value={receiptTxId}
+                        onChange={e => setReceiptTxId(e.target.value)}
+                        style={{ flex: '1 1 180px', padding: '9px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(15,23,42,0.85)', color: 'white', fontSize: '0.84rem' }}
+                      />
+                    </div>
+
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: 'rgba(15, 23, 42, 0.8)',
+                      border: receiptImageData ? '1px solid #10b981' : '1px dashed rgba(56, 189, 248, 0.4)',
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1.1rem' }}>📷</span>
+                        <div>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: receiptImageData ? '#34d399' : '#e2e8f0' }}>
+                            {receiptImageData ? '✓ Photo du reçu jointe avec succès' : 'Joindre la photo du reçu (Optionnel)'}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                            JPG, PNG, WebP (Compression auto)
+                          </div>
+                        </div>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={handleReceiptFileChange}
+                        style={{ display: 'none' }}
+                      />
+                      <span style={{
+                        background: receiptImageData ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                        color: receiptImageData ? '#34d399' : '#38bdf8',
+                        border: receiptImageData ? '1px solid #10b981' : '1px solid #38bdf8',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {receiptImageData ? 'Modifier' : 'Parcourir...'}
+                      </span>
+                    </label>
+
                     <button
                       type="submit"
                       disabled={isSubmittingReceipt}
-                      style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #0d9488, #0284c7)', color: 'white', fontWeight: 700, fontSize: '0.82rem', cursor: 'pointer' }}
+                      style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #0d9488, #0284c7)', color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
                     >
-                      {isSubmittingReceipt ? 'Envoi...' : 'Transmettre le Reçu'}
+                      {isSubmittingReceipt ? 'Transmission en cours...' : '📤 Transmettre le Reçu et la Photo'}
                     </button>
                   </form>
                 )}

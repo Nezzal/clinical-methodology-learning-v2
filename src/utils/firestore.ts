@@ -430,6 +430,7 @@ export interface AccessRequest {
   createdAt: any;
   expiresAt?: any;
   paymentReceiptRef?: string;
+  paymentReceiptImage?: string;
   paymentReceivedAt: any;
   paymentReceivedBy: string | null;
   rejectedAt: any;

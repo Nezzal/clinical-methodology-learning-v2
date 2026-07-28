@@ -24,6 +24,7 @@ import {
   FirestoreSupportMessage
 } from '@/utils/firestore';
 import SubscriptionModal from '@/components/SubscriptionModal';
+import { downloadImage } from '@/utils/image-utils';
 import styles from './page.module.css';
 
 // Simple markdown formatter helper for protocol preview
@@ -211,10 +212,34 @@ export default function AdminDashboard() {
   const [actionPending, setActionPending] = useState(false);
   const [modalPreviewMode, setModalPreviewMode] = useState<'protocol' | 'crf'>('protocol');
 
-  // States pour les demandes d'accès et renommage
+  // States pour les demandes d'accès, aperçu et suppression de reçu
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages'>('students');
+  const [previewReceiptModal, setPreviewReceiptModal] = useState<{ title: string; image: string; email: string } | null>(null);
+
+  const handleDeleteReceiptImage = async (email: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer définitivement cette photo de reçu ?")) return;
+    try {
+      const res = await fetch(`/api/access-requests?email=${encodeURIComponent(email)}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erreur lors de la suppression.");
+      }
+      setAccessRequests(prev => prev.map(r => r.email === email ? { ...r, paymentReceiptImage: undefined } : r));
+      if (selectedRequestDetail && selectedRequestDetail.email === email) {
+        setSelectedRequestDetail(prev => prev ? { ...prev, paymentReceiptImage: undefined } : null);
+      }
+      if (previewReceiptModal && previewReceiptModal.email === email) {
+        setPreviewReceiptModal(null);
+      }
+      alert("Photo de reçu supprimée avec succès.");
+    } catch (err: any) {
+      alert(err.message || "Impossible de supprimer la photo.");
+    }
+  };
 
   // States pour la messagerie
   const [teachers, setTeachers] = useState<FirestoreUser[]>([]);
@@ -2470,6 +2495,37 @@ Votre superviseur`;
                                     : `💳 Réf Paiement : ${req.paymentReceiptRef}`}
                                 </div>
                               )}
+                              {req.paymentReceiptImage && (
+                                <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                  <img
+                                    src={req.paymentReceiptImage}
+                                    alt="Photo du reçu"
+                                    onClick={() => setPreviewReceiptModal({
+                                      title: `Reçu - ${req.firstName} ${req.lastName}`,
+                                      image: req.paymentReceiptImage!,
+                                      email: req.email
+                                    })}
+                                    style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #38bdf8', cursor: 'pointer' }}
+                                    title="Cliquer pour agrandir"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => downloadImage(req.paymentReceiptImage!, `Recu_${req.lastName}_${req.firstName}_${req.paymentReceiptRef || 'BaridiMob'}.webp`)}
+                                    style={{ padding: '3px 7px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}
+                                    title="Télécharger la photo sur l'ordinateur"
+                                  >
+                                    📥 Télécharger
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteReceiptImage(req.email)}
+                                    style={{ padding: '3px 7px', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}
+                                    title="Supprimer la photo du reçu"
+                                  >
+                                    🗑️ Supprimer
+                                  </button>
+                                </div>
+                              )}
                             </td>
                             <td style={{ fontSize: '0.82rem', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                               {req.createdAt?.seconds ? (
@@ -4004,6 +4060,39 @@ Votre superviseur`;
                     </span>
                   </div>
                 </div>
+
+                {selectedRequestDetail.paymentReceiptImage && (
+                  <div style={{ marginTop: '12px', background: 'rgba(15,23,42,0.8)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#38bdf8', fontWeight: 700, marginBottom: '6px' }}>📷 Photo du Reçu Jointe :</div>
+                    <img
+                      src={selectedRequestDetail.paymentReceiptImage}
+                      alt="Photo du reçu"
+                      onClick={() => setPreviewReceiptModal({
+                        title: `Reçu - ${selectedRequestDetail.firstName} ${selectedRequestDetail.lastName}`,
+                        image: selectedRequestDetail.paymentReceiptImage!,
+                        email: selectedRequestDetail.email
+                      })}
+                      style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain', borderRadius: '6px', cursor: 'pointer', display: 'block', margin: '0 auto 8px auto', border: '1px solid rgba(255,255,255,0.1)' }}
+                      title="Cliquer pour agrandir en plein écran"
+                    />
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => downloadImage(selectedRequestDetail.paymentReceiptImage!, `Recu_${selectedRequestDetail.lastName}_${selectedRequestDetail.firstName}_${selectedRequestDetail.paymentReceiptRef || 'Paiement'}.webp`)}
+                        style={{ padding: '6px 14px', background: 'linear-gradient(135deg, #0d9488, #0284c7)', color: 'white', border: 'none', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        📥 Télécharger sur PC
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReceiptImage(selectedRequestDetail.email)}
+                        style={{ padding: '6px 14px', background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid #ef4444', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        🗑️ Supprimer la photo
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Actions Rapides */}
@@ -4198,6 +4287,52 @@ Votre superviseur`;
                   Annuler
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox / Modale d'agrandissement de photo de reçu */}
+      {previewReceiptModal && (
+        <div 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} 
+          onClick={() => setPreviewReceiptModal(null)}
+        >
+          <div 
+            style={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px', padding: '20px', maxWidth: '850px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)' }} 
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
+              <h3 style={{ margin: 0, color: '#38bdf8', fontSize: '1.1rem', fontWeight: 700 }}>📷 {previewReceiptModal.title}</h3>
+              <button 
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.4rem', cursor: 'pointer', padding: '0 6px' }} 
+                onClick={() => setPreviewReceiptModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ textAlign: 'center', marginBottom: '16px', background: '#020617', padding: '12px', borderRadius: '8px' }}>
+              <img 
+                src={previewReceiptModal.image} 
+                alt="Aperçu grand format du reçu" 
+                style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain', borderRadius: '6px' }} 
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => downloadImage(previewReceiptModal.image, `${previewReceiptModal.title.replace(/\s+/g, '_')}.webp`)}
+                style={{ padding: '9px 18px', background: 'linear-gradient(135deg, #0d9488, #0284c7)', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                📥 Télécharger sur l'ordinateur
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDeleteReceiptImage(previewReceiptModal.email)}
+                style={{ padding: '9px 18px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                🗑️ Supprimer la photo
+              </button>
             </div>
           </div>
         </div>

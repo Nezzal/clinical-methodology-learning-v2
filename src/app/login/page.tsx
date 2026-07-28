@@ -8,6 +8,7 @@ import styles from './page.module.css';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { sendSupportMessage } from '@/utils/firestore';
 import { verifyLicense } from '@/utils/license';
+import { compressAndSanitizeImage } from '@/utils/image-utils';
 
 export default function Login() {
   const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
@@ -51,6 +52,7 @@ export default function Login() {
   // Reçu BaridiMob / PayPal / Western Union pour accès direct payant
   const [submittedPaidTier, setSubmittedPaidTier] = useState<{ email: string; tier: string; country: string } | null>(null);
   const [receiptTxIdInput, setReceiptTxIdInput] = useState('');
+  const [receiptImageDataInput, setReceiptImageDataInput] = useState<string | null>(null);
   const [isSubmittingReceipt, setIsSubmittingReceipt] = useState(false);
   const [receiptSubmittedSuccess, setReceiptSubmittedSuccess] = useState(false);
 
@@ -58,6 +60,21 @@ export default function Login() {
     if (!c) return true;
     const cleanC = c.toLowerCase().trim();
     return cleanC === 'algérie' || cleanC === 'algerie' || cleanC === 'dz' || cleanC === 'algeria';
+  };
+
+  const handleDirectReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setReceiptImageDataInput(null);
+      return;
+    }
+    try {
+      const sanitized = await compressAndSanitizeImage(file);
+      setReceiptImageDataInput(sanitized);
+    } catch (err: any) {
+      alert(err.message || "Erreur de chargement de l'image.");
+      setReceiptImageDataInput(null);
+    }
   };
 
   const handleDirectReceiptSubmit = async (e: React.FormEvent) => {
@@ -71,7 +88,8 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: submittedPaidTier.email,
-          receiptTxId: receiptTxIdInput.trim()
+          receiptTxId: receiptTxIdInput.trim(),
+          receiptImageData: receiptImageDataInput || undefined
         })
       });
 
@@ -545,29 +563,88 @@ export default function Login() {
                         ✓ Justificatif N° {receiptTxIdInput} transmis à l'administrateur ! Votre compte sera activé sous 24h.
                       </div>
                     ) : (
-                      <form onSubmit={handleDirectReceiptSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '0.78rem', color: '#cbd5e1', fontWeight: 600 }}>
-                          {isAlgeriaCountry(submittedPaidTier.country)
-                            ? 'Vous avez effectué votre virement BaridiMob ? Saisissez votre N° de reçu :'
-                            : 'Vous avez effectué votre règlement ? Saisissez la référence PayPal ou MTCN Western Union :'}
-                        </label>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                      <form onSubmit={handleDirectReceiptSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                        <div>
+                          <label style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                            {isAlgeriaCountry(submittedPaidTier.country)
+                              ? '1. N° ou Référence du reçu BaridiMob *'
+                              : '1. Référence PayPal ou MTCN Western Union *'}
+                          </label>
                           <input
                             type="text"
                             required
-                            placeholder={isAlgeriaCountry(submittedPaidTier.country) ? "Ex : Reçu N° 987654321..." : "Ex : Réf PayPal / MTCN Western Union..."}
+                            placeholder={isAlgeriaCountry(submittedPaidTier.country) ? "Ex : N° de virement BaridiMob..." : "Ex : Réf PayPal / MTCN Western Union..."}
                             value={receiptTxIdInput}
                             onChange={e => setReceiptTxIdInput(e.target.value)}
-                            style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15,23,42,0.9)', color: 'white', fontSize: '0.85rem' }}
+                            style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(15,23,42,0.9)', color: 'white', fontSize: '0.85rem' }}
                           />
-                          <button
-                            type="submit"
-                            disabled={isSubmittingReceipt}
-                            style={{ padding: '8px 14px', borderRadius: '6px', border: 'none', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
-                          >
-                            {isSubmittingReceipt ? 'Envoi...' : 'Envoyer Reçu'}
-                          </button>
                         </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.8rem', color: '#cbd5e1', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                            2. Photo du reçu de paiement (Optionnel / Recommandé)
+                          </label>
+                          <label style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            background: 'rgba(15, 23, 42, 0.8)',
+                            border: receiptImageDataInput ? '1px solid #10b981' : '1px dashed rgba(56, 189, 248, 0.4)',
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <span style={{ fontSize: '1.2rem' }}>📷</span>
+                              <div>
+                                <div style={{ fontSize: '0.82rem', fontWeight: 600, color: receiptImageDataInput ? '#34d399' : '#e2e8f0' }}>
+                                  {receiptImageDataInput ? '✓ Photo du reçu jointe avec succès' : 'Cliquez ici pour joindre la photo du reçu'}
+                                </div>
+                                <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                                  Formats acceptés : JPG, PNG, WebP
+                                </div>
+                              </div>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/png, image/jpeg, image/webp"
+                              onChange={handleDirectReceiptFileChange}
+                              style={{ display: 'none' }}
+                            />
+                            <span style={{
+                              background: receiptImageDataInput ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                              color: receiptImageDataInput ? '#34d399' : '#38bdf8',
+                              border: receiptImageDataInput ? '1px solid #10b981' : '1px solid #38bdf8',
+                              padding: '5px 12px',
+                              borderRadius: '6px',
+                              fontSize: '0.78rem',
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {receiptImageDataInput ? 'Modifier la photo' : 'Parcourir...'}
+                            </span>
+                          </label>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSubmittingReceipt}
+                          style={{
+                            width: '100%',
+                            padding: '11px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            color: 'white',
+                            fontWeight: 700,
+                            fontSize: '0.88rem',
+                            cursor: 'pointer',
+                            marginTop: '4px',
+                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                          }}
+                        >
+                          {isSubmittingReceipt ? 'Transmission en cours...' : '📤 Envoyer le justificatif et la photo'}
+                        </button>
                       </form>
                     )}
                   </div>
