@@ -47,7 +47,12 @@ try {
   console.log(`- Copie de '.next/static' vers '${destStatic}'...`);
   copyDir(srcStatic, destStatic);
 
-  console.log('✅ Copie des ressources statiques terminée avec succès !');
+  const srcServer = path.join(__dirname, '../.next/server');
+  const destServer = path.join(destStandalone, '.next/server');
+  console.log(`- Copie de '.next/server' vers '${destServer}'...`);
+  copyDir(srcServer, destServer);
+
+  console.log('✅ Copie des ressources statiques et serveur terminée avec succès !');
 } catch (error) {
   console.error('❌ Erreur lors de la copie des ressources statiques :', error);
   process.exit(1);
