@@ -1030,8 +1030,32 @@ Votre superviseur`;
             `
           })
         });
+
+        // 3b. Envoyer automatiquement la Facture Officielle PedagogiAfrica par e-mail
+        const autoInvData: InvoiceData = {
+          invoiceNumber: `FAC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+          date: new Date().toLocaleDateString('fr-FR'),
+          clientName: `${req.firstName} ${req.lastName}`,
+          clientEmail: req.email,
+          clientInstitution: req.institution || 'Non renseignée',
+          clientCity: req.city || '',
+          clientCountry: req.country || 'Algérie',
+          tier: req.requestedTier || 'pro',
+          amount: getTierPrice(req.requestedTier || 'pro', req.country),
+          paymentRef: req.paymentReceiptRef || 'Paiement Validé'
+        };
+        const invoiceHTML = generateInvoiceHTML(autoInvData);
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: req.email,
+            subject: `📄 Facture Officielle N° ${autoInvData.invoiceNumber} - PedagogiAfrica`,
+            html: invoiceHTML
+          })
+        });
       } catch (mailErr) {
-        console.error("Erreur lors de l'envoi de l'email d'activation:", mailErr);
+        console.error("Erreur lors de l'envoi des e-mails (activation / facture):", mailErr);
       }
 
       // 4. Mettre à jour localement les listes
