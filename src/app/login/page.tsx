@@ -10,6 +10,7 @@ import { sendSupportMessage } from '@/utils/firestore';
 import { verifyLicense } from '@/utils/license';
 import { compressAndSanitizeImage } from '@/utils/image-utils';
 import { APP_VERSION, COMPANY_NIF } from '@/utils/constants';
+import logoPedagogiafrica from '../../../public/logo_pedagogiafrica.png';
 
 export default function Login() {
   const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
@@ -341,7 +342,7 @@ export default function Login() {
                 boxShadow: '0 4px 15px rgba(0, 0, 0, 0.3), 0 0 20px rgba(56, 189, 248, 0.2)'
               }}>
                 <img 
-                  src="/logo_pedagogiafrica.png" 
+                  src={logoPedagogiafrica.src} 
                   alt="PedagogiAfrica" 
                   style={{ 
                     height: '38px', 
