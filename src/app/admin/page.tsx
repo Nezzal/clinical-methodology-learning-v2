@@ -25,6 +25,8 @@ import {
 } from '@/utils/firestore';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { downloadImage } from '@/utils/image-utils';
+import { generateInvoiceHTML, InvoiceData, getTierPrice } from '@/utils/invoice';
+import { COMPANY_NIF } from '@/utils/constants';
 import styles from './page.module.css';
 
 // Simple markdown formatter helper for protocol preview
@@ -217,6 +219,66 @@ export default function AdminDashboard() {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages'>('students');
   const [previewReceiptModal, setPreviewReceiptModal] = useState<{ title: string; image: string; email: string } | null>(null);
+
+  // Factures PedagogiAfrica
+  const [invoiceModalData, setInvoiceModalData] = useState<InvoiceData | null>(null);
+  const [isSendingInvoiceEmail, setIsSendingInvoiceEmail] = useState(false);
+
+  const handleOpenInvoiceForRequest = (req: AccessRequest) => {
+    const invData: InvoiceData = {
+      invoiceNumber: `FAC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+      date: new Date().toLocaleDateString('fr-FR'),
+      clientName: `${req.firstName} ${req.lastName}`,
+      clientEmail: req.email,
+      clientInstitution: req.institution || 'Non renseignée',
+      clientCity: req.city || '',
+      clientCountry: req.country || 'Algérie',
+      tier: req.requestedTier || 'pro',
+      amount: getTierPrice(req.requestedTier || 'pro', req.country),
+      paymentRef: req.paymentReceiptRef || 'Paiement Validé'
+    };
+    setInvoiceModalData(invData);
+  };
+
+  const handleOpenInvoiceForUser = (u: FirestoreUser) => {
+    const tier = getUserFormulaTier(u);
+    const invData: InvoiceData = {
+      invoiceNumber: `FAC-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`,
+      date: new Date().toLocaleDateString('fr-FR'),
+      clientName: getUserDisplayName(u),
+      clientEmail: u.email || '',
+      clientInstitution: u.institution || 'Non renseignée',
+      clientCity: u.city || '',
+      clientCountry: u.country || u.residence || 'Algérie',
+      tier: tier,
+      amount: getTierPrice(tier, u.country || u.residence),
+      paymentRef: u.subscription?.paymentReceiptRef || 'Validation Directe Admin'
+    };
+    setInvoiceModalData(invData);
+  };
+
+  const handleSendInvoiceEmail = async (invData: InvoiceData) => {
+    setIsSendingInvoiceEmail(true);
+    try {
+      const htmlContent = generateInvoiceHTML(invData);
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: invData.clientEmail,
+          subject: `📄 Facture Officielle N° ${invData.invoiceNumber} - PedagogiAfrica`,
+          html: htmlContent
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur d'envoi d'e-mail.");
+      alert(`Facture N° ${invData.invoiceNumber} envoyée avec succès à ${invData.clientEmail} !`);
+    } catch (err: any) {
+      alert(err.message || "Erreur lors de l'envoi de la facture.");
+    } finally {
+      setIsSendingInvoiceEmail(false);
+    }
+  };
 
   const handleDeleteReceiptImage = async (email: string) => {
     if (!confirm("Voulez-vous vraiment supprimer définitivement cette photo de reçu ?")) return;
@@ -3360,6 +3422,15 @@ Votre superviseur`;
                           </span>
                         </div>
                       </div>
+                      <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenInvoiceForUser(selectedStudent)}
+                          style={{ width: '100%', padding: '7px 12px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.4)', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                        >
+                          📄 Générer Facture Officielle PedagogiAfrica
+                        </button>
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -4172,6 +4243,14 @@ Votre superviseur`;
                 })()}
 
                 <button
+                  type="button"
+                  style={{ padding: '10px 14px', fontSize: '0.82rem', background: 'rgba(56,189,248,0.15)', color: '#38bdf8', border: '1px solid rgba(56,189,248,0.4)', fontWeight: 700, borderRadius: '8px', cursor: 'pointer' }}
+                  onClick={() => handleOpenInvoiceForRequest(selectedRequestDetail)}
+                >
+                  📄 Facture PedagogiAfrica
+                </button>
+
+                <button
                   className="btn btn-secondary"
                   style={{ padding: '10px 16px', fontSize: '0.82rem', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.15)' }}
                   onClick={() => setSelectedRequestDetail(null)}
@@ -4332,6 +4411,76 @@ Votre superviseur`;
                 style={{ padding: '9px 18px', background: 'rgba(239, 68, 68, 0.2)', color: '#f87171', border: '1px solid #ef4444', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
               >
                 🗑️ Supprimer la photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modale Facture Officielle PedagogiAfrica */}
+      {invoiceModalData && (
+        <div 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }} 
+          onClick={() => setInvoiceModalData(null)}
+        >
+          <div 
+            style={{ background: '#0f172a', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '12px', padding: '20px', maxWidth: '850px', width: '100%', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)', color: 'white' }} 
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '1.3rem' }}>📄</span>
+                <h3 style={{ margin: 0, color: '#38bdf8', fontSize: '1.1rem', fontWeight: 700 }}>
+                  Facture Officielle N° {invoiceModalData.invoiceNumber} — PedagogiAfrica
+                </h3>
+              </div>
+              <button 
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.4rem', cursor: 'pointer', padding: '0 6px' }} 
+                onClick={() => setInvoiceModalData(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Visualisation IFrame de la Facture HTML */}
+            <div style={{ background: '#ffffff', borderRadius: '8px', padding: '4px', marginBottom: '16px', overflow: 'hidden' }}>
+              <iframe
+                srcDoc={generateInvoiceHTML(invoiceModalData)}
+                style={{ width: '100%', height: '540px', border: 'none', borderRadius: '6px' }}
+                title={`Facture ${invoiceModalData.invoiceNumber}`}
+                id="invoice-iframe"
+              />
+            </div>
+
+            {/* Actions Facture */}
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const iframe = document.getElementById('invoice-iframe') as HTMLIFrameElement;
+                  if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                  }
+                }}
+                style={{ padding: '10px 18px', background: 'linear-gradient(135deg, #0d9488, #0284c7)', color: 'white', border: 'none', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                🖨️ Imprimer / Sauvegarder en PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSendInvoiceEmail(invoiceModalData)}
+                disabled={isSendingInvoiceEmail}
+                style={{ padding: '10px 18px', background: 'rgba(16, 185, 129, 0.2)', color: '#34d399', border: '1px solid #10b981', borderRadius: '6px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                {isSendingInvoiceEmail ? 'Envoi en cours...' : '📧 Envoyer la Facture par E-mail'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setInvoiceModalData(null)}
+                style={{ padding: '10px 18px', background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer' }}
+              >
+                Fermer
               </button>
             </div>
           </div>
