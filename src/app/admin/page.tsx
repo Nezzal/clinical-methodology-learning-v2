@@ -72,7 +72,7 @@ const isUserSuperAdminAccount = (u: any): boolean => {
   return (
     roleStr === 'superadmin' ||
     tierStr === 'superadmin' ||
-    emailStr.includes('nezzal.abdelmalek@gmail.com')
+    emailStr === 'nezzal.abdelmalek@gmail.com'
   );
 };
 
@@ -82,14 +82,12 @@ const isUserAdminAccount = (u: any): boolean => {
   const roleStr = String(u.role || '').toLowerCase();
   const emailStr = String(u.email || '').toLowerCase();
   const nameStr = String(u.displayName || '').toLowerCase();
-  const tierStr = String(u.subscription?.tier || '').toLowerCase();
 
   return (
     roleStr === 'admin' ||
     tierStr === 'admin' ||
-    emailStr.includes('admin') ||
-    emailStr.includes('nezzal.abdelmalek@yahoo.fr') ||
-    nameStr.includes('admin')
+    emailStr === 'nezzal.abdelmalek@yahoo.fr' ||
+    emailStr === 'admin@recif.dz'
   );
 };
 
@@ -98,24 +96,18 @@ const getUserFormulaTier = (u: any): string => {
   if (isUserSuperAdminAccount(u)) return 'superadmin';
   if (isUserAdminAccount(u)) return 'admin';
 
-  const searchStr = `${u.displayName || ''} ${u.firstName || ''} ${u.lastName || ''} ${u.email || ''}`.toLowerCase();
-  if (searchStr.includes('bouhidel') || searchStr.includes('wissam') || searchStr.includes('bouzegane') || searchStr.includes('malik')) {
-    return 'ultra';
-  }
-
   return (u.subscription?.tier || 'découverte').toLowerCase();
 };
 
 const getUserDisplayName = (u: any): string => {
   if (!u) return 'Utilisateur';
-  const email = (u.email || '').toLowerCase();
-  const name = (u.displayName || '').toLowerCase();
-
-  if (email.includes('nezzal') || email.includes('admin@recif.dz') || name.includes('admin') || u.role === 'admin' || isUserAdminAccount(u)) {
-    return 'Nezzal Abdelmalek';
+  if (u.displayName && u.displayName.trim()) {
+    return u.displayName.trim();
   }
-
-  return u.displayName || (u.firstName ? `${u.firstName || ''} ${u.lastName || ''}`.trim() : 'Utilisateur');
+  if (u.firstName || u.lastName) {
+    return `${u.firstName || ''} ${u.lastName || ''}`.trim();
+  }
+  return u.email || 'Utilisateur';
 };
 
 export default function AdminDashboard() {
