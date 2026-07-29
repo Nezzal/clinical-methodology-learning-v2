@@ -71,7 +71,7 @@ function findFreePort(startPort, callback) {
   });
 }
 
-// Vérifier si le serveur Next.js est prêt
+// Vérifier si le serveur Next.js est prêt (avec vérification du statut HTTP)
 function checkServerReady(port, callback, attempts = 0) {
   if (attempts > 150) { // 15 secondes max
     console.error("❌ Timeout : Le serveur Next.js n'a pas démarré.");
@@ -80,13 +80,19 @@ function checkServerReady(port, callback, attempts = 0) {
   }
 
   const req = http.get(`http://localhost:${port}/`, (res) => {
-    callback(true);
+    if (res.statusCode >= 200 && res.statusCode < 500) {
+      callback(true);
+    } else {
+      setTimeout(() => {
+        checkServerReady(port, callback, attempts + 1);
+      }, 150);
+    }
   });
 
   req.on('error', () => {
     setTimeout(() => {
       checkServerReady(port, callback, attempts + 1);
-    }, 100);
+    }, 150);
   });
 }
 
@@ -164,6 +170,20 @@ function createWindow(port) {
   });
 
   const url = `http://localhost:${port}`;
+  
+  let retryCount = 0;
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    if (retryCount < 5 && errorCode !== -3) { // -3 est une annulation utilisateur volontaire
+      retryCount++;
+      console.warn(`⚠️ Chargement initial échoué (${errorCode}: ${errorDescription}), nouvelle tentative (${retryCount}/5) dans 500ms...`);
+      setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.loadURL(url);
+        }
+      }, 500);
+    }
+  });
+
   mainWindow.loadURL(url);
   mainWindow.show();
   mainWindow.focus();

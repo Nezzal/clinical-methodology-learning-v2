@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { adminAuth } from '@/utils/firebase-admin';
+import { adminAuth, adminDb } from '@/utils/firebase-admin';
 import nodemailer from 'nodemailer';
 import { loadEnvLocal } from '@/utils/env';
 
@@ -16,25 +16,74 @@ export async function POST(request: Request) {
 
     // Générer le lien de réinitialisation sécurisé via Firebase Admin SDK
     let resetLink = '';
+    let userRecord: any = null;
+
     if (adminAuth) {
+      try {
+        userRecord = await adminAuth.getUserByEmail(cleanEmail);
+      } catch (authErr: any) {
+        if (authErr?.code === 'auth/user-not-found') {
+          // Si l'utilisateur n'est pas encore dans Firebase Auth, rechercher dans Firestore
+          let existsInFirestore = false;
+          let displayName = cleanEmail.split('@')[0];
+
+          if (adminDb) {
+            try {
+              const userSnap = await adminDb.collection('users').where('email', '==', cleanEmail).limit(1).get();
+              if (!userSnap.empty) {
+                existsInFirestore = true;
+                const data = userSnap.docs[0].data();
+                if (data.displayName) displayName = data.displayName;
+              } else {
+                const reqSnap = await adminDb.collection('access_requests').where('email', '==', cleanEmail).limit(1).get();
+                if (!reqSnap.empty) {
+                  existsInFirestore = true;
+                  const reqData = reqSnap.docs[0].data();
+                  if (reqData.firstName) displayName = `${reqData.firstName} ${reqData.lastName || ''}`.trim();
+                }
+              }
+            } catch (dbErr) {
+              console.warn("⚠️ Recherche Firestore utilisateur pour réinitialisation:", dbErr);
+            }
+          }
+
+          if (existsInFirestore) {
+            // Créer le compte Firebase Auth automatiquement
+            try {
+              const tempPass = Math.random().toString(36).substring(2) + 'RECIF!2026';
+              userRecord = await adminAuth.createUser({
+                email: cleanEmail,
+                password: tempPass,
+                displayName: displayName,
+                emailVerified: true
+              });
+              console.log(`🟢 Compte Auth créé automatiquement pour réinitialisation : ${cleanEmail}`);
+            } catch (createErr) {
+              console.error("❌ Échec création compte Auth pour réinitialisation:", createErr);
+            }
+          } else {
+            return NextResponse.json({ error: "Aucun compte trouvé avec cette adresse e-mail." }, { status: 404 });
+          }
+        } else {
+          console.warn("⚠️ Erreur recherche compte Auth:", authErr?.message);
+        }
+      }
+
       try {
         const actionCodeSettings = {
           url: 'https://clinical-methodology-learning.vercel.app/login',
           handleCodeInApp: false
         };
         resetLink = await adminAuth.generatePasswordResetLink(cleanEmail, actionCodeSettings);
-      } catch (authErr: any) {
-        console.warn("⚠️ Impossible de générer le lien de réinitialisation via Firebase Admin:", authErr?.message);
-        if (authErr?.code === 'auth/user-not-found') {
-          return NextResponse.json({ error: "Aucun compte trouvé avec cette adresse e-mail." }, { status: 404 });
-        }
+      } catch (linkErr: any) {
+        console.error("❌ Échec génération lien de réinitialisation:", linkErr?.message);
       }
     }
 
     if (!resetLink) {
       return NextResponse.json({ 
-        error: "Impossible de générer le lien de réinitialisation. Veuillez contacter le support." 
-      }, { status: 500 });
+        error: "Aucun compte trouvé avec cette adresse e-mail ou impossible de générer le lien de réinitialisation." 
+      }, { status: 404 });
     }
 
     const smtpUser = process.env.SMTP_USER;
