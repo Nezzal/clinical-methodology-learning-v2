@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { loadUserProfile, loadFirestoreProtocols, syncUserProfile, deleteFirestoreProtocol } from '@/utils/firestore';
 import { APP_VERSION_LABEL, COMPANY_NIF } from '@/utils/constants';
 import ProfileModal from '@/components/ProfileModal';
+import GovernanceModal from '@/components/GovernanceModal';
 import styles from './page.module.css';
 
 export default function Dashboard() {
@@ -14,6 +15,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState<LocalStats | null>(null);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showGovernanceModal, setShowGovernanceModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   const fetchStats = async () => {
@@ -112,9 +114,9 @@ export default function Dashboard() {
           </div>
           <div 
             className={styles.profileCard}
-            onClick={() => setShowProfileModal(true)}
+            onClick={() => setShowGovernanceModal(true)}
             style={{ cursor: 'pointer' }}
-            title="Cliquer pour voir la fiche de gouvernance académique & profil"
+            title="Cliquer pour voir la fiche de gouvernance académique & direction"
           >
             <div className={styles.profileImageContainer}>
               <img 
@@ -310,6 +312,11 @@ export default function Dashboard() {
       <ProfileModal 
         isOpen={showProfileModal} 
         onClose={() => setShowProfileModal(false)} 
+      />
+
+      <GovernanceModal
+        isOpen={showGovernanceModal}
+        onClose={() => setShowGovernanceModal(false)}
       />
     </div>
   );
