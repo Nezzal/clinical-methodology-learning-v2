@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 
 import styles from './page.module.css';
 import SubscriptionModal from '@/components/SubscriptionModal';
+import GuideModal from '@/components/GuideModal';
 import { sendSupportMessage } from '@/utils/firestore';
 import { verifyLicense } from '@/utils/license';
 import { compressAndSanitizeImage } from '@/utils/image-utils';
@@ -17,6 +18,7 @@ export default function Login() {
   const router = useRouter();
 
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isLicenseMode, setIsLicenseMode] = useState(false);
@@ -412,6 +414,27 @@ export default function Login() {
 
             <div className={styles.presentationFooter}>
               <span>Version v{APP_VERSION}</span>
+              <button
+                type="button"
+                onClick={() => setShowGuideModal(true)}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  color: '#38bdf8',
+                  padding: '5px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.82rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  transition: 'all 0.2s ease',
+                  boxShadow: '0 0 12px rgba(56, 189, 248, 0.15)'
+                }}
+              >
+                📖 Guide Officiel & Scripts Vidéo
+              </button>
               <span>NIF : {COMPANY_NIF}</span>
             </div>
           </div>
@@ -1096,6 +1119,11 @@ export default function Login() {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
         onSelectPlan={handleSelectPlanFromModal}
+      />
+
+      <GuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
       />
     </div>
   );
