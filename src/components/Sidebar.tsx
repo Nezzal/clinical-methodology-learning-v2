@@ -9,6 +9,7 @@ import { loadUserProfile, listenToUnreadMessages } from '@/utils/firestore';
 import { APP_VERSION } from '@/utils/constants';
 import ChangelogModal from './ChangelogModal';
 import SubscriptionModal from './SubscriptionModal';
+import ProfileModal from './ProfileModal';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -19,6 +20,7 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [level, setLevel] = useState('Débutant');
 
   const [profileName, setProfileName] = useState('');
@@ -515,7 +517,12 @@ export default function Sidebar() {
         <div className={styles.profileSection}>
           {user ? (
             <div className={styles.profileContainer}>
-              <div className={styles.profileCard}>
+              <div 
+                className={styles.profileCard} 
+                onClick={() => setShowProfileModal(true)}
+                style={{ cursor: 'pointer' }}
+                title="Cliquer pour afficher la fiche profil & la gouvernance académique"
+              >
                 {user.photoURL ? (
                   <img src={user.photoURL} alt="Avatar" className={styles.avatar} />
                 ) : (
@@ -608,6 +615,11 @@ export default function Sidebar() {
       <SubscriptionModal
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
+      />
+
+      <ProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
     </>
   );

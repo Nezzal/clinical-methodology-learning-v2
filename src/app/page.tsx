@@ -6,12 +6,14 @@ import { getProgress, resetProgress, saveProgress, LocalStats } from '@/utils/st
 import { useAuth } from '@/context/AuthContext';
 import { loadUserProfile, loadFirestoreProtocols, syncUserProfile, deleteFirestoreProtocol } from '@/utils/firestore';
 import { APP_VERSION_LABEL, COMPANY_NIF } from '@/utils/constants';
+import ProfileModal from '@/components/ProfileModal';
 import styles from './page.module.css';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<LocalStats | null>(null);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   const fetchStats = async () => {
@@ -108,7 +110,12 @@ export default function Dashboard() {
               Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
             </p>
           </div>
-          <div className={styles.profileCard}>
+          <div 
+            className={styles.profileCard}
+            onClick={() => setShowProfileModal(true)}
+            style={{ cursor: 'pointer' }}
+            title="Cliquer pour voir la fiche de gouvernance académique & profil"
+          >
             <div className={styles.profileImageContainer}>
               <img 
                 src="/pr_nezzal.png" 
@@ -299,6 +306,11 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <ProfileModal 
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
+      />
     </div>
   );
 }
