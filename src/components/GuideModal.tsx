@@ -37,8 +37,8 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
           <div className={styles.headerLeft}>
             <div className={styles.titleIcon}>📖</div>
             <div>
-              <h3 className={styles.title}>Guide d&apos;Utilisation Officiel & Scripts Vidéo</h3>
-              <p className={styles.subtitle}>Plateforme Académique PedagogiAfrica / RECIF — Version v1.8.8 (Loi 18-11 Santé)</p>
+              <h3 className={styles.title}>Manuel Utilisateur Officiel & Guide de Prise en Main</h3>
+              <p className={styles.subtitle}>Plateforme Académique PedagogiAfrica / RECIF — Version v1.8.8 (Conforme Loi 18-11 Santé)</p>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Fermer">✕</button>
@@ -64,40 +64,60 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
             {activeModule === 1 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🚀 Module 1 : Page d&apos;Accueil & Authentification</h2>
+                  <h2 className={styles.moduleTitle}>🚀 Chapitre 1 : Page d&apos;Accueil, Connexion & Demandes d&apos;Accès</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Guide de première prise en main, connexion, demande d&apos;accès et activation de la licence hors-ligne.
+                    Guide de première prise en main, connexion sécurisée, demandes d&apos;accès et activation hors-ligne.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.1. Présentation de la Page d&apos;Accueil & Conformité</h4>
+                  <h4 className={styles.subTitle}>1.1. Présentation de la Plateforme & Conformité Réglementaire</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Ouverture de l&apos;application (/login). Balayage du panneau de présentation à gauche avec le badge de conformité Loi 18-11 et la grille 2x2 des modules.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité & Rôle</div>
+                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre conforme aux exigences de la recherche médicale et à la Loi n° 18-11 relative à la santé (Algérie).</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>Bienvenue sur PedagogiAfrica RECIF. L&apos;interface d&apos;accueil vous présente la conformité à la Loi n° 18-11 Santé en Algérie, les 4 piliers fonctionnels et le public cible (résidents, médecins, chercheurs, enseignants).</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>💡 Astuce</div>
-                      <p className={styles.cardText}>Vérifiez la version v1.8.8 et le NIF officiel 15007180115910202380 en bas de page.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Fonctionnalités & Interface</div>
+                      <p className={styles.cardText}>Panneau de conformité, grille 2x2 des 4 piliers fonctionnels (Tuteur, Générateur, NSN/Quiz, STROBE) et tags du public cible (Résidents, Médecins, Chercheurs, Enseignants, Étudiants).</p>
                     </div>
                   </div>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.3. Réinitialisation de Mot de Passe (&quot;Mot de passe oublié ?&quot;)</h4>
+                  <h4 className={styles.subTitle}>1.2. Connexion à votre Espace Utilisateur</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Clic sur &quot;Mot de passe oublié ?&quot;, saisie de l&apos;e-mail et clic sur &quot;Envoyer le lien&quot;.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Permet d&apos;accéder à votre tableau de bord personnel, vos protocoles sauvegardés et vos quotas d&apos;utilisation.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>Entrez votre adresse e-mail. Notre serveur SMTP vous envoie un e-mail officiel PedagogiAfrica contenant un bouton sécurisé pour réinitialiser votre mot de passe en 1 clic.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Entrez votre e-mail et mot de passe dans le formulaire.<br/>2. Cliquez sur &quot;Se connecter&quot; ou utilisez &quot;Se connecter avec Google&quot; pour un accès direct.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>1.3. Réinitialiser un Mot de Passe Oublié</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Permet de réinitialiser votre mot de passe et de récupérer l&apos;accès à votre compte en toute sécurité.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Cliquez sur &quot;Mot de passe oublié ?&quot;.<br/>2. Saisissez votre e-mail et cliquez sur &quot;Envoyer le lien&quot;.<br/>3. Cliquez sur le bouton dans le mail reçu pour définir votre nouveau mot de passe.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>1.4. Demander un Accès & Choisir une Formule</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Cliquez sur &quot;✨ Demander un Accès / Voir les Formules&quot;.<br/>2. Choisissez votre rôle (Étudiant ou Enseignant).<br/>3. Sélectionnez votre formule (Découverte 3j gratuit, Pro, Expert, Ultra, Institution).<br/>4. Remplissez vos coordonnées et validez.</p>
                     </div>
                   </div>
                 </div>
@@ -107,16 +127,16 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
             {activeModule === 3 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🤖 Module 3 : Tuteur Intelligent RECIF (3 Volets)</h2>
+                  <h2 className={styles.moduleTitle}>🤖 Chapitre 3 : Tuteur Intelligent RECIF (3 Volets)</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Exploration des 3 volets de travail, des commandes vocales et du transfert 1-clic.
+                    Accompagnement méthodologique personnalisé, validation des 23 paramètres et transfert 1-clic.
                   </p>
                 </div>
 
                 <div className={styles.tutorFlowchart}>
                   <div className={styles.flowItem}>
                     <h5>💬 1. Discussion Libre</h5>
-                    <p>Questions méthodologiques, calculs NSN rapides et réglementation.</p>
+                    <p>Questions libres, calculs NSN et conseils réglementaires Loi 18-11.</p>
                   </div>
                   <div className={styles.flowItem}>
                     <h5>📄 2. Accompagnement Projet</h5>
@@ -124,7 +144,7 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   </div>
                   <div className={styles.flowItem}>
                     <h5>📜 3. Rédaction STROBE</h5>
-                    <p>Préparation d&apos;articles observationnels pour publication.</p>
+                    <p>Structuration d&apos;articles observationnels pour publication.</p>
                   </div>
                 </div>
 
@@ -132,16 +152,22 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <h4 className={styles.subTitle}>3.2. Volet 2 : Accompagnement Projet (23 Paramètres RECIF)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Clic sur la carte &quot;Accompagnement Projet&quot;. Déroulement du questionnaire guidé et validation des 23 paramètres avec jauge de progression.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité & Rôle</div>
+                      <p className={styles.cardText}>Vous guide pas-à-pas pour concevoir un protocole clinique complet et valider l&apos;ensemble des 23 paramètres obligatoires.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>Le tuteur vous interroge pas à pas pour construire votre projet d&apos;étude et valide successivement les 23 paramètres méthodologiques requis par la charte RECIF.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Cliquez sur &quot;Accompagnement Projet&quot;.<br/>2. Répondez aux questions du tuteur pour définir la problématique, les objectifs et la méthode.<br/>3. Suivez la jauge de progression.<br/>4. Une fois validé, cliquez sur &quot;🚀 Transférer au Générateur&quot; pour l&apos;export PDF.</p>
                     </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>3.4. Option Commande Vocale (Dictée & Synthèse)</h4>
+                  <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>💡 Bouton 1-Clic</div>
-                      <p className={styles.cardText}>Une fois validé, cliquez sur &quot;🚀 Transférer les 23 paramètres au Générateur&quot; pour exporter votre PDF officiel.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>💡 Interaction Vocale</div>
+                      <p className={styles.cardText}>Cliquez sur l&apos;icône Microphone 🎙️ pour dicter votre question à l&apos;oral. Le tuteur retranscrit votre voix et lit la réponse à haute voix.</p>
                     </div>
                   </div>
                 </div>
@@ -151,27 +177,27 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
             {activeModule === 6 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🧠 Module 6 : Quiz & Flashcards Interactifs</h2>
+                  <h2 className={styles.moduleTitle}>🧠 Chapitre 6 : Quiz & Flashcards Interactifs</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Maîtrise des biais de recherche, puissance statistique et répétition espacée.
+                    Évaluation des connaissances méthodologiques et mémorisation espacée.
                   </p>
                 </div>
 
                 <div className={styles.timerBadge}>
-                  <span>⏱️ REGLE DE CHRONOMÈTRE :</span>
-                  <span>Le décompte reste bloqué à 00:00 et ne démarre QU&apos;APRÈS votre clic sur &quot;🚀 Démarrer le Quiz&quot;.</span>
+                  <span>⏱️ RÈGLE DU CHRONOMÈTRE :</span>
+                  <span>Le temps reste fixe à 00:00 et ne commence QU&apos;APRÈS votre clic explicite sur &quot;🚀 Démarrer le Quiz&quot;.</span>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>6.2. Démarrage du Quiz & Gestion du Timer</h4>
+                  <h4 className={styles.subTitle}>6.1. Démarrer une Session de Quiz</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Affichage des consignes avec le chrono à 00:00 (Pause). Clic sur &quot;🚀 Démarrer le Quiz&quot;. Le décompte commence (00:01, 00:02...).</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Évaluez vos compétences sur les pièges de la recherche (biais de sélection, classement, confusion, puissance statistique).</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>Ne paniquez pas devant le chronomètre ! Le temps ne commence jamais automatiquement à l&apos;ouverture. Prenez votre temps pour lire les instructions. Le temps ne se déclenche qu&apos;au moment exact où vous cliquez sur &quot;Démarrer le Quiz&quot;.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Choisissez une thématique.<br/>2. Lisez les instructions en toute sérénité (le chrono est sur pause à 00:00).<br/>3. Cliquez sur &quot;🚀 Démarrer le Quiz&quot; pour lancer le chronomètre.<br/>4. Répondez aux questions et lisez les explications immédiates.</p>
                     </div>
                   </div>
                 </div>
@@ -181,22 +207,22 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
             {activeModule === 8 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🧮 Module 8 : Calculateur du Nombre de Sujets Nécessaires (NSN)</h2>
+                  <h2 className={styles.moduleTitle}>🧮 Chapitre 8 : Calculateur du Nombre de Sujets Nécessaires (NSN)</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Calcul exact de taille d&apos;échantillon et génération de justification statistique.
+                    Calcul d&apos;effectif et génération automatique du texte de justification statistique.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>8.3. Calcul et Justification Copiable en 1-Clic</h4>
+                  <h4 className={styles.subTitle}>8.1. Calcul & Justification en 1-Clic</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Saisie des proportions (30% vs 50%), risque alpha = 5%, puissance = 80%. Clic sur &quot;Calculer le NSN&quot; puis sur &quot;📋 Copier le texte de justification&quot;.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Détermine le nombre de sujets requis pour obtenir une étude statistiquement valide et conforme aux exigences des comités d&apos;éthique.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>Entrez vos hypothèses et cliquez sur Calculer. Un paragraphe académique complet est généré et copié dans votre presse-papier, prêt à être collé dans votre protocole.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Sélectionnez le type d&apos;étude (proportions, moyennes, cohorte, cas-témoins).<br/>2. Entrez vos valeurs (p1, p2, alpha 5%, puissance 80%).<br/>3. Cliquez sur &quot;Calculer le NSN&quot;.<br/>4. Cliquez sur &quot;📋 Copier le texte de justification&quot; pour le coller directement dans votre protocole.</p>
                     </div>
                   </div>
                 </div>
@@ -206,52 +232,51 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
             {activeModule === 13 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>⚙️ Module 13 : Moteur IA Hybride (Cascade Tripro)</h2>
+                  <h2 className={styles.moduleTitle}>⚙️ Chapitre 13 : Architecture du Moteur IA Hybride</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Architecture de résilience réseau (Cloud Gemini, Ollama Local et Base Statique).
+                    Fonctionnement automatique des 3 niveaux de résilience réseau.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>13.3. Cascade de Résilience Réseau</h4>
+                  <h4 className={styles.subTitle}>13.1. Cascade de Connectivité Tripro</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Schéma des 3 niveaux : 1. Cloud Gemini (En ligne), 2. Ollama Local 127.0.0.1:11434 (Hors-ligne), 3. Base Statique RECIF (Repli ultime).</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🟢 Mode Connecté (Gemini Cloud)</div>
+                      <p className={styles.cardText}>Puissance maximale et synthèse PubMed en direct lorsque la connexion Internet est active.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>L&apos;application garantit un fonctionnement ininterrompu. Si vous perdez votre connexion Internet, elle bascule automatiquement sur votre modèle local Ollama ou sur la base statique intégrée.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🟡 Mode Déconnecté (Ollama Local)</div>
+                      <p className={styles.cardText}>Basculement automatique sur le modèle local (127.0.0.1:11434) sans interruption si Internet est indisponible.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔵 Base Statique Embarquée</div>
+                      <p className={styles.cardText}>Repli ultime sur la base de connaissances RECIF intégrée dans le binaire pour un fonctionnement garanti 24h/24.</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Tous les autres modules de 2 a 12 de maniere synthetique */}
             {![1, 3, 6, 8, 13].includes(activeModule) && (
               <div>
                 <div className={styles.moduleHeader}>
                   <h2 className={styles.moduleTitle}>{MODULES.find(m => m.id === activeModule)?.name}</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Guide d&apos;utilisation pas-à-pas et script de démonstration vidéo pour ce module.
+                    Guide d&apos;utilisation pas-à-pas et procédure de prise en main pour ce module.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>Déroulement Fonctionnel Pas-à-Pas</h4>
+                  <h4 className={styles.subTitle}>Procédure de Prise en Main Pas-à-Pas</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🎬 Action à l&apos;écran</div>
-                      <p className={styles.cardText}>Sélection du module dans la barre latérale, configuration des paramètres et clic sur le bouton de déclenchement principal.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité & Rôle</div>
+                      <p className={styles.cardText}>Fournit les outils méthodologiques conformes aux exigences académiques de la charte RECIF et à la réglementation sanitaire.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🗣️ Voix-off / Explication</div>
-                      <p className={styles.cardText}>Utilisez les fonctionnalités avancées conformes à la charte méthodologique RECIF et aux exigences de la Loi 18-11 Santé.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>💡 Export & Sauvegarde</div>
-                      <p className={styles.cardText}>Tous vos documents peuvent être exportés au format PDF officiel A4 ou sauvegardés dans votre profil académique.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Sélectionnez le module dans la barre latérale.<br/>2. Complétez les champs ou effectuez vos choix.<br/>3. Validez l&apos;action pour obtenir l&apos;analyse ou l&apos;exportation désirée.</p>
                     </div>
                   </div>
                 </div>

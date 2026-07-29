@@ -412,29 +412,34 @@ export default function Login() {
               </div>
             </div>
 
-            <div className={styles.presentationFooter}>
-              <span>Version v{APP_VERSION}</span>
+            <div style={{ marginTop: '1rem', width: '100%' }}>
               <button
                 type="button"
                 onClick={() => setShowGuideModal(true)}
                 style={{
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
+                  width: '100%',
+                  background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
                   color: '#38bdf8',
-                  padding: '5px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: '600',
+                  padding: '10px 16px',
+                  borderRadius: '12px',
+                  fontSize: '0.88rem',
+                  fontWeight: '700',
                   cursor: 'pointer',
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
-                  gap: '0.4rem',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 0 12px rgba(56, 189, 248, 0.15)'
+                  boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2), 0 0 15px rgba(56, 189, 248, 0.15)'
                 }}
               >
-                📖 Guide Officiel & Scripts Vidéo
+                📖 Manuel Utilisateur Officiel
               </button>
+            </div>
+
+            <div className={styles.presentationFooter}>
+              <span>Version v{APP_VERSION}</span>
               <span>NIF : {COMPANY_NIF}</span>
             </div>
           </div>
@@ -468,13 +473,36 @@ export default function Login() {
                   <p className={styles.ctaSubtitle}>
                     Découvrez nos formules d'abonnement (Découverte 3j gratuit, Pro, Ultra, Institution) et demandez votre accès instantanément :
                   </p>
-                  <button
-                    type="button"
-                    className={styles.ctaBtn}
-                    onClick={() => setShowSubscriptionModal(true)}
-                  >
-                    ✨ Voir les Formules & Demander un Accès ➔
-                  </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', width: '100%' }}>
+                    <button
+                      type="button"
+                      className={styles.ctaBtn}
+                      onClick={() => setShowSubscriptionModal(true)}
+                    >
+                      ✨ Demander un Accès / Voir les Formules
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowGuideModal(true)}
+                      style={{
+                        background: 'rgba(56, 189, 248, 0.12)',
+                        border: '1px solid rgba(56, 189, 248, 0.35)',
+                        color: '#38bdf8',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      📖 Consulter le Manuel Utilisateur Officiel
+                    </button>
+                  </div>
                 </div>
               )}
 
