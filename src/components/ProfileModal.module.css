@@ -20,7 +20,7 @@
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 20px;
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(56, 189, 248, 0.2);
   overflow: hidden;
   color: #f8fafc;
@@ -69,7 +69,9 @@
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.1rem;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .profileCardMain {
@@ -80,6 +82,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
 }
 
 .avatarBig {
@@ -105,6 +108,10 @@
   box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
 }
 
+.userInfoMain {
+  flex: 1;
+}
+
 .userInfoMain h3 {
   margin: 0 0 0.3rem 0;
   font-size: 1.1rem;
@@ -127,6 +134,97 @@
   border-radius: 6px;
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.editToggleBtn {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.editToggleBtn:hover {
+  background: rgba(56, 189, 248, 0.3);
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.fieldGroup label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.inputField {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #f8fafc;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.inputField:focus {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.2);
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.saveBtn {
+  flex: 1;
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveBtn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.cancelBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
 }
 
 .infoGrid {
@@ -169,6 +267,17 @@
 
 .governanceBox strong {
   color: #2dd4bf;
+}
+
+.successAlert {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 @keyframes fadeIn {
