@@ -117,7 +117,7 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Cliquez sur &quot;✨ Demander un Accès / Voir les Formules&quot;.<br/>2. Choisissez votre rôle (Étudiant ou Enseignant).<br/>3. Sélectionnez votre formule (Découverte 3j gratuit, Pro, Expert, Ultra, Institution).<br/>4. Remplissez vos coordonnées et validez.</p>
+                      <p className={styles.cardText}>1. Cliquez sur &quot;✨ Demander un Accès / Voir les Formules&quot;.<br/>2. Parcourez les 5 offres d&apos;accès (PRO &amp; EXPERT pour usage individuel, ULTRA pour Encadreurs autonomes, INSTITUTION pour facultés/CHU).<br/>3. Remplissez vos coordonnées et validez votre demande.</p>
                     </div>
                   </div>
                 </div>
@@ -258,7 +258,36 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
               </div>
             )}
 
-            {![1, 3, 6, 8, 13].includes(activeModule) && (
+            {activeModule === 11 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>👨‍🏫 Chapitre 11 : Espace Superviseur &amp; Raccordement des Étudiants</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Architecture des accès encadrants, raccordement des étudiants et gouvernance académique.
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>11.1. Modèle d&apos;Accès Encadreur &amp; Formules</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>👑 Formule ULTRA (Encadreur Autonome)</div>
+                      <p className={styles.cardText}>Réservée aux enseignants et praticiens souhaitant inscrire, raccorder et superviser directement leurs propres étudiants avec leur Code d&apos;Affiliation.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🏛️ Formule INSTITUTION (Facultés, CHU)</div>
+                      <p className={styles.cardText}>L&apos;Administrateur de l&apos;établissement (ou SuperAdmin RECIF) crée et affecte les comptes Enseignants ainsi que les étudiants qui leur sont attribués.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>⚡ Formules PRO &amp; EXPERT</div>
+                      <p className={styles.cardText}>Destinées à l&apos;utilisation individuelle. Si un raccordement avec un encadreur référent est nécessaire, l&apos;attribution est effectuée sur mesure par l&apos;Administrateur Général.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {![1, 3, 6, 8, 11, 13].includes(activeModule) && (
               <div>
                 <div className={styles.moduleHeader}>
                   <h2 className={styles.moduleTitle}>{MODULES.find(m => m.id === activeModule)?.name}</h2>
