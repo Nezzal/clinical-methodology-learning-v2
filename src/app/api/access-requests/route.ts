@@ -61,12 +61,13 @@ export async function POST(req: Request) {
       try {
         await adminAuth.getUserByEmail(cleanEmail);
         return NextResponse.json(
-          { error: "Un compte avec cette adresse e-mail existe déjà sur la plateforme. Si vous avez oublié votre mot de passe, utilisez l'option de réinitialisation." },
+          { error: "Cet e-mail a déjà bénéficié de l'offre d'essai Découverte (3 jours). Connectez-vous à votre compte ou découvrez nos formules d'abonnement PRO & EXPERT." },
           { status: 400 }
         );
-      } catch (authErr: any) {
-        if (authErr.code !== 'auth/user-not-found') {
-          console.warn("⚠️ Firebase Auth lookup warning (non-bloquant):", authErr?.code || authErr?.message || authErr);
+      } catch (authErr: unknown) {
+        const authErrorObj = authErr as { code?: string; message?: string };
+        if (authErrorObj.code !== 'auth/user-not-found') {
+          console.warn("⚠️ Firebase Auth lookup warning (non-bloquant):", authErrorObj?.code || authErrorObj?.message || authErr);
         }
       }
     }
@@ -76,7 +77,7 @@ export async function POST(req: Request) {
         const existingUserSnap = await adminDb.collection('users').where('email', '==', cleanEmail).limit(1).get();
         if (!existingUserSnap.empty) {
           return NextResponse.json(
-            { error: "Un compte avec cette adresse e-mail existe déjà sur la plateforme. Si vous avez oublié votre mot de passe, utilisez l'option de réinitialisation." },
+            { error: "Cet e-mail a déjà bénéficié de l'offre d'essai Découverte (3 jours). Connectez-vous à votre compte ou découvrez nos formules d'abonnement PRO & EXPERT." },
             { status: 400 }
           );
         }
@@ -101,7 +102,7 @@ export async function POST(req: Request) {
         // Permettre une nouvelle demande après rejet
       } else {
         return NextResponse.json(
-          { error: "Une demande a déjà été traitée pour cet e-mail." },
+          { error: "Cet e-mail a déjà bénéficié de l'offre d'essai Découverte (3 jours). Connectez-vous à votre compte ou découvrez nos formules d'abonnement PRO & EXPERT." },
           { status: 400 }
         );
       }
@@ -120,8 +121,9 @@ export async function POST(req: Request) {
         let userRecord;
         try {
           userRecord = await adminAuth.getUserByEmail(cleanEmail);
-        } catch (authErr: any) {
-          if (authErr.code === 'auth/user-not-found') {
+        } catch (authErr: unknown) {
+          const authErrorObj = authErr as { code?: string; message?: string };
+          if (authErrorObj.code === 'auth/user-not-found') {
             // Générer un mot de passe temporaire à 6 caractères lisibles
             const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             tempPassword = "Test3j-";
@@ -203,7 +205,6 @@ export async function POST(req: Request) {
         const isPro = cleanTier === 'pro';
         const isExpert = cleanTier === 'expert';
         const isUltra = cleanTier === 'ultra';
-        const isInstitution = cleanTier === 'institution';
 
         let emailSubject = "Confirmation de votre demande d'accès - Methodo&Clinique";
         if (isDecouverte) emailSubject = "Confirmation de votre demande d'accès Test Découverte (3j) - Methodo&Clinique";
@@ -440,9 +441,10 @@ export async function POST(req: Request) {
         : "Demande enregistrée.",
       credentials: isFreeTest && isNewAccountCreated ? { email: cleanEmail, tempPassword } : null
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Une erreur interne est survenue. Veuillez réessayer.";
     console.error("Erreur lors de la soumission de la demande d'accès:", error);
-    return NextResponse.json({ error: error?.message || "Une erreur interne est survenue. Veuillez réessayer." }, { status: 500 });
+    return NextResponse.json({ error: errMsg }, { status: 500 });
   }
 }
 
@@ -460,7 +462,7 @@ export async function PUT(req: Request) {
     const requestDocRef = adminDb.collection('access_requests').doc(docId);
     const docSnap = await requestDocRef.get();
 
-    const updatePayload: Record<string, any> = {
+    const updatePayload: Record<string, unknown> = {
       status: 'payment_received',
       paymentReceiptRef: receiptTxId.trim(),
       paymentSubmittedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -517,9 +519,10 @@ export async function PUT(req: Request) {
     }
 
     return NextResponse.json({ success: true, message: "Reçu BaridiMob et photo enregistrés avec succès." });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : "Erreur serveur lors de l'enregistrement du reçu.";
     console.error("Erreur enregistrement reçu BaridiMob:", err);
-    return NextResponse.json({ error: err.message || "Erreur serveur lors de l'enregistrement du reçu." }, { status: 500 });
+    return NextResponse.json({ error: errMsg }, { status: 500 });
   }
 }
 
@@ -552,8 +555,9 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ success: true, message: "Photo du reçu supprimée avec succès." });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : "Erreur serveur lors de la suppression.";
     console.error("Erreur suppression photo reçu:", err);
-    return NextResponse.json({ error: err.message || "Erreur serveur lors de la suppression." }, { status: 500 });
+    return NextResponse.json({ error: errMsg }, { status: 500 });
   }
 }
