@@ -371,7 +371,15 @@ export async function getAllUsers(): Promise<FirestoreUser[]> {
   try {
     const usersRef = collection(db, 'users');
     const snap = await getDocsWithCacheFallback(usersRef);
-    return snap.docs.map(d => d.data() as FirestoreUser);
+    return snap.docs
+      .map(d => {
+        const data = d.data() as FirestoreUser;
+        return {
+          ...data,
+          uid: data.uid || d.id
+        };
+      })
+      .filter(u => u.uid && (u.email || (u.displayName && u.displayName !== 'Utilisateur') || u.role === 'admin' || u.role === 'teacher'));
   } catch (error) {
     console.warn('⚠️ Erreur getAllUsers:', error);
     return [];

@@ -1623,14 +1623,22 @@ Votre superviseur`;
       
       let finalData = data;
       if (data && data.length > 0) {
-        localStorage.setItem('recif_offline_students', JSON.stringify(data));
+        finalData = data.filter(u => u && u.uid && (u.email || (u.displayName && u.displayName !== 'Utilisateur') || u.role === 'admin' || u.role === 'teacher'));
+        localStorage.setItem('recif_offline_students', JSON.stringify(finalData));
       } else {
-        localStorage.setItem('recif_offline_students', JSON.stringify([]));
-        if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+        if (typeof window !== 'undefined') {
           const cached = localStorage.getItem('recif_offline_students');
           if (cached) {
-            finalData = JSON.parse(cached);
-            console.log("Chargement des étudiants depuis le cache local (LocalStorage)");
+            try {
+              const parsed = JSON.parse(cached);
+              finalData = parsed.filter((u: any) => u && u.uid && (u.email || (u.displayName && u.displayName !== 'Utilisateur') || u.role === 'admin' || u.role === 'teacher'));
+              localStorage.setItem('recif_offline_students', JSON.stringify(finalData));
+            } catch (e) {
+              finalData = [];
+              localStorage.setItem('recif_offline_students', JSON.stringify([]));
+            }
+          } else {
+            localStorage.setItem('recif_offline_students', JSON.stringify([]));
           }
         }
       }
