@@ -20,8 +20,30 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.6',
+    version: 'v1.8.9',
     isCurrent: true,
+    date: '30 Juillet 2026',
+    title: 'Intégration du Paiement Automatique PayPal (Afrique & Europe/Occident)',
+    tags: ['PayPal', 'Paiement Automatique', 'Instant Activation', 'Multi-Devises'],
+    features: [
+      'Intégration native des boutons intelligents PayPal & Carte bancaire pour la Zone Afrique (hors Algérie) et la Zone Europe & Occident.',
+      'Activation automatique et instantanée des comptes dans Firestore avec attribution automatique des jours bonus (+7j PRO, +14j ULTRA, +10j EXPERT).',
+      'Calcul sécurisé des tarifs côté serveur API et envoi automatique de la confirmation et facture d\'accès par Nodemailer.',
+      'Compatibilité intégrale multi-plateforme : Web (localhost & Vercel) et Application Desktop Electron.'
+    ]
+  },
+  {
+    version: 'v1.8.8',
+    date: '29 Juillet 2026',
+    title: 'Système d\'Accès Découverte (3 Jours) & Réception Automatisée',
+    tags: ['Test 3j', 'Découverte', 'Automation', 'Nodemailer'],
+    features: [
+      'Attribution automatique de l\'accès Découverte (3 jours) sans validation manuelle.',
+      'Envoi automatisé des identifiants temporaires par e-mail au demandeur.'
+    ]
+  },
+  {
+    version: 'v1.8.6',
     date: '28 Juillet 2026',
     title: 'Factures Officielles PedagogiAfrica (Logo, NIF, Exonération TVA & Sceau QR-Code)',
     tags: ['Facturation', 'NIF', 'PedagogiAfrica', 'QR-Code', 'PDF'],

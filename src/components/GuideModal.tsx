@@ -38,7 +38,7 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
             <div className={styles.titleIcon}>📖</div>
             <div>
               <h3 className={styles.title}>Manuel Utilisateur Officiel & Guide de Prise en Main</h3>
-              <p className={styles.subtitle}>Plateforme Académique PedagogiAfrica / RECIF — Version v1.8.8 (Conforme Loi 18-11 Santé)</p>
+              <p className={styles.subtitle}>Plateforme Académique PedagogiAfrica / RECIF — Version v1.8.9 (Conforme Loi 18-11 Santé)</p>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Fermer">✕</button>
