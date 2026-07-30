@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import styles from './SubscriptionModal.module.css';
-import { sendSupportMessage } from '@/utils/firestore';
 import { compressAndSanitizeImage } from '@/utils/image-utils';
 import PayPalCheckoutButton from './PayPalCheckoutButton';
 
@@ -14,7 +13,7 @@ interface SubscriptionModalProps {
 
 export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
   const [residence, setResidence] = useState<'dz' | 'africa' | 'western' | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('12m');
+  const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('1m');
   const [selectedTier, setSelectedTier] = useState<'pro' | 'expert' | 'ultra'>('pro');
   const [copiedRip, setCopiedRip] = useState(false);
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
@@ -54,8 +53,9 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
     try {
       const sanitized = await compressAndSanitizeImage(file);
       setReceiptImageData(sanitized);
-    } catch (err: any) {
-      alert(err.message || "Impossible de lire le fichier image.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Impossible de lire le fichier image.";
+      alert(errMsg);
       setReceiptImageData(null);
     }
   };
@@ -86,12 +86,14 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         setReceiptEmail('');
         setReceiptImageData(null);
       }, 4000);
-    } catch (err: any) {
-      alert(err.message || "Erreur lors de la transmission du reçu.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Erreur lors de la transmission du reçu.";
+      alert(errMsg);
     } finally {
       setIsSubmittingReceipt(false);
     }
   };
+
 
   return (
     <div className={styles.backdrop} onClick={onClose}>
@@ -206,7 +208,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <span className={styles.decouverteSubtitle}>Accès Test (3 Jours)</span>
               </div>
               <div className={styles.decouvertePriceBadge}>
-                Gratuit <span className={styles.decouverteAutoBadge}>Automatique à l'inscription</span>
+                Gratuit <span className={styles.decouverteAutoBadge}>Automatique à l&apos;inscription</span>
               </div>
             </div>
 
@@ -222,7 +224,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
               if (onSelectPlan) onSelectPlan('découverte', 'student');
               onClose();
             }}>
-              Tester l'Offre Découverte (3j)
+              Tester l&apos;Offre Découverte (3j)
             </button>
           </div>
 
@@ -273,7 +275,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   if (ripElement) ripElement.scrollIntoView({ behavior: 'smooth' });
                 }
               }}>
-                Demander l'Offre PRO
+                Demander l&apos;Offre PRO
               </button>
             </div>
 
@@ -312,7 +314,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <li><span>⚡</span> <strong>Exports PDF HD propres SANS FILIGRANE</strong></li>
                 <li><span>✓</span> Calculateur NSN, Quiz & Flashcards illimités</li>
                 <li><span>✓</span> Support prioritaire chercheurs</li>
-                <li style={{ color: '#94a3b8', fontSize: '0.78rem', fontStyle: 'italic' }}>(Sans espace supervision d'étudiants)</li>
+                <li style={{ color: '#94a3b8', fontSize: '0.78rem', fontStyle: 'italic' }}>(Sans espace supervision d&apos;étudiants)</li>
               </ul>
               <button className={styles.actionBtn} style={{ background: 'linear-gradient(135deg, #9333ea, #7e22ce)' }} onClick={() => {
                 setSelectedTier('expert');
@@ -324,7 +326,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   if (ripElement) ripElement.scrollIntoView({ behavior: 'smooth' });
                 }
               }}>
-                Demander l'Offre EXPERT
+                Demander l&apos;Offre EXPERT
               </button>
             </div>
 
@@ -416,7 +418,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                   setContactMode('ultra');
                 }
               }}>
-                Demander l'Offre ULTRA
+                Demander l&apos;Offre ULTRA
               </button>
             </div>
 
@@ -536,7 +538,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 </button>
               </div>
               <p style={{ fontSize: '0.78rem', color: '#34d399', margin: '0 0 10px 0', fontStyle: 'italic' }}>
-                ⚡ Dès réception et validation du virement BaridiMob par l'administrateur, votre accès s'active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
+                ⚡ Dès réception et validation du virement BaridiMob par l&apos;administrateur, votre accès s&apos;active immédiatement avec vos jours bonus offerts (7j Pro / 14j Ultra) !
               </p>
 
               {/* Formulaire direct de transmission de Reçu BaridiMob */}

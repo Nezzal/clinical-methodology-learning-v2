@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   loadEnvLocal();
   try {
     const body = await req.json();
-    const { orderID, userInfo, tier = 'pro', duration = '12m' } = body;
+    const { orderID, userInfo, tier = 'pro', duration = '1m' } = body;
 
     if (!orderID) {
       return NextResponse.json({ error: "Identifiant de commande PayPal (orderID) manquant." }, { status: 400 });
