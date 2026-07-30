@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import styles from './SubscriptionModal.module.css';
 import { sendSupportMessage } from '@/utils/firestore';
 import { compressAndSanitizeImage } from '@/utils/image-utils';
+import PayPalCheckoutButton from './PayPalCheckoutButton';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface SubscriptionModalProps {
 export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: SubscriptionModalProps) {
   const [residence, setResidence] = useState<'dz' | 'africa' | 'western' | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<'1m' | '3m' | '6m' | '12m'>('12m');
+  const [selectedTier, setSelectedTier] = useState<'pro' | 'expert' | 'ultra'>('pro');
   const [copiedRip, setCopiedRip] = useState(false);
   const [contactMode, setContactMode] = useState<null | 'ultra' | 'institution'>(null);
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '', studentCount: '' });
@@ -262,6 +264,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <li><span>✓</span> 5 bilans pédagogiques/mois</li>
               </ul>
               <button className={styles.actionBtn} onClick={() => {
+                setSelectedTier('pro');
                 if (onSelectPlan) {
                   onSelectPlan('pro', 'student');
                   onClose();
@@ -312,6 +315,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <li style={{ color: '#94a3b8', fontSize: '0.78rem', fontStyle: 'italic' }}>(Sans espace supervision d'étudiants)</li>
               </ul>
               <button className={styles.actionBtn} style={{ background: 'linear-gradient(135deg, #9333ea, #7e22ce)' }} onClick={() => {
+                setSelectedTier('expert');
                 if (onSelectPlan) {
                   onSelectPlan('expert', 'student');
                   onClose();
@@ -618,51 +622,64 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
             <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(13, 148, 136, 0.4)' }}>
               <div className={styles.ripTitle} style={{ color: '#2dd4bf' }}>
                 <span>🌍</span>
-                <span>Instructions de Paiement Zone Afrique (Mali, Sénégal, Côte d'Ivoire...)</span>
+                <span>Règlement Automatique PayPal / Carte — Zone Afrique</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: '0 0 10px 0' }}>
-                Pour la zone Afrique (hors Algérie), vous pouvez régler votre abonnement par <strong>PayPal</strong> ou <strong>Western Union</strong> :
+                Formule sélectionnée : <strong style={{ color: '#2dd4bf' }}>{selectedTier.toUpperCase()}</strong> ({selectedDuration === '1m' ? '1 Mois' : selectedDuration === '3m' ? '3 Mois' : selectedDuration === '6m' ? '6 Mois' : '12 Mois'})
               </p>
-              <div className={styles.ripDetails}>
-                <div>
-                  <span style={{ color: '#38bdf8', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💳 Compte PayPal :</span>
-                  <strong style={{ fontFamily: 'monospace', color: '#2dd4bf' }}>nezzal.abdelmalek@gmail.com</strong>
+
+              {/* Bouton de Paiement PayPal Automatique */}
+              <PayPalCheckoutButton
+                tier={selectedTier}
+                duration={selectedDuration}
+                residence="africa"
+              />
+
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.12)' }}>
+                <div style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 600, marginBottom: '6px' }}>
+                  💸 Moyen de secours manuel (Western Union) :
                 </div>
-                <div>
-                  <span style={{ color: '#fbbf24', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💸 Western Union :</span>
-                  <strong style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>Bénéficiaire : Nezzal Hanane Hayette</strong>
-                  <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Destination : Quebec Brossard, Canada</div>
+                <div className={styles.ripDetails}>
+                  <div>
+                    <span style={{ color: '#fbbf24', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>Western Union :</span>
+                    <strong style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>Bénéficiaire : Nezzal Hanane Hayette</strong>
+                    <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Destination : Quebec Brossard, Canada</div>
+                  </div>
                 </div>
               </div>
-              <p style={{ fontSize: '0.78rem', color: '#2dd4bf', margin: '10px 0 0 0', fontStyle: 'italic' }}>
-                🌍 Dès réception de votre règlement, votre compte sera activé sous 24h avec vos jours bonus offerts !
-              </p>
             </div>
           ) : (
             <div id="rip-section" className={styles.ripBox} style={{ borderColor: 'rgba(2, 132, 199, 0.4)' }}>
               <div className={styles.ripTitle} style={{ color: '#38bdf8' }}>
                 <span>🇪🇺🇨🇦</span>
-                <span>Instructions de Paiement Europe & Occident (France, Canada, Belgique...)</span>
+                <span>Règlement Automatique PayPal / Carte — Zone Europe & Occident</span>
               </div>
               <p style={{ fontSize: '0.83rem', color: '#94a3b8', margin: '0 0 10px 0' }}>
-                Pour la zone Europe & Occident (€ / $ / CAD), effectuez votre règlement par <strong>PayPal</strong> ou <strong>Western Union</strong> :
+                Formule sélectionnée : <strong style={{ color: '#38bdf8' }}>{selectedTier.toUpperCase()}</strong> ({selectedDuration === '1m' ? '1 Mois' : selectedDuration === '3m' ? '3 Mois' : selectedDuration === '6m' ? '6 Mois' : '12 Mois'})
               </p>
-              <div className={styles.ripDetails}>
-                <div>
-                  <span style={{ color: '#38bdf8', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💳 Compte PayPal :</span>
-                  <strong style={{ fontFamily: 'monospace', color: '#38bdf8' }}>nezzal.abdelmalek@gmail.com</strong>
+
+              {/* Bouton de Paiement PayPal Automatique */}
+              <PayPalCheckoutButton
+                tier={selectedTier}
+                duration={selectedDuration}
+                residence="western"
+              />
+
+              <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.12)' }}>
+                <div style={{ fontSize: '0.8rem', color: '#fbbf24', fontWeight: 600, marginBottom: '6px' }}>
+                  💸 Moyen de secours manuel (Western Union) :
                 </div>
-                <div>
-                  <span style={{ color: '#fbbf24', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>💸 Western Union :</span>
-                  <strong style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>Bénéficiaire : Nezzal Hanane Hayette</strong>
-                  <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Destination : Quebec Brossard, Canada</div>
+                <div className={styles.ripDetails}>
+                  <div>
+                    <span style={{ color: '#fbbf24', fontSize: '0.78rem', display: 'block', fontWeight: 700 }}>Western Union :</span>
+                    <strong style={{ fontSize: '0.82rem', color: '#f1f5f9' }}>Bénéficiaire : Nezzal Hanane Hayette</strong>
+                    <div style={{ fontSize: '0.75rem', color: '#cbd5e1' }}>Destination : Quebec Brossard, Canada</div>
+                  </div>
                 </div>
               </div>
-              <p style={{ fontSize: '0.78rem', color: '#38bdf8', margin: '10px 0 0 0', fontStyle: 'italic' }}>
-                🌐 Facture officielle et confirmation d'activation transmises sous 24h après validation du paiement.
-              </p>
             </div>
           )}
+
             </>
           )}
         </div>
