@@ -2359,7 +2359,7 @@ Votre superviseur`;
                         </td>
                       </tr>
                     ) : (
-                      filteredStudents.map((student) => {
+                      filteredStudents.map((student, idx) => {
                         const isSelected = selectedStudent?.uid === student.uid;
                         const quizCorrect = student.stats?.quizCorrect || 0;
                         const quizTotal = student.stats?.quizTotal || 0;
@@ -2374,7 +2374,7 @@ Votre superviseur`;
                         const lastActiveStr = formatLastActive(student.lastActive);
 
                         return (
-                          <tr key={student.uid} className={isSelected ? styles.selectedRow : ''}>
+                          <tr key={student.uid ? `student-${student.uid}-${idx}` : `student-idx-${idx}`} className={isSelected ? styles.selectedRow : ''}>
                             <td>
                               <div className={styles.studentInfo}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
