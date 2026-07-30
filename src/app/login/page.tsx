@@ -745,11 +745,60 @@ export default function Login() {
                 ) : isRequestAccess ? (
                   // Formulaire de demande d'accès
                   <form className={styles.form} onSubmit={handleRequestAccessSubmit}>
-                    <div style={{ marginBottom: '1.25rem', padding: '0.75rem', borderRadius: '8px', background: 'rgba(13, 148, 136, 0.12)', border: '1px solid rgba(13, 148, 136, 0.3)', color: '#2dd4bf', fontSize: '0.9rem', fontWeight: '600', textAlign: 'center' }}>
-                      {requestedTier === 'découverte' && '🟢 Formule Sélectionnée : Découverte (3 jours d\'essai gratuit)'}
-                      {requestedTier === 'pro' && '🔷 Formule Sélectionnée : PRO (Internes, Résidents & Doctorants)'}
-                      {requestedTier === 'ultra' && '👑 Formule Sélectionnée : ULTRA (Enseignants & Encadreurs)'}
-                      {requestedTier === 'institution' && '🏛️ Formule Sélectionnée : INSTITUTION (Facultés, Hôpitaux, Labos de recherche & Entreprises)'}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRequestAccess(false);
+                        setShowSubscriptionModal(true);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(13, 148, 136, 0.15))',
+                        border: '1px solid rgba(56, 189, 248, 0.4)',
+                        color: '#38bdf8',
+                        padding: '10px 16px',
+                        borderRadius: '10px',
+                        fontSize: '0.88rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        marginBottom: '1rem',
+                        width: '100%',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                      }}
+                    >
+                      ← Revenir au choix des formules & comparer les offres
+                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', padding: '0.75rem 1rem', borderRadius: '8px', background: 'rgba(13, 148, 136, 0.12)', border: '1px solid rgba(13, 148, 136, 0.3)', color: '#2dd4bf', fontSize: '0.88rem', fontWeight: '600' }}>
+                      <span>
+                        {requestedTier === 'découverte' && '🟢 Formule : Découverte (3j gratuit)'}
+                        {requestedTier === 'pro' && '🔷 Formule : PRO (Internes, Résidents)'}
+                        {requestedTier === 'ultra' && '👑 Formule : ULTRA (Enseignants)'}
+                        {requestedTier === 'institution' && '🏛️ Formule : INSTITUTION (Établissements)'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRequestAccess(false);
+                          setShowSubscriptionModal(true);
+                        }}
+                        style={{
+                          background: 'rgba(45, 212, 191, 0.2)',
+                          border: '1px solid rgba(45, 212, 191, 0.4)',
+                          color: '#2dd4bf',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
+                          fontSize: '0.78rem',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Changer 🔄
+                      </button>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <div className={styles.inputGroup}>
