@@ -576,7 +576,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                         <span style={{ fontSize: '1.1rem' }}>📷</span>
                         <div>
                           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: receiptImageData ? '#34d399' : '#e2e8f0' }}>
-                            {receiptImageData ? '✓ Photo du reçu jointe avec succès' : 'Joindre la photo du reçu (Optionnel)'}
+                            {receiptImageData ? '✓ Photo du reçu jointe avec succès' : 'Joindre la photo du reçu'}
                           </div>
                           <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
                             JPG, PNG, WebP (Compression auto)
