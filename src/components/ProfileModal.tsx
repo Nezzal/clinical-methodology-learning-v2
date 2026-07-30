@@ -127,7 +127,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             </div>
           </div>
 
-          {/* Badges d'information Abonnement & Système (Sans NIF) */}
+          {/* Badges d'information Abonnement & Système */}
           <div className={styles.infoGrid}>
             <div className={styles.infoCard}>
               <h5>Formule d&apos;Abonnement</h5>
@@ -137,6 +137,36 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               <h5>Statut Système</h5>
               <p>{guestMode ? '🔑 Mode Exécutable' : '🟢 Connecté Cloud'}</p>
             </div>
+            {(role === 'teacher' || role === 'admin' || tier.includes('ULTRA') || tier.includes('SUPERADMIN')) && (
+              <div className={styles.infoCard} style={{ gridColumn: '1 / -1', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                <h5>🎓 Code d&apos;Affiliation Enseignant (Raccordement Étudiants)</h5>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <p style={{ color: '#fbbf24', fontFamily: 'monospace', fontSize: '0.95rem', margin: 0, fontWeight: 700 }}>
+                    ENS-{(user?.uid || 'RECIF-2026').substring(0, 6).toUpperCase()}
+                  </p>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const code = `ENS-${(user?.uid || 'RECIF-2026').substring(0, 6).toUpperCase()}`;
+                      navigator.clipboard.writeText(code);
+                      alert(`Code d'affiliation Enseignant "${code}" copié !`);
+                    }}
+                    style={{
+                      background: 'rgba(251, 191, 36, 0.2)',
+                      border: '1px solid rgba(251, 191, 36, 0.4)',
+                      color: '#fbbf24',
+                      padding: '3px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    📋 Copier le Code
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Formulaire d'édition directe */}
