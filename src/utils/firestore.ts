@@ -391,7 +391,7 @@ export async function updateUserStatus(uid: string, status: 'active' | 'suspende
 }
 
 export async function deleteUserFully(uid: string) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!uid || typeof uid !== 'string' || !isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {
     const chatsRef = collection(db, 'users', uid, 'chats');
     const chatsSnap = await getDocsWithCacheFallback(chatsRef);

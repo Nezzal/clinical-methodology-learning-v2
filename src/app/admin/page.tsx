@@ -779,7 +779,10 @@ export default function AdminDashboard() {
 
     setActionPending(true);
     try {
-      if (user) {
+      const targetStudent = selectedStudent;
+      const targetEmail = targetStudent?.email;
+
+      if (uid && user) {
         try {
           const idToken = await user.getIdToken(true);
           await fetch(`/api/admin/users/${uid}`, {
@@ -794,23 +797,32 @@ export default function AdminDashboard() {
       }
 
       // Supprimer le document dans Firestore via le SDK client (si actif)
-      try {
-        await deleteUserFully(uid);
-      } catch (fsErr) {
-        console.warn("⚠️ Client Firestore deletion failed/skipped:", fsErr);
+      if (uid) {
+        try {
+          await deleteUserFully(uid);
+        } catch (fsErr) {
+          console.warn("⚠️ Client Firestore deletion failed/skipped:", fsErr);
+        }
       }
 
-      const targetEmail = selectedStudent?.email;
-
       // Mettre à jour l'état local immédiatement
-      setStudents(prev => prev.filter(s => s.uid !== uid && (targetEmail ? s.email !== targetEmail : true)));
+      setStudents(prev => prev.filter(s => {
+        if (uid && s.uid === uid) return false;
+        if (targetEmail && s.email === targetEmail) return false;
+        if (targetStudent && s === targetStudent) return false;
+        return true;
+      }));
 
-      // Nettoyer le cache LocalStorage pour que l'utilisateur ne réapparaisse pas au rechargement
+      // Nettoyer le cache LocalStorage pour que l'utilisateur orphelin ne réapparaisse pas au rechargement
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem('recif_offline_students');
         if (cached) {
           try {
-            const parsed = JSON.parse(cached).filter((s: any) => s.uid !== uid && (targetEmail ? s.email !== targetEmail : true));
+            const parsed = JSON.parse(cached).filter((s: any) => {
+              if (uid && s.uid === uid) return false;
+              if (targetEmail && s.email === targetEmail) return false;
+              return true;
+            });
             localStorage.setItem('recif_offline_students', JSON.stringify(parsed));
           } catch (e) {}
         }
