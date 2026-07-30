@@ -520,9 +520,11 @@ export default function Login() {
                         ? 'Demander un Accès (Offre Test 3j)'
                         : requestedTier === 'pro'
                           ? 'Demander un Accès (Offre PRO)'
-                          : requestedTier === 'ultra'
-                            ? 'Demander un Accès (Offre ULTRA Encadreur)'
-                            : 'Demande de Devis (Formule INSTITUTION)')
+                          : requestedTier === 'expert'
+                            ? 'Demander un Accès (Offre EXPERT Illimité Solo)'
+                            : requestedTier === 'ultra'
+                              ? 'Demander un Accès (Offre ULTRA Encadreur)'
+                              : 'Demande de Devis (Formule INSTITUTION)')
                     : 'Connexion Utilisateur'
                 }
               </h1>
@@ -532,7 +534,7 @@ export default function Login() {
                   : isRequestAccess 
                     ? ((requestedTier === 'ultra' || requestedTier === 'institution')
                         ? 'Un e-mail de confirmation vous sera envoyé. L\'administrateur prendra directement contact avec vous par e-mail pour étudier vos besoins et vous transmettre les modalités d\'accès sur-mesure.'
-                        : 'Remplissez ce formulaire pour recevoir vos identifiants d\'essai par e-mail ainsi que les coordonnées du RIP pour le virement.') 
+                        : 'Remplissez ce formulaire pour recevoir vos identifiants d\'accès par e-mail ainsi que les coordonnées du RIP pour le virement.') 
                     : 'Accédez à vos quiz, vos flashcards, échangez avec votre assistant et concevez vos protocoles cliniques.'
                 }
               </p>
@@ -777,6 +779,7 @@ export default function Login() {
                       <span>
                         {requestedTier === 'découverte' && '🟢 Formule : Découverte (3j gratuit)'}
                         {requestedTier === 'pro' && '🔷 Formule : PRO (Internes, Résidents)'}
+                        {requestedTier === 'expert' && '⚡ Formule : EXPERT (Illimité Chercheur Solo)'}
                         {requestedTier === 'ultra' && '👑 Formule : ULTRA (Enseignants)'}
                         {requestedTier === 'institution' && '🏛️ Formule : INSTITUTION (Établissements)'}
                       </span>
@@ -841,9 +844,14 @@ export default function Login() {
                     </div>
 
                      <div className={styles.inputGroup}>
-                       <label htmlFor="requestProfession">
-                         {requestedRole === 'teacher' ? 'Discipline enseignée' : 'Profession'} <span style={{color:'#e11d48'}}>*</span>
-                       </label>
+                        <label htmlFor="requestProfession">
+                          {requestedTier === 'institution'
+                            ? "Fonction dans l'institution"
+                            : requestedRole === 'teacher'
+                            ? 'Discipline enseignée'
+                            : 'Profession'
+                          } <span style={{color:'#e11d48'}}>*</span>
+                        </label>
                        <select
                          id="requestProfession"
                          value={requestProfession}
@@ -864,34 +872,45 @@ export default function Login() {
                            outline: 'none'
                          }}
                        >
-                         {requestedRole === 'teacher' ? (
-                           <>
-                             <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre discipline</option>
-                             <option value="Médecine Clinique" style={{ background: '#1a1a2e' }}>Médecine Clinique</option>
-                             <option value="Épidémiologie / Santé Publique" style={{ background: '#1a1a2e' }}>Épidémiologie / Santé Publique</option>
-                             <option value="Biostatistique / Informatique Médicale" style={{ background: '#1a1a2e' }}>Biostatistique / Informatique Médicale</option>
-                             <option value="Pharmacologie / Toxicologie" style={{ background: '#1a1a2e' }}>Pharmacologie / Toxicologie</option>
-                             <option value="Chirurgie / Spécialités chirurgicales" style={{ background: '#1a1a2e' }}>Chirurgie / Spécialités chirurgicales</option>
-                             <option value="Biologie Médicale / Génétique" style={{ background: '#1a1a2e' }}>Biologie Médicale / Génétique</option>
-                             <option value="Sciences Infirmières / Paramédical" style={{ background: '#1a1a2e' }}>Sciences Infirmières / Paramédical</option>
-                             <option value="Éthique Médicale / Droit de la Santé" style={{ background: '#1a1a2e' }}>Éthique Médicale / Droit de la Santé</option>
-                             <option value="Autre" style={{ background: '#1a1a2e' }}>Autre (préciser...)</option>
-                           </>
-                         ) : (
-                           <>
-                             <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre profession</option>
-                             <option value="Médecin" style={{ background: '#1a1a2e' }}>Médecin</option>
-                             <option value="Résident / Interne" style={{ background: '#1a1a2e' }}>Résident / Interne</option>
-                             <option value="Infirmier(e)" style={{ background: '#1a1a2e' }}>Infirmier(e)</option>
-                             <option value="Pharmacien(ne)" style={{ background: '#1a1a2e' }}>Pharmacien(ne)</option>
-                             <option value="Chercheur en santé" style={{ background: '#1a1a2e' }}>Chercheur en santé</option>
-                             <option value="Doctorant" style={{ background: '#1a1a2e' }}>Doctorant</option>
-                             <option value="Étudiant en santé" style={{ background: '#1a1a2e' }}>Étudiant en santé</option>
-                             <option value="Manager de santé" style={{ background: '#1a1a2e' }}>Manager de santé</option>
-                             <option value="Nutritionniste" style={{ background: '#1a1a2e' }}>Nutritionniste</option>
-                             <option value="Autre" style={{ background: '#1a1a2e' }}>Autre (préciser...)</option>
-                           </>
-                         )}
+                         {requestedTier === 'institution' ? (
+                            <>
+                              <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre fonction dans l&apos;établissement</option>
+                              <option value="Doyen / Vice-Doyen" style={{ background: '#1a1a2e' }}>Doyen / Vice-Doyen</option>
+                              <option value="Chef de Service / Directeur Médical" style={{ background: '#1a1a2e' }}>Chef de Service / Directeur Médical</option>
+                              <option value="Directeur de Recherche / Chef de Laboratoire" style={{ background: '#1a1a2e' }}>Directeur de Recherche / Chef de Laboratoire</option>
+                              <option value="Responsable Pédagogique / Comité d'Éthique" style={{ background: '#1a1a2e' }}>Responsable Pédagogique / Comité d&apos;Éthique</option>
+                              <option value="Directeur / Administrateur Établissement" style={{ background: '#1a1a2e' }}>Directeur / Administrateur Établissement</option>
+                              <option value="Enseignant-Chercheur Responsable" style={{ background: '#1a1a2e' }}>Enseignant-Chercheur Responsable</option>
+                              <option value="Autre" style={{ background: '#1a1a2e' }}>Autre fonction (préciser...)</option>
+                            </>
+                          ) : requestedRole === 'teacher' ? (
+                            <>
+                              <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre discipline</option>
+                              <option value="Médecine Clinique" style={{ background: '#1a1a2e' }}>Médecine Clinique</option>
+                              <option value="Épidémiologie / Santé Publique" style={{ background: '#1a1a2e' }}>Épidémiologie / Santé Publique</option>
+                              <option value="Biostatistique / Informatique Médicale" style={{ background: '#1a1a2e' }}>Biostatistique / Informatique Médicale</option>
+                              <option value="Pharmacologie / Toxicologie" style={{ background: '#1a1a2e' }}>Pharmacologie / Toxicologie</option>
+                              <option value="Chirurgie / Spécialités chirurgicales" style={{ background: '#1a1a2e' }}>Chirurgie / Spécialités chirurgicales</option>
+                              <option value="Biologie Médicale / Génétique" style={{ background: '#1a1a2e' }}>Biologie Médicale / Génétique</option>
+                              <option value="Sciences Infirmières / Paramédical" style={{ background: '#1a1a2e' }}>Sciences Infirmières / Paramédical</option>
+                              <option value="Éthique Médicale / Droit de la Santé" style={{ background: '#1a1a2e' }}>Éthique Médicale / Droit de la Santé</option>
+                              <option value="Autre" style={{ background: '#1a1a2e' }}>Autre (préciser...)</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="" disabled style={{ background: '#1a1a2e', color: '#94a3b8' }}>Sélectionnez votre profession</option>
+                              <option value="Médecin" style={{ background: '#1a1a2e' }}>Médecin</option>
+                              <option value="Résident / Interne" style={{ background: '#1a1a2e' }}>Résident / Interne</option>
+                              <option value="Infirmier(e)" style={{ background: '#1a1a2e' }}>Infirmier(e)</option>
+                              <option value="Pharmacien(ne)" style={{ background: '#1a1a2e' }}>Pharmacien(ne)</option>
+                              <option value="Chercheur en santé" style={{ background: '#1a1a2e' }}>Chercheur en santé</option>
+                              <option value="Doctorant" style={{ background: '#1a1a2e' }}>Doctorant</option>
+                              <option value="Étudiant en santé" style={{ background: '#1a1a2e' }}>Étudiant en santé</option>
+                              <option value="Manager de santé" style={{ background: '#1a1a2e' }}>Manager de santé</option>
+                              <option value="Nutritionniste" style={{ background: '#1a1a2e' }}>Nutritionniste</option>
+                              <option value="Autre" style={{ background: '#1a1a2e' }}>Autre (préciser...)</option>
+                            </>
+                          )}
                        </select>
                      </div>
 
