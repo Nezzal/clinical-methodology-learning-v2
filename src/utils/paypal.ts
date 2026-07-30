@@ -70,9 +70,9 @@ export function isPayPalConfigured(): boolean {
  */
 export async function getPayPalAccessToken(): Promise<string> {
   loadEnvLocal();
-  const clientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
-  const mode = process.env.PAYPAL_MODE || 'sandbox';
+  const clientId = (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || process.env.PAYPAL_CLIENT_ID || '').trim();
+  const clientSecret = (process.env.PAYPAL_CLIENT_SECRET || '').trim();
+  const mode = (process.env.PAYPAL_MODE || 'sandbox').trim().toLowerCase();
 
   if (!clientId || !clientSecret || clientSecret === 'placeholder_secret_key') {
     throw new Error("Clés API PayPal manquantes (NEXT_PUBLIC_PAYPAL_CLIENT_ID ou PAYPAL_CLIENT_SECRET).");
@@ -96,7 +96,16 @@ export async function getPayPalAccessToken(): Promise<string> {
   if (!response.ok) {
     const errText = await response.text();
     console.error("❌ Erreur de connexion API PayPal (OAuth2):", errText);
-    throw new Error("Impossible de se connecter aux services PayPal.");
+    try {
+      const errJson = JSON.parse(errText);
+      const detail = errJson.error_description || errJson.error || errText;
+      throw new Error(`Authentification PayPal refusée : ${detail}`);
+    } catch (parseErr) {
+      if (parseErr instanceof Error && parseErr.message.startsWith('Authentification PayPal')) {
+        throw parseErr;
+      }
+      throw new Error(`Impossible de se connecter aux services PayPal (Statut ${response.status}).`);
+    }
   }
 
   const data = await response.json();
@@ -108,7 +117,7 @@ export async function getPayPalAccessToken(): Promise<string> {
  */
 export function getPayPalBaseUrl(): string {
   loadEnvLocal();
-  const mode = process.env.PAYPAL_MODE || 'sandbox';
+  const mode = (process.env.PAYPAL_MODE || 'sandbox').trim().toLowerCase();
   return mode === 'live' 
     ? 'https://api-m.paypal.com' 
     : 'https://api-m.sandbox.paypal.com';
