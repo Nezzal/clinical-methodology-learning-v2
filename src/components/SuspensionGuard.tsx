@@ -199,11 +199,13 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   };
 
   // Redirection automatique pour les utilisateurs non connectés en production (Firebase activé)
+  const hasOfflineLicense = typeof window !== 'undefined' && Boolean(localStorage.getItem('recif_offline_license'));
+
   useEffect(() => {
-    if ((!loading || maxWaitExceeded) && isFirebaseConfigured && !user && !guestMode && pathname !== '/login') {
+    if ((!loading || maxWaitExceeded) && isFirebaseConfigured && !user && !guestMode && !hasOfflineLicense && pathname !== '/login') {
       router.push('/login');
     }
-  }, [user, loading, maxWaitExceeded, isFirebaseConfigured, guestMode, pathname, router]);
+  }, [user, loading, maxWaitExceeded, isFirebaseConfigured, guestMode, hasOfflineLicense, pathname, router]);
 
   // Écran de chargement initial pendant la vérification de la session ou le montage initial (SSR)
   if (!hasMounted || (loading && isFirebaseConfigured && !maxWaitExceeded)) {

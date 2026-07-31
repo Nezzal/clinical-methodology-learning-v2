@@ -33,8 +33,13 @@ export default function Login() {
     if (savedStr) {
       try {
         const parsed = JSON.parse(savedStr);
-        if (parsed && parsed.data && parsed.data.expiresAt > Date.now()) {
-          return { email: parsed.data.email, tier: parsed.data.tier };
+        const lData = parsed?.data || parsed;
+        if (lData && lData.email) {
+          const expiresAt = lData.expiresAt || lData.validUntil;
+          const expTime = expiresAt ? (typeof expiresAt === 'number' ? expiresAt : new Date(expiresAt).getTime()) : Date.now() + 86400000;
+          if (expTime > Date.now()) {
+            return { email: lData.email, tier: lData.tier || 'pro' };
+          }
         }
       } catch {
         // Ignore
@@ -1167,7 +1172,7 @@ export default function Login() {
                       <button
                         type="button"
                         className={styles.submitBtn}
-                        onClick={() => router.push('/')}
+                        onClick={() => { window.location.href = '/'; }}
                         style={{ background: 'linear-gradient(135deg, #10b981, #059669)', marginBottom: '0.75rem' }}
                       >
                         🚀 Accéder à mon Espace de Formation

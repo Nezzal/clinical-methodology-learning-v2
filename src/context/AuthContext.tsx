@@ -66,15 +66,79 @@ const AuthContext = createContext<AuthContextType>({
   disableGuestMode: () => {},
 });
 
+interface InitialOfflineState {
+  user: any;
+  profile: any;
+  role: 'admin' | 'teacher' | 'student';
+  isAdmin: boolean;
+}
+
+const getInitialOfflineState = (): InitialOfflineState | null => {
+  if (typeof window === 'undefined') return null;
+  const savedLicenseStr = localStorage.getItem('recif_offline_license');
+  if (savedLicenseStr) {
+    try {
+      const license = JSON.parse(savedLicenseStr);
+      const licenseData = license?.data || license;
+      if (licenseData && licenseData.email) {
+        const email = licenseData.email;
+        const tier = licenseData.tier || 'pro';
+        const expiresAt = licenseData.expiresAt || licenseData.validUntil;
+        const expTime = expiresAt ? (typeof expiresAt === 'number' ? expiresAt : new Date(expiresAt).getTime()) : Date.now() + 86400000;
+
+        if (expTime > Date.now()) {
+          const cleanEmail = (email || '').toLowerCase();
+          const isOfflineAdmin = cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com';
+          const userRole: 'admin' | 'teacher' | 'student' = isOfflineAdmin ? 'admin' : (tier === 'ultra' ? 'teacher' : 'student');
+          const uid = 'offline_license_uid_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+          const displayName = isOfflineAdmin ? 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+          
+          const userObj = {
+            uid,
+            email: cleanEmail,
+            displayName,
+            photoURL: null,
+            getIdToken: async () => uid,
+            getIdTokenResult: async () => ({
+              claims: { role: userRole }
+            })
+          };
+
+          const profileObj = {
+            uid,
+            email: cleanEmail,
+            displayName,
+            photoURL: null,
+            level: isOfflineAdmin ? 'Expert' : 'Intermédiaire',
+            role: userRole,
+            subscription: {
+              tier,
+              status: 'active',
+              validUntil: new Date(expTime).toISOString()
+            },
+            stats: {},
+            updatedAt: new Date()
+          };
+
+          return { user: userObj, profile: profileObj, role: userRole, isAdmin: isOfflineAdmin };
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  return null;
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<FirestoreUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(() => (getInitialOfflineState()?.user as any) || null);
+  const [profile, setProfile] = useState<FirestoreUser | null>(() => (getInitialOfflineState()?.profile as any) || null);
+  const [loading, setLoading] = useState(() => !getInitialOfflineState());
   const [isSuspended, setIsSuspended] = useState(false);
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const [guestMode, setGuestMode] = useState(false);
-  const [role, setRole] = useState<'admin' | 'teacher' | 'student' | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<'admin' | 'teacher' | 'student' | null>(() => getInitialOfflineState()?.role || null);
+  const [isAdmin, setIsAdmin] = useState(() => getInitialOfflineState()?.isAdmin || false);
 
   // Charger les modes hors-ligne depuis localStorage au montage (côté client)
   useEffect(() => {
@@ -87,42 +151,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (savedLicenseStr) {
       try {
         const license = JSON.parse(savedLicenseStr);
-        if (license && license.data && license.data.expiresAt > Date.now()) {
-          const email = license.data.email;
-          const tier = license.data.tier;
-          const uid = 'offline_license_uid_' + email.replace(/[^a-z0-9]/g, '_');
-          const displayName = `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
-          
-          setUser({
-            uid,
-            email,
-            displayName,
-            photoURL: null,
-            getIdToken: async () => uid,
-            getIdTokenResult: async () => ({
-              claims: { role: 'student' }
-            })
-          } as any);
-          setRole('student');
-          setIsAdmin(false);
-          setGuestMode(false);
-          setProfile({
-            uid,
-            email,
-            displayName,
-            photoURL: null,
-            level: 'Intermédiaire',
-            role: 'student',
-            subscription: {
-              tier,
-              status: 'active',
-              expiresAt: license.data.expiresAt
-            },
-            stats: {},
-            updatedAt: new Date()
-          } as any);
-          setLoading(false);
-          return;
+        const licenseData = license?.data || license;
+        if (licenseData && licenseData.email) {
+          const email = licenseData.email;
+          const tier = licenseData.tier || 'pro';
+          const expiresAt = licenseData.expiresAt || licenseData.validUntil;
+          const expTime = expiresAt ? (typeof expiresAt === 'number' ? expiresAt : new Date(expiresAt).getTime()) : Date.now() + 86400000;
+
+          if (expTime > Date.now()) {
+            const cleanEmail = (email || '').toLowerCase();
+            const isOfflineAdmin = cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com';
+            const userRole = isOfflineAdmin ? 'admin' : (tier === 'ultra' ? 'teacher' : 'student');
+            const uid = 'offline_license_uid_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+            const displayName = isOfflineAdmin ? 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+            
+            setUser({
+              uid,
+              email: cleanEmail,
+              displayName,
+              photoURL: null,
+              getIdToken: async () => uid,
+              getIdTokenResult: async () => ({
+                claims: { role: userRole }
+              })
+            } as any);
+            setRole(userRole);
+            setIsAdmin(isOfflineAdmin);
+            setGuestMode(false);
+            setProfile({
+              uid,
+              email: cleanEmail,
+              displayName,
+              photoURL: null,
+              level: isOfflineAdmin ? 'Expert' : 'Intermédiaire',
+              role: userRole,
+              subscription: {
+                tier,
+                status: 'active',
+                validUntil: new Date(expTime).toISOString()
+              },
+              stats: {},
+              updatedAt: new Date()
+            } as any);
+            setLoading(false);
+            return;
+          }
         }
       } catch (err) {
         console.warn("⚠️ Erreur lecture licence locale au montage:", err);
@@ -186,42 +259,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (typeof window !== 'undefined' && savedLicenseStr) {
         try {
           const license = JSON.parse(savedLicenseStr);
-          if (license && license.data && license.data.expiresAt > Date.now()) {
-            const email = license.data.email;
-            const tier = license.data.tier;
-            const uid = 'offline_license_uid_' + email.replace(/[^a-z0-9]/g, '_');
-            const displayName = `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
-            
-            setUser({
-              uid,
-              email,
-              displayName,
-              photoURL: null,
-              getIdToken: async () => uid,
-              getIdTokenResult: async () => ({
-                claims: { role: 'student' }
-              })
-            } as any);
-            setRole('student');
-            setIsAdmin(false);
-            setGuestMode(false);
-            setProfile({
-              uid,
-              email,
-              displayName,
-              photoURL: null,
-              level: 'Intermédiaire',
-              role: 'student',
-              subscription: {
-                tier,
-                status: 'active',
-                expiresAt: license.data.expiresAt
-              },
-              stats: {},
-              updatedAt: new Date()
-            } as any);
-            setLoading(false);
-            return;
+          const licenseData = license?.data || license;
+          if (licenseData && licenseData.email) {
+            const email = licenseData.email;
+            const tier = licenseData.tier || 'pro';
+            const expiresAt = licenseData.expiresAt || licenseData.validUntil;
+            const expTime = expiresAt ? (typeof expiresAt === 'number' ? expiresAt : new Date(expiresAt).getTime()) : Date.now() + 86400000;
+
+            if (expTime > Date.now()) {
+              const cleanEmail = (email || '').toLowerCase();
+              const isOfflineAdmin = cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com';
+              const userRole = isOfflineAdmin ? 'admin' : (tier === 'ultra' ? 'teacher' : 'student');
+              const uid = 'offline_license_uid_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
+              const displayName = isOfflineAdmin ? 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+              
+              setUser({
+                uid,
+                email: cleanEmail,
+                displayName,
+                photoURL: null,
+                getIdToken: async () => uid,
+                getIdTokenResult: async () => ({
+                  claims: { role: userRole }
+                })
+              } as any);
+              setRole(userRole);
+              setIsAdmin(isOfflineAdmin);
+              setGuestMode(false);
+              setProfile({
+                uid,
+                email: cleanEmail,
+                displayName,
+                photoURL: null,
+                level: isOfflineAdmin ? 'Expert' : 'Intermédiaire',
+                role: userRole,
+                subscription: {
+                  tier,
+                  status: 'active',
+                  validUntil: new Date(expTime).toISOString()
+                },
+                stats: {},
+                updatedAt: new Date()
+              } as any);
+              setLoading(false);
+              return;
+            }
           }
         } catch (err) {
           console.warn("⚠️ Erreur lecture licence locale dans AuthChanged:", err);
