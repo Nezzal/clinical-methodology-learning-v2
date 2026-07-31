@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { sendSupportMessage } from '@/utils/firestore';
 import styles from './page.module.css';
 
 export default function GuidePage() {
@@ -21,9 +20,11 @@ export default function GuidePage() {
     }, 2000);
   };
 
+  const [generatedLicense, setGeneratedLicense] = useState<string | null>(null);
+
   const handleRequestLicense = async () => {
-    if (!user) {
-      setRequestError("Vous devez être connecté à votre compte pour envoyer une demande de licence.");
+    if (!user?.email) {
+      setRequestError("Vous devez être connecté à votre compte pour obtenir votre clé de licence.");
       return;
     }
     
@@ -32,50 +33,25 @@ export default function GuidePage() {
     setRequestSuccess('');
     
     try {
-      const senderName = profile?.displayName || user.displayName || 'Utilisateur RECIF';
-      const senderEmail = user.email || '';
-      const phone = profile?.phone || 'Non renseigné';
-      const profession = profile?.profession || 'Non renseigné';
-      const roleName = profile?.role || 'student';
-      const institution = profile?.institution || 'Non renseigné';
-      const city = profile?.city || 'Non renseigné';
-      const country = profile?.country || 'Non renseigné';
-      const currentTier = profile?.subscription?.tier || 'découverte';
-      
-      const subject = "🔑 [Demande de Licence Hors-ligne] Acquisition d'Exécutable";
-      const content = `Bonjour,
+      const res = await fetch('/api/auth/generate-license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          tier: profile?.subscription?.tier || (profile?.role === 'admin' ? 'ultra' : 'pro'),
+          expiresAt: profile?.subscription?.validUntil ? new Date(profile.subscription.validUntil).getTime() : (Date.now() + 365 * 24 * 3600 * 1000)
+        })
+      });
 
-Je souhaite faire une demande d'acquisition pour la version exécutable hors-ligne (Desktop) de l'application Methodo&Clinique.
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Impossible de générer la clé.");
 
-Coordonnées du demandeur :
-- Nom complet : ${senderName}
-- Adresse e-mail : ${senderEmail}
-- Téléphone : ${phone}
-- Rôle actuel : ${roleName}
-- Profession : ${profession}
-- Institution : ${institution}
-- Localisation : ${city}, ${country}
-- Formule d'abonnement actuelle : ${currentTier.toUpperCase()}
-
-Merci de me recontacter pour me communiquer le devis et la procédure de validation de cette licence hors-ligne.
-
-Cordialement.`;
-
-      await sendSupportMessage(
-        user.uid,
-        senderName,
-        senderEmail,
-        roleName === 'admin' ? 'admin' : (roleName === 'teacher' ? 'teacher' : 'student'),
-        'admin',
-        undefined,
-        subject,
-        content
-      );
-      
-      setRequestSuccess("Votre demande a été envoyée avec succès à l'administrateur ! Vous serez recontacté(e) très prochainement.");
-    } catch (err: any) {
-      console.error("Erreur lors de l'envoi de la demande de licence :", err);
-      setRequestError("Une erreur est survenue lors de l'envoi de votre demande : " + (err.message || String(err)));
+      setGeneratedLicense(data.licenseKey);
+      setRequestSuccess("Votre clé de licence Desktop a été générée avec succès ! Vous pouvez la copier ci-dessous.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error("Erreur lors de la génération de licence :", errMsg);
+      setRequestError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -133,17 +109,17 @@ Cordialement.`;
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
           <button 
             className="btn btn-primary"
-            style={{ padding: '0.65rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.92rem', fontWeight: 600 }}
+            style={{ padding: '0.65rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.92rem', fontWeight: 600, background: 'linear-gradient(135deg, #0d9488, #0284c7)' }}
             onClick={handleRequestLicense}
             disabled={isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <span className={styles.spinner}></span> Envoi de la demande...
+                <span className={styles.spinner}></span> Génération de votre clé...
               </>
             ) : (
               <>
-                🔑 Demander l'Acquisition & Licence Hors-ligne
+                🔑 Obtenir / Afficher ma Clé de Licence Desktop
               </>
             )}
           </button>
@@ -159,7 +135,69 @@ Cordialement.`;
               ⚠️ {requestError}
             </div>
           )}
+
+          {/* CARTE DORÉE D'AFFICHAGE ET COPIE DE LA LICENCE */}
+          {generatedLicense && (
+            <div style={{
+              width: '100%',
+              background: 'linear-gradient(135deg, rgba(217, 119, 6, 0.15), rgba(30, 41, 59, 0.95))',
+              border: '2px solid #f59e0b',
+              borderRadius: '12px',
+              padding: '1.25rem',
+              marginTop: '1rem',
+              boxShadow: '0 8px 24px rgba(245, 158, 11, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h4 style={{ color: '#fbbf24', margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔑 Votre Clé de Licence Desktop Officielle
+                </h4>
+                <span style={{ background: '#f59e0b', color: '#000', fontSize: '0.75rem', fontWeight: 800, padding: '2px 8px', borderRadius: '12px', textTransform: 'uppercase' }}>
+                  {profile?.subscription?.tier?.toUpperCase() || (profile?.role === 'admin' ? 'ADMIN' : 'PRO')}
+                </span>
+              </div>
+
+              <p style={{ color: '#cbd5e1', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                Copiez le code ci-dessous et collez-le dans le champ <strong>« Code de Licence Hors-Ligne »</strong> au lancement de votre application Desktop :
+              </p>
+
+              <textarea
+                readOnly
+                value={generatedLicense}
+                rows={4}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(245, 158, 11, 0.5)',
+                  background: 'rgba(0,0,0,0.5)',
+                  color: '#fef08a',
+                  fontFamily: 'monospace',
+                  fontSize: '0.8rem',
+                  resize: 'none',
+                  marginBottom: '0.75rem'
+                }}
+              />
+
+              <button
+                className="btn btn-primary"
+                style={{
+                  background: 'linear-gradient(135deg, #d97706, #b45309)',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  padding: '0.65rem 1.25rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+                onClick={() => handleCopy('license_key', generatedLicense)}
+              >
+                {copyStates['license_key'] ? '✅ Clé Copiée dans le presse-papier !' : '📋 Copier ma Clé de Licence'}
+              </button>
+            </div>
+          )}
         </div>
+
       </section>
 
       {/* Section 2 : Téléchargement des Exécutables de Bureau & Instructions par OS */}
@@ -170,37 +208,25 @@ Cordialement.`;
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          📦 2. Télécharger l'Application selon votre Système (v1.8.5)
+          📦 2. Télécharger l&apos;Application selon votre Système (v1.9.0)
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
-          Sélectionnez ci-dessous l'exécutable correspondant à votre système d'exploitation. Tous les installateurs sont générés et certifiés automatiquement sur notre plateforme sécurisée.
+          Sélectionnez ci-dessous l&apos;exécutable certifié v1.9.0 correspondant à votre système d&apos;exploitation (Mac ou Windows).
         </p>
 
         {/* Banner OBLIGATOIRE sur la licence */}
-        <div style={{ background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.3)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', color: '#facc15', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>⚠️</span> ÉTAPE OBLIGATOIRE DE PREMIER DÉMARRAGE
+        <div style={{ background: 'rgba(45, 212, 191, 0.08)', border: '1px solid rgba(45, 212, 191, 0.3)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#2dd4bf', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>⚡</span> ACTIVATION EN 2 ÉTAPES SIMPLES
           </h4>
-          <p style={{ margin: '0 0 0.75rem 0', color: 'var(--text-primary)', fontSize: '0.88rem', lineHeight: '1.6' }}>
-            Après avoir téléchargé et lancé l'application sur votre ordinateur, un <strong>Code de Licence Hors-ligne (16 caractères)</strong> vous sera demandé lors de la première ouverture.
-          </p>
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
-            <strong>Comment obtenir et retrouver votre code de licence auprès de l'Administrateur :</strong>
-            <ol style={{ margin: '0.5rem 0 0.75rem 0', paddingLeft: '1.25rem' }}>
-              <li style={{ marginBottom: '0.35rem' }}>Faites défiler vers le haut et cliquez sur le bouton <strong>« 🔑 Demander l'Acquisition & Licence Hors-ligne »</strong>.</li>
-              <li style={{ marginBottom: '0.35rem' }}>L'administrateur valide votre demande et génère votre clé d'activation individuelle à 16 caractères.</li>
-            </ol>
-
-            <div style={{ background: 'rgba(45, 212, 191, 0.08)', border: '1px solid rgba(45, 212, 191, 0.3)', borderRadius: '8px', padding: '0.75rem 1rem', marginTop: '0.5rem', color: 'var(--text-primary)' }}>
-              📬 <strong>Où allez-vous consulter et copier votre clé de licence ?</strong>
-              <ul style={{ margin: '0.35rem 0 0 0', paddingLeft: '1.25rem' }}>
-                <li style={{ marginBottom: '0.25rem' }}><strong>Dans votre onglet Messagerie</strong> : L'administrateur vous réponds directement dans le support avec votre code de licence à 16 caractères.</li>
-                <li><strong>Par E-mail</strong> : Une notification contenant votre clé d'activation vous est également transmise sur votre adresse électronique de compte.</li>
-              </ul>
-            </div>
-          </div>
+          <ol style={{ margin: '0.5rem 0 0', paddingLeft: '1.25rem', color: 'var(--text-primary)', fontSize: '0.88rem', lineHeight: '1.7' }}>
+            <li><strong>Obtenez votre clé</strong> : Cliquez sur le bouton bleu ci-dessus <strong>« 🔑 Obtenir / Afficher ma Clé de Licence Desktop »</strong> pour copier votre code personnel.</li>
+            <li><strong>Téléchargez &amp; installez</strong> : Cliquez sur l&apos;installateur ci-dessous (Mac <code>.dmg</code> ou Windows <code>.exe</code>).</li>
+            <li><strong>Activez l&apos;application</strong> : Au premier démarrage, collez votre clé dans le champ <strong>« Code de Licence Hors-Ligne »</strong>.</li>
+          </ol>
         </div>
+
 
         {/* 3 Cartes OS : Windows, macOS, Linux */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem', marginBottom: '1rem' }}>
@@ -218,7 +244,7 @@ Cordialement.`;
               <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Plateforme RECIF » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique.Setup.1.8.4.exe" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.0/RECIF-MethodoClinique.Setup.1.9.0.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -234,14 +260,14 @@ Cordialement.`;
               <span style={{ fontSize: '1.8rem' }}>🍎</span>
               <div>
                 <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)' }}>macOS (.dmg / .app)</h3>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>macOS 11+ (Apple Silicon & Intel)</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>macOS 11+ (Apple Silicon &amp; Intel)</span>
               </div>
             </div>
             <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
-              <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l'application dans votre dossier Applications. (Si avertissement de sécurité : Clic-droit $\rightarrow$ <em>Ouvrir</em>).
+              <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l&apos;application dans votre dossier Applications.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4-arm64.dmg" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.0/RECIF-MethodoClinique-1.9.0-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -250,6 +276,7 @@ Cordialement.`;
               📥 Télécharger Directement (.dmg)
             </a>
           </div>
+
 
           {/* Linux */}
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>

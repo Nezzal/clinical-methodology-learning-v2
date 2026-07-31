@@ -20,8 +20,29 @@ export default function Login() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [isLicenseMode, setIsLicenseMode] = useState(false);
+  const [isLicenseMode, setIsLicenseMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    // Sur l'exécutable Desktop (Electron) ou sans réseau, la licence est demandée par défaut
+    const isElectron = window.navigator.userAgent.includes('Electron') || Boolean((window as unknown as Record<string, unknown>).electron);
+    return isElectron || !navigator.onLine;
+  });
   const [licenseKeyInput, setLicenseKeyInput] = useState('');
+  const [existingLicense, setExistingLicense] = useState<{ email: string; tier: string } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const savedStr = localStorage.getItem('recif_offline_license');
+    if (savedStr) {
+      try {
+        const parsed = JSON.parse(savedStr);
+        if (parsed && parsed.data && parsed.data.expiresAt > Date.now()) {
+          return { email: parsed.data.email, tier: parsed.data.tier };
+        }
+      } catch {
+        // Ignore
+      }
+    }
+    return null;
+  });
+
   const [requestedRole, setRequestedRole] = useState<'student' | 'teacher'>('student');
   const [requestedTier, setRequestedTier] = useState<string>('découverte');
 
@@ -131,8 +152,8 @@ export default function Login() {
         friendlyError = 'Aucun utilisateur trouvé avec cette adresse e-mail.';
       } else if (authError.code === 'auth/invalid-email') {
         friendlyError = 'Format d\'adresse e-mail invalide.';
-      } else if (error.message) {
-        friendlyError = error.message;
+      } else if (authError.message) {
+        friendlyError = authError.message;
       }
       setErrorMsg(friendlyError);
     } finally {
@@ -187,6 +208,7 @@ export default function Login() {
       router.push('/');
     }
   }, [user, router]);
+
 
   if (loading) {
     return (
@@ -546,8 +568,126 @@ export default function Login() {
               </p>
             </div>
 
-            {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
+            {errorMsg && (
+              <div className={styles.errorMsg} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div>{errorMsg}</div>
+                {(errorMsg.includes('injoignables') || errorMsg.includes('connexion Internet')) && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsLicenseMode(true);
+                        setErrorMsg('');
+                      }}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        background: 'linear-gradient(135deg, #d97706, #b45309)',
+                        color: 'white',
+                        border: 'none',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        width: 'fit-content'
+                      }}
+                    >
+                      <span>🔑</span> Saisir une clé de Licence Hors-Ligne ➔
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => router.push('/')}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        background: 'rgba(16, 185, 129, 0.2)',
+                        border: '1px solid #10b981',
+                        color: '#34d399',
+                        fontWeight: 700,
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        width: 'fit-content'
+                      }}
+                    >
+                      <span>🟢</span> Poursuivre immédiatement en Mode Invité Local (Sans Internet) ➔
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
+
+            {/* BARRE D'ONGLETS DE SÉLECTION DU MODE (EN LIGNE VS LICENCE HORS-LIGNE) */}
+            {!isRequestAccess && !isForgotPassword && (
+              <div style={{
+                display: 'flex',
+                background: 'rgba(15, 23, 42, 0.8)',
+                borderRadius: '12px',
+                padding: '4px',
+                margin: '1.25rem 0',
+                border: '1px solid rgba(255, 255, 255, 0.12)'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLicenseMode(false);
+                    setErrorMsg('');
+                    setSuccessMsg('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: !isLicenseMode ? 'linear-gradient(135deg, #0d9488, #0284c7)' : 'transparent',
+                    color: !isLicenseMode ? '#ffffff' : '#94a3b8',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>🌐</span> Connexion en Ligne
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLicenseMode(true);
+                    setErrorMsg('');
+                    setSuccessMsg('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: isLicenseMode ? 'linear-gradient(135deg, #d97706, #b45309)' : 'transparent',
+                    color: isLicenseMode ? '#ffffff' : '#94a3b8',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>🔑</span> Licence Hors-Ligne
+                </button>
+              </div>
+            )}
 
                 {/* Encadré d'instructions BaridiMob / PayPal / Western Union et soumission de reçu */}
                 {submittedPaidTier && (
@@ -1005,65 +1145,144 @@ export default function Login() {
                     </button>
                   </form>
                 ) : isLicenseMode ? (
-                  // Formulaire de validation de licence hors-ligne
-                  <form className={styles.form} onSubmit={handleLicenseSubmit}>
-                    <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '1.1rem', textAlign: 'center' }}>
-                      🔑 Activation de la Licence Hors-ligne
-                    </h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.5', textAlign: 'center' }}>
-                      Collez ci-dessous le code de licence fourni lors de l&apos;achat de la version exécutable hors-ligne.
-                    </p>
-                    
-                    <div className={styles.inputGroup}>
-                      <label htmlFor="licenseKey">Code de Licence Hors-ligne</label>
-                      <textarea
-                        id="licenseKey"
-                        placeholder="Collez votre code de licence ici..."
-                        value={licenseKeyInput}
-                        onChange={(e) => setLicenseKeyInput(e.target.value)}
-                        required
-                        disabled={submitting}
-                        rows={6}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border-glass)',
-                          background: 'rgba(0, 0, 0, 0.2)',
-                          color: 'var(--text-primary)',
-                          fontFamily: 'monospace',
-                          fontSize: '0.85rem',
-                          resize: 'vertical'
-                        }}
-                      />
-                    </div>
+                  existingLicense ? (
+                    // Carte affichée quand une licence est DÉJÀ active sur la machine
+                    <div style={{
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(30, 41, 59, 0.95))',
+                      border: '2px solid #10b981',
+                      borderRadius: '12px',
+                      padding: '1.5rem',
+                      textAlign: 'center',
+                      marginBottom: '1rem'
+                    }}>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
+                      <h3 style={{ color: '#34d399', margin: '0 0 0.5rem 0', fontSize: '1.15rem', fontWeight: 700 }}>
+                        Licence Desktop Active ({existingLicense.tier.toUpperCase()})
+                      </h3>
+                      <p style={{ color: '#cbd5e1', fontSize: '0.85rem', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+                        Votre application Desktop est déjà activée pour l&apos;utilisateur :<br/>
+                        <strong style={{ color: '#ffffff' }}>{existingLicense.email}</strong>
+                      </p>
 
-                    <button type="submit" className={styles.submitBtn} disabled={submitting}>
-                      {submitting ? 'Vérification...' : '⚡ Activer l\'Application'}
-                    </button>
-
-                    <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
                       <button
                         type="button"
-                        className={styles.toggleLinkBtn}
-                        onClick={() => {
-                          setIsLicenseMode(false);
-                          setErrorMsg('');
-                          setSuccessMsg('');
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--accent-primary)',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          fontWeight: '500'
-                        }}
+                        className={styles.submitBtn}
+                        onClick={() => router.push('/')}
+                        style={{ background: 'linear-gradient(135deg, #10b981, #059669)', marginBottom: '0.75rem' }}
                       >
-                        ← Retour à la connexion en ligne
+                        🚀 Accéder à mon Espace de Formation
                       </button>
+
+                      <div style={{ marginTop: '0.75rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            localStorage.removeItem('recif_offline_license');
+                            setExistingLicense(null);
+                            setErrorMsg('');
+                            setSuccessMsg('Licence retirée. Vous pouvez saisir une nouvelle clé.');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#f43f5e',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          🔄 Remplacer ou Changer de Clé de Licence
+                        </button>
+                      </div>
                     </div>
-                  </form>
+                  ) : (
+                    // Formulaire de validation de licence hors-ligne
+                    <form className={styles.form} onSubmit={handleLicenseSubmit}>
+                      <h3 style={{ color: 'var(--text-primary)', marginBottom: '1rem', fontSize: '1.1rem', textAlign: 'center' }}>
+                        🔑 Activation de la Licence Hors-ligne
+                      </h3>
+                      <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.5', textAlign: 'center' }}>
+                        Collez ci-dessous le code de licence fourni lors de l&apos;achat de la version exécutable hors-ligne.
+                      </p>
+                      
+                      <div className={styles.inputGroup}>
+                        <label htmlFor="licenseKey">Code de Licence Hors-ligne</label>
+                        <textarea
+                          id="licenseKey"
+                          placeholder="Collez votre code de licence ici..."
+                          value={licenseKeyInput}
+                          onChange={(e) => setLicenseKeyInput(e.target.value)}
+                          required
+                          disabled={submitting}
+                          rows={6}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            borderRadius: '8px',
+                            border: '1px solid var(--border-glass)',
+                            background: 'rgba(0, 0, 0, 0.2)',
+                            color: 'var(--text-primary)',
+                            fontFamily: 'monospace',
+                            fontSize: '0.85rem',
+                            resize: 'vertical'
+                          }}
+                        />
+                      </div>
+
+                      <button type="submit" className={styles.submitBtn} disabled={submitting}>
+                        {submitting ? 'Vérification...' : '⚡ Activer l\'Application'}
+                      </button>
+
+                      <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          className={styles.toggleLinkBtn}
+                          onClick={() => {
+                            setIsLicenseMode(false);
+                            setErrorMsg('');
+                            setSuccessMsg('');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--accent-primary)',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            fontWeight: '500'
+                          }}
+                        >
+                          ← Se connecter avec E-mail & Mot de passe
+                        </button>
+                      </div>
+
+                      <div style={{ marginTop: '1.25rem', textAlign: 'center', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px', padding: '10px 12px' }}>
+                        <p style={{ color: '#38bdf8', fontSize: '0.8rem', margin: 0, fontWeight: 600 }}>
+                          ℹ️ Vous avez un compte abonné en ligne sans clé de licence ?
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsLicenseMode(false);
+                            setErrorMsg('');
+                            setSuccessMsg('');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#ffffff',
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            fontWeight: '700',
+                            textDecoration: 'underline',
+                            marginTop: '6px'
+                          }}
+                        >
+                          👉 Basculer sur [ 🌐 Connexion en Ligne ] (E-mail & Mot de passe)
+                        </button>
+                      </div>
+                    </form>
+                  )
                 ) : (
                   // Formulaire de connexion classique
                   <form className={styles.form} onSubmit={handleEmailSubmit}>
@@ -1142,32 +1361,35 @@ export default function Login() {
                       Se connecter avec Google
                     </button>
 
-                    <div style={{ marginTop: '1.25rem', textAlign: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsLicenseMode(true);
-                          setIsRequestAccess(false);
-                          setIsForgotPassword(false);
-                          setErrorMsg('');
-                          setSuccessMsg('');
-                        }}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          color: 'var(--accent-primary)',
-                          fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          fontWeight: '600',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.4rem',
-                          textDecoration: 'underline'
-                        }}
-                      >
-                        🔑 Activer la version Hors-ligne avec une licence
-                      </button>
-                    </div>
+                    {!isLicenseMode && (
+                      <div style={{ marginTop: '1.25rem', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsLicenseMode(true);
+                            setIsRequestAccess(false);
+                            setIsForgotPassword(false);
+                            setErrorMsg('');
+                            setSuccessMsg('');
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--accent-primary)',
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            fontWeight: '600',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          🔑 Activer la version Hors-ligne avec une licence
+                        </button>
+                      </div>
+                    )}
+
                   </>
                 )}
 

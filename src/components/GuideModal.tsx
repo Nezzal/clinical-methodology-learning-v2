@@ -287,7 +287,60 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
               </div>
             )}
 
-            {![1, 3, 6, 8, 11, 13].includes(activeModule) && (
+            {activeModule === 10 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>💻 Chapitre 10 : Application Desktop &amp; Gestion des Clés de Licence</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Installation de l&apos;exécutable autonome (Mac / Windows), génération automatique et validation des clés de licence.
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>10.1. Téléchargement &amp; Installation de l&apos;Exécutable</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🍎 Mac (.dmg) &amp; 💻 Windows (.exe)</div>
+                      <p className={styles.cardText}>L&apos;application Desktop s&apos;exécute de façon totalement autonome sans dépendre d&apos;un navigateur web ni d&apos;une connexion Internet permanente.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>10.2. Clé de Licence Autonome (Inclus Automatiquement)</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚡ Génération Automatique</div>
+                      <p className={styles.cardText}>Toute souscription à une formule (PRO, EXPERT, ULTRA) génère et fournit automatiquement votre clé de licence dédiée sans aucun besoin d&apos;intervention de l&apos;administrateur.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔑 Activation en 1-Clic</div>
+                      <p className={styles.cardText}>Au premier démarrage de l&apos;application Desktop, collez votre clé dans le champ &quot;Code de Licence Hors-Ligne&quot; pour valider instantanément votre accès.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>10.3. Modes de Connexion Disponibles</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🔑 Licence Hors-Ligne</div>
+                      <p className={styles.cardText}>Mode par défaut au démarrage sur Desktop. Valide les droits localement par cryptographie RSA avec ou sans Internet.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🌐 Connexion en Ligne</div>
+                      <p className={styles.cardText}>Permet aux abonnés web de s&apos;identifier avec leur E-mail et Mot de passe habituels lorsqu&apos;Internet est actif (met en cache la session pour le futur hors-ligne).</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🟢 Mode Invité Local</div>
+                      <p className={styles.cardText}>Permet à tout utilisateur déconnecté de découvrir immédiatement l&apos;IA locale Ollama, le calculateur NSN et les quiz sans rester bloqué.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {![1, 3, 6, 8, 10, 11, 13].includes(activeModule) && (
               <div>
                 <div className={styles.moduleHeader}>
                   <h2 className={styles.moduleTitle}>{MODULES.find(m => m.id === activeModule)?.name}</h2>
