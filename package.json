@@ -76,7 +76,14 @@
     },
     "mac": {
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
+      ],
+      "extraFiles": [
+        {
+          "from": "scripts/mac-installer/Activer-RECIF-Mac.command",
+          "to": "Activer-RECIF-Mac.command"
+        }
       ],
       "identity": null,
       "category": "public.app-category.medical"
