@@ -263,9 +263,15 @@ export default function GuidePage() {
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>macOS 11+ (Apple Silicon &amp; Intel)</span>
               </div>
             </div>
-            <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '0.75rem' }}>
               <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l&apos;application dans votre dossier Applications.
             </p>
+            
+            <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px', padding: '0.65rem 0.75rem', marginBottom: '1rem', fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+              <strong style={{ color: '#38bdf8' }}>⚡ Activation 1-Clic pour Mac :</strong><br/>
+              Après ouverture du fichier <code>.dmg</code>, double-cliquez simplement sur <strong>Activer-RECIF-Mac.command</strong> pour installer et débloquer l&apos;application automatiquement sans aucun message de sécurité !
+            </div>
+
             <a 
               href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4-arm64.dmg" 
               target="_blank" 
@@ -276,6 +282,7 @@ export default function GuidePage() {
               📥 Télécharger Directement (.dmg)
             </a>
           </div>
+
 
 
 

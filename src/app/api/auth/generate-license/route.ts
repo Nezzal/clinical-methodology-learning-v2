@@ -22,12 +22,31 @@ export async function POST(req: Request) {
       generatedAt: Date.now()
     };
 
-    const privateKeyPath = path.join(process.cwd(), 'scripts', 'license-keys', 'private.json');
-    if (!fs.existsSync(privateKeyPath)) {
-      return NextResponse.json({ error: "Clé privée secrète introuvable sur le serveur." }, { status: 500 });
+    let privateKeyJWK;
+    if (process.env.RECIF_LICENSE_PRIVATE_KEY) {
+      try {
+        privateKeyJWK = JSON.parse(process.env.RECIF_LICENSE_PRIVATE_KEY);
+      } catch {
+        privateKeyJWK = null;
+      }
     }
 
-    const privateKeyJWK = JSON.parse(fs.readFileSync(privateKeyPath, 'utf8'));
+    if (!privateKeyJWK) {
+      const privateKeyPath = path.join(process.cwd(), 'scripts', 'license-keys', 'private.json');
+      if (fs.existsSync(privateKeyPath)) {
+        privateKeyJWK = JSON.parse(fs.readFileSync(privateKeyPath, 'utf8'));
+      } else {
+        // Fallback JWK pour environnement Vercel Serverless
+        privateKeyJWK = {
+          "kty": "EC",
+          "x": "6-rwn9YUZzgijI0qs5919CCkmVSpjppGvm6lQLOvesA",
+          "y": "5LYANG3-KXQD_0E3EbGCUtpTcbbIXjLgQvSsI0DfNUw",
+          "crv": "P-256",
+          "d": "0zynKEhXck3yCXBPPzLR9xBzMSRomsrJHPkLTmZaGZU"
+        };
+      }
+    }
+
     const privateKeyObj = createPrivateKey({ key: privateKeyJWK, format: 'jwk' });
 
     const dataString = JSON.stringify(licenseData);
