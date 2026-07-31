@@ -96,13 +96,13 @@ export default function GuidePage() {
 
         <div style={{ border: '1px solid rgba(45, 212, 191, 0.2)', padding: '1.25rem', borderRadius: '12px', background: 'rgba(45, 212, 191, 0.02)', marginBottom: '1.5rem' }}>
           <h4 style={{ color: 'var(--text-primary)', marginBottom: '0.75rem', fontSize: '1rem' }}>
-            💼 Tarifs & Offre Spéciale :
+            💼 Licence Exécutable Hors-Ligne Inclus :
           </h4>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '0.75rem' }}>
-            Vous pouvez faire l'acquisition de clés de licences individuelles (pack de 1, 2 ou 3 licences actives avec code d'activation unique).
+            Une licence exécutable autonome est mise à votre disposition pour activer et utiliser l&apos;application Desktop en toute liberté.
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(45, 212, 191, 0.1)', padding: '0.5rem 0.75rem', borderRadius: '8px', borderLeft: '3px solid var(--accent-primary)', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
-            🎁 <strong>Offre Promotionnelle :</strong> 1 licence exécutable hors-ligne vous est <strong>offerte gratuitement</strong> pour toute souscription annuelle (12 mois) aux formules <strong>EXPERT</strong> ou <strong>ULTRA</strong>.
+            🎁 <strong>Offre Inclus :</strong> 1 licence exécutable hors-ligne vous est <strong>offerte gratuitement</strong> pour toute souscription aux formules <strong>PRO</strong>, <strong>EXPERT</strong> ou <strong>ULTRA</strong>.
           </div>
         </div>
 
