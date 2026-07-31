@@ -192,8 +192,8 @@ export default function Login() {
       window.dispatchEvent(new Event('progress_changed'));
 
       setTimeout(() => {
-        router.push('/');
-      }, 1000);
+        window.location.href = '/';
+      }, 500);
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
       setErrorMsg("Une erreur est survenue : " + errMsg);

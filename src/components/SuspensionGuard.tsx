@@ -242,7 +242,7 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   const isLoginPage = pathname === '/login';
 
   // Bloquer le rendu le temps de rediriger vers la page de connexion
-  if (!loading && isFirebaseConfigured && !user && !guestMode && !isLoginPage) {
+  if (!loading && isFirebaseConfigured && !user && !guestMode && !hasOfflineLicense && !isLoginPage) {
     return null;
   }
 
