@@ -7,14 +7,13 @@ import { useAuth } from '@/context/AuthContext';
 import styles from './page.module.css';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import GuideModal from '@/components/GuideModal';
-import { sendSupportMessage } from '@/utils/firestore';
 import { verifyLicense } from '@/utils/license';
 import { compressAndSanitizeImage } from '@/utils/image-utils';
 import { APP_VERSION, COMPANY_NIF } from '@/utils/constants';
 import logoPedagogiafrica from '../../../public/logo_pedagogiafrica.png';
 
 export default function Login() {
-  const { user, loading, isFirebaseConfigured, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
+  const { user, loading, signInWithGoogle, signInWithEmail, sendPasswordReset } = useAuth();
   const router = useRouter();
 
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
@@ -75,8 +74,9 @@ export default function Login() {
     try {
       const sanitized = await compressAndSanitizeImage(file);
       setReceiptImageDataInput(sanitized);
-    } catch (err: any) {
-      alert(err.message || "Erreur de chargement de l'image.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Erreur de chargement de l'image.";
+      alert(errMsg);
       setReceiptImageDataInput(null);
     }
   };
@@ -101,8 +101,9 @@ export default function Login() {
       if (!res.ok) throw new Error(data.error || "Impossible d'enregistrer le reçu.");
 
       setReceiptSubmittedSuccess(true);
-    } catch (err: any) {
-      alert(err.message || "Erreur lors de la transmission du reçu.");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Erreur lors de la transmission du reçu.";
+      alert(errMsg);
     } finally {
       setIsSubmittingReceipt(false);
     }
@@ -122,12 +123,13 @@ export default function Login() {
     try {
       await sendPasswordReset(email.trim());
       setSuccessMsg('Un e-mail de réinitialisation a été envoyé ! Veuillez vérifier votre boîte de réception.');
-    } catch (error: any) {
-      console.warn("Erreur réinitialisation mot de passe:", error.code || error.message);
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
+      console.warn("Erreur réinitialisation mot de passe:", authError.code || authError.message);
       let friendlyError = 'Une erreur est survenue lors de l\'envoi de l\'e-mail.';
-      if (error.code === 'auth/user-not-found') {
+      if (authError.code === 'auth/user-not-found') {
         friendlyError = 'Aucun utilisateur trouvé avec cette adresse e-mail.';
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (authError.code === 'auth/invalid-email') {
         friendlyError = 'Format d\'adresse e-mail invalide.';
       } else if (error.message) {
         friendlyError = error.message;
@@ -166,8 +168,9 @@ export default function Login() {
       setTimeout(() => {
         router.push('/');
       }, 1000);
-    } catch (err: any) {
-      setErrorMsg("Une erreur est survenue : " + (err.message || String(err)));
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      setErrorMsg("Une erreur est survenue : " + errMsg);
     } finally {
       setSubmitting(false);
     }
@@ -189,7 +192,7 @@ export default function Login() {
     return (
       <div className={styles.loadingContainer}>
         <div className={styles.spinner}></div>
-        <p>Chargement du portail d'accès...</p>
+        <p>Chargement du portail d&apos;accès...</p>
       </div>
     );
   }
@@ -208,17 +211,18 @@ export default function Login() {
     try {
       await signInWithEmail(email, password);
       setSuccessMsg('Connexion réussie ! Redirection en cours...');
-    } catch (error: any) {
-      console.warn("Erreur d'authentification:", error.code || error.message);
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
+      console.warn("Erreur d'authentification:", authError.code || authError.message);
       let friendlyError = 'Une erreur est survenue lors de l\'authentification.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      if (authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password' || authError.code === 'auth/invalid-credential') {
         friendlyError = 'Adresse e-mail ou mot de passe incorrect.';
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (authError.code === 'auth/invalid-email') {
         friendlyError = 'Format d\'adresse e-mail invalide.';
-      } else if (error.code === 'auth/network-request-failed') {
+      } else if (authError.code === 'auth/network-request-failed') {
         friendlyError = 'Connexion impossible : les serveurs d\'authentification sont injoignables. Veuillez vérifier votre connexion Internet.';
-      } else if (error.message) {
-        friendlyError = error.message;
+      } else if (authError.message) {
+        friendlyError = authError.message;
       }
       setErrorMsg(friendlyError);
     } finally {
@@ -299,9 +303,10 @@ export default function Login() {
       setTimeout(() => {
         setIsRequestAccess(false);
       }, 12000);
-    } catch (error: any) {
-      console.warn("Erreur soumission demande d'accès:", error.message);
-      setErrorMsg(error.message || 'Impossible de soumettre la demande. Veuillez réessayer.');
+    } catch (error: unknown) {
+      const errObj = error as { message?: string };
+      console.warn("Erreur soumission demande d'accès:", errObj.message);
+      setErrorMsg(errObj.message || 'Impossible de soumettre la demande. Veuillez réessayer.');
     } finally {
       setSubmitting(false);
     }
@@ -313,11 +318,12 @@ export default function Login() {
     try {
       await signInWithGoogle();
       setSuccessMsg('Connexion Google réussie ! Redirection...');
-    } catch (error: any) {
-      console.warn("Erreur connexion Google:", error.code || error.message);
-      if (error.code === 'auth/network-request-failed') {
+    } catch (error: unknown) {
+      const authErr = error as { code?: string; message?: string };
+      console.warn("Erreur connexion Google:", authErr.code || authErr.message);
+      if (authErr.code === 'auth/network-request-failed') {
         setErrorMsg('Connexion impossible : les serveurs d\'authentification sont injoignables. Veuillez vérifier votre connexion Internet.');
-      } else if (error.code !== 'auth/popup-closed-by-user') {
+      } else if (authErr.code !== 'auth/popup-closed-by-user') {
         setErrorMsg('Échec de la connexion avec Google. Veuillez réessayer.');
       }
     } finally {
@@ -471,7 +477,7 @@ export default function Login() {
                   <div className={styles.ctaBadge}>✨ DECOUVRIR LES FORMULES</div>
                   <h3 className={styles.ctaTitle}>Nouveau sur la plateforme ?</h3>
                   <p className={styles.ctaSubtitle}>
-                    Découvrez nos formules d'abonnement (Découverte 3j gratuit, Pro, Ultra, Institution) et demandez votre accès instantanément :
+                    Découvrez nos formules d&apos;abonnement (Découverte 3j gratuit, Pro, Ultra, Institution) et demandez votre accès instantanément :
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', width: '100%' }}>
                     <button
@@ -540,29 +546,8 @@ export default function Login() {
               </p>
             </div>
 
-            {/* Bannière d'avertissement si Firebase n'est pas configuré */}
-            {!isFirebaseConfigured && (
-              <div className={styles.warningBanner}>
-                <h3>⚠️ Configuration Firebase requise</h3>
-                <p>
-                  Pour activer l'authentification et la synchronisation en temps réel, veuillez copier vos clés d'accès Firebase dans le fichier <code>.env.local</code>.
-                </p>
-                <p style={{ marginTop: '0.4rem', fontSize: '0.8rem' }}>
-                  En attendant, vous pouvez continuer à utiliser l'application localement. Vos scores et protocoles seront stockés sur votre navigateur (LocalStorage).
-                </p>
-                <button 
-                  className={styles.guestBtn}
-                  onClick={() => router.push('/')}
-                >
-                  Continuer en mode Invité Local
-                </button>
-              </div>
-            )}
-
-            {isFirebaseConfigured && (
-              <>
-                {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
-                {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
+            {errorMsg && <div className={styles.errorMsg}>{errorMsg}</div>}
+            {successMsg && <div className={styles.successMsg}>{successMsg}</div>}
 
                 {/* Encadré d'instructions BaridiMob / PayPal / Western Union et soumission de reçu */}
                 {submittedPaidTier && (
@@ -620,7 +605,7 @@ export default function Login() {
 
                     {receiptSubmittedSuccess ? (
                       <div style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid #10b981', color: '#34d399', padding: '10px', borderRadius: '8px', fontSize: '0.88rem', fontWeight: 600, textAlign: 'center' }}>
-                        ✓ Justificatif N° {receiptTxIdInput} transmis à l'administrateur ! Votre compte sera activé sous 24h.
+                        ✓ Justificatif N° {receiptTxIdInput} transmis à l&apos;administrateur ! Votre compte sera activé sous 24h.
                       </div>
                     ) : (
                       <form onSubmit={handleDirectReceiptSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
@@ -959,7 +944,7 @@ export default function Login() {
                             <option value="Algérie" style={{ background: '#1a1a2e' }}>🇩🇿 Algérie</option>
                           </optgroup>
                           <optgroup label="🌍 Zone Afrique (Hors Algérie)" style={{ background: '#1a1a2e', color: '#2dd4bf' }}>
-                            <option value="Côte d'Ivoire" style={{ background: '#1a1a2e' }}>🇨🇮 Côte d'Ivoire</option>
+                            <option value="Côte d'Ivoire" style={{ background: '#1a1a2e' }}>🇨🇮 Côte d&apos;Ivoire</option>
                             <option value="Sénégal" style={{ background: '#1a1a2e' }}>🇸🇳 Sénégal</option>
                             <option value="Cameroun" style={{ background: '#1a1a2e' }}>🇨🇲 Cameroun</option>
                             <option value="Mali" style={{ background: '#1a1a2e' }}>🇲🇱 Mali</option>
@@ -975,7 +960,7 @@ export default function Login() {
                             <option value="Niger" style={{ background: '#1a1a2e' }}>🇳🇪 Niger</option>
                             <option value="Tchad" style={{ background: '#1a1a2e' }}>🇹🇩 Tchad</option>
                             <option value="Mauritanie" style={{ background: '#1a1a2e' }}>🇲🇷 Mauritanie</option>
-                            <option value="Autre Afrique" style={{ background: '#1a1a2e' }}>🌍 Autre pays d'Afrique</option>
+                            <option value="Autre Afrique" style={{ background: '#1a1a2e' }}>🌍 Autre pays d&apos;Afrique</option>
                           </optgroup>
                           <optgroup label="🇪🇺🇨🇦 Europe & Occident" style={{ background: '#1a1a2e', color: '#fbbf24' }}>
                             <option value="France" style={{ background: '#1a1a2e' }}>🇫🇷 France</option>
@@ -1026,7 +1011,7 @@ export default function Login() {
                       🔑 Activation de la Licence Hors-ligne
                     </h3>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.25rem', lineHeight: '1.5', textAlign: 'center' }}>
-                      Collez ci-dessous le code de licence fourni lors de l'achat de la version exécutable hors-ligne.
+                      Collez ci-dessous le code de licence fourni lors de l&apos;achat de la version exécutable hors-ligne.
                     </p>
                     
                     <div className={styles.inputGroup}>
@@ -1204,8 +1189,6 @@ export default function Login() {
                     </p>
                   </div>
                 )}
-              </>
-            )}
           </div>
         </div>
 

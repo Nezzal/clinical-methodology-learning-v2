@@ -3,10 +3,12 @@ const path = require('path');
 
 const srcPublic = path.join(__dirname, '../public');
 const srcStatic = path.join(__dirname, '../.next/static');
+const srcEnvLocal = path.join(__dirname, '../.env.local');
 
 const destStandalone = path.join(__dirname, '../.next/standalone');
 const destPublic = path.join(destStandalone, 'public');
 const destStatic = path.join(destStandalone, '.next/static');
+const destEnvLocal = path.join(destStandalone, '.env.local');
 
 console.log('📦 Début de la copie des ressources statiques pour Next.js Standalone...');
 
@@ -52,7 +54,12 @@ try {
   console.log(`- Copie de '.next/server' vers '${destServer}'...`);
   copyDir(srcServer, destServer);
 
-  console.log('✅ Copie des ressources statiques et serveur terminée avec succès !');
+  if (fs.existsSync(srcEnvLocal)) {
+    console.log(`- Copie de '.env.local' vers '${destEnvLocal}'...`);
+    fs.copyFileSync(srcEnvLocal, destEnvLocal);
+  }
+
+  console.log('✅ Copie des ressources statiques, serveur et .env.local terminée avec succès !');
 } catch (error) {
   console.error('❌ Erreur lors de la copie des ressources statiques :', error);
   process.exit(1);
