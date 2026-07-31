@@ -87,6 +87,13 @@ export async function POST(req: Request) {
     }
 
     // 2. Vérifier s'il y a déjà une demande en attente
+    if (!adminDb) {
+      return NextResponse.json(
+        { error: "Le service de base de données d'administration n'est pas disponible actuellement. Veuillez vérifier la connexion ou le fichier .env.local." },
+        { status: 500 }
+      );
+    }
+
     const docId = cleanEmail.replace(/[^a-z0-9]/g, '_');
     const requestDocRef = adminDb.collection('access_requests').doc(docId);
     const requestDoc = await requestDocRef.get();
@@ -117,6 +124,12 @@ export async function POST(req: Request) {
     let isNewAccountCreated = false;
 
     if (isFreeTest) {
+      if (!adminAuth) {
+        return NextResponse.json(
+          { error: "Le service d'authentification Firebase Admin n'est pas disponible actuellement." },
+          { status: 500 }
+        );
+      }
       try {
         let userRecord;
         try {
