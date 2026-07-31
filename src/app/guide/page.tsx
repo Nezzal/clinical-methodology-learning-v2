@@ -244,7 +244,7 @@ export default function GuidePage() {
               <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Plateforme RECIF » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.0/RECIF-MethodoClinique.Setup.1.9.0.exe" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique.Setup.1.8.4.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -267,7 +267,7 @@ export default function GuidePage() {
               <strong>Instructions :</strong> Ouvrez le fichier <code>.dmg</code> et glissez l&apos;application dans votre dossier Applications.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.0/RECIF-MethodoClinique-1.9.0-arm64.dmg" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -276,6 +276,7 @@ export default function GuidePage() {
               📥 Télécharger Directement (.dmg)
             </a>
           </div>
+
 
 
           {/* Linux */}
