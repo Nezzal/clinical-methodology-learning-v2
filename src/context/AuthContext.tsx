@@ -389,8 +389,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Si on est en mode admin hors-ligne, ne pas écouter Firestore via onSnapshot (qui échouerait)
-    if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+    // Si une licence hors-ligne est active, ne pas écouter Firestore via onSnapshot
+    const hasOfflineLicense = typeof window !== 'undefined' && (
+      Boolean(localStorage.getItem('recif_offline_license')) ||
+      localStorage.getItem('offline_admin_active') === 'true'
+    );
+    if (hasOfflineLicense) {
       setLoading(false);
       return;
     }
@@ -418,8 +422,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user) return;
 
-    // Si on est en mode admin hors-ligne, ne pas tenter de synchronisation Firestore
-    if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
+    // Si une licence hors-ligne est active ou mode admin hors-ligne, ne pas tenter de synchronisation / blocage Firestore
+    const hasOfflineLicense = typeof window !== 'undefined' && (
+      Boolean(localStorage.getItem('recif_offline_license')) ||
+      localStorage.getItem('offline_admin_active') === 'true'
+    );
+    if (hasOfflineLicense) {
       return;
     }
 
