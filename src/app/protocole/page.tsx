@@ -6,6 +6,7 @@ import { getProgress, updateProgress, LocalStats } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreProtocol, loadFirestoreProtocols, syncUserProfile, loadFirestoreChats, deleteFirestoreProtocol } from '@/utils/firestore';
 import { APP_VERSION_LABEL } from '@/utils/constants';
+import { getUserProfileHeaderInfo } from '@/utils/pdf-utils';
 import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import { QuotaModal } from '@/components/QuotaModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
@@ -681,6 +682,8 @@ export default function ProtocoleGenerator() {
     const textToExport = previewMode === 'protocol' ? generatedProtocol : generatedCrf;
     if (!textToExport) return;
 
+    const { authorName, profession, institution, city } = getUserProfileHeaderInfo(profile, user);
+
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       alert('Veuillez autoriser les fenêtres pop-up pour pouvoir exporter le PDF.');
@@ -727,7 +730,7 @@ export default function ProtocoleGenerator() {
             size: A4;
             margin: 2.5cm 2.2cm 2.5cm 2.2cm;
             @bottom-left {
-              content: "${APP_VERSION_LABEL}";
+              content: "${authorName}${institution ? ' • ' + institution : ''}";
               font-family: 'Inter', sans-serif;
               font-size: 8pt;
               color: #9ca3af;
@@ -754,19 +757,21 @@ export default function ProtocoleGenerator() {
 
           .doc-header {
             border-bottom: 2px solid #005a70;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
             margin-bottom: 2rem;
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: flex-start;
           }
 
           .doc-header h3 {
-            margin: 0;
+            margin: 0 0 0.35rem 0;
             font-family: var(--font-title);
             font-size: 13pt;
             color: #005a70;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
 
           .doc-header p {
@@ -899,11 +904,14 @@ export default function ProtocoleGenerator() {
       </head>
       <body>
         <div class="doc-header">
-          <div>
+          <div style="flex: 1;">
             <h3>${docTitle}</h3>
-            <p>${APP_VERSION_LABEL}</p>
+            <div style="font-size: 9.5pt; color: #374151; line-height: 1.45; margin-top: 4px;">
+              <div><strong>Auteur / Rédacteur :</strong> ${authorName}${profession ? ` <span style="color:#6b7280;">(${profession})</span>` : ''}</div>
+              <div><strong>Institution :</strong> ${institution ? `${institution}${city ? ` — ${city}` : ''}` : '<span style="color:#9ca3af; font-style:italic;">Non renseignée</span>'}</div>
+            </div>
           </div>
-          <div class="doc-header-date">
+          <div class="doc-header-date" style="font-size: 8.5pt; color: #6b7280; text-align: right; white-space: nowrap; margin-left: 1rem;">
             Généré le ${new Date().toLocaleDateString('fr-FR')}
           </div>
         </div>

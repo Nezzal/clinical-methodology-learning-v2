@@ -6,6 +6,7 @@ import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreChat, loadFirestoreChats, deleteFirestoreChat, syncUserProfile } from '@/utils/firestore';
 import { APP_VERSION, APP_VERSION_LABEL } from '@/utils/constants';
+import { getUserProfileHeaderInfo } from '@/utils/pdf-utils';
 import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import { QuotaModal } from '@/components/QuotaModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
@@ -868,6 +869,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
   };
 
   const handleExportDiscussionHtml = () => {
+    const { authorName, profession, institution, city } = getUserProfileHeaderInfo(profile, user);
     let chatTitle = 'Discussion Tuteur RECIF';
     if (user && activeSessionId) {
       const activeSession = sessions.find(s => s.id === activeSessionId);
@@ -900,7 +902,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>${chatTitle} - METHODO-CLINIQUE Édu</title>
+  <title>${chatTitle}</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
     
@@ -1215,7 +1217,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     
     /* Footer style */
     .report-footer {
-      margin-top: 4rem;
+      margin-top: 3.5rem;
       border-top: 1px solid var(--border-color);
       padding-top: 1.5rem;
       font-size: 0.78rem;
@@ -1277,18 +1279,15 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
   <div class="report-sheet">
     <header class="report-header">
       <div class="header-left">
-        <h1>
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary); vertical-align:middle;">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            <path d="M12 11v6"></path>
-            <path d="M9 14h6"></path>
-          </svg>
-          METHODO-CLINIQUE Édu
+        <h1 style="font-size: 1.3rem; margin: 0 0 0.35rem 0; color: #0f766e;">
+          TUTEUR VIRTUEL RECIF — COMPTE-RENDU DE DISCUSSION
         </h1>
-        <p>Fil de discussion • Tuteur Virtuel RECIF</p>
+        <div style="font-size: 0.85rem; color: #475569; text-transform: none; letter-spacing: normal;">
+          <div><strong>Apprenant / Rédacteur :</strong> ${authorName}${profession ? ` (${profession})` : ''}</div>
+          <div><strong>Institution :</strong> ${institution ? `${institution}${city ? ` — ${city}` : ''}` : 'Non renseignée'}</div>
+        </div>
       </div>
       <div class="header-right">
-        <span class="report-badge">v${APP_VERSION} - Production Ready</span>
         <p class="report-date">Exporté le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
     </header>
@@ -1298,7 +1297,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     </main>
     
     <footer class="report-footer">
-      Document officiel généré par ${APP_VERSION_LABEL}<br>
+      Document de travail — ${authorName}${institution ? ' • ' + institution : ''}<br>
       Basé sur le Référentiel de Recherche Clinique et Épidémiologique RECIF et conforme aux articles 377-399 de la Loi n° 18-11 relative à la santé.
     </footer>
   </div>
@@ -1340,6 +1339,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
   };
 
   const handleExportMessageHtml = (index: number, content: string) => {
+    const { authorName, profession, institution, city } = getUserProfileHeaderInfo(profile, user);
     // Nettoyer les blocs de code markdown ```html ou ``` si l'assistant a entouré le code
     let htmlContent = content.trim();
     const matchCodeBlock = htmlContent.match(/^```(?:html)?\s*([\s\S]*?)\s*```$/i);
@@ -1733,18 +1733,15 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
   <div class="report-sheet">
     <header class="report-header">
       <div class="header-left">
-        <h1>
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary); vertical-align:middle;">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            <path d="M12 11v6"></path>
-            <path d="M9 14h6"></path>
-          </svg>
-          Tuteur Virtuel RECIF
+        <h1 style="font-size: 1.3rem; margin: 0 0 0.35rem 0; color: #0f766e;">
+          TUTEUR VIRTUEL RECIF — EXTRAIT MÉTHODOLOGIQUE
         </h1>
-        <p>Accompagnement Méthodologique</p>
+        <div style="font-size: 0.85rem; color: #475569; text-transform: none; letter-spacing: normal;">
+          <div><strong>Utilisateur / Chercheur :</strong> ${authorName}${profession ? ` (${profession})` : ''}</div>
+          <div><strong>Institution :</strong> ${institution ? `${institution}${city ? ` — ${city}` : ''}` : 'Non renseignée'}</div>
+        </div>
       </div>
       <div class="header-right">
-        <span class="report-badge">Manuel RECIF & Loi 18-11</span>
         <p class="report-date">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
       </div>
     </header>
@@ -1754,7 +1751,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     </main>
     
     <footer class="report-footer">
-      Document issu de la plateforme Clinical Methodology Learning<br>
+      Document de travail — ${authorName}${institution ? ' • ' + institution : ''}<br>
       Basé sur le Référentiel RECIF (Recherche Clinique et Épidémiologique) et conforme aux articles 377-399 de la Loi n° 18-11 du 2 juillet 2018 relative à la santé.
     </footer>
   </div>

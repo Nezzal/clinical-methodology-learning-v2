@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { getProgress, LocalStats } from '@/utils/storage';
 import { APP_VERSION_LABEL } from '@/utils/constants';
+import { getUserProfileHeaderInfo } from '@/utils/pdf-utils';
 import { useAuth } from '@/context/AuthContext';
 import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import styles from './page.module.css';
@@ -424,6 +425,7 @@ const INITIAL_SECTIONS: ReportSectionState[] = [
 
 export default function RapportPage() {
   const { user, profile } = useAuth();
+  const { authorName, profession, institution, city } = getUserProfileHeaderInfo(profile, user);
   const [stats, setStats] = useState<LocalStats | null>(null);
   const [sections, setSections] = useState<ReportSectionState[]>(INITIAL_SECTIONS);
   const [isAutoProgressing, setIsAutoProgressing] = useState(false);
@@ -895,13 +897,16 @@ export default function RapportPage() {
           </div>
 
            <div className={styles.reportPaper}>
-            <div className="print-only-header" style={{ display: 'none', borderBottom: '2px solid #005a70', paddingBottom: '0.5rem', marginBottom: '2rem', fontFamily: "'Outfit', sans-serif" }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div className="print-only-header" style={{ display: 'none', borderBottom: '2px solid #005a70', paddingBottom: '0.75rem', marginBottom: '2rem', fontFamily: "'Outfit', sans-serif" }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '13pt', color: '#005a70', fontWeight: 700 }}>BILAN PÉDAGOGIQUE ET SUIVI</h3>
-                  <p style={{ margin: '2px 0 0 0', fontSize: '9pt', color: '#6b7280' }}>{APP_VERSION_LABEL}</p>
+                  <h3 style={{ margin: '0 0 0.35rem 0', fontSize: '13pt', color: '#005a70', fontWeight: 700, textTransform: 'uppercase' }}>BILAN PÉDAGOGIQUE ET SUIVI</h3>
+                  <div style={{ fontSize: '9.5pt', color: '#374151', lineHeight: '1.45' }}>
+                    <div><strong>Apprenant / Résident :</strong> {authorName}{profession ? ` (${profession})` : ''}</div>
+                    <div><strong>Institution :</strong> {institution ? `${institution}${city ? ` — ${city}` : ''}` : 'Non renseignée'}</div>
+                  </div>
                 </div>
-                <div style={{ fontSize: '9pt', color: '#6b7280' }}>
+                <div style={{ fontSize: '8.5pt', color: '#6b7280', whiteSpace: 'nowrap', marginLeft: '1rem' }}>
                   Généré le {new Date().toLocaleDateString('fr-FR')}
                 </div>
               </div>
@@ -926,7 +931,7 @@ export default function RapportPage() {
                 size: A4;
                 margin: 2cm 1.8cm 2cm 1.8cm;
                 @bottom-left {
-                  content: "${APP_VERSION_LABEL}";
+                  content: "${authorName}${institution ? ' • ' + institution : ''}";
                   font-family: 'Inter', sans-serif;
                   font-size: 8pt;
                   color: #9ca3af;

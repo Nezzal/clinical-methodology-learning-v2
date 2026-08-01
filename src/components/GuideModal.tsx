@@ -174,6 +174,31 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
               </div>
             )}
 
+            {activeModule === 4 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>📑 Chapitre 4 : Générateur de Protocoles & Export PDF Officiel</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Génération interactive, personnalisation automatique de l&apos;en-tête utilisateur et export PDF officiel.
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>4.1. Reprise Automatique du Profil dans l&apos;En-tête PDF</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 En-tête Officiel Certifié</div>
+                      <p className={styles.cardText}>Vos informations d&apos;institution et de profession sont automatiquement reprises dans l&apos;en-tête de vos protocoles cliniques officiels et de vos cahiers d&apos;observation (CRF).</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
+                      <p className={styles.cardText}>1. Renseignez votre profil (Nom, Profession, Institution, Ville) dans le menu &quot;Mon Profil&quot;.<br/>2. Générez ou modifiez votre protocole dans le Générateur.<br/>3. Cliquez sur &quot;Exporter en PDF&quot; : l&apos;en-tête du document affiche directement vos coordonnées d&apos;auteur et d&apos;institution sans aucune mention générique.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeModule === 6 && (
               <div>
                 <div className={styles.moduleHeader}>
@@ -340,7 +365,7 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
               </div>
             )}
 
-            {![1, 3, 6, 8, 10, 11, 13].includes(activeModule) && (
+            {![1, 3, 4, 6, 8, 10, 11, 13].includes(activeModule) && (
               <div>
                 <div className={styles.moduleHeader}>
                   <h2 className={styles.moduleTitle}>{MODULES.find(m => m.id === activeModule)?.name}</h2>

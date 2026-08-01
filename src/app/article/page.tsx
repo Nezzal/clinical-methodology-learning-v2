@@ -6,6 +6,7 @@ import { getProgress, updateProgress } from '@/utils/storage';
 import { useAuth } from '@/context/AuthContext';
 import { saveFirestoreArticle, loadFirestoreArticles, syncUserProfile, deleteFirestoreArticle } from '@/utils/firestore';
 import { APP_NAME, APP_VERSION } from '@/utils/constants';
+import { getUserProfileHeaderInfo } from '@/utils/pdf-utils';
 import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import { QuotaModal } from '@/components/QuotaModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
@@ -372,6 +373,7 @@ export default function ArticleGenerator() {
     if (!generatedArticle) return;
     const userTier = getUserTier(profile);
     const quotaConfig = getQuotaConfig(userTier);
+    const { authorName, profession, institution, city } = getUserProfileHeaderInfo(profile, user);
     const htmlContent = renderMarkdown(generatedArticle);
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -431,6 +433,7 @@ export default function ArticleGenerator() {
               padding: 1.25rem;
               border-radius: 6px;
               border-left: 4px solid #0d9488;
+              line-height: 1.6;
             }
             .footer {
               margin-top: 4rem;
@@ -468,6 +471,8 @@ export default function ArticleGenerator() {
         <body>
           <h1>${title || "Article d'Étude Observationnelle STROBE"}</h1>
           <div class="meta-block">
+            <strong>Auteur / Rédacteur :</strong> ${authorName}${profession ? ` (${profession})` : ''}<br/>
+            <strong>Institution :</strong> ${institution ? `${institution}${city ? ` — ${city}` : ''}` : 'Non renseignée'}<br/>
             <strong>Schéma méthodologique :</strong> ${studyType === 'cohort' ? 'Étude de cohorte' : (studyType === 'case-control' ? 'Étude cas-témoins' : 'Étude transversale')} (Normes STROBE)<br/>
             <strong>Date de rédaction :</strong> ${new Date().toLocaleDateString('fr-FR')}
           </div>
@@ -475,7 +480,7 @@ export default function ArticleGenerator() {
             ${htmlContent}
           </div>
           <div class="footer">
-            ${APP_NAME} v${APP_VERSION}
+            ${authorName}${institution ? ' • ' + institution : ''}
           </div>
           ${quotaConfig.watermark ? `
             <div style="text-align:center; font-size:8.5pt; color:#ef4444; font-weight:700; border-top:1px dashed #fca5a5; padding-top:8px; margin-top:28px; font-family: sans-serif;">
