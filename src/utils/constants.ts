@@ -1,5 +1,5 @@
-export const APP_VERSION = '1.9.0';
+export const APP_VERSION = '1.9.1';
 export const APP_NAME = 'METHODO-CLINIQUE Édu';
 export const APP_VERSION_LABEL = `${APP_NAME} v${APP_VERSION} - Production Ready`;
 export const COMPANY_NIF = '15007180115910202380';
-// Build release trigger v1.9.0
+// Build release trigger v1.9.1

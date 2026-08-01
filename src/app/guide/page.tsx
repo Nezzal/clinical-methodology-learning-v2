@@ -208,11 +208,11 @@ export default function GuidePage() {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          📦 2. Télécharger l&apos;Application selon votre Système (v1.9.0)
+          📦 2. Télécharger l&apos;Application selon votre Système (v1.9.1)
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
-          Sélectionnez ci-dessous l&apos;exécutable certifié v1.9.0 correspondant à votre système d&apos;exploitation (Mac ou Windows).
+          Sélectionnez ci-dessous l&apos;exécutable certifié v1.9.1 correspondant à votre système d&apos;exploitation (Mac ou Windows).
         </p>
 
         {/* Banner OBLIGATOIRE sur la licence */}

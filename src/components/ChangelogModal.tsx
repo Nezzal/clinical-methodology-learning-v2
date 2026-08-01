@@ -20,8 +20,19 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.8.9',
+    version: 'v1.9.1',
     isCurrent: true,
+    date: '1 Août 2026',
+    title: 'Optimisation de la Licence Hors-Ligne & Gestion des Liens Externes Desktop',
+    tags: ['Electron', 'Offline-First', 'Navigateur Externe', 'Licences'],
+    features: [
+      'Désactivation du blocage d\'approbation Firestore lorsqu\'une licence hors-ligne valide est détectée.',
+      'Redirection automatique des liens externes et fichiers de téléchargement vers le navigateur par défaut de l\'OS (Safari / Chrome).',
+      'Mise à jour des bannières d\'information tarifaire et d\'instructions d\'installation.'
+    ]
+  },
+  {
+    version: 'v1.8.9',
     date: '30 Juillet 2026',
     title: 'Intégration du Paiement Automatique PayPal (Afrique & Europe/Occident)',
     tags: ['PayPal', 'Paiement Automatique', 'Instant Activation', 'Multi-Devises'],
