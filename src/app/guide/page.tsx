@@ -90,7 +90,7 @@ export default function GuidePage() {
         </p>
         <ul style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
           <li style={{ marginBottom: '0.5rem' }}><strong>Confidentialité 100% absolue :</strong> Vos données de recherche et vos fiches de protocoles cliniques sont stockées et traitées uniquement sur votre disque dur, sans aucun transfert cloud.</li>
-          <li style={{ marginBottom: '0.5rem' }}><strong>Zéro Dépendance Internet :</strong> Le tuteur virtuel RECIF continue de répondre intelligemment en exploitant un modèle d'IA local (Ollama).</li>
+          <li style={{ marginBottom: '0.5rem' }}><strong>Zéro Dépendance Internet :</strong> Le Tuteur IA Methodo&Clinique continue de répondre intelligemment en exploitant un modèle d'IA local (Ollama).</li>
           <li style={{ marginBottom: '0.5rem' }}><strong>Zéro Latence & Zéro Quota :</strong> Pas de limitation de jetons ou de ralentissements dus à la bande passante.</li>
         </ul>
 
@@ -241,10 +241,10 @@ export default function GuidePage() {
               </div>
             </div>
             <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
-              <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Plateforme RECIF » sera créé sur votre bureau.
+              <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Methodo&Clinique » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique.Setup.1.8.4.exe" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/MethodoClinique.Setup.1.9.1.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -269,11 +269,11 @@ export default function GuidePage() {
             
             <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '8px', padding: '0.65rem 0.75rem', marginBottom: '1rem', fontSize: '0.78rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
               <strong style={{ color: '#38bdf8' }}>⚡ Activation 1-Clic pour Mac :</strong><br/>
-              Après ouverture du fichier <code>.dmg</code>, double-cliquez simplement sur <strong>Activer-RECIF-Mac.command</strong> pour installer et débloquer l&apos;application automatiquement sans aucun message de sécurité !
+              Après ouverture du fichier <code>.dmg</code>, double-cliquez simplement sur <strong>Activer-MethodoClinique-Mac.command</strong> pour installer et débloquer l&apos;application automatiquement sans aucun message de sécurité !
             </div>
 
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4-arm64.dmg" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/MethodoClinique-1.9.1-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -282,9 +282,6 @@ export default function GuidePage() {
               📥 Télécharger Directement (.dmg)
             </a>
           </div>
-
-
-
 
           {/* Linux */}
           <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column' }}>
@@ -297,12 +294,12 @@ export default function GuidePage() {
             </div>
             <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
               <strong>Instructions (dans le Terminal Linux) :</strong><br/>
-              • <code>AppImage</code> : Rendre le fichier exécutable dans le terminal (<code>chmod +x RECIF-MethodoClinique-*.AppImage</code>) puis double-cliquer pour lancer.<br/>
+              • <code>AppImage</code> : Rendre le fichier exécutable dans le terminal (<code>chmod +x MethodoClinique-*.AppImage</code>) puis double-cliquer pour lancer.<br/>
               • <code>.deb</code> : Lancer la commande d'installation dans le terminal (<code>sudo dpkg -i clinical-methodology-learning_*.deb</code>) ou installer via le Centre Logiciels.
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/RECIF-MethodoClinique-1.8.4.AppImage" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/MethodoClinique-1.9.1.AppImage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -311,7 +308,7 @@ export default function GuidePage() {
                 AppImage
               </a>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.8.4/clinical-methodology-learning_1.8.4_amd64.deb" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/clinical-methodology-learning_1.9.1_amd64.deb" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
@@ -518,7 +515,7 @@ export default function GuidePage() {
           <li className={styles.stepItem}>
             <span className={styles.stepNumber}>1</span>
             <div className={styles.stepText}>
-              <p>Démarrez l'application <strong>Methodo&Clinique</strong> (soit en ouvrant le dossier et en saisissant <code>npm run dev</code> dans le terminal, soit en lançant l'application de bureau Electron).</p>
+              <p>Démarrez simplement l'application <strong>Methodo&Clinique</strong> (en double-cliquant sur son raccourci de bureau ou depuis votre dossier Applications).</p>
             </div>
           </li>
           <li className={styles.stepItem}>
