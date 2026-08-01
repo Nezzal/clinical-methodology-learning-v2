@@ -5,8 +5,8 @@ import SuspensionGuard from "@/components/SuspensionGuard";
 import MobileOverlay from "@/components/MobileOverlay";
 
 export const metadata: Metadata = {
-  title: "RECIF Méthodologie - Formation en Recherche Clinique",
-  description: "Plateforme d'apprentissage en ligne de la méthodologie de recherche clinique et générateur de protocole basé sur le manuel de référence RECIF.",
+  title: "Methodo&Clinique - Formation en Recherche Clinique",
+  description: "Plateforme d'apprentissage en ligne de la méthodologie de recherche clinique et générateur de protocole.",
 };
 
 export default function RootLayout({
