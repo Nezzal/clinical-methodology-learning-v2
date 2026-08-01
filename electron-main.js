@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
@@ -171,6 +171,22 @@ function createWindow(port) {
 
   const url = `http://localhost:${port}`;
   
+  // Rediriger tous les liens externes (téléchargements .dmg/.exe, GitHub, etc.) vers le navigateur par défaut de l'OS (Safari / Chrome)
+  mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
+    if (targetUrl.startsWith('http:') || targetUrl.startsWith('https:')) {
+      shell.openExternal(targetUrl);
+      return { action: 'deny' };
+    }
+    return { action: 'allow' };
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, targetUrl) => {
+    if (!targetUrl.startsWith(`http://localhost:${port}`) && !targetUrl.startsWith(`http://127.0.0.1:${port}`)) {
+      event.preventDefault();
+      shell.openExternal(targetUrl);
+    }
+  });
+
   let retryCount = 0;
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     if (retryCount < 5 && errorCode !== -3) { // -3 est une annulation utilisateur volontaire
