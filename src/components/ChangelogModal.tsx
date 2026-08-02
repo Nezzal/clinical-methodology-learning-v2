@@ -20,8 +20,21 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
-    version: 'v1.9.1',
+    version: 'v2.0.0',
     isCurrent: true,
+    date: '2 Août 2026',
+    title: 'Lancement Officiel de la Version 2.0 & Système de Design UI/UX',
+    tags: ['UI/UX Redesign', 'Design System', 'Figtree & Inter', 'Medical Teal', 'WCAG AA'],
+    features: [
+      'Lancement officiel de la Version 2.0 de la plateforme Methodo&Clinique.',
+      'Nouveau Système de Design "Medical Teal & Scientific Slate" avec fonds sombres profonds (#070A13), cartes glassmorphism et accents néon cyan (#00E5FF).',
+      'Intégration des polices typographiques scientifiques et académiques : Figtree (titres), Inter (corps de texte) et JetBrains Mono (données biostatistiques & code).',
+      'Boutons d\'action néon cyan interactifs avec lueurs lumineuses (glow) et micro-animations fluides (200-300ms).',
+      'Conformité stricte à l\'accessibilité WCAG 2.1 AA (contraste > 4.5:1, anneaux de focus néon cyan 2px sur tous les éléments interactifs).'
+    ]
+  },
+  {
+    version: 'v1.9.1',
     date: '1 Août 2026',
     title: 'Optimisation de la Licence Hors-Ligne & Gestion des Liens Externes Desktop',
     tags: ['Electron', 'Offline-First', 'Navigateur Externe', 'Licences'],

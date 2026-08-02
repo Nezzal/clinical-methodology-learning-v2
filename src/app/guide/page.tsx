@@ -208,11 +208,11 @@ export default function GuidePage() {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          📦 2. Télécharger l&apos;Application selon votre Système (v1.9.1)
+          📦 2. Télécharger l&apos;Application selon votre Système (v2.0.0)
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
-          Sélectionnez ci-dessous l&apos;exécutable certifié v1.9.1 correspondant à votre système d&apos;exploitation (Mac ou Windows).
+          Sélectionnez ci-dessous l&apos;exécutable certifié v2.0.0 correspondant à votre système d&apos;exploitation (Mac ou Windows).
         </p>
 
         {/* Banner OBLIGATOIRE sur la licence */}
@@ -244,7 +244,7 @@ export default function GuidePage() {
               <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Methodo&Clinique » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/RECIF-MethodoClinique.Setup.1.9.1.exe" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.0/RECIF-MethodoClinique.Setup.2.0.0.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -273,7 +273,7 @@ export default function GuidePage() {
             </div>
 
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/RECIF-MethodoClinique-1.9.1-arm64.dmg" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.0/RECIF-MethodoClinique-2.0.0-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -299,7 +299,7 @@ export default function GuidePage() {
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/RECIF-MethodoClinique-1.9.1.AppImage" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.0/RECIF-MethodoClinique-2.0.0.AppImage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -308,7 +308,7 @@ export default function GuidePage() {
                 AppImage
               </a>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v1.9.1/clinical-methodology-learning_1.9.1_amd64.deb" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.0/clinical-methodology-learning_2.0.0_amd64.deb" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
