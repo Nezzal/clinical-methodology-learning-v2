@@ -1,6 +1,6 @@
 .sidebar {
   width: 280px;
-  background-color: rgba(9, 12, 21, 0.75);
+  background-color: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-right: 1px solid var(--border-glass);
@@ -23,6 +23,7 @@
 }
 
 .logoText {
+  font-family: var(--font-heading);
   font-size: 1.25rem;
   font-weight: 700;
   background: var(--gradient-primary);
@@ -62,10 +63,10 @@
 }
 
 .active a {
-  background-color: rgba(56, 189, 248, 0.06);
-  border-left: 4px solid var(--accent-primary);
+  background-color: rgba(8, 145, 178, 0.12);
+  border-left: 4px solid var(--accent-secondary);
   color: var(--text-primary);
-  box-shadow: inset 4px 0 12px -4px rgba(56, 189, 248, 0.15);
+  box-shadow: inset 4px 0 12px -4px rgba(0, 229, 255, 0.25);
 }
 
 .footer {
