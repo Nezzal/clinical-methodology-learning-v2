@@ -50,17 +50,22 @@ Avant d'exécuter des modifications sur `package.json`, `next.config.js`, ou les
 
 ---
 
-## 🚀 5. Procédure Automatique Système : Modifications, Release & Tagging
+## 🚀 5. Procédure Automatique Système : Modifications & Release en 2 Étapes (Validation Mac)
 
-Lors de chaque modification de code, correctif de bug ou évolution de fonctionnalite :
-1. **Incrémentation de Version** : Monter systématiquement la version dans `package.json` et dans `src/utils/constants.ts` (ex: `2.0.1`).
-2. **Mise à jour des liens du Guide** : Adapter les URLs de téléchargement direct de la page Guide ([`src/app/guide/page.tsx`](file:///Users/mac/Sites/clinical-methodology-learning-v2/src/app/guide/page.tsx)) avec le tag de release (`vX.Y.Z`).
-3. **Packaging Electron Multi-Plateformes** :
-   - macOS : `npm run electron:package:mac`
+Lors de chaque modification de code, correctif de bug ou évolution de fonctionnalité :
+
+### ⏸️ Étape 1 : Préparation & Build macOS (Pause pour Validation)
+1. **Incrémentation de Version** : Monter systématiquement la version dans `package.json` et dans `src/utils/constants.ts` (ex: `2.0.3`).
+2. **Mise à jour des liens du Guide** : Adapter les URLs de téléchargement direct de la page Guide ([`src/app/guide/page.tsx`](file:///Users/mac/Sites/clinical-methodology-learning-v2/src/app/guide/page.tsx)) avec le nouveau tag de release (`vX.Y.Z`).
+3. **Build macOS uniquement** : Générer le paquet macOS via `npm run electron:package:mac`.
+4. **PAUSE OBLIGATOIRE** : S'arrêter et demander à l'utilisateur de tester et valider l'application Mac ([`dist/mac-arm64/RECIF-MethodoClinique.app`](file:///Users/mac/Sites/clinical-methodology-learning-v2/dist/mac-arm64)).
+
+### ▶️ Étape 2 : Finalisation de la Release (Après Validation de l'Utilisateur)
+5. **Builds Windows & Linux** :
    - Windows : `npx electron-builder build --win --publish never`
    - Linux : `npm run electron:package:linux`
-4. **Archive de Distribution ZIP** : Exécuter `npm run zip` pour renouveler `clinical-methodology-learning.zip`.
-5. **Cycle Git Complet** :
+6. **Archive de Distribution ZIP** : Exécuter `npm run zip` pour renouveler `clinical-methodology-learning.zip`.
+7. **Cycle Git Complet** :
    - Stager les fichiers modifiés (`git add .`).
    - Commiter avec un message explicite (`git commit -m "release: ..."`).
    - Créer le tag Git (`git tag -a vX.Y.Z -m "Release vX.Y.Z"`).
