@@ -279,6 +279,36 @@ export default function Tuteur() {
     localStorage.setItem('recif_tuteur_discussion_collapsed', String(next));
   };
 
+  const handleSwitchVolet = (newMode: 'free' | 'protocol' | 'strobe') => {
+    if (chatMode === newMode) return;
+    setChatMode(newMode);
+    
+    if (messages.length <= 1) {
+      let welcomeMsg: Message;
+      if (newMode === 'free') {
+        welcomeMsg = getWelcomeMessage();
+      } else if (newMode === 'protocol') {
+        welcomeMsg = {
+          role: 'assistant',
+          content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide [**RECIF en ligne**](https://recif-amiens.org/enseignements/le-livre-recif/), de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
+          timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        };
+      } else {
+        welcomeMsg = {
+          role: 'assistant',
+          content: `Bonjour ! Je suis votre assistant méthodologique pour la **rédaction de votre article scientifique** conforme aux critères internationaux **STROBE**.\n\nJe vais vous guider pas-à-pas pour documenter les 22 critères obligatoires (Titre, Résumé, Introduction, Méthodes, Résultats, Discussion, Financement) indispensables pour publier une étude observationnelle (cohorte, cas-témoins ou transversale).\n\nPour commencer, quel est le **titre complet ou de travail** de votre article scientifique, et de quel **type d'étude observationnelle** s'agit-il (cohorte, cas-témoins, ou étude transversale) ?`,
+          timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        };
+      }
+      setMessages([welcomeMsg]);
+      
+      if (user && activeSessionId) {
+        saveFirestoreChat(user.uid, activeSessionId, activeSessionId, [welcomeMsg], newMode)
+          .catch(e => console.error("Erreur mise à jour mode chat:", e));
+      }
+    }
+  };
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesListRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -1852,11 +1882,60 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
       </header>
 
       <div className={styles.actionsHeader}>
-        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-          Session active • {messages.filter(m => m.role === 'user').length} question(s)
-        </span>
-        {messages.length > 1 && (
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {chatMode !== null ? (
+            <>
+              {/* Bouton de retour à la page globale du tuteur */}
+              <button
+                type="button"
+                className={styles.homeVoletBtn}
+                onClick={() => setChatMode(null)}
+                title="Revenir à la page globale du tuteur (Sélection des 3 volets)"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span>Accueil Tuteur</span>
+              </button>
+
+              {/* Commutateur instantané entre les 3 volets */}
+              <div className={styles.voletSwitcherPills}>
+                <button
+                  type="button"
+                  className={`${styles.voletPill} ${chatMode === 'free' ? styles.voletPillActive : ''}`}
+                  onClick={() => handleSwitchVolet('free')}
+                  title="Basculer vers le volet Discussion Libre"
+                >
+                  <span>💬 Discussion Libre</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.voletPill} ${chatMode === 'protocol' ? styles.voletPillActive : ''}`}
+                  onClick={() => handleSwitchVolet('protocol')}
+                  title="Basculer vers le volet Accompagnement Projet Protocole"
+                >
+                  <span>📋 Projet Protocole</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.voletPill} ${chatMode === 'strobe' ? styles.voletPillActiveStrobe : ''}`}
+                  onClick={() => handleSwitchVolet('strobe')}
+                  title="Basculer vers le volet Rédaction d'Article STROBE"
+                >
+                  <span>📝 Article STROBE</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              Sélectionnez un des 3 volets ci-dessous pour démarrer votre travail
+            </span>
+          )}
+        </div>
+
+        {chatMode !== null && messages.length > 1 && (
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             {chatMode === 'protocol' && (
               <button 
                 className={styles.transferHeaderBtn} 
@@ -1889,7 +1968,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Exporter en TXT
+              TXT
             </button>
             <button className={styles.exportBtn} onClick={handleExportDiscussionHtml} title="Exporter l'ensemble de la discussion avec questions en HTML mise en page">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1897,7 +1976,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                 <polyline points="15 3 21 3 21 9" />
                 <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
-              Exporter en HTML
+              HTML
             </button>
           </div>
         )}
