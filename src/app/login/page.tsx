@@ -346,10 +346,12 @@ export default function Login() {
     } catch (error: unknown) {
       const authErr = error as { code?: string; message?: string };
       console.warn("Erreur connexion Google:", authErr.code || authErr.message);
-      if (authErr.code === 'auth/network-request-failed') {
+      if (authErr.code === 'auth/unauthorized-domain') {
+        setErrorMsg('Domaine non autorisé dans Firebase. Le domaine "clinical-methodology-learning.vercel.app" doit être ajouté dans Firebase Console > Authentication > Settings > Authorized domains.');
+      } else if (authErr.code === 'auth/network-request-failed') {
         setErrorMsg('Connexion impossible : les serveurs d\'authentification sont injoignables. Veuillez vérifier votre connexion Internet.');
-      } else if (authErr.code !== 'auth/popup-closed-by-user') {
-        setErrorMsg('Échec de la connexion avec Google. Veuillez réessayer.');
+      } else if (authErr.code !== 'auth/popup-closed-by-user' && authErr.code !== 'auth/cancelled-popup-request') {
+        setErrorMsg(`Échec de la connexion avec Google (${authErr.code || authErr.message || 'Erreur inconnue'}). Veuillez réessayer.`);
       }
     } finally {
       setSubmitting(false);

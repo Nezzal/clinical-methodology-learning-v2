@@ -4,6 +4,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   User, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   signOut, 
   onAuthStateChanged,
@@ -522,7 +524,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithGoogle = async () => {
     if (!isFirebaseEnabled || !auth) throw new Error('Firebase non configuré');
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (popupErr: any) {
+      console.warn("⚠️ signInWithPopup échoué:", popupErr?.code || popupErr?.message);
+      if (
+        popupErr?.code === 'auth/popup-blocked' || 
+        popupErr?.code === 'auth/cancelled-popup-request' ||
+        popupErr?.code === 'auth/popup-closed-by-user'
+      ) {
+        console.log("🔄 Tentative de connexion via redirection...");
+        await signInWithRedirect(auth, provider);
+      } else {
+        throw popupErr;
+      }
+    }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
