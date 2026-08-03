@@ -47,3 +47,22 @@ Avant d'exécuter des modifications sur `package.json`, `next.config.js`, ou les
 1.  **Scanner les Secrets** : Assurez-vous qu'aucun jeton d'API en clair n'est introduit dans le code source de l'application.
 2.  **Audit de Gitignore** : Vérifiez que `.gitignore` contient bien les exceptions et les blocages appropriés (par exemple `.env*` ignoré, sauf `!.env.example`).
 3.  **Vérification post-build** : Après modification des scripts de build, exécutez un test de compilation (`npm run build`) pour confirmer que les variables d'environnement sont correctement détectées et sécurisées.
+
+---
+
+## 🚀 5. Procédure Automatique Système : Modifications, Release & Tagging
+
+Lors de chaque modification de code, correctif de bug ou évolution de fonctionnalite :
+1. **Incrémentation de Version** : Monter systématiquement la version dans `package.json` et dans `src/utils/constants.ts` (ex: `2.0.1`).
+2. **Mise à jour des liens du Guide** : Adapter les URLs de téléchargement direct de la page Guide ([`src/app/guide/page.tsx`](file:///Users/mac/Sites/clinical-methodology-learning-v2/src/app/guide/page.tsx)) avec le tag de release (`vX.Y.Z`).
+3. **Packaging Electron Multi-Plateformes** :
+   - macOS : `npm run electron:package:mac`
+   - Windows : `npx electron-builder build --win --publish never`
+   - Linux : `npm run electron:package:linux`
+4. **Archive de Distribution ZIP** : Exécuter `npm run zip` pour renouveler `clinical-methodology-learning.zip`.
+5. **Cycle Git Complet** :
+   - Stager les fichiers modifiés (`git add .`).
+   - Commiter avec un message explicite (`git commit -m "release: ..."`).
+   - Créer le tag Git (`git tag -a vX.Y.Z -m "Release vX.Y.Z"`).
+   - Pousser la branche et les tags vers GitHub (`git push origin <branch> --tags`).
+
