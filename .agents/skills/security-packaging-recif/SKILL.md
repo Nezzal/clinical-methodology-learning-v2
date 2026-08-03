@@ -54,14 +54,14 @@ Avant d'exécuter des modifications sur `package.json`, `next.config.js`, ou les
 
 Lors de chaque modification de code, correctif de bug ou évolution de fonctionnalité :
 
-### ⏸️ Étape 1 : Préparation & Build macOS (Pause pour Validation)
-1. **Incrémentation de Version** : Monter systématiquement la version dans `package.json` et dans `src/utils/constants.ts` (ex: `2.0.3`).
+### ⏸️ Étape 1 : Préparation & Build macOS (Pause pour Validation avec Signal Sonore)
+1. **Incrémentation de Version** : Monter systématiquement la version dans `package.json` et dans `src/utils/constants.ts` (ex: `2.0.5`).
 2. **Mise à jour des liens du Guide** : Adapter les URLs de téléchargement direct de la page Guide ([`src/app/guide/page.tsx`](file:///Users/mac/Sites/clinical-methodology-learning-v2/src/app/guide/page.tsx)) avec le nouveau tag de release (`vX.Y.Z`).
 3. **Build macOS uniquement** : Générer le paquet macOS via `npm run electron:package:mac`.
-4. **PAUSE OBLIGATOIRE** : S'arrêter et demander à l'utilisateur de tester et valider l'application Mac ([`dist/mac-arm64/RECIF-MethodoClinique.app`](file:///Users/mac/Sites/clinical-methodology-learning-v2/dist/mac-arm64)).
+4. **PAUSE & SIGNAL SONORE** : S'arrêter, émettre une notification sonore système (`afplay /System/Library/Sounds/Glass.aiff` ou `say "Validation Mac requise"`), et demander à l'utilisateur de tester et valider l'application Mac ([`dist/mac-arm64/RECIF-MethodoClinique.app`](file:///Users/mac/Sites/clinical-methodology-learning-v2/dist/mac-arm64)).
 
-### ▶️ Étape 2 : Finalisation Automatique en Chaîne (Après Validation de l'Utilisateur)
-⚠️ **RÈGLE CRUCIALE** : Dès que l'utilisateur valide l'application Mac (Étape 1), l'agent doit exécuter TOUTES les étapes suivantes d'une seule traite, enchaîner tous les builds, générer le ZIP et effectuer le push/tag Git sans jamais s'arrêter ni demander de validation intermédiaire pour chaque sous-étape !
+### ▶️ Étape 2 : Finalisation Automatique Ininterrompue (Après Validation Mac)
+🚨 **DIRECTIVE STRICTE** : Dès réception de l'accord de l'utilisateur pour le Mac, l'agent enchaîne **l'intégralité des sous-étapes ci-dessous d'une seule traite sans s'arrêter et sans demander aucun avis ni aucune validation intermédiaire** jusqu'à la fin du workflow :
 
 5. **Builds Windows & Linux** :
    - Windows : `npx electron-builder build --win --publish never`
