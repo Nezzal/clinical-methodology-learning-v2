@@ -60,7 +60,9 @@ Lors de chaque modification de code, correctif de bug ou évolution de fonctionn
 3. **Build macOS uniquement** : Générer le paquet macOS via `npm run electron:package:mac`.
 4. **PAUSE OBLIGATOIRE** : S'arrêter et demander à l'utilisateur de tester et valider l'application Mac ([`dist/mac-arm64/RECIF-MethodoClinique.app`](file:///Users/mac/Sites/clinical-methodology-learning-v2/dist/mac-arm64)).
 
-### ▶️ Étape 2 : Finalisation de la Release (Après Validation de l'Utilisateur)
+### ▶️ Étape 2 : Finalisation Automatique en Chaîne (Après Validation de l'Utilisateur)
+⚠️ **RÈGLE CRUCIALE** : Dès que l'utilisateur valide l'application Mac (Étape 1), l'agent doit exécuter TOUTES les étapes suivantes d'une seule traite, enchaîner tous les builds, générer le ZIP et effectuer le push/tag Git sans jamais s'arrêter ni demander de validation intermédiaire pour chaque sous-étape !
+
 5. **Builds Windows & Linux** :
    - Windows : `npx electron-builder build --win --publish never`
    - Linux : `npm run electron:package:linux`

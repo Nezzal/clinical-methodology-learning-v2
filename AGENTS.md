@@ -14,7 +14,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 3. **Build Electron macOS** : Générez uniquement le livrable macOS (`npm run electron:package:mac`).
 4. **PAUSE OBLIGATOIRE** : Demandez à l'utilisateur de tester et valider l'application Mac (`dist/mac-arm64/RECIF-MethodoClinique.app`) avant de continuer.
 
-### ▶️ Étape 2 : Finalisation de la Release (Après Validation de l'Utilisateur)
+### ▶️ Étape 2 : Finalisation Automatique en Chaîne (Après Validation de l'Utilisateur)
+*Règle d'exécution : Dès validation du Mac par l'utilisateur, l'agent enchaîne TOUTES les sous-étapes ci-dessous d'une seule traite sans s'arrêter.*
+
 5. **Builds Windows & Linux** : Générez les livrables Windows (`npx electron-builder build --win --publish never`) et Linux (`npm run electron:package:linux`).
 6. **Archive ZIP** : Exécutez `npm run zip` pour actualiser `clinical-methodology-learning.zip`.
 7. **Cycle Git Obligatoire** :
