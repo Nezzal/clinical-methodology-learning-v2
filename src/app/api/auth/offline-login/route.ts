@@ -13,8 +13,9 @@ export async function POST(req: Request) {
 
     const cleanEmail = email.toLowerCase().trim();
     
-    // Vérifier si l'email se termine par @recif.dz (domaine officiel)
-    if (!cleanEmail.endsWith('@recif.dz')) {
+    // Vérifier si l'email est un compte officiel RECIF ou du Pr Nezzal
+    const isOfficial = cleanEmail.endsWith('@recif.dz') || cleanEmail === 'nezzal.abdelmalek@gmail.com';
+    if (!isOfficial) {
       return NextResponse.json({ error: "Non autorisé en mode hors-ligne. Seuls les comptes officiels RECIF sont autorisés." }, { status: 403 });
     }
 
@@ -29,9 +30,9 @@ export async function POST(req: Request) {
     let role: 'admin' | 'teacher' = 'teacher';
     let displayName = 'Enseignant RECIF (Hors-ligne)';
 
-    if (cleanEmail === 'admin@recif.dz') {
+    if (cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com') {
       role = 'admin';
-      displayName = 'Superviseur RECIF (Hors-ligne)';
+      displayName = 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)';
     }
 
     console.log(`🔌 Connexion hors-ligne réussie pour : ${cleanEmail} (Rôle: ${role})`);

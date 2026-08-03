@@ -32,7 +32,11 @@ function loadEnv() {
             const parts = trimmed.split('=');
             if (parts.length >= 2) {
               const key = parts[0].trim();
-              const val = parts.slice(1).join('=').trim();
+              let val = parts.slice(1).join('=').trim();
+              if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+                val = val.slice(1, -1);
+              }
+              val = val.replace(/\\n/g, '\n');
               // Ne pas écraser si déjà défini dans l'environnement système global
               if (!process.env[key]) {
                 process.env[key] = val;

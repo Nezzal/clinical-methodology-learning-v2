@@ -23,21 +23,23 @@ export async function POST(request: Request) {
         userRecord = await adminAuth.getUserByEmail(cleanEmail);
       } catch (authErr: any) {
         if (authErr?.code === 'auth/user-not-found') {
-          // Si l'utilisateur n'est pas encore dans Firebase Auth, rechercher dans Firestore
           let existsInFirestore = false;
           let displayName = cleanEmail.split('@')[0];
+          let targetUid: string | undefined = undefined;
 
           if (adminDb) {
             try {
               const userSnap = await adminDb.collection('users').where('email', '==', cleanEmail).limit(1).get();
               if (!userSnap.empty) {
                 existsInFirestore = true;
+                targetUid = userSnap.docs[0].id;
                 const data = userSnap.docs[0].data();
                 if (data.displayName) displayName = data.displayName;
               } else {
                 const reqSnap = await adminDb.collection('access_requests').where('email', '==', cleanEmail).limit(1).get();
                 if (!reqSnap.empty) {
                   existsInFirestore = true;
+                  targetUid = reqSnap.docs[0].id;
                   const reqData = reqSnap.docs[0].data();
                   if (reqData.firstName) displayName = `${reqData.firstName} ${reqData.lastName || ''}`.trim();
                 }
@@ -48,16 +50,20 @@ export async function POST(request: Request) {
           }
 
           if (existsInFirestore) {
-            // Créer le compte Firebase Auth automatiquement
+            // Créer le compte Firebase Auth automatiquement en conservant l'UID Firestore
             try {
               const tempPass = Math.random().toString(36).substring(2) + 'RECIF!2026';
-              userRecord = await adminAuth.createUser({
+              const createPayload: any = {
                 email: cleanEmail,
                 password: tempPass,
                 displayName: displayName,
                 emailVerified: true
-              });
-              console.log(`🟢 Compte Auth créé automatiquement pour réinitialisation : ${cleanEmail}`);
+              };
+              if (targetUid) {
+                createPayload.uid = targetUid;
+              }
+              userRecord = await adminAuth.createUser(createPayload);
+              console.log(`🟢 Compte Auth créé automatiquement avec UID (${userRecord.uid}) pour réinitialisation : ${cleanEmail}`);
             } catch (createErr) {
               console.error("❌ Échec création compte Auth pour réinitialisation:", createErr);
             }

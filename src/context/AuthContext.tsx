@@ -254,9 +254,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       clearTimeout(safetyTimer);
-      // Interception pour la licence hors-ligne
-      const savedLicenseStr = localStorage.getItem('recif_offline_license');
-      if (typeof window !== 'undefined' && savedLicenseStr) {
+
+      // Si un utilisateur Firebase Auth réel est connecté, il a la priorité absolue sur le mode hors-ligne
+      if (currentUser) {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('offline_admin_active');
+          localStorage.removeItem('offline_admin_email');
+        }
+
+        setUser(currentUser);
+        setGuestMode(false);
+        localStorage.removeItem('guest_mode_active');
+
+        try {
+          // Force le rafraîchissement du token pour obtenir les derniers Custom Claims
+          const tokenResult = await currentUser.getIdTokenResult(true);
+          const claimRole = tokenResult.claims.role as 'admin' | 'teacher' | 'student' | null;
+          const emailLower = (currentUser.email || '').toLowerCase().trim();
+          const isSuperAdminEmail = emailLower === 'nezzal.abdelmalek@gmail.com' || emailLower === 'admin@recif.dz' || emailLower.includes('nezzal');
+          const effectiveRole = isSuperAdminEmail ? 'admin' : (claimRole || 'student');
+          setRole(effectiveRole);
+          setIsAdmin(effectiveRole === 'admin' || effectiveRole === 'teacher');
+        } catch (err) {
+          console.error("❌ Erreur lors du chargement des Custom Claims:", err);
+          const emailLower = (currentUser.email || '').toLowerCase().trim();
+          const isSuperAdminEmail = emailLower === 'nezzal.abdelmalek@gmail.com' || emailLower === 'admin@recif.dz' || emailLower.includes('nezzal');
+          setRole(isSuperAdminEmail ? 'admin' : 'student');
+          setIsAdmin(isSuperAdminEmail);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Si pas de currentUser Firebase, interception pour la licence hors-ligne
+      const savedLicenseStr = typeof window !== 'undefined' ? localStorage.getItem('recif_offline_license') : null;
+      if (savedLicenseStr) {
         try {
           const license = JSON.parse(savedLicenseStr);
           const licenseData = license?.data || license;
@@ -310,7 +342,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      // Interception pour la session admin hors-ligne persistante
+      // Interception pour la session admin hors-ligne persistante (seulement si pas connecté à Firebase Auth)
       if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
         const cachedEmail = localStorage.getItem('offline_admin_email') || 'admin@recif.dz';
         const isSuperAdmin = cachedEmail === 'admin@recif.dz';
@@ -342,36 +374,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setUser(currentUser);
-      if (currentUser) {
-        // Si un utilisateur Firebase se connecte, désactiver le mode invité
-        setGuestMode(false);
-        localStorage.removeItem('guest_mode_active');
-
-        try {
-          // Force le rafraîchissement du token pour obtenir les derniers Custom Claims
-          const tokenResult = await currentUser.getIdTokenResult(true);
-          const claimRole = tokenResult.claims.role as 'admin' | 'teacher' | 'student' | null;
-          const emailLower = (currentUser.email || '').toLowerCase().trim();
-          const isSuperAdminEmail = emailLower === 'nezzal.abdelmalek@gmail.com' || emailLower === 'admin@recif.dz' || emailLower.includes('nezzal');
-          const effectiveRole = isSuperAdminEmail ? 'admin' : (claimRole || 'student');
-          setRole(effectiveRole);
-          setIsAdmin(effectiveRole === 'admin' || effectiveRole === 'teacher');
-        } catch (err) {
-          console.error("❌ Erreur lors du chargement des Custom Claims:", err);
-          const emailLower = (currentUser.email || '').toLowerCase().trim();
-          const isSuperAdminEmail = emailLower === 'nezzal.abdelmalek@gmail.com' || emailLower === 'admin@recif.dz' || emailLower.includes('nezzal');
-          setRole(isSuperAdminEmail ? 'admin' : 'student');
-          setIsAdmin(isSuperAdminEmail);
-        }
-      } else {
-        setProfile(null);
-        setRole(null);
-        setIsAdmin(false);
-        setIsSuspended(false);
-        setRequirePasswordChange(false);
-        setLoading(false);
-      }
+      setUser(null);
+      setProfile(null);
+      setRole(null);
+      setIsAdmin(false);
+      setIsSuspended(false);
+      setRequirePasswordChange(false);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -389,12 +398,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    // Si une licence hors-ligne est active, ne pas écouter Firestore via onSnapshot
-    const hasOfflineLicense = typeof window !== 'undefined' && (
-      Boolean(localStorage.getItem('recif_offline_license')) ||
-      localStorage.getItem('offline_admin_active') === 'true'
-    );
-    if (hasOfflineLicense) {
+    // Ne pas écouter Firestore seulement si l'utilisateur utilise un UID factice ET n'est pas en ligne
+    const isMockUser = user.uid.startsWith('offline_');
+    if (isMockUser && typeof window !== 'undefined' && !navigator.onLine) {
       setLoading(false);
       return;
     }
@@ -422,12 +428,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user) return;
 
-    // Si une licence hors-ligne est active ou mode admin hors-ligne, ne pas tenter de synchronisation / blocage Firestore
-    const hasOfflineLicense = typeof window !== 'undefined' && (
-      Boolean(localStorage.getItem('recif_offline_license')) ||
-      localStorage.getItem('offline_admin_active') === 'true'
-    );
-    if (hasOfflineLicense) {
+    // Ne pas tenter de synchro si UID factice hors-ligne pur sans réseau
+    const isMockUser = user.uid.startsWith('offline_');
+    if (isMockUser && typeof window !== 'undefined' && !navigator.onLine) {
       return;
     }
 
@@ -524,7 +527,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     const cleanEmail = email.toLowerCase().trim();
-    const isOfficialEmail = cleanEmail === 'admin@recif.dz' || cleanEmail === 'enseignant@recif.dz' || cleanEmail.endsWith('@recif.dz');
+    const isOfficialEmail = cleanEmail === 'admin@recif.dz' || cleanEmail === 'enseignant@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com' || cleanEmail.endsWith('@recif.dz');
 
     const tryOfflineLogin = async () => {
       const response = await fetch('/api/auth/offline-login', {

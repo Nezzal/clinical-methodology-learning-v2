@@ -215,7 +215,7 @@ export async function syncUserProfile(
 }
 
 export async function loadUserProfile(uid: string): Promise<FirestoreUser | null> {
-  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return null;
+  if (!isFirebaseEnabled || !db || !uid) return null;
   try {
     const userDocRef = doc(db, 'users', uid);
     const snap = await getDocWithCacheFallback(userDocRef);
@@ -240,7 +240,7 @@ export async function saveFirestoreChat(
   messages: Array<{ role: 'user' | 'assistant'; content: string; timestamp?: string }>,
   mode?: 'free' | 'protocol' | 'strobe'
 ) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const chatDocRef = doc(db, 'users', uid, 'chats', chatId);
     
@@ -269,7 +269,7 @@ export async function saveFirestoreChat(
 }
 
 export async function loadFirestoreChats(uid: string): Promise<any[]> {
-  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
+  if (!isFirebaseEnabled || !db || !uid) return [];
   try {
     const chatsRef = collection(db, 'users', uid, 'chats');
     const q = query(chatsRef, orderBy('updatedAt', 'desc'));
@@ -282,7 +282,7 @@ export async function loadFirestoreChats(uid: string): Promise<any[]> {
 }
 
 export async function deleteFirestoreChat(uid: string, chatId: string) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const chatDocRef = doc(db, 'users', uid, 'chats', chatId);
     await deleteDoc(chatDocRef);
@@ -293,7 +293,7 @@ export async function deleteFirestoreChat(uid: string, chatId: string) {
 
 // 3. Protocoles
 export async function saveFirestoreProtocol(uid: string, protocol: { id: string; title: string; acronym: string; date: string; content: string; crfContent?: string | null; formData?: any }) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const protoDocRef = doc(db, 'users', uid, 'protocols', protocol.id);
     await setDoc(protoDocRef, {
@@ -306,7 +306,7 @@ export async function saveFirestoreProtocol(uid: string, protocol: { id: string;
 }
 
 export async function loadFirestoreProtocols(uid: string): Promise<FirestoreProtocol[]> {
-  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
+  if (!isFirebaseEnabled || !db || !uid) return [];
   try {
     const protosRef = collection(db, 'users', uid, 'protocols');
     const q = query(protosRef, orderBy('createdAt', 'desc'));
@@ -319,7 +319,7 @@ export async function loadFirestoreProtocols(uid: string): Promise<FirestoreProt
 }
 
 export async function deleteFirestoreProtocol(uid: string, protocolId: string) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const protoDocRef = doc(db, 'users', uid, 'protocols', protocolId);
     await deleteDoc(protoDocRef);
@@ -330,7 +330,7 @@ export async function deleteFirestoreProtocol(uid: string, protocolId: string) {
 
 // Articles STROBE
 export async function saveFirestoreArticle(uid: string, article: FirestoreArticle) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const articleDocRef = doc(db, 'users', uid, 'articles', article.id);
     await setDoc(articleDocRef, {
@@ -343,7 +343,7 @@ export async function saveFirestoreArticle(uid: string, article: FirestoreArticl
 }
 
 export async function loadFirestoreArticles(uid: string): Promise<FirestoreArticle[]> {
-  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
+  if (!isFirebaseEnabled || !db || !uid) return [];
   try {
     const articlesRef = collection(db, 'users', uid, 'articles');
     const q = query(articlesRef, orderBy('createdAt', 'desc'));
@@ -356,7 +356,7 @@ export async function loadFirestoreArticles(uid: string): Promise<FirestoreArtic
 }
 
 export async function deleteFirestoreArticle(uid: string, articleId: string) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const articleDocRef = doc(db, 'users', uid, 'articles', articleId);
     await deleteDoc(articleDocRef);
@@ -367,7 +367,7 @@ export async function deleteFirestoreArticle(uid: string, articleId: string) {
 
 // 4. Mode Enseignant (Supervision de tous les étudiants)
 export async function getAllUsers(): Promise<FirestoreUser[]> {
-  if (!isFirebaseEnabled || !db || !auth || (!auth.currentUser && !isOfflineAdmin())) return [];
+  if (!isFirebaseEnabled || !db) return [];
   try {
     const usersRef = collection(db, 'users');
     const snap = await getDocsWithCacheFallback(usersRef);

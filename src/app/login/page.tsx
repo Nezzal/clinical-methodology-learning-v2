@@ -22,9 +22,7 @@ export default function Login() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isLicenseMode, setIsLicenseMode] = useState(() => {
     if (typeof window === 'undefined') return false;
-    // Sur l'exécutable Desktop (Electron) ou sans réseau, la licence est demandée par défaut
-    const isElectron = window.navigator.userAgent.includes('Electron') || Boolean((window as unknown as Record<string, unknown>).electron);
-    return isElectron || !navigator.onLine;
+    return !navigator.onLine;
   });
   const [licenseKeyInput, setLicenseKeyInput] = useState('');
   const [existingLicense, setExistingLicense] = useState<{ email: string; tier: string } | null>(() => {
