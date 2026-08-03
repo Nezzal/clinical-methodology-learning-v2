@@ -175,8 +175,16 @@ function createWindow(port) {
 
   const url = `http://localhost:${port}`;
   
-  // Rediriger tous les liens externes (téléchargements .dmg/.exe, GitHub, etc.) vers le navigateur par défaut de l'OS (Safari / Chrome)
+  // Rediriger les liens externes vers le navigateur par défaut, mais autoriser les popups d'authentification (Google / Firebase)
   mainWindow.webContents.setWindowOpenHandler(({ url: targetUrl }) => {
+    if (
+      targetUrl.includes('firebaseapp.com/__/auth') || 
+      targetUrl.includes('accounts.google.com') ||
+      targetUrl.includes('google.com/o/oauth2')
+    ) {
+      return { action: 'allow' };
+    }
+
     if (targetUrl.startsWith('http:') || targetUrl.startsWith('https:')) {
       shell.openExternal(targetUrl);
       return { action: 'deny' };
