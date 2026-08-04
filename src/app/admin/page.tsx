@@ -26,7 +26,7 @@ import {
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { downloadImage } from '@/utils/image-utils';
 import { generateInvoiceHTML, InvoiceData, getTierPrice } from '@/utils/invoice';
-import { COMPANY_NIF } from '@/utils/constants';
+import { COMPANY_NIF, APP_VERSION } from '@/utils/constants';
 import styles from './page.module.css';
 
 // Simple markdown formatter helper for protocol preview
@@ -216,6 +216,47 @@ export default function AdminDashboard() {
   // Factures PedagogiAfrica
   const [invoiceModalData, setInvoiceModalData] = useState<InvoiceData | null>(null);
   const [isSendingInvoiceEmail, setIsSendingInvoiceEmail] = useState(false);
+  const [isBroadcastingEmail, setIsBroadcastingEmail] = useState(false);
+
+  const handleBroadcastReleaseEmail = async () => {
+    const totalUsersCount = students.length;
+    if (!confirm(`Êtes-vous sûr de vouloir diffuser l'email de mise à jour v${APP_VERSION} à l'ensemble des ${totalUsersCount} utilisateur(s) inscrits ?`)) {
+      return;
+    }
+
+    setIsBroadcastingEmail(true);
+    try {
+      let token = '';
+      if (user) {
+        token = await user.getIdToken();
+      } else {
+        token = 'offline_admin_uid';
+      }
+
+      const res = await fetch('/api/admin/broadcast-release-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ version: APP_VERSION })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erreur lors de la diffusion de l'email.");
+
+      if (data.simulated) {
+        alert(`ℹ️ ${data.message}`);
+      } else {
+        alert(`✅ ${data.message} (${data.sentCount} envoyés, ${data.errorCount} erreurs).`);
+      }
+    } catch (err: any) {
+      console.error("Erreur diffusion email:", err);
+      alert(`⚠️ ${err.message || "Impossible d'envoyer les notifications par email."}`);
+    } finally {
+      setIsBroadcastingEmail(false);
+    }
+  };
 
   const handleOpenInvoiceForRequest = (req: AccessRequest) => {
     const invData: InvoiceData = {
@@ -2356,6 +2397,28 @@ Votre superviseur`;
                     title="Télécharger la liste complète des utilisateurs au format CSV (Excel)"
                   >
                     📥 Exporter en CSV (Excel)
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      color: '#38bdf8',
+                      border: '1px solid rgba(56, 189, 248, 0.4)',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={handleBroadcastReleaseEmail}
+                    disabled={isBroadcastingEmail}
+                    title={`Diffuser le mail de mise à jour v${APP_VERSION} à tous les utilisateurs`}
+                  >
+                    {isBroadcastingEmail ? '⏳ Envoi en cours...' : `📢 Diffuser Mail v${APP_VERSION}`}
                   </button>
                 </div>
               </div>
