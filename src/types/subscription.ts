@@ -57,7 +57,7 @@ export const TIER_LIMITS: Record<SubscriptionTier, PlanLimits> = {
     monthlyStrobe: 5,
     monthlySyntheses: 20,
     monthlyReports: 5,
-    allowWatermarkFreePdf: false,
+    allowWatermarkFreePdf: true,
     allowNsnCalculator: true, // ILLIMITÉ
     allowSupervisionSpace: false,
     allowInternalMessaging: false,

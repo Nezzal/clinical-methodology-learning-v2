@@ -87,7 +87,7 @@ export function QuotaModal({
         }}>
           <div style={{ color: '#2dd4bf', fontWeight: 700, marginBottom: '4px' }}>⚡ Surclassez votre compte :</div>
           {isDecouverte ? (
-            <div>Passer à l'offre <strong>PRO</strong> (5/mois) ou <strong>ULTRA</strong> (Illimité sans filigrane) pour débloquer toutes les fonctionnalités.</div>
+            <div>Passer à l'offre <strong>PRO</strong> (5/mois sans filigrane) ou <strong>ULTRA</strong> (Illimité sans filigrane) pour débloquer toutes les fonctionnalités.</div>
           ) : (
             <div>Passer à l'offre <strong>ULTRA Enseignant</strong> pour bénéficier d'un accès illimité et de téléchargements PDF HD propres sans filigrane.</div>
           )}

@@ -148,8 +148,13 @@ function getStaticFallbackArticle(
 ---
 
 ## 6. Financement (Critère STROBE 22)
-* **Financement de l\'étude :**
+* **Financement de l'étude :**
  ${data.funding || 'Non spécifié.'}
+
+---
+
+## 7. Déclaration d'utilisation de l'intelligence artificielle
+${data.aiDeclaration || "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo&Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication."}
 `;
 }
 
@@ -209,7 +214,8 @@ export async function POST(req: Request) {
     limitations = '',
     interpretation = '',
     generalisability = '',
-    funding = ''
+    funding = '',
+    aiDeclaration = "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo&Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication."
   } = payload;
 
   const requestHeaders = new Headers(req.headers);
@@ -230,6 +236,7 @@ L'article doit être structuré de manière académique avec les sections suivan
 4. **Résultats** (Critères STROBE 13-17 : Participants, Données descriptives, Données sur les résultats d'intérêt, Résultats principaux, Autres analyses)
 5. **Discussion** (Critères STROBE 18-21 : Résultats clés, Limites, Interprétation, Généralisabilité)
 6. **Financement** (Critère STROBE 22)
+7. **Déclaration d'utilisation de l'intelligence artificielle** (Transparence & Éthique)
 
 Voici les données saisies par le chercheur :
 - Titre proposé : ${title}
@@ -256,6 +263,7 @@ Voici les données saisies par le chercheur :
 - Interprétation globale prudente : ${interpretation || 'Non spécifié'}
 - Généralisabilité des résultats : ${generalisability || 'Non spécifié'}
 - Financement de l'étude : ${funding || 'Non spécifié'}
+- Déclaration d'utilisation de l'IA : ${aiDeclaration}
 
 Instructions de rédaction :
 Si un paramètre ou une section ci-dessus est marqué comme "Non spécifié(e)" ou "Non spécifié", tu dois formuler des propositions méthodologiques, logistiques ou scientifiques cohérentes, réalistes et structurées, adaptées à l'étude pour compléter cette section. Si le chercheur a fourni des détails, utilise-les en priorité absolue et enrichis-les de manière rigoureuse.

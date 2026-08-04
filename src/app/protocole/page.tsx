@@ -219,6 +219,20 @@ export default function ProtocoleGenerator() {
     }
   }, []);
 
+  const [biblioImportSuccess, setBiblioImportSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('recif_biblio_synthesis');
+      if (stored) {
+        setJustification(stored);
+        setActiveTab('methodo');
+        setBiblioImportSuccess(true);
+        localStorage.removeItem('recif_biblio_synthesis');
+      }
+    }
+  }, []);
+
   const fillFormFields = (p: any) => {
     if (!p) return;
     setTitle(p.title || '');
@@ -1253,6 +1267,11 @@ export default function ProtocoleGenerator() {
             {/* 2. Méthodologie */}
             {activeTab === 'methodo' && (
               <>
+                {biblioImportSuccess && (
+                  <div className={styles.successNotice} style={{ marginBottom: '1rem', background: 'rgba(13, 148, 136, 0.15)', border: '1px solid #0d9488', color: '#2dd4bf', padding: '0.75rem 1rem', borderRadius: '8px' }}>
+                    🎉 <b>Revue PubMed importée !</b> La synthèse bibliographique a été injectée dans le champ <b>Justification de l&apos;étude (Rationnel scientifique)</b>.
+                  </div>
+                )}
                 <div className={styles.protoFormGroup}>
                   <div className={styles.protoLabelHeader}>
                     <label className={styles.protoLabel} htmlFor="question">Question de recherche principale *</label>

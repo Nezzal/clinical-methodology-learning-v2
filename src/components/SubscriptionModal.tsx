@@ -260,8 +260,8 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
                 <li><span>✓</span> <strong>100 Q / jour IA</strong></li>
                 <li><span>✓</span> <strong>Calculateur NSN ILLIMITÉ</strong></li>
                 <li><span>✓</span> Quiz & Flashcards illimités</li>
-                <li><span>✓</span> 5 protocoles/mois (avec filigrane)</li>
-                <li><span>✓</span> 5 articles STROBE/mois (avec filigrane)</li>
+                <li><span>✓</span> 5 protocoles/mois (sans filigrane)</li>
+                <li><span>✓</span> 5 articles STROBE/mois (sans filigrane)</li>
                 <li><span>✓</span> 20 synthèses PubMed/mois</li>
                 <li><span>✓</span> 5 bilans pédagogiques/mois</li>
               </ul>

@@ -10,6 +10,13 @@ import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import { QuotaModal } from '@/components/QuotaModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import styles from './page.module.css';
+import { 
+  saveFirestoreSynthesis, 
+  loadFirestoreSyntheses, 
+  deleteFirestoreSynthesis, 
+  FirestoreSynthesis 
+} from '@/utils/firestore';
+import { getProgress, updateProgress } from '@/utils/storage';
 
 const getBiblioCount = (): number => {
   if (typeof window === 'undefined') return 0;
@@ -52,6 +59,128 @@ export default function BiblioPage() {
   const [synthesisProvider, setSynthesisProvider] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  // Synthèses sauvegardées
+  const [savedSyntheses, setSavedSyntheses] = useState<FirestoreSynthesis[]>([]);
+  const [activeSynthesisId, setActiveSynthesisId] = useState<string | null>(null);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Charger les synthèses depuis localStorage immédiatement, puis fusionner avec Firestore
+  useEffect(() => {
+    const fetchSyntheses = async () => {
+      const localSynths = (getProgress().recentSyntheses as FirestoreSynthesis[]) || [];
+      setSavedSyntheses(localSynths);
+
+      if (user) {
+        try {
+          const firestoreSynths = await loadFirestoreSyntheses(user.uid);
+          if (firestoreSynths && firestoreSynths.length > 0) {
+            const map = new Map<string, FirestoreSynthesis>();
+            firestoreSynths.forEach(s => map.set(s.id, s));
+            localSynths.forEach(s => { if (!map.has(s.id)) map.set(s.id, s); });
+            const merged = Array.from(map.values());
+            setSavedSyntheses(merged);
+            updateProgress(stats => ({ ...stats, recentSyntheses: merged.slice(0, 15) }));
+          }
+        } catch (err) {
+          console.error("Erreur lors de la récupération des synthèses Firestore:", err);
+        }
+      }
+    };
+    fetchSyntheses();
+  }, [user]);
+
+  const handleManualSaveSynthesis = () => {
+    if (!synthesisResult) return;
+    const selectedArticles = articles.filter(a => selectedPmids.includes(a.pmid));
+    const synthesisId = activeSynthesisId || `synth_${Date.now()}`;
+    const newSynthItem: FirestoreSynthesis = {
+      id: synthesisId,
+      query: query.trim() || naturalLanguageQuestion.trim() || 'Revue de la littérature',
+      title: `Revue PubMed : ${query.trim() || naturalLanguageQuestion.trim() || 'Recherche'} (${selectedArticles.length} articles)`,
+      date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }),
+      articlesCount: selectedArticles.length,
+      content: synthesisResult,
+      articles: selectedArticles,
+      provider: synthesisProvider || 'IA'
+    };
+
+    setActiveSynthesisId(newSynthItem.id);
+    setSavedSyntheses(prev => {
+      const filtered = prev.filter(s => s.id !== newSynthItem.id);
+      return [newSynthItem, ...filtered];
+    });
+
+    updateProgress((stats) => {
+      const currentList = (stats.recentSyntheses || []) as FirestoreSynthesis[];
+      const filtered = currentList.filter(s => s.id !== newSynthItem.id);
+      return {
+        ...stats,
+        recentSyntheses: [newSynthItem, ...filtered].slice(0, 15)
+      };
+    });
+
+    if (user) {
+      saveFirestoreSynthesis(user.uid, newSynthItem).catch(e => console.error("Erreur sauvegarde Firestore synthèse:", e));
+    }
+
+    setSavedSuccess(true);
+    setTimeout(() => setSavedSuccess(false), 2500);
+  };
+
+  const handleOpenSynthesis = (s: FirestoreSynthesis) => {
+    setActiveSynthesisId(s.id);
+    setSynthesisResult(s.content);
+    setSynthesisProvider(s.provider || null);
+    if (s.articles && s.articles.length > 0) {
+      setArticles(s.articles);
+      setSelectedPmids(s.articles.map(a => a.pmid));
+    }
+    if (s.query) setQuery(s.query);
+    setTimeout(() => {
+      const el = document.getElementById('synthesis-result-section');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleRegenerateSynthesis = (s: FirestoreSynthesis) => {
+    setActiveSynthesisId(s.id);
+    if (s.articles && s.articles.length > 0) {
+      setArticles(s.articles);
+      setSelectedPmids(s.articles.map(a => a.pmid));
+    }
+    if (s.query) setQuery(s.query);
+    setTimeout(() => {
+      handleSynthesize();
+    }, 200);
+  };
+
+  const handleDeleteSynthesis = async (e: React.MouseEvent, sId: string) => {
+    e.stopPropagation();
+    if (!window.confirm("Voulez-vous vraiment supprimer définitivement cette revue de la littérature ?")) return;
+
+    setSavedSyntheses(prev => prev.filter(s => s.id !== sId));
+    if (activeSynthesisId === sId) {
+      setActiveSynthesisId(null);
+      setSynthesisResult(null);
+    }
+
+    updateProgress((stats) => ({
+      ...stats,
+      recentSyntheses: ((stats.recentSyntheses || []) as FirestoreSynthesis[]).filter(s => s.id !== sId)
+    }));
+
+    if (user) {
+      deleteFirestoreSynthesis(user.uid, sId).catch(e => console.error(e));
+    }
+  };
+
+  const handleNewSynthesis = () => {
+    setActiveSynthesisId(null);
+    setSynthesisResult(null);
+    setQuery('');
+    setArticles([]);
+    setSelectedPmids([]);
+  };
 
   // Assistant de requêtes MeSH par IA
   const [naturalLanguageQuestion, setNaturalLanguageQuestion] = useState('');
@@ -248,6 +377,38 @@ export default function BiblioPage() {
       setSynthesisResult(data.synthesis);
       setSynthesisProvider(data.provider);
       incrementBiblioCount();
+
+      // Enregistrement automatique de la synthèse
+      const synthesisId = activeSynthesisId || `synth_${Date.now()}`;
+      const newSynthItem: FirestoreSynthesis = {
+        id: synthesisId,
+        query: query.trim() || naturalLanguageQuestion.trim() || 'Revue de la littérature',
+        title: `Revue PubMed : ${query.trim() || naturalLanguageQuestion.trim() || 'Recherche'} (${selectedArticles.length} articles)`,
+        date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }),
+        articlesCount: selectedArticles.length,
+        content: data.synthesis,
+        articles: selectedArticles,
+        provider: data.provider || 'IA'
+      };
+
+      setActiveSynthesisId(newSynthItem.id);
+      setSavedSyntheses(prev => {
+        const filtered = prev.filter(s => s.id !== newSynthItem.id);
+        return [newSynthItem, ...filtered];
+      });
+
+      updateProgress((stats) => {
+        const currentList = (stats.recentSyntheses || []) as FirestoreSynthesis[];
+        const filtered = currentList.filter(s => s.id !== newSynthItem.id);
+        return {
+          ...stats,
+          recentSyntheses: [newSynthItem, ...filtered].slice(0, 15)
+        };
+      });
+
+      if (user) {
+        saveFirestoreSynthesis(user.uid, newSynthItem).catch(e => console.error("Erreur sauvegarde Firestore synthèse:", e));
+      }
     } catch (err: any) {
       console.error('Erreur synthèse IA:', err);
       setError(err.message || 'Erreur lors de la génération de la synthèse.');
@@ -281,6 +442,13 @@ export default function BiblioPage() {
     if (!synthesisResult) return;
     localStorage.setItem('recif_biblio_synthesis', synthesisResult);
     router.push('/protocole');
+  };
+
+  // Transférer au rédacteur d'article STROBE (Critère 3)
+  const handleTransferToStrobeArticle = () => {
+    if (!synthesisResult) return;
+    localStorage.setItem('recif_strobe_biblio_synthesis', synthesisResult);
+    router.push('/article');
   };
 
   return (
@@ -332,6 +500,128 @@ export default function BiblioPage() {
             </div>
           </div>
         </header>
+
+        {/* Historique des synthèses et revues sauvegardées */}
+        {savedSyntheses.length > 0 && (
+          <section className={styles.card} style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📚</span> Mes Revues &amp; Synthèses sauvegardées ({savedSyntheses.length})
+              </h3>
+              <button
+                type="button"
+                onClick={handleNewSynthesis}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.15)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                ➕ Nouvelle Recherche / Revue
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+              {savedSyntheses.map((s) => {
+                const isActive = activeSynthesisId === s.id;
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => handleOpenSynthesis(s)}
+                    style={{
+                      background: isActive ? 'rgba(13, 148, 136, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+                      border: isActive ? '1px solid #0d9488' : '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '10px',
+                      padding: '12px 14px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                        <h4 style={{ margin: 0, fontSize: '0.92rem', color: '#f1f5f9', fontWeight: 600, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          {s.title}
+                        </h4>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteSynthesis(e, s.id)}
+                          title="Supprimer cette revue"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: '#94a3b8',
+                            cursor: 'pointer',
+                            padding: '2px 4px',
+                            fontSize: '0.9rem'
+                          }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginBottom: '10px' }}>
+                        📅 {s.date} • 📄 {s.articlesCount || 0} article(s) PubMed
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenSynthesis(s);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '5px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(13, 148, 136, 0.4)',
+                          background: 'rgba(13, 148, 136, 0.2)',
+                          color: '#2dd4bf',
+                          fontSize: '0.76rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        📖 Ouvrir
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRegenerateSynthesis(s);
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '5px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(56, 189, 248, 0.4)',
+                          background: 'rgba(56, 189, 248, 0.15)',
+                          color: '#38bdf8',
+                          fontSize: '0.76rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🔄 Regénérer
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Formulaire de recherche */}
         <section className={styles.card} style={{ marginBottom: '2rem' }}>
@@ -671,7 +961,7 @@ export default function BiblioPage() {
 
           {/* Colonne Droite : Revue de la littérature IA */}
           {(isSynthesizing || synthesisResult) && (
-            <section className={styles.card}>
+            <section id="synthesis-result-section" className={styles.card}>
               <h2 className={styles.cardTitle}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -699,6 +989,13 @@ export default function BiblioPage() {
                     </span>
 
                     <div className={styles.actionsGroup}>
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#34d399' }}
+                        onClick={handleManualSaveSynthesis}
+                      >
+                        {savedSuccess ? '✓ Sauvegardé !' : '💾 Sauvegarder la revue'}
+                      </button>
                       <button className={styles.actionBtn} onClick={handleCopy}>
                         {copied ? '✓ Copié !' : '📋 Copier'}
                       </button>
@@ -711,6 +1008,13 @@ export default function BiblioPage() {
                         onClick={handleTransferToProtocol}
                       >
                         ⚡ Utiliser dans mon Protocole
+                      </button>
+                      <button
+                        className={styles.actionBtn}
+                        style={{ background: 'rgba(168, 85, 247, 0.25)', borderColor: '#a855f7', color: '#c084fc' }}
+                        onClick={handleTransferToStrobeArticle}
+                      >
+                        📝 Utiliser dans Article STROBE (Critère 3)
                       </button>
                     </div>
                   </div>

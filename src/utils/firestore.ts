@@ -161,6 +161,18 @@ export interface FirestoreArticle {
   formData?: any;
 }
 
+export interface FirestoreSynthesis {
+  id: string;
+  query: string;
+  title: string;
+  date: string;
+  articlesCount: number;
+  content: string;
+  articles: any[];
+  provider?: string;
+  createdAt?: any;
+}
+
 // 1. Profil utilisateur et Statistiques
 export async function syncUserProfile(
   uid: string, 
@@ -362,6 +374,43 @@ export async function deleteFirestoreArticle(uid: string, articleId: string) {
     await deleteDoc(articleDocRef);
   } catch (error) {
     console.error('❌ Erreur deleteFirestoreArticle:', error);
+  }
+}
+
+// Synthèses Bibliographiques
+export async function saveFirestoreSynthesis(uid: string, synthesis: FirestoreSynthesis) {
+  if (!isFirebaseEnabled || !db || !uid) return;
+  try {
+    const docRef = doc(db, 'users', uid, 'syntheses', synthesis.id);
+    await setDoc(docRef, {
+      ...synthesis,
+      createdAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.error('❌ Erreur saveFirestoreSynthesis:', error);
+  }
+}
+
+export async function loadFirestoreSyntheses(uid: string): Promise<FirestoreSynthesis[]> {
+  if (!isFirebaseEnabled || !db || !uid) return [];
+  try {
+    const synthesesRef = collection(db, 'users', uid, 'syntheses');
+    const q = query(synthesesRef, orderBy('createdAt', 'desc'));
+    const snap = await getDocsWithCacheFallback(q);
+    return snap.docs.map(d => d.data() as FirestoreSynthesis);
+  } catch (error) {
+    console.warn('⚠️ Erreur loadFirestoreSyntheses:', error);
+    return [];
+  }
+}
+
+export async function deleteFirestoreSynthesis(uid: string, synthesisId: string) {
+  if (!isFirebaseEnabled || !db || !uid) return;
+  try {
+    const docRef = doc(db, 'users', uid, 'syntheses', synthesisId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error('❌ Erreur deleteFirestoreSynthesis:', error);
   }
 }
 

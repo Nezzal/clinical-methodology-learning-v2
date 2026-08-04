@@ -47,6 +47,8 @@ function renderMarkdown(text: string): string {
   return formatted;
 }
 
+const DEFAULT_AI_DECLARATION = "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo&Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication.";
+
 export default function ArticleGenerator() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'info' | 'intro' | 'methodo' | 'results' | 'discussion' | 'funding'>('info');
@@ -78,6 +80,7 @@ export default function ArticleGenerator() {
   const [interpretation, setInterpretation] = useState('');
   const [generalisability, setGeneralisability] = useState('');
   const [funding, setFunding] = useState('');
+  const [aiDeclaration, setAiDeclaration] = useState(DEFAULT_AI_DECLARATION);
 
   const [generatedArticle, setGeneratedArticle] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -135,6 +138,20 @@ export default function ArticleGenerator() {
     }
   }, []);
 
+  const [strobeBiblioImportSuccess, setStrobeBiblioImportSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedStrobeBiblio = localStorage.getItem('recif_strobe_biblio_synthesis');
+      if (storedStrobeBiblio) {
+        setRationale(storedStrobeBiblio);
+        setActiveTab('intro');
+        setStrobeBiblioImportSuccess(true);
+        localStorage.removeItem('recif_strobe_biblio_synthesis');
+      }
+    }
+  }, []);
+
   const fillFormFields = (p: any) => {
     if (!p) return;
     setTitle(p.title || '');
@@ -161,6 +178,7 @@ export default function ArticleGenerator() {
     setInterpretation(p.interpretation || '');
     setGeneralisability(p.generalisability || '');
     setFunding(p.funding || '');
+    setAiDeclaration(p.aiDeclaration || DEFAULT_AI_DECLARATION);
   };
 
   const handleNewArticle = () => {
@@ -190,6 +208,7 @@ export default function ArticleGenerator() {
     setInterpretation('');
     setGeneralisability('');
     setFunding('');
+    setAiDeclaration(DEFAULT_AI_DECLARATION);
     setExtractionSuccess(false);
     setActiveTab('info');
   };
@@ -220,7 +239,7 @@ export default function ArticleGenerator() {
         title, studyType, abstract, rationale, objectives, design, setting, participants,
         variables, dataSources, bias, studySize, quantitativeVariables, statisticalMethods,
         participantsFlow, descriptiveData, outcomeData, mainResults, otherAnalyses,
-        keyResults, limitations, interpretation, generalisability, funding
+        keyResults, limitations, interpretation, generalisability, funding, aiDeclaration
       }
     };
 
@@ -329,7 +348,7 @@ export default function ArticleGenerator() {
           title, studyType, abstract, rationale, objectives, design, setting, participants,
           variables, dataSources, bias, studySize, quantitativeVariables, statisticalMethods,
           participantsFlow, descriptiveData, outcomeData, mainResults, otherAnalyses,
-          keyResults, limitations, interpretation, generalisability, funding
+          keyResults, limitations, interpretation, generalisability, funding, aiDeclaration
         })
       });
 
@@ -514,7 +533,7 @@ export default function ArticleGenerator() {
             )}
           </h1>
           <p className={styles.subtitle} style={{ margin: '0.25rem 0 0 0' }}>
-            Rédigez votre article scientifique pas-à-pas selon les 22 critères de publication STROBE.
+            Rédigez votre article scientifique pas-à-pas selon les 22 critères de publication <strong>STROBE</strong> et les normes éthiques de l&apos;<strong>ICMJE</strong> (<a href="https://www.icmje.org" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline' }}>icmje.org</a>).
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -542,6 +561,12 @@ export default function ArticleGenerator() {
       {extractionSuccess && (
         <div className={styles.successNotice}>
           🎉 <b>Bilan STROBE importé du Tuteur !</b> Les réponses synthétisées ont été chargées dans le formulaire. Vous pouvez maintenant relire les sections, compléter les données descriptives de vos résultats, puis cliquer sur <b>Générer l'article par l'IA</b>.
+        </div>
+      )}
+
+      {strobeBiblioImportSuccess && (
+        <div className={styles.successNotice} style={{ background: 'rgba(168, 85, 247, 0.15)', borderColor: '#a855f7', color: '#c084fc' }}>
+          🎉 <b>Revue PubMed importée !</b> La synthèse bibliographique a été injectée dans le <b>Contexte scientifique et justification (STROBE 3-4)</b> (Onglet 2 - Introduction).
         </div>
       )}
 
@@ -589,7 +614,7 @@ export default function ArticleGenerator() {
               className={`${styles.tabBtn} ${activeTab === 'funding' ? styles.activeTab : ''}`}
               onClick={() => setActiveTab('funding')}
             >
-              6. Financement
+              6. Financement &amp; IA
             </button>
           </div>
 
@@ -948,7 +973,7 @@ export default function ArticleGenerator() {
               </>
             )}
 
-            {/* 6. Financement */}
+            {/* 6. Financement & Déclaration IA */}
             {activeTab === 'funding' && (
               <>
                 <div className={styles.strobeFormGroup}>
@@ -959,10 +984,30 @@ export default function ArticleGenerator() {
                   <textarea
                     id="art-funding"
                     className={styles.strobeTextarea}
-                    rows={4}
+                    rows={3}
                     value={funding}
                     onChange={(e) => setFunding(e.target.value)}
                     placeholder="Indiquer les sources de financement et le rôle des financeurs pour la recherche présente..."
+                  />
+                </div>
+
+                <div className={styles.strobeFormGroup} style={{ marginTop: '1.5rem' }}>
+                  <div className={styles.strobeLabelHeader}>
+                    <label htmlFor="art-ai-declaration" className={styles.strobeLabel}>Déclaration d'utilisation de l'intelligence artificielle (IA)</label>
+                    <span className={styles.strobeBadge} style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.3)' }}>
+                      Transparence &amp; Éthique
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem', lineHeight: '1.4' }}>
+                    Déclaration d&apos;utilisation de l&apos;IA pré-remplie selon les recommandations éthiques officielles de l&apos;<strong>ICMJE</strong> (<a href="https://www.icmje.org" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'underline' }}>www.icmje.org</a>) &amp; STROBE. Vous pouvez personnaliser ce texte si nécessaire :
+                  </p>
+                  <textarea
+                    id="art-ai-declaration"
+                    className={styles.strobeTextarea}
+                    rows={5}
+                    value={aiDeclaration}
+                    onChange={(e) => setAiDeclaration(e.target.value)}
+                    placeholder="Déclaration sur l'utilisation de l'IA..."
                   />
                 </div>
               </>

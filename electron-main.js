@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, session } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
@@ -244,6 +244,15 @@ if (!gotTheLock) {
 
 // Démarrage de l'application
 app.whenReady().then(() => {
+  if (session && session.defaultSession) {
+    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+      if (permission === 'media' || permission === 'audioCapture' || permission === 'notifications') {
+        return callback(true);
+      }
+      callback(true);
+    });
+  }
+
   if (isDev) {
     createWindow(DEFAULT_PORT);
   } else {

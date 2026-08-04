@@ -65,8 +65,8 @@ export function getQuotaConfig(tier: SubscriptionTier): QuotaConfig {
         biblioMax: 20,
         reportsMax: 5,
         tuteurDailyMax: 100,
-        watermark: true,
-        watermarkText: 'FORMULE PRO — METHODO&CLINIQUE'
+        watermark: false,
+        watermarkText: ''
       };
     case 'expert':
     case 'ultra':

@@ -261,6 +261,7 @@ export default function Tuteur() {
   const [loading, setLoading] = useState(false);
   const [isRecognitionSupported, setIsRecognitionSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [activePlayingMessageIndex, setActivePlayingMessageIndex] = useState<number | null>(null);
   const [chatMode, setChatMode] = useState<'free' | 'protocol' | 'strobe' | null>(null);
   const [extracting, setExtracting] = useState(false);
@@ -312,6 +313,8 @@ export default function Tuteur() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesListRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const prevMessagesLengthRef = useRef(0);
   const prevActiveSessionIdRef = useRef<string | null>(null);
 
@@ -375,36 +378,122 @@ export default function Tuteur() {
     }
   };
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (typeof window === 'undefined') return;
-    
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (isTranscribing) return;
 
+    // Si le micro est actif, arrêter l'enregistrement
     if (isListening) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {
+          console.error(e);
+        }
+      }
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        try { recognitionRef.current.stop(); } catch (e) {}
       }
       setIsListening(false);
+      return;
+    }
+
+    // 1. Solution native MediaRecorder (fonctionne à 100% dans Electron et tous les navigateurs)
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && typeof MediaRecorder !== 'undefined') {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        let mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported('audio/webm')) {
+          if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+          else if (MediaRecorder.isTypeSupported('audio/ogg')) mimeType = 'audio/ogg';
+          else mimeType = '';
+        }
+
+        const options = mimeType ? { mimeType } : undefined;
+        const mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(track => track.stop());
+          setIsListening(false);
+
+          if (audioChunksRef.current.length === 0) return;
+          const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+          if (audioBlob.size < 800) return; // Trop court
+
+          setIsTranscribing(true);
+          try {
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async () => {
+              const base64Data = (reader.result as string).split(',')[1];
+              const response = await fetch('/api/transcribe', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  audio: base64Data,
+                  mimeType: mediaRecorder.mimeType || 'audio/webm'
+                })
+              });
+              const data = await response.json();
+              if (data.text) {
+                setInput((prev) => {
+                  const trimmed = prev.trim();
+                  return trimmed ? `${trimmed} ${data.text}` : data.text;
+                });
+              }
+              setIsTranscribing(false);
+            };
+          } catch (err) {
+            console.error("Erreur lors de la transcription :", err);
+            setIsTranscribing(false);
+          }
+        };
+
+        mediaRecorder.start(250);
+        setIsListening(true);
+        return;
+      }
+    } catch (mediaErr) {
+      console.warn("Accès MediaRecorder/micro indisponible, tentative WebSpeech fallback...", mediaErr);
+    }
+
+    // 2. Fallback WebSpeech API
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("L'accès au microphone n'est pas disponible.");
       return;
     }
 
     try {
       const recognition = new SpeechRecognition();
       recognition.lang = 'fr-FR';
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.continuous = true;
+      recognition.interimResults = true;
 
       recognition.onstart = () => {
         setIsListening(true);
       };
 
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript) {
+        let finalChunk = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalChunk += event.results[i][0].transcript;
+          }
+        }
+        if (finalChunk) {
           setInput((prev) => {
             const trimmed = prev.trim();
-            return trimmed ? `${trimmed} ${transcript}` : transcript;
+            return trimmed ? `${trimmed} ${finalChunk}` : finalChunk;
           });
         }
       };
@@ -536,7 +625,8 @@ export default function Tuteur() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
+      const hasMediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      if (SpeechRecognition || hasMediaDevices) {
         setIsRecognitionSupported(true);
       }
     }
@@ -2472,15 +2562,19 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                     type="button"
                     className={`${styles.micBtn} ${isListening ? styles.micBtnListening : ''}`}
                     onClick={toggleListening}
-                    disabled={loading}
-                    title={isListening ? "Arrêter l'écoute" : "Saisie vocale"}
+                    disabled={loading || isTranscribing}
+                    title={isTranscribing ? "Transcription IA en cours..." : (isListening ? "Enregistrement en cours... Cliquez pour terminer et transcrire" : "Dictée vocale")}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                      <line x1="12" y1="19" x2="12" y2="23" />
-                      <line x1="8" y1="23" x2="16" y2="23" />
-                    </svg>
+                    {isTranscribing ? (
+                      <span className={styles.spinner} style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                        <line x1="12" y1="19" x2="12" y2="23" />
+                        <line x1="8" y1="23" x2="16" y2="23" />
+                      </svg>
+                    )}
                   </button>
                 )}
                 <button

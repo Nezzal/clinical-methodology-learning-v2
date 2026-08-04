@@ -31,6 +31,16 @@ export interface LocalStats {
     content: string;
     formData?: any;
   }>;
+  recentSyntheses?: Array<{
+    id: string;
+    query: string;
+    title: string;
+    date: string;
+    articlesCount: number;
+    content: string;
+    articles: any[];
+    provider?: string;
+  }>;
   quizHistory?: QuizAttempt[];
 }
 
@@ -43,6 +53,7 @@ const DEFAULT_STATS: LocalStats = {
   recentQuestions: [],
   recentProtocols: [],
   recentArticles: [],
+  recentSyntheses: [],
   quizHistory: []
 };
 
