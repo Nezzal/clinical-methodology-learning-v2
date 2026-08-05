@@ -328,6 +328,19 @@ a {
    ============================================ */
 @media (max-width: 768px) {
 
+  /* --- VERROUILLAGE ANTI-DÉBORDEMENT HORIZONTAL SUR MOBILE --- */
+  html, body {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  main, section, article, div, p, li, h1, h2, h3, h4, h5, h6, a, span {
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+  }
+
   /* --- MAIN : annuler les styles inline desktop --- */
   main {
     margin-left: 0 !important;
