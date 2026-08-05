@@ -65,15 +65,23 @@ export function getSavedSynthesesFromLocal(): any[] {
   if (typeof window === 'undefined') return [];
   try {
     const data = localStorage.getItem(SYNTHESES_STORAGE_KEY);
-    if (data) return JSON.parse(data);
-    const statsData = localStorage.getItem(STORAGE_KEY);
-    if (statsData) {
-      const parsed = JSON.parse(statsData);
-      if (parsed.recentSyntheses && Array.isArray(parsed.recentSyntheses)) {
-        return parsed.recentSyntheses;
+    let list: any[] = [];
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        list = parsed;
       }
     }
-    return [];
+    if (list.length === 0) {
+      const statsData = localStorage.getItem(STORAGE_KEY);
+      if (statsData) {
+        const parsedStats = JSON.parse(statsData);
+        if (parsedStats.recentSyntheses && Array.isArray(parsedStats.recentSyntheses) && parsedStats.recentSyntheses.length > 0) {
+          list = parsedStats.recentSyntheses;
+        }
+      }
+    }
+    return list;
   } catch (e) {
     console.error('Error reading syntheses localStorage', e);
     return [];
@@ -84,7 +92,11 @@ export function saveSynthesesToLocal(syntheses: any[]) {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(SYNTHESES_STORAGE_KEY, JSON.stringify(syntheses));
+    const currentStats = getProgress();
+    const updatedStats = { ...currentStats, recentSyntheses: syntheses };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedStats));
     window.dispatchEvent(new Event('syntheses_changed'));
+    window.dispatchEvent(new Event('progress_changed'));
   } catch (e) {
     console.error('Error saving syntheses to localStorage', e);
   }

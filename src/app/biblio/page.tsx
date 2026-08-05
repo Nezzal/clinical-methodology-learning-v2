@@ -105,13 +105,10 @@ export default function BiblioPage() {
     };
 
     setActiveSynthesisId(newSynthItem.id);
-    let updatedList: FirestoreSynthesis[] = [];
-    setSavedSyntheses(prev => {
-      const filtered = prev.filter(s => s.id !== newSynthItem.id);
-      updatedList = [newSynthItem, ...filtered];
-      return updatedList;
-    });
+    const filtered = savedSyntheses.filter(s => s.id !== newSynthItem.id);
+    const updatedList = [newSynthItem, ...filtered];
 
+    setSavedSyntheses(updatedList);
     saveSynthesesToLocal(updatedList);
 
     if (user) {
