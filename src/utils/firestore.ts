@@ -382,8 +382,9 @@ export async function saveFirestoreSynthesis(uid: string, synthesis: FirestoreSy
   if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const docRef = doc(db, 'users', uid, 'syntheses', synthesis.id);
+    const cleanSynthesis = JSON.parse(JSON.stringify(synthesis));
     await setDoc(docRef, {
-      ...synthesis,
+      ...cleanSynthesis,
       createdAt: serverTimestamp()
     }, { merge: true });
   } catch (error) {
@@ -395,8 +396,14 @@ export async function loadFirestoreSyntheses(uid: string): Promise<FirestoreSynt
   if (!isFirebaseEnabled || !db || !uid) return [];
   try {
     const synthesesRef = collection(db, 'users', uid, 'syntheses');
-    const q = query(synthesesRef, orderBy('createdAt', 'desc'));
-    const snap = await getDocsWithCacheFallback(q);
+    let snap;
+    try {
+      const q = query(synthesesRef, orderBy('createdAt', 'desc'));
+      snap = await getDocsWithCacheFallback(q);
+    } catch (orderErr) {
+      console.warn('⚠️ Fallback query sans orderBy pour loadFirestoreSyntheses:', orderErr);
+      snap = await getDocsWithCacheFallback(synthesesRef);
+    }
     return snap.docs.map(d => d.data() as FirestoreSynthesis);
   } catch (error) {
     console.warn('⚠️ Erreur loadFirestoreSyntheses:', error);

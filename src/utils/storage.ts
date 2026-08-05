@@ -59,6 +59,36 @@ const DEFAULT_STATS: LocalStats = {
 
 
 const STORAGE_KEY = 'recif_methodology_progress';
+const SYNTHESES_STORAGE_KEY = 'recif_saved_syntheses_list';
+
+export function getSavedSynthesesFromLocal(): any[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(SYNTHESES_STORAGE_KEY);
+    if (data) return JSON.parse(data);
+    const statsData = localStorage.getItem(STORAGE_KEY);
+    if (statsData) {
+      const parsed = JSON.parse(statsData);
+      if (parsed.recentSyntheses && Array.isArray(parsed.recentSyntheses)) {
+        return parsed.recentSyntheses;
+      }
+    }
+    return [];
+  } catch (e) {
+    console.error('Error reading syntheses localStorage', e);
+    return [];
+  }
+}
+
+export function saveSynthesesToLocal(syntheses: any[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SYNTHESES_STORAGE_KEY, JSON.stringify(syntheses));
+    window.dispatchEvent(new Event('syntheses_changed'));
+  } catch (e) {
+    console.error('Error saving syntheses to localStorage', e);
+  }
+}
 
 export function getProgress(): LocalStats {
   if (typeof window === 'undefined') return DEFAULT_STATS;

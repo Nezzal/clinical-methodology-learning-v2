@@ -16,7 +16,7 @@ import {
   deleteFirestoreSynthesis, 
   FirestoreSynthesis 
 } from '@/utils/firestore';
-import { getProgress, updateProgress } from '@/utils/storage';
+import { getProgress, updateProgress, getSavedSynthesesFromLocal, saveSynthesesToLocal } from '@/utils/storage';
 
 const getBiblioCount = (): number => {
   if (typeof window === 'undefined') return 0;
@@ -67,7 +67,7 @@ export default function BiblioPage() {
   // Charger les synthèses depuis localStorage immédiatement, puis fusionner avec Firestore
   useEffect(() => {
     const fetchSyntheses = async () => {
-      const localSynths = (getProgress().recentSyntheses as FirestoreSynthesis[]) || [];
+      const localSynths = (getSavedSynthesesFromLocal() as FirestoreSynthesis[]) || [];
       setSavedSyntheses(localSynths);
 
       if (user) {
@@ -79,7 +79,7 @@ export default function BiblioPage() {
             localSynths.forEach(s => { if (!map.has(s.id)) map.set(s.id, s); });
             const merged = Array.from(map.values());
             setSavedSyntheses(merged);
-            updateProgress(stats => ({ ...stats, recentSyntheses: merged.slice(0, 15) }));
+            saveSynthesesToLocal(merged);
           }
         } catch (err) {
           console.error("Erreur lors de la récupération des synthèses Firestore:", err);
@@ -105,19 +105,14 @@ export default function BiblioPage() {
     };
 
     setActiveSynthesisId(newSynthItem.id);
+    let updatedList: FirestoreSynthesis[] = [];
     setSavedSyntheses(prev => {
       const filtered = prev.filter(s => s.id !== newSynthItem.id);
-      return [newSynthItem, ...filtered];
+      updatedList = [newSynthItem, ...filtered];
+      return updatedList;
     });
 
-    updateProgress((stats) => {
-      const currentList = (stats.recentSyntheses || []) as FirestoreSynthesis[];
-      const filtered = currentList.filter(s => s.id !== newSynthItem.id);
-      return {
-        ...stats,
-        recentSyntheses: [newSynthItem, ...filtered].slice(0, 15)
-      };
-    });
+    saveSynthesesToLocal(updatedList);
 
     if (user) {
       saveFirestoreSynthesis(user.uid, newSynthItem).catch(e => console.error("Erreur sauvegarde Firestore synthèse:", e));
@@ -158,16 +153,15 @@ export default function BiblioPage() {
     e.stopPropagation();
     if (!window.confirm("Voulez-vous vraiment supprimer définitivement cette revue de la littérature ?")) return;
 
-    setSavedSyntheses(prev => prev.filter(s => s.id !== sId));
+    setSavedSyntheses(prev => {
+      const next = prev.filter(s => s.id !== sId);
+      saveSynthesesToLocal(next);
+      return next;
+    });
     if (activeSynthesisId === sId) {
       setActiveSynthesisId(null);
       setSynthesisResult(null);
     }
-
-    updateProgress((stats) => ({
-      ...stats,
-      recentSyntheses: ((stats.recentSyntheses || []) as FirestoreSynthesis[]).filter(s => s.id !== sId)
-    }));
 
     if (user) {
       deleteFirestoreSynthesis(user.uid, sId).catch(e => console.error(e));
