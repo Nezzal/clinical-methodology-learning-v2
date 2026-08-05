@@ -502,33 +502,37 @@ export default function BiblioPage() {
         </header>
 
         {/* Historique des synthèses et revues sauvegardées */}
-        {savedSyntheses.length > 0 && (
-          <section className={styles.card} style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-              <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>📚</span> Mes Revues &amp; Synthèses sauvegardées ({savedSyntheses.length})
-              </h3>
-              <button
-                type="button"
-                onClick={handleNewSynthesis}
-                style={{
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  border: '1px solid rgba(56, 189, 248, 0.4)',
-                  color: '#38bdf8',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                ➕ Nouvelle Recherche / Revue
-              </button>
-            </div>
+        <section id="saved-syntheses-section" className={styles.card} style={{ marginBottom: '1.5rem', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>📚</span> Mes Revues &amp; Synthèses sauvegardées ({savedSyntheses.length})
+            </h3>
+            <button
+              type="button"
+              onClick={handleNewSynthesis}
+              style={{
+                background: 'rgba(56, 189, 248, 0.15)',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                color: '#38bdf8',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              ➕ Nouvelle Recherche / Revue
+            </button>
+          </div>
 
+          {savedSyntheses.length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: '0.88rem', margin: 0, padding: '0.5rem 0' }}>
+              Aucune revue sauvegardée pour l&apos;instant. Effectuez une recherche ci-dessous et cliquez sur <strong>💾 Sauvegarder la revue</strong> pour la retrouver ici à tout moment.
+            </p>
+          ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
               {savedSyntheses.map((s) => {
                 const isActive = activeSynthesisId === s.id;
@@ -583,17 +587,21 @@ export default function BiblioPage() {
                         }}
                         style={{
                           flex: 1,
-                          padding: '5px 8px',
+                          padding: '6px 10px',
                           borderRadius: '6px',
-                          border: '1px solid rgba(13, 148, 136, 0.4)',
-                          background: 'rgba(13, 148, 136, 0.2)',
+                          border: '1px solid rgba(13, 148, 136, 0.5)',
+                          background: 'rgba(13, 148, 136, 0.25)',
                           color: '#2dd4bf',
-                          fontSize: '0.76rem',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
                         }}
                       >
-                        📖 Ouvrir
+                        📖 Ouvrir la revue
                       </button>
                       <button
                         type="button"
@@ -603,14 +611,18 @@ export default function BiblioPage() {
                         }}
                         style={{
                           flex: 1,
-                          padding: '5px 8px',
+                          padding: '6px 10px',
                           borderRadius: '6px',
                           border: '1px solid rgba(56, 189, 248, 0.4)',
                           background: 'rgba(56, 189, 248, 0.15)',
                           color: '#38bdf8',
-                          fontSize: '0.76rem',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
                         }}
                       >
                         🔄 Regénérer
@@ -620,8 +632,8 @@ export default function BiblioPage() {
                 );
               })}
             </div>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* Formulaire de recherche */}
         <section className={styles.card} style={{ marginBottom: '2rem' }}>
@@ -995,6 +1007,16 @@ export default function BiblioPage() {
                         onClick={handleManualSaveSynthesis}
                       >
                         {savedSuccess ? '✓ Sauvegardé !' : '💾 Sauvegarder la revue'}
+                      </button>
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.2)' }}
+                        onClick={() => {
+                          const el = document.getElementById('saved-syntheses-section');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                      >
+                        📚 Mes Revues Sauvegardées ({savedSyntheses.length})
                       </button>
                       <button className={styles.actionBtn} onClick={handleCopy}>
                         {copied ? '✓ Copié !' : '📋 Copier'}
