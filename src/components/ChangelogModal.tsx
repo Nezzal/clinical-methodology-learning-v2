@@ -33,6 +33,50 @@ const RELEASES: ReleaseItem[] = [
     ]
   },
   {
+    version: 'v2.0.4',
+    date: '4 Août 2026',
+    title: 'Navigation Transversale & Sélecteur Rapide dans le Tuteur Virtuel',
+    tags: ['Tuteur IA', 'Navigation', 'Volets Pédagogiques', 'UX'],
+    features: [
+      'Ajout du bouton d\'accès direct au Volet d\'accueil depuis l\'interface du Tuteur Virtuel.',
+      'Intégration d\'un sélecteur rapide de volets pédagogiques pour basculer facilement entre le tuteur, les quiz et les flashcards.',
+      'Optimisation des transitions de volets et conservation du contexte de discussion.'
+    ]
+  },
+  {
+    version: 'v2.0.3',
+    date: '4 Août 2026',
+    title: 'Authentification Google Auth par Redirection & Logs Pédagogiques',
+    tags: ['Google Auth', 'Redirect Fallback', 'Sécurité', 'Logs'],
+    features: [
+      'Ajout du mode de repli par redirection (signInWithRedirect) lorsque le navigateur ou le bloqueur de fenêtres surgissantes empêche les popups Google Auth.',
+      'Journalisation détaillée des erreurs d\'authentification et affichage de messages d\'aide pédagogiques en français.',
+      'Gestion améliorée des exceptions réseau lors de la première connexion.'
+    ]
+  },
+  {
+    version: 'v2.0.2',
+    date: '3 Août 2026',
+    title: 'Correction Authentification OAuth Electron & Synchronisation Licences Admin',
+    tags: ['Electron', 'Google OAuth', 'Licences Admin', 'Desktop'],
+    features: [
+      'Résolution du blocage des popups d\'authentification Google OAuth dans l\'environnement Desktop Electron.',
+      'Alignement synchrone entre le statut d\'administrateur et l\'état de la licence hors-ligne sur PC et Mac.',
+      'Sécurisation des jetons de session lors de l\'initialisation hors-ligne.'
+    ]
+  },
+  {
+    version: 'v2.0.1',
+    date: '3 Août 2026',
+    title: 'Synchronisation Firestore Desktop & Purge des Comptes Fantômes',
+    tags: ['Firestore Sync', 'Desktop', 'Purge Comptes', 'Espace Superviseur'],
+    features: [
+      'Stabilisation du flux de synchronisation Firestore pour l\'application Desktop Electron.',
+      'Filtrage automatique et purge définitive des comptes utilisateurs orphelins sans e-mail dans l\'Espace Superviseur.',
+      'Invalidation du cache local pour aligner les comptes utilisateurs avec l\'authentification serveur.'
+    ]
+  },
+  {
     version: 'v2.0.0',
     date: '2 Août 2026',
     title: 'Lancement Officiel de la Version 2.0 & Système de Design UI/UX',
