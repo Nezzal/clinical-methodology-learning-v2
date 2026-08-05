@@ -373,9 +373,10 @@
   border-radius: 8px;
   border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.15));
   background: rgba(30, 41, 59, 0.8);
-  color: #f8fafc;
+  color: #f8fafc !important;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600 !important;
+  opacity: 1 !important;
   cursor: pointer;
   display: inline-flex;
   align-items: center;

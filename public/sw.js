@@ -1,4 +1,4 @@
-const CACHE_NAME = 'methodoclinique-pwa-v1';
+const CACHE_NAME = 'methodoclinique-pwa-v2.0.7';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
