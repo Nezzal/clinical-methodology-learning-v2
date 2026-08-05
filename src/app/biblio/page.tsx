@@ -1003,14 +1003,14 @@ export default function BiblioPage() {
                     <div className={styles.actionsGroup}>
                       <button 
                         className={styles.actionBtn} 
-                        style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#34d399' }}
+                        style={{ background: 'rgba(16, 185, 129, 0.25)', borderColor: '#10b981', color: '#34d399', fontWeight: 600 }}
                         onClick={handleManualSaveSynthesis}
                       >
                         {savedSuccess ? '✓ Sauvegardé !' : '💾 Sauvegarder la revue'}
                       </button>
                       <button 
                         className={styles.actionBtn} 
-                        style={{ background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.2)' }}
+                        style={{ background: 'rgba(13, 148, 136, 0.25)', borderColor: '#0d9488', color: '#2dd4bf', fontWeight: 600 }}
                         onClick={() => {
                           const el = document.getElementById('saved-syntheses-section');
                           if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -1018,22 +1018,30 @@ export default function BiblioPage() {
                       >
                         📚 Mes Revues Sauvegardées ({savedSyntheses.length})
                       </button>
-                      <button className={styles.actionBtn} onClick={handleCopy}>
-                        {copied ? '✓ Copié !' : '📋 Copier'}
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#f8fafc', fontWeight: 600 }}
+                        onClick={handleCopy}
+                      >
+                        {copied ? '✓ Copié !' : '📋 Copier le texte'}
                       </button>
-                      <button className={styles.actionBtn} onClick={handleDownload}>
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#f8fafc', fontWeight: 600 }}
+                        onClick={handleDownload}
+                      >
                         📥 Télécharger (.md)
                       </button>
                       <button
                         className={styles.actionBtn}
-                        style={{ background: 'rgba(14, 165, 233, 0.25)', borderColor: '#38bdf8' }}
+                        style={{ background: 'rgba(14, 165, 233, 0.25)', borderColor: '#38bdf8', color: '#38bdf8', fontWeight: 600 }}
                         onClick={handleTransferToProtocol}
                       >
                         ⚡ Utiliser dans mon Protocole
                       </button>
                       <button
                         className={styles.actionBtn}
-                        style={{ background: 'rgba(168, 85, 247, 0.25)', borderColor: '#a855f7', color: '#c084fc' }}
+                        style={{ background: 'rgba(168, 85, 247, 0.25)', borderColor: '#a855f7', color: '#c084fc', fontWeight: 600 }}
                         onClick={handleTransferToStrobeArticle}
                       >
                         📝 Utiliser dans Article STROBE (Critère 3)

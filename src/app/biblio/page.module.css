@@ -659,7 +659,7 @@
   .synthesisBody {
     font-size: 0.9rem;
     line-height: 1.6;
-    overflow-x: hidden;
+    overflow-x: visible;
     word-break: break-word;
     overflow-wrap: break-word;
     width: 100%;
