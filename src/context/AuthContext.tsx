@@ -508,27 +508,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     syncOnLogin();
   }, [user]);
 
-  // Écoute de l'activité pour mettre à jour la présence (heartbeat toutes les 60s)
+  // Écoute de l'activité pour mettre à jour la présence (heartbeat toutes les 45s) et journal d'accès
   useEffect(() => {
-    if (!user || !role) return;
+    if (!user) return;
 
-    if (role === 'admin' || role === 'teacher') return; // Ne pas tracker les administrateurs/enseignants
+    // Enregistrer l'activité et le journal de connexion immédiatement
+    updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat initial error:", err));
+    recordAccessLog(user.uid, user.email || '', user.displayName || profile?.displayName || '');
 
-    // Si on est en mode admin hors-ligne, ne pas tracker l'activité
-    if (typeof window !== 'undefined' && localStorage.getItem('offline_admin_active') === 'true') {
-      return;
-    }
-
-    // Mettre à jour immédiatement
-    updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat error (mode hors-ligne ou réseau) :", err));
-
-    // Puis périodiquement toutes les 60 secondes
+    // Puis périodiquement toutes les 45 secondes
     const interval = setInterval(() => {
-      updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat error (mode hors-ligne ou réseau) :", err));
-    }, 60000);
+      updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat error:", err));
+    }, 45000);
 
     return () => clearInterval(interval);
-  }, [user, role]);
+  }, [user]);
 
   const signInWithGoogle = async () => {
     if (!isFirebaseEnabled || !auth) throw new Error('Firebase non configuré');

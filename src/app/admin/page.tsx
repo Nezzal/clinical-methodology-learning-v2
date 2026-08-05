@@ -1428,10 +1428,12 @@ Votre superviseur`;
       setCheckingAdmin(false);
       fetchStudents();
       fetchRequests();
+      fetchAccessLogs();
 
       const interval = setInterval(() => {
         fetchStudents();
-      }, 30000);
+        fetchAccessLogs();
+      }, 15000);
 
       return () => clearInterval(interval);
     }

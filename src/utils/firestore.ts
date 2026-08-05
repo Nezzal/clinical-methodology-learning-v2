@@ -213,6 +213,7 @@ export async function syncUserProfile(
         flashcardsMastered: stats.flashcardsMastered || [],
         quizHistory: stats.quizHistory || []
       },
+      lastActive: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
@@ -645,7 +646,7 @@ export async function createStudentAccountDirectly(name: string, email: string, 
 }
 
 export async function updateUserLastActive(uid: string) {
-  if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
+  if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const userDocRef = doc(db, 'users', uid);
     await setDoc(userDocRef, { lastActive: serverTimestamp() }, { merge: true });
