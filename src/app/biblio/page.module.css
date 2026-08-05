@@ -597,9 +597,34 @@
   white-space: nowrap;
 }
 
-.deleteArticleBtn:hover {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
+
+
+@media (max-width: 768px) {
+  .searchBarRow {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .searchInput {
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .searchBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+  }
 }
+
 
