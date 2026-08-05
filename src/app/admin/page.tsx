@@ -3484,47 +3484,66 @@ Votre superviseur`;
                       <th>Utilisateur</th>
                       <th>Email</th>
                       <th>Plateforme</th>
+                      <th>Durée Session</th>
                     </tr>
                   </thead>
                   <tbody>
                     {accessLogsList.length === 0 ? (
                       <tr>
-                        <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                        <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                           {loadingAccessLogs ? 'Chargement des accès...' : 'Aucune connexion enregistrée dans le journal.'}
                         </td>
                       </tr>
                     ) : (
-                      accessLogsList.map((log, lIdx) => (
-                        <tr key={log.id || `log-${lIdx}`}>
-                          <td>
-                            <div style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '0.85rem' }}>
-                              📅 {log.dateStr || 'Aujourd\'hui'}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                              🕒 {log.timeStr || 'Récemment'}
-                            </div>
-                          </td>
-                          <td>
-                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{log.displayName || 'Utilisateur'}</span>
-                          </td>
-                          <td>
-                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{log.email || '—'}</span>
-                          </td>
-                          <td>
-                            <span style={{ 
-                              padding: '0.15rem 0.5rem', 
-                              borderRadius: '4px', 
-                              fontSize: '0.72rem', 
-                              fontWeight: 'bold',
-                              background: log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                              color: log.platform?.includes('Electron') ? '#c084fc' : '#38bdf8',
-                              border: `1px solid ${log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
-                            }}>
-                              {log.platform || 'Web'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
+                      accessLogsList.map((log, lIdx) => {
+                        const isLive = log.status === 'active' || (log.lastPingMs && (Date.now() - log.lastPingMs < 3 * 60 * 1000));
+                        const durationMins = log.durationMins || 1;
+                        const durationStr = durationMins < 60 ? `${durationMins} min` : `${Math.floor(durationMins / 60)} h ${durationMins % 60} min`;
+                        return (
+                          <tr key={log.id || `log-${lIdx}`}>
+                            <td>
+                              <div style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '0.85rem' }}>
+                                📅 {log.dateStr || 'Aujourd\'hui'}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                🕒 {log.timeStr || 'Récemment'}
+                              </div>
+                            </td>
+                            <td>
+                              <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{log.displayName || 'Utilisateur'}</span>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{log.email || '—'}</span>
+                            </td>
+                            <td>
+                              <span style={{ 
+                                padding: '0.15rem 0.5rem', 
+                                borderRadius: '4px', 
+                                fontSize: '0.72rem', 
+                                fontWeight: 'bold',
+                                background: log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                                color: log.platform?.includes('Electron') ? '#c084fc' : '#38bdf8',
+                                border: `1px solid ${log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
+                              }}>
+                                {log.platform || 'Web'}
+                              </span>
+                            </td>
+                            <td>
+                              <span style={{
+                                padding: '0.2rem 0.55rem',
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                background: isLive ? 'rgba(52, 211, 153, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                color: isLive ? '#34d399' : '#94a3b8',
+                                border: `1px solid ${isLive ? 'rgba(52, 211, 153, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`
+                              }}>
+                                {isLive ? `🟢 En cours (${durationStr})` : `⚪ ${durationStr}`}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

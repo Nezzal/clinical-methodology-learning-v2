@@ -26,6 +26,8 @@ import {
   saveFirestoreProtocol,
   updateUserLastActive,
   recordAccessLog,
+  updateAccessLogPing,
+  closeAccessLog,
   FirestoreUser
 } from '@/utils/firestore';
 
@@ -508,20 +510,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     syncOnLogin();
   }, [user]);
 
-  // Écoute de l'activité pour mettre à jour la présence (heartbeat toutes les 45s) et journal d'accès
+  // Écoute de l'activité pour mettre à jour la présence (heartbeat toutes les 45s) et la durée du journal d'accès
   useEffect(() => {
     if (!user) return;
 
+    let currentLogId: string | null = null;
+    const startTimeMs = Date.now();
+
     // Enregistrer l'activité et le journal de connexion immédiatement
     updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat initial error:", err));
-    recordAccessLog(user.uid, user.email || '', user.displayName || profile?.displayName || '');
+    recordAccessLog(user.uid, user.email || '', user.displayName || profile?.displayName || '').then(id => {
+      currentLogId = id;
+    });
 
     // Puis périodiquement toutes les 45 secondes
     const interval = setInterval(() => {
       updateUserLastActive(user.uid).catch(err => console.warn("⚠️ Heartbeat error:", err));
+      if (currentLogId) {
+        updateAccessLogPing(currentLogId, startTimeMs);
+      }
     }, 45000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (currentLogId) {
+        closeAccessLog(currentLogId, startTimeMs);
+      }
+    };
   }, [user]);
 
   const signInWithGoogle = async () => {

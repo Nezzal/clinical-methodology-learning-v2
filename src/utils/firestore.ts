@@ -549,18 +549,23 @@ export interface FirestoreAccessLog {
   email: string;
   displayName: string;
   timestamp: any;
+  startTimeMs?: number;
+  lastPingMs?: number;
+  durationMins?: number;
+  status?: 'active' | 'closed';
   dateStr: string;
   timeStr: string;
   platform: string;
 }
 
-export async function recordAccessLog(uid: string, email: string, displayName?: string) {
-  if (!isFirebaseEnabled || !db || !uid) return;
+export async function recordAccessLog(uid: string, email: string, displayName?: string): Promise<string | null> {
+  if (!isFirebaseEnabled || !db || !uid) return null;
   try {
     const isElectron = typeof window !== 'undefined' && (window as any).electron !== undefined;
     const platform = isElectron ? 'Application Desktop Electron' : 'Navigateur Web';
     const now = new Date();
-    const logId = `log_${uid}_${Date.now()}`;
+    const startTimeMs = now.getTime();
+    const logId = `log_${uid}_${startTimeMs}`;
     const logRef = doc(db, 'access_logs', logId);
     
     await setDoc(logRef, {
@@ -569,12 +574,50 @@ export async function recordAccessLog(uid: string, email: string, displayName?: 
       email: email || 'Sans email',
       displayName: displayName || email?.split('@')[0] || 'Utilisateur',
       timestamp: serverTimestamp(),
+      startTimeMs,
+      lastPingMs: startTimeMs,
+      durationMins: 1,
+      status: 'active',
       dateStr: now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
       timeStr: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
       platform
     });
+    return logId;
   } catch (error) {
     console.warn('⚠️ Erreur enregistrement journal accès:', error);
+    return null;
+  }
+}
+
+export async function updateAccessLogPing(logId: string, startTimeMs: number) {
+  if (!isFirebaseEnabled || !db || !logId) return;
+  try {
+    const logRef = doc(db, 'access_logs', logId);
+    const nowMs = Date.now();
+    const durationMins = Math.max(1, Math.round((nowMs - (startTimeMs || nowMs)) / 60000));
+    await setDoc(logRef, {
+      lastPingMs: nowMs,
+      durationMins,
+      status: 'active'
+    }, { merge: true });
+  } catch (error) {
+    console.warn('⚠️ Erreur mise à jour ping session:', error);
+  }
+}
+
+export async function closeAccessLog(logId: string, startTimeMs: number) {
+  if (!isFirebaseEnabled || !db || !logId) return;
+  try {
+    const logRef = doc(db, 'access_logs', logId);
+    const nowMs = Date.now();
+    const durationMins = Math.max(1, Math.round((nowMs - (startTimeMs || nowMs)) / 60000));
+    await setDoc(logRef, {
+      lastPingMs: nowMs,
+      durationMins,
+      status: 'closed'
+    }, { merge: true });
+  } catch (error) {
+    console.warn('⚠️ Erreur fermeture log session:', error);
   }
 }
 
