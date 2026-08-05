@@ -390,6 +390,27 @@ a {
     gap: 0.5rem !important;
   }
 
+  /* --- GROUPE D'ACTIONS RESPONSIVES (/biblio) --- */
+  div[class*="actionsGroup"] {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 0.5rem !important;
+  }
+
+  button[class*="actionBtn"], div[class*="actionsGroup"] > button {
+    width: 100% !important;
+    min-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0.65rem 0.85rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+  }
+
   /* ===========================================
      CARTES DE SÉLECTION DE MODE
      =========================================== */

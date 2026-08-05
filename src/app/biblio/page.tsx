@@ -991,30 +991,60 @@ export default function BiblioPage() {
                     <div className={styles.actionsGroup}>
                       <button 
                         className={styles.actionBtn} 
-                        style={{ background: 'rgba(16, 185, 129, 0.2)', borderColor: '#10b981', color: '#34d399' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '46px', background: '#059669', borderColor: '#10b981', color: '#ffffff', padding: '0.65rem 1rem', borderRadius: '10px', cursor: 'pointer' }}
                         onClick={handleManualSaveSynthesis}
                       >
-                        {savedSuccess ? '✓ Sauvegardé !' : '💾 Sauvegarder la revue'}
+                        <span style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: 700, display: 'inline-block' }}>
+                          {savedSuccess ? '✓ Sauvegardé !' : '💾 Sauvegarder la revue'}
+                        </span>
                       </button>
-                      <button className={styles.actionBtn} onClick={handleCopy}>
-                        {copied ? '✓ Copié !' : '📋 Copier'}
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '46px', background: '#0d9488', borderColor: '#2dd4bf', color: '#ffffff', padding: '0.65rem 1rem', borderRadius: '10px', cursor: 'pointer' }}
+                        onClick={() => {
+                          const el = document.getElementById('saved-syntheses-section');
+                          if (el) el.scrollIntoView({ behavior: 'smooth' });
+                        }}
+                      >
+                        <span style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: 700, display: 'inline-block' }}>
+                          📚 Mes Revues Sauvegardées ({savedSyntheses.length})
+                        </span>
                       </button>
-                      <button className={styles.actionBtn} onClick={handleDownload}>
-                        📥 Télécharger (.md)
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '46px', background: '#334155', borderColor: '#475569', color: '#ffffff', padding: '0.65rem 1rem', borderRadius: '10px', cursor: 'pointer' }}
+                        onClick={handleCopy}
+                      >
+                        <span style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: 700, display: 'inline-block' }}>
+                          {copied ? '✓ Copié !' : '📋 Copier le texte'}
+                        </span>
+                      </button>
+                      <button 
+                        className={styles.actionBtn} 
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '46px', background: '#334155', borderColor: '#475569', color: '#ffffff', padding: '0.65rem 1rem', borderRadius: '10px', cursor: 'pointer' }}
+                        onClick={handleDownload}
+                      >
+                        <span style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: 700, display: 'inline-block' }}>
+                          📥 Télécharger (.md)
+                        </span>
                       </button>
                       <button
                         className={styles.actionBtn}
-                        style={{ background: 'rgba(14, 165, 233, 0.25)', borderColor: '#38bdf8' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '46px', background: '#0284c7', borderColor: '#38bdf8', color: '#ffffff', padding: '0.65rem 1rem', borderRadius: '10px', cursor: 'pointer' }}
                         onClick={handleTransferToProtocol}
                       >
-                        ⚡ Utiliser dans mon Protocole
+                        <span style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: 700, display: 'inline-block' }}>
+                          ⚡ Utiliser dans mon Protocole
+                        </span>
                       </button>
                       <button
                         className={styles.actionBtn}
-                        style={{ background: 'rgba(168, 85, 247, 0.25)', borderColor: '#a855f7', color: '#c084fc' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minHeight: '46px', background: '#9333ea', borderColor: '#c084fc', color: '#ffffff', padding: '0.65rem 1rem', borderRadius: '10px', cursor: 'pointer' }}
                         onClick={handleTransferToStrobeArticle}
                       >
-                        📝 Utiliser dans Article STROBE (Critère 3)
+                        <span style={{ color: '#ffffff', fontSize: '0.88rem', fontWeight: 700, display: 'inline-block' }}>
+                          📝 Utiliser dans Article STROBE (Critère 3)
+                        </span>
                       </button>
                     </div>
                   </div>
