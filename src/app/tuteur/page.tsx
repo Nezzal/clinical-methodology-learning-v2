@@ -269,8 +269,13 @@ export default function Tuteur() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('recif_tuteur_discussion_collapsed') === 'true';
-      setIsDiscussionCollapsed(saved);
+      const isMobile = window.innerWidth <= 768;
+      const saved = localStorage.getItem('recif_tuteur_discussion_collapsed');
+      if (saved !== null) {
+        setIsDiscussionCollapsed(saved === 'true');
+      } else if (isMobile) {
+        setIsDiscussionCollapsed(true);
+      }
     }
   }, []);
 
