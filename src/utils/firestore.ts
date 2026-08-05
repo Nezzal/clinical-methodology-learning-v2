@@ -639,6 +639,30 @@ export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
   }
 }
 
+export async function deleteAccessLog(logId: string) {
+  if (!isFirebaseEnabled || !db || !logId) return;
+  try {
+    const logRef = doc(db, 'access_logs', logId);
+    await deleteDoc(logRef);
+  } catch (error) {
+    console.error('❌ Erreur suppression log accès:', error);
+    throw error;
+  }
+}
+
+export async function clearAllAccessLogs() {
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const logsRef = collection(db, 'access_logs');
+    const snap = await getDocsWithCacheFallback(logsRef);
+    const promises = snap.docs.map(d => deleteDoc(d.ref));
+    await Promise.all(promises);
+  } catch (error) {
+    console.error('❌ Erreur vidage journal accès:', error);
+    throw error;
+  }
+}
+
 export async function updateUserDisplayName(uid: string, displayName: string) {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {

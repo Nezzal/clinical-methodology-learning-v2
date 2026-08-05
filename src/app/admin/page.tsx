@@ -23,6 +23,8 @@ import {
   deleteSupportMessage,
   FirestoreSupportMessage,
   loadAccessLogs,
+  deleteAccessLog,
+  clearAllAccessLogs,
   FirestoreAccessLog
 } from '@/utils/firestore';
 import SubscriptionModal from '@/components/SubscriptionModal';
@@ -227,6 +229,28 @@ export default function AdminDashboard() {
       console.warn("Erreur chargement journal des accès:", e);
     } finally {
       setLoadingAccessLogs(false);
+    }
+  };
+
+  const handleDeleteAccessLog = async (logId: string) => {
+    if (!window.confirm("Voulez-vous vraiment supprimer cet enregistrement du journal d'accès ?")) return;
+    try {
+      await deleteAccessLog(logId);
+      setAccessLogsList(prev => prev.filter(l => l.id !== logId));
+    } catch (e) {
+      alert("Erreur lors de la suppression de l'accès.");
+    }
+  };
+
+  const handleClearAllAccessLogs = async () => {
+    if (accessLogsList.length === 0) return;
+    if (!window.confirm(`Voulez-vous vraiment vider intégralement tout le journal d'accès (${accessLogsList.length} entrées) ?`)) return;
+    try {
+      await clearAllAccessLogs();
+      setAccessLogsList([]);
+      alert("Le journal d'accès a été intégralement vidé.");
+    } catch (e) {
+      alert("Erreur lors du vidage du journal d'accès.");
     }
   };
   const [previewReceiptModal, setPreviewReceiptModal] = useState<{ title: string; image: string; email: string } | null>(null);
@@ -3464,16 +3488,27 @@ Votre superviseur`;
             <div style={{ padding: '0.5rem 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-                  Historique et journal chronologique de toutes les connexions ({accessLogsList.length} enregistrements)
+                  Journal des accès successifs ({accessLogsList.length} connexions répertoriées)
                 </div>
-                <button
-                  className="btn btn-secondary"
-                  style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
-                  onClick={fetchAccessLogs}
-                  disabled={loadingAccessLogs}
-                >
-                  {loadingAccessLogs ? 'Chargement...' : '🔄 Rafraîchir le journal'}
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
+                    onClick={fetchAccessLogs}
+                    disabled={loadingAccessLogs}
+                  >
+                    {loadingAccessLogs ? 'Chargement...' : '🔄 Rafraîchir'}
+                  </button>
+                  {accessLogsList.length > 0 && (
+                    <button
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem', background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                      onClick={handleClearAllAccessLogs}
+                    >
+                      🧹 Vider tout le journal
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className={styles.tableContainer}>
@@ -3485,12 +3520,13 @@ Votre superviseur`;
                       <th>Email</th>
                       <th>Plateforme</th>
                       <th>Durée Session</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {accessLogsList.length === 0 ? (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                        <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                           {loadingAccessLogs ? 'Chargement des accès...' : 'Aucune connexion enregistrée dans le journal.'}
                         </td>
                       </tr>
@@ -3540,6 +3576,16 @@ Votre superviseur`;
                               }}>
                                 {isLive ? `🟢 En cours (${durationStr})` : `⚪ ${durationStr}`}
                               </span>
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-secondary"
+                                style={{ padding: '0.25rem 0.55rem', fontSize: '0.72rem', background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                                onClick={() => handleDeleteAccessLog(log.id)}
+                                title="Supprimer cet enregistrement"
+                              >
+                                🗑️ Supprimer
+                              </button>
                             </td>
                           </tr>
                         );
