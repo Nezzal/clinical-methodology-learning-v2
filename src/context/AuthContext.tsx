@@ -272,10 +272,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('guest_mode_active');
 
         if (typeof window !== 'undefined') {
-          const sessionLoggedKey = `recif_logged_session_${currentUser.uid}`;
-          if (!sessionStorage.getItem(sessionLoggedKey)) {
-            sessionStorage.setItem(sessionLoggedKey, 'true');
-            recordAccessLog(currentUser.uid, currentUser.email || '', currentUser.displayName || '');
+          const sessionLoggedKey = `recif_logged_session_${currentUser.uid}_${Date.now()}`;
+          if (!sessionStorage.getItem('recif_active_log_id')) {
+            recordAccessLog(currentUser.uid, currentUser.email || '', currentUser.displayName || '').then(id => {
+              if (id && typeof window !== 'undefined') {
+                sessionStorage.setItem('recif_active_log_id', id);
+              }
+            });
           }
         }
 
@@ -650,6 +653,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('offline_admin_active');
     localStorage.removeItem('offline_admin_email');
     localStorage.removeItem('recif_offline_license');
+    if (typeof window !== 'undefined') {
+      sessionStorage.clear();
+    }
     
     if (isFirebaseEnabled && auth) {
       try {
