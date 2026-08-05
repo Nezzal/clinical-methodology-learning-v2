@@ -20,8 +20,20 @@ interface ReleaseItem {
 
 const RELEASES: ReleaseItem[] = [
   {
+    version: 'v2.0.6',
+    date: '5 Août 2026',
+    title: 'Sécurisation du Coffre-Fort de Revues, Refonte UI /biblio & Protection Firestore',
+    tags: ['Coffre-Fort Revues', 'Refonte UI', 'PubMed', 'Protection Cloud', 'Article STROBE'],
+    features: [
+      'Sécurisation et isolation du coffre-fort local de revues bibliographiques (recif_saved_syntheses_list) contre l\'effacement accidentel.',
+      'Refonte d\'affichage et lisibilité haute visibilité des 6 boutons d\'action de la revue bibliographique.',
+      'Correction du bogue de persistance lors du changement d\'onglet et double synchronisation des clés de stockage.',
+      'Sanitisation automatique des objets avant envoi à Cloud Firestore et requêtes de secours (fallback) sans erreur de permissions.',
+      'Déclaration automatique d\'assistance IA dans le module Rédacteur d\'Article STROBE (Critère 3) et double transfert PubMed.'
+    ]
+  },
+  {
     version: 'v2.0.0',
-    isCurrent: true,
     date: '2 Août 2026',
     title: 'Lancement Officiel de la Version 2.0 & Système de Design UI/UX',
     tags: ['UI/UX Redesign', 'Design System', 'Figtree & Inter', 'Medical Teal', 'WCAG AA'],
@@ -259,16 +271,18 @@ export default function ChangelogModal({ isOpen, onClose }: ChangelogModalProps)
         </header>
 
         <div className={styles.modalBody}>
-          {RELEASES.map((rel, index) => (
-            <div
-              key={index}
-              className={`${styles.timelineItem} ${rel.isCurrent ? styles.timelineItemActive : ''}`}
-            >
-              <div className={styles.timelineHeader}>
-                <span className={styles.versionTag}>{rel.version}</span>
-                {rel.isCurrent && <span className={styles.currentBadge}>Version Actuelle</span>}
-                <span className={styles.releaseDate}>{rel.date}</span>
-              </div>
+          {RELEASES.map((rel, index) => {
+            const isCurrentVersion = rel.version === `v${APP_VERSION}` || (index === 0 && !RELEASES.some(r => r.version === `v${APP_VERSION}`));
+            return (
+              <div
+                key={index}
+                className={`${styles.timelineItem} ${isCurrentVersion ? styles.timelineItemActive : ''}`}
+              >
+                <div className={styles.timelineHeader}>
+                  <span className={styles.versionTag}>{rel.version}</span>
+                  {isCurrentVersion && <span className={styles.currentBadge}>Version Actuelle</span>}
+                  <span className={styles.releaseDate}>{rel.date}</span>
+                </div>
               <div className={styles.releaseTitle}>{rel.title}</div>
               <div className={styles.tagRow}>
                 {rel.tags.map((tag, tIdx) => (
@@ -281,7 +295,8 @@ export default function ChangelogModal({ isOpen, onClose }: ChangelogModalProps)
                 ))}
               </ul>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <footer className={styles.modalFooter}>
