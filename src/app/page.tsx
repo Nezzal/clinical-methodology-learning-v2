@@ -273,10 +273,13 @@ export default function Dashboard() {
       {/* Pied de page Officiel avec NIF */}
       <footer style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
         <p style={{ margin: '0 0 0.35rem 0', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          Plateforme Officielle RECIF — Méthodologie & Recherche Clinique
+          Plateforme Officielle — Méthodologie &amp; Recherche Clinique ({APP_VERSION_LABEL})
+        </p>
+        <p style={{ margin: '0 0 0.4rem 0', fontSize: '0.8rem', color: '#94a3b8' }}>
+          © 2026 Methodo&amp;Clinique <Link href="/guide#legal" style={{ color: '#38bdf8', textDecoration: 'none' }}>[Droits &amp; Licence CC BY-NC-SA 4.0]</Link>
         </p>
         <p style={{ margin: 0, fontFamily: 'monospace', color: '#94a3b8', fontSize: '0.85rem' }}>
-          🏛️ Numéro d'Identification Fiscale (NIF) : <strong style={{ color: '#38bdf8', letterSpacing: '0.05em' }}>{COMPANY_NIF}</strong>
+          🏛️ Numéro d&apos;Identification Fiscale (NIF) : <strong style={{ color: '#38bdf8', letterSpacing: '0.05em' }}>{COMPANY_NIF}</strong>
         </p>
       </footer>
 

@@ -1141,3 +1141,87 @@ export async function activateUserSubscriptionInFirestore(
     throw error;
   }
 }
+
+export interface UserSession {
+  id: string;
+  uid: string;
+  userName: string;
+  userEmail: string;
+  role?: string;
+  platform: 'web' | 'desktop_mac' | 'desktop_win' | 'desktop_linux';
+  startTime: string; // ISO string
+  endTime?: string; // ISO string
+  durationSeconds: number;
+  durationFormatted: string;
+  lastActive: string; // ISO string
+}
+
+export function formatSessionDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins < 60) return `${mins}m ${secs}s`;
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return `${hours}h ${remMins}m`;
+}
+
+export async function saveUserSession(session: UserSession): Promise<void> {
+  if (typeof window !== 'undefined') {
+    try {
+      const existingStr = localStorage.getItem('recif_local_sessions') || '[]';
+      const existing: UserSession[] = JSON.parse(existingStr);
+      const filtered = existing.filter(s => s.id !== session.id);
+      const updated = [session, ...filtered].slice(0, 100);
+      localStorage.setItem('recif_local_sessions', JSON.stringify(updated));
+    } catch (e) {
+      console.warn("⚠️ Impossible de sauvegarder la session localement:", e);
+    }
+  }
+
+  if (!isFirebaseEnabled || !db) return;
+  try {
+    const sessionRef = doc(db, 'user_sessions', session.id);
+    await setDoc(sessionRef, {
+      ...session,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  } catch (error) {
+    console.warn("⚠️ Erreur lors de la sauvegarde de la session sur Firestore:", error);
+  }
+}
+
+export async function loadUserSessions(limitCount = 100): Promise<UserSession[]> {
+  let localSessions: UserSession[] = [];
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('recif_local_sessions');
+      if (stored) localSessions = JSON.parse(stored);
+    } catch (e) {
+      console.warn("Erreur lecture sessions locales:", e);
+    }
+  }
+
+  if (!isFirebaseEnabled || !db) return localSessions;
+
+  try {
+    const sessionsRef = collection(db, 'user_sessions');
+    const q = query(sessionsRef, orderBy('lastActive', 'desc'));
+    const snapshot = await getDocsWithCacheFallback(q);
+    const firestoreSessions: UserSession[] = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as UserSession));
+
+    const map = new Map<string, UserSession>();
+    localSessions.forEach(s => map.set(s.id, s));
+    firestoreSessions.forEach(s => map.set(s.id, s));
+
+    return Array.from(map.values())
+      .sort((a, b) => new Date(b.lastActive || b.startTime).getTime() - new Date(a.lastActive || a.startTime).getTime())
+      .slice(0, limitCount);
+  } catch (error) {
+    console.warn("⚠️ Impossible de charger les sessions depuis Firestore:", error);
+    return localSessions;
+  }
+}

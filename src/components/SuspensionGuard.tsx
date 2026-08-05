@@ -943,8 +943,9 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
           main {
             margin-left: 0 !important;
             width: 100% !important;
-            padding: 1.5rem !important;
-            padding-top: 5rem !important;
+            max-width: 100% !important;
+            padding: 1rem !important;
+            padding-top: 4.5rem !important;
           }
         }
         @keyframes slideDown {

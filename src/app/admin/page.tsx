@@ -21,7 +21,10 @@ import {
   markMessageReadState,
   loadSupportMessages,
   deleteSupportMessage,
-  FirestoreSupportMessage
+  FirestoreSupportMessage,
+  loadUserSessions,
+  UserSession,
+  formatSessionDuration
 } from '@/utils/firestore';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { downloadImage } from '@/utils/image-utils';
@@ -210,8 +213,65 @@ export default function AdminDashboard() {
   // States pour les demandes d'accès, aperçu et suppression de reçu
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages'>('students');
+  const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages' | 'sessions'>('students');
   const [previewReceiptModal, setPreviewReceiptModal] = useState<{ title: string; image: string; email: string } | null>(null);
+
+  // States pour les sessions d'accès et durées
+  const [userSessions, setUserSessions] = useState<UserSession[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  const fetchUserSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const data = await loadUserSessions(200);
+      setUserSessions(data);
+    } catch (e) {
+      console.warn("Erreur chargement sessions:", e);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserSessions();
+  }, []);
+
+  const handleExportSessionsCSV = () => {
+    if (!userSessions || userSessions.length === 0) {
+      alert("Aucune session d'accès enregistrée à exporter.");
+      return;
+    }
+
+    let csvContent = "\uFEFF";
+    csvContent += "ID Session;Nom Utilisateur;Email;Role;Plateforme;Date Heure Connexion;Dernier Signe de Vie;Duree Secondes;Duree Formatee\n";
+
+    userSessions.forEach(s => {
+      const startStr = s.startTime ? new Date(s.startTime).toLocaleString('fr-FR') : '';
+      const lastStr = s.lastActive ? new Date(s.lastActive).toLocaleString('fr-FR') : '';
+      const platStr = s.platform === 'desktop_mac' ? 'App Mac' : s.platform === 'desktop_win' ? 'App Windows' : s.platform === 'desktop_linux' ? 'App Linux' : 'Web';
+      
+      const line = [
+        `"${s.id || ''}"`,
+        `"${(s.userName || '').replace(/"/g, '""')}"`,
+        `"${(s.userEmail || '').replace(/"/g, '""')}"`,
+        `"${s.role || 'user'}"`,
+        `"${platStr}"`,
+        `"${startStr}"`,
+        `"${lastStr}"`,
+        `"${s.durationSeconds || 0}"`,
+        `"${s.durationFormatted || '0s'}"`
+      ].join(";");
+      csvContent += line + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `historique_acces_sessions_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Factures PedagogiAfrica
   const [invoiceModalData, setInvoiceModalData] = useState<InvoiceData | null>(null);
@@ -219,7 +279,16 @@ export default function AdminDashboard() {
   const [isBroadcastingEmail, setIsBroadcastingEmail] = useState(false);
 
   const handleBroadcastReleaseEmail = async () => {
-    const totalUsersCount = students.length;
+    const recipientEmails = students
+      .map((s) => s.email)
+      .filter((e): e is string => typeof e === 'string' && e.includes('@'));
+
+    const totalUsersCount = recipientEmails.length;
+    if (totalUsersCount === 0) {
+      alert("⚠️ Aucun utilisateur avec une adresse email valide n'a été trouvé dans la liste.");
+      return;
+    }
+
     if (!confirm(`Êtes-vous sûr de vouloir diffuser l'email de mise à jour v${APP_VERSION} à l'ensemble des ${totalUsersCount} utilisateur(s) inscrits ?`)) {
       return;
     }
@@ -239,7 +308,10 @@ export default function AdminDashboard() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ version: APP_VERSION })
+        body: JSON.stringify({ 
+          version: APP_VERSION,
+          recipients: recipientEmails
+        })
       });
 
       const data = await res.json();
@@ -2339,6 +2411,15 @@ Votre superviseur`;
             >
               Messagerie {unreadMessagesCount > 0 && <span className={styles.tabRedDot} />}
             </button>
+            <button 
+              className={`${styles.tabBtn} ${leftTab === 'sessions' ? styles.activeTab : ''}`}
+              onClick={() => {
+                setLeftTab('sessions');
+                router.push('/admin?tab=sessions');
+              }}
+            >
+              ⏱️ Accès &amp; Durées ({userSessions.length})
+            </button>
           </div>
 
           {leftTab === 'students' ? (
@@ -3194,7 +3275,7 @@ Votre superviseur`;
                 </table>
               </div>
             </>
-          ) : (
+          ) : leftTab === 'messages' ? (
             // Onglet Messagerie
             <div style={{ padding: '0.5rem 0' }}>
               {messagingError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#ef4444', fontSize: '0.85rem' }}>{messagingError}</div>}
@@ -3422,7 +3503,123 @@ Votre superviseur`;
                 </form>
               </div>
             </div>
-          )}
+          ) : leftTab === 'sessions' ? (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+                    ⏱️ Historique des Accès &amp; Durées de Session
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>
+                    Suivi des connexions, temps passé réel et déconnexions sur Web et Desktop.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      color: '#f87171',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      if (!confirm("Voulez-vous supprimer les sessions d'accès anonymes de test ?")) return;
+                      setUserSessions(prev => {
+                        const filtered = prev.filter(s => s.uid !== 'guest' && s.userEmail !== 'anonyme@app.local' && s.userEmail !== 'non_connecte@app.local');
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('recif_local_sessions', JSON.stringify(filtered));
+                        }
+                        return filtered;
+                      });
+                    }}
+                    title="Supprimer les sessions anonymes ou temporaires de la liste"
+                  >
+                    🗑️ Nettoyer anonymes
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      color: '#38bdf8',
+                      border: '1px solid rgba(56, 189, 248, 0.4)',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px'
+                    }}
+                    onClick={handleExportSessionsCSV}
+                  >
+                    📥 Exporter Sessions (CSV)
+                  </button>
+                </div>
+              </div>
+
+              {loadingSessions ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  Chargement des sessions d&apos;accès...
+                </div>
+              ) : userSessions.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  Aucune session d&apos;accès enregistrée pour le moment.
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-glass)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                        <th style={{ padding: '0.6rem 0.8rem' }}>Utilisateur</th>
+                        <th style={{ padding: '0.6rem 0.8rem' }}>Plateforme</th>
+                        <th style={{ padding: '0.6rem 0.8rem' }}>Connexion</th>
+                        <th style={{ padding: '0.6rem 0.8rem' }}>Dernier Signe</th>
+                        <th style={{ padding: '0.6rem 0.8rem' }}>Durée Totale</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userSessions.map((sess) => (
+                        <tr key={sess.id} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                          <td style={{ padding: '0.65rem 0.8rem' }}>
+                            <div style={{ fontWeight: 600, color: '#f8fafc' }}>{sess.userName}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{sess.userEmail}</div>
+                          </td>
+                          <td style={{ padding: '0.65rem 0.8rem' }}>
+                            <span style={{ 
+                              padding: '2px 8px', 
+                              borderRadius: '12px', 
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: sess.platform?.startsWith('desktop') ? 'rgba(168, 85, 247, 0.2)' : 'rgba(56, 189, 248, 0.2)',
+                              color: sess.platform?.startsWith('desktop') ? '#c084fc' : '#38bdf8',
+                              border: `1px solid ${sess.platform?.startsWith('desktop') ? 'rgba(168, 85, 247, 0.4)' : 'rgba(56, 189, 248, 0.4)'}`
+                            }}>
+                              {sess.platform === 'desktop_mac' ? '🍎 Mac App' : sess.platform === 'desktop_win' ? '🪟 Win App' : sess.platform === 'desktop_linux' ? '🐧 Linux App' : '🌐 Web'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.65rem 0.8rem', color: '#cbd5e1' }}>
+                            {sess.startTime ? new Date(sess.startTime).toLocaleString('fr-FR') : '-'}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.8rem', color: '#cbd5e1' }}>
+                            {sess.lastActive ? new Date(sess.lastActive).toLocaleString('fr-FR') : '-'}
+                          </td>
+                          <td style={{ padding: '0.65rem 0.8rem', fontWeight: 700, color: '#2dd4bf' }}>
+                            {sess.durationFormatted || '0s'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
 
         {/* Panneau de détail étudiant (Droite) */}

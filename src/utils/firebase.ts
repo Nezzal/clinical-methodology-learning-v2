@@ -25,24 +25,6 @@ export const isFirebaseEnabled = !!(
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
 );
 
-// Nettoyer les clés Firestore obsolètes de localStorage au démarrage pour libérer le quota (évite QuotaExceededError)
-if (typeof window !== 'undefined') {
-  try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < window.localStorage.length; i++) {
-      const key = window.localStorage.key(i);
-      if (key && (key.startsWith('firestore_') || key.startsWith('@firebase/'))) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(key => window.localStorage.removeItem(key));
-    if (keysToRemove.length > 0) {
-      console.log(`🧹 Nettoyage de ${keysToRemove.length} clé(s) Firestore obsolète(s) dans localStorage.`);
-    }
-  } catch (e) {
-    console.warn('⚠️ Échec du nettoyage de localStorage:', e);
-  }
-}
 
 let app;
 let auth: Auth | null = null;

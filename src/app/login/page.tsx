@@ -18,6 +18,7 @@ export default function Login() {
 
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [guideInitialModule, setGuideInitialModule] = useState(1);
   const [isRequestAccess, setIsRequestAccess] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isLicenseMode, setIsLicenseMode] = useState(() => {
@@ -448,7 +449,10 @@ export default function Login() {
             <div style={{ marginTop: '1rem', width: '100%' }}>
               <button
                 type="button"
-                onClick={() => setShowGuideModal(true)}
+                onClick={() => {
+                  setGuideInitialModule(1);
+                  setShowGuideModal(true);
+                }}
                 style={{
                   width: '100%',
                   background: 'linear-gradient(135deg, rgba(13, 148, 136, 0.2) 0%, rgba(56, 189, 248, 0.2) 100%)',
@@ -471,8 +475,31 @@ export default function Login() {
               </button>
             </div>
 
-            <div className={styles.presentationFooter}>
+            <div className={styles.presentationFooter} style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
               <span>Version v{APP_VERSION}</span>
+              <span>
+                © 2026 Methodo&amp;Clinique{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGuideInitialModule(15);
+                    setShowGuideModal(true);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#38bdf8',
+                    cursor: 'pointer',
+                    fontSize: 'inherit',
+                    fontFamily: 'inherit',
+                    padding: 0,
+                    textDecoration: 'none'
+                  }}
+                  title="Consulter les détails des Droits & de la Licence CC BY-NC-SA 4.0"
+                >
+                  [Droits &amp; Licence CC BY-NC-SA 4.0]
+                </button>
+              </span>
               <span>NIF : {COMPANY_NIF}</span>
             </div>
           </div>
@@ -1429,6 +1456,7 @@ export default function Login() {
 
       <GuideModal
         isOpen={showGuideModal}
+        initialModule={guideInitialModule}
         onClose={() => setShowGuideModal(false)}
       />
     </div>

@@ -50,26 +50,32 @@ Avant d'exécuter des modifications sur `package.json`, `next.config.js`, ou les
 
 ---
 
-## 🚀 5. Procédure Automatique Système : Modifications & Release en 2 Étapes (Validation Mac)
+## 🚀 5. Procédure Automatique Système : Modifications & Release (Workflow Agilité 3 Étapes)
 
 Lors de chaque modification de code, correctif de bug ou évolution de fonctionnalité :
 
-### ⏸️ Étape 1 : Préparation & Build macOS (Pause pour Validation avec Signal Sonore)
-1. **Incrémentation de Version** : Monter systématiquement la version dans `package.json` et dans `src/utils/constants.ts` (ex: `2.0.5`).
-2. **Mise à jour des liens du Guide** : Adapter les URLs de téléchargement direct de la page Guide ([`src/app/guide/page.tsx`](file:///Users/mac/Sites/clinical-methodology-learning-v2/src/app/guide/page.tsx)) avec le nouveau tag de release (`vX.Y.Z`).
-3. **Build macOS uniquement** : Générer le paquet macOS via `npm run electron:package:mac`.
-4. **PAUSE & SIGNAL SONORE** : S'arrêter, émettre une notification sonore système (`afplay /System/Library/Sounds/Glass.aiff` ou `say "Validation Mac requise"`), et demander à l'utilisateur de tester et valider l'application Mac ([`dist/mac-arm64/RECIF-MethodoClinique.app`](file:///Users/mac/Sites/clinical-methodology-learning-v2/dist/mac-arm64)).
+### 🚀 Étape 1 : Développement Local & Validation Développeur
+1. **Validation Dev & Localhost** : Tester et valider les modifications localement sur `http://localhost:3001` ou via `npm run electron:dev`.
+2. **Montée de version** : Incrémenter la version dans `package.json` et `src/utils/constants.ts` (`APP_VERSION`).
+3. **Mise à jour des liens du Guide** : Ajuster les URLs de téléchargement dans [`src/app/guide/page.tsx`](file:///Users/mac/Sites/clinical-methodology-learning-v2/src/app/guide/page.tsx) avec le nouveau tag (`vX.Y.Z`).
 
-### ▶️ Étape 2 : Finalisation Automatique Ininterrompue (Après Validation Mac)
-🚨 **DIRECTIVE STRICTE** : Dès réception de l'accord de l'utilisateur pour le Mac, l'agent enchaîne **l'intégralité des sous-étapes ci-dessous d'une seule traite sans s'arrêter et sans demander aucun avis ni aucune validation intermédiaire** jusqu'à la fin du workflow :
+### 🌐 Étape 2 : Déploiement Web / Vercel & Validation PWA / Mobile
+4. **Git Commit & Push Web** :
+   - Stager les fichiers modifiés (`git add .`).
+   - Commiter avec un message explicite (`git commit -m "fix: ..."`).
+   - Pousser la branche (`git push origin <branch>`) pour déployer immédiatement sur Vercel et alimenter la PWA Mobile.
+5. **PAUSE & SIGNAL SONORE (Validation Web/Mobile)** : Émettre une notification sonore système (`afplay /System/Library/Sounds/Glass.aiff` ou `say "Déploiement Web prêt"`) et demander à l'utilisateur de tester et valider l'application Web / PWA Mobile.
 
-5. **Builds Windows & Linux** :
+### 📦 Étape 3 : Packaging Desktop & Release Globale (Après Validation Web)
+*Dès réception de la validation de la version Web/Mobile par l'utilisateur, l'agent exécute d'une seule traite :*
+6. **Builds Desktop Natifs (Mac, Windows, Linux)** :
+   - Mac : `npm run electron:package:mac`
    - Windows : `npx electron-builder build --win --publish never`
    - Linux : `npm run electron:package:linux`
-6. **Archive de Distribution ZIP** : Exécuter `npm run zip` pour renouveler `clinical-methodology-learning.zip`.
-7. **Cycle Git Complet** :
-   - Stager les fichiers modifiés (`git add .`).
-   - Commiter avec un message explicite (`git commit -m "release: ..."`).
-   - Créer le tag Git (`git tag -a vX.Y.Z -m "Release vX.Y.Z"`).
-   - Pousser la branche et les tags vers GitHub (`git push origin <branch> --tags`).
+7. **Archive ZIP** : Exécuter `npm run zip` pour renouveler `clinical-methodology-learning.zip`.
+8. **Tag Release & Push Tags** :
+   - `git add .`
+   - `git commit -m "release: vX.Y.Z"` (si nécessaire)
+   - `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
+   - `git push origin <branch> --tags`
 

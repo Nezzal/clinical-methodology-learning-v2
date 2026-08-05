@@ -604,6 +604,13 @@ export default function Sidebar() {
             <span>✨</span>
             <span>v{APP_VERSION} Nouveautés</span>
           </button>
+
+          <div style={{ marginTop: '8px', textAlign: 'center', fontSize: '0.68rem', color: '#94a3b8', lineHeight: '1.3' }}>
+            © 2026 Methodo&amp;Clinique<br />
+            <Link href="/guide#legal" style={{ color: '#38bdf8', textDecoration: 'none' }}>
+              Droits &amp; Licence CC BY-NC-SA 4.0
+            </Link>
+          </div>
         </div>
       </aside>
 

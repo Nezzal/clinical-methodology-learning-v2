@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { APP_VERSION } from '@/utils/constants';
 import styles from './page.module.css';
 
 export default function GuidePage() {
@@ -208,11 +209,11 @@ export default function GuidePage() {
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          📦 2. Télécharger l&apos;Application selon votre Système (v2.0.0)
+          📦 2. Télécharger l&apos;Application selon votre Système (v{APP_VERSION})
         </h2>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
-          Sélectionnez ci-dessous l&apos;exécutable certifié v2.0.0 correspondant à votre système d&apos;exploitation (Mac ou Windows).
+          Sélectionnez ci-dessous l&apos;exécutable certifié v{APP_VERSION} correspondant à votre système d&apos;exploitation (Mac, Windows ou Linux).
         </p>
 
         {/* Banner OBLIGATOIRE sur la licence */}
@@ -244,7 +245,7 @@ export default function GuidePage() {
               <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Methodo&Clinique » sera créé sur votre bureau.
             </p>
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.6/RECIF-MethodoClinique.Setup.2.0.6.exe" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.7/RECIF-MethodoClinique.Setup.2.0.7.exe" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -273,7 +274,7 @@ export default function GuidePage() {
             </div>
 
             <a 
-              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.6/RECIF-MethodoClinique-2.0.6-arm64.dmg" 
+              href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.7/RECIF-MethodoClinique-2.0.7-arm64.dmg" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn btn-primary"
@@ -299,7 +300,7 @@ export default function GuidePage() {
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <a 
-                href="https://github.com/mednajah/clinical-methodology-learning/releases/download/v2.0.6/RECIF-MethodoClinique-2.0.6.AppImage" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.7/RECIF-MethodoClinique-2.0.7.AppImage" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-primary"
@@ -308,7 +309,7 @@ export default function GuidePage() {
                 AppImage
               </a>
               <a 
-                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.6/clinical-methodology-learning_2.0.6_arm64.deb" 
+                href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.7/clinical-methodology-learning_2.0.7_arm64.deb" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn btn-secondary"
@@ -319,6 +320,41 @@ export default function GuidePage() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* Section Smartphone PWA */}
+      <section className={styles.card} style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(13, 148, 136, 0.08) 100%)', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+        <h2 className={styles.cardTitle} style={{ color: '#38bdf8' }}>
+          📱 Installation sur Smartphone &amp; Tablette (iOS iPhone / Android)
+        </h2>
+        
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.6' }}>
+          Vous pouvez installer <strong>Methodo&amp;Clinique</strong> directement sur l&apos;écran d&apos;accueil de votre smartphone comme une véritable application native (sans passer par les stores et sans frais) :
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+          {/* iPhone / iPad */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '10px', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8', fontSize: '0.98rem' }}>🍎 sur iPhone &amp; iPad (Safari)</h4>
+            <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
+              <li>Ouvrez le site dans le navigateur <strong>Safari</strong>.</li>
+              <li>Touchez le bouton de partage <strong>[⎋]</strong> en bas de votre écran.</li>
+              <li>Faites défiler vers le bas et sélectionnez <strong>« Sur l&apos;écran d&apos;accueil »</strong>.</li>
+              <li>Cliquez sur <strong>Ajouter</strong> en haut à droite. L&apos;icône apparaît sur votre téléphone !</li>
+            </ol>
+          </div>
+
+          {/* Android */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.04)', borderRadius: '10px', padding: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <h4 style={{ margin: '0 0 0.5rem 0', color: '#2dd4bf', fontSize: '0.98rem' }}>🤖 sur Smartphone Android (Chrome)</h4>
+            <ol style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6' }}>
+              <li>Ouvrez le site dans <strong>Google Chrome</strong>.</li>
+              <li>Une bannière de 1-Clic <strong>« Installer l&apos;application »</strong> apparaît au bas de l&apos;écran.</li>
+              <li>Ou touchez le menu à 3 points <strong>[⋮]</strong> en haut à droite.</li>
+              <li>Sélectionnez <strong>« Installer l&apos;application »</strong> ou <strong>« Ajouter à l&apos;écran d&apos;accueil »</strong>.</li>
+            </ol>
+          </div>
         </div>
       </section>
 
@@ -543,6 +579,54 @@ export default function GuidePage() {
             </div>
           </li>
         </ul>
+      </section>
+
+      {/* Section 6 : Droits d'Auteur & Propriété Intellectuelle (CC BY-NC-SA 4.0) */}
+      <section id="legal" className={styles.card} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid var(--border-glass)' }}>
+        <h2 className={styles.cardTitle} style={{ color: 'var(--text-primary)' }}>
+          📜 6. Propriété Intellectuelle &amp; Licence Creative Commons
+        </h2>
+        
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6', fontSize: '0.9rem' }}>
+          Répartition claire des droits d&apos;auteur et des conditions d&apos;utilisation de la plateforme Methodo&amp;Clinique :
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem' }}>
+          {/* Card 1 : Logiciel & Code */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '1.2rem', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>💻</span>
+              <h4 style={{ margin: 0, color: '#38bdf8', fontSize: '0.95rem' }}>Logiciel &amp; Code Source</h4>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.55' }}>
+              <strong>© 2026 Methodo&amp;Clinique. Tous droits réservés.</strong><br />
+              Le code source, l&apos;architecture logicielle, l&apos;interface graphique et la logique d&apos;intégration RAG sont la propriété exclusive de l&apos;éditeur.
+            </p>
+          </div>
+
+          {/* Card 2 : Référentiels Officiels */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '1.2rem', border: '1px solid rgba(45, 212, 191, 0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>📚</span>
+              <h4 style={{ margin: 0, color: '#2dd4bf', fontSize: '0.95rem' }}>Sources &amp; Référentiels</h4>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.55' }}>
+              La grille STROBE, l&apos;ICMJE, la Loi 18-11 et le manuel du RECIF sont des sources documentaires officielles exploitées à des fins d&apos;analyse RAG et d&apos;enseignement.
+            </p>
+          </div>
+
+          {/* Card 3 : Contenus Pédagogiques CC */}
+          <div style={{ background: 'rgba(255, 255, 255, 0.03)', borderRadius: '12px', padding: '1.2rem', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>🎓</span>
+              <h4 style={{ margin: 0, color: '#c084fc', fontSize: '0.95rem' }}>Licence Creative Commons</h4>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.55' }}>
+              <strong>CC BY-NC-SA 4.0</strong><br />
+              Les contenus et fiches pédagogiques générés par l&apos;IA sont libres pour l&apos;étude et la recherche personnelle (usage non commercial avec citation).
+            </p>
+          </div>
+        </div>
       </section>
 
     </div>
