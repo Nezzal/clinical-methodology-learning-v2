@@ -153,7 +153,7 @@ export default function AdminDashboard() {
   };
 
   const formatLastActive = (lastActive: any): string => {
-    if (!lastActive) return 'Aucune activité récente';
+    if (!lastActive) return '⚪ Aucune activité récente';
     
     let date: Date;
     if (lastActive.seconds) {
@@ -165,19 +165,21 @@ export default function AdminDashboard() {
     } else if (typeof lastActive === 'number') {
       date = new Date(lastActive);
     } else {
-      return 'Activité inconnue';
+      return '⚪ Activité inconnue';
     }
     
     const diffMs = Date.now() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
+    const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
     
-    if (diffMins < 1) return 'Actif à l\'instant';
-    if (diffMins < 60) return `Actif il y a ${diffMins} min`;
+    if (diffMins < 1) return `🟢 En ligne • Connecté à ${timeStr} (Session en cours)`;
+    if (diffMins < 60) return `🟢 En ligne • Connecté à ${timeStr} (Durée: ${diffMins} min)`;
     
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `Actif il y a ${diffHours} h`;
+    if (diffHours < 24) return `⚪ Hors-ligne • Dernier accès aujourd'hui à ${timeStr} (il y a ${diffHours} h)`;
     
-    return `Actif le ${date.toLocaleDateString('fr-FR')}`;
+    return `⚪ Hors-ligne • Dernier accès le ${dateStr} à ${timeStr}`;
   };
 
   // Selected Student Detailed Supervision
@@ -835,6 +837,42 @@ export default function AdminDashboard() {
     } finally {
       setActionPending(false);
     }
+  };
+
+  const handlePurgeAnonymousUsers = async () => {
+    const anonymousList = students.filter(s => {
+      const isSuperAdmin = isUserSuperAdminAccount(s);
+      const isAdmin = isUserAdminAccount(s);
+      if (isSuperAdmin || isAdmin) return false;
+      const email = String(s.email || '').toLowerCase();
+      const name = String(s.displayName || '').toLowerCase();
+      return !email || email.includes('anonymous') || email.includes('orphelin') || !name || name === 'utilisateur recif' || name === 'anonyme';
+    });
+
+    if (anonymousList.length === 0) {
+      alert("Aucun compte anonyme ou orphelin n'a été détecté dans la liste.");
+      return;
+    }
+
+    if (!window.confirm(`Voulez-vous vraiment purger définitivement ${anonymousList.length} compte(s) anonyme(s) / sans e-mail ?`)) {
+      return;
+    }
+
+    let purgedCount = 0;
+    for (const item of anonymousList) {
+      try {
+        if (item.uid) {
+          await deleteUserFully(item.uid);
+        }
+        purgedCount++;
+      } catch (e) {
+        console.error("Erreur purge compte:", e);
+      }
+    }
+
+    const purgedUids = new Set(anonymousList.map(s => s.uid));
+    setStudents(prev => prev.filter(s => !purgedUids.has(s.uid)));
+    alert(`Purge terminée : ${purgedCount} compte(s) anonyme(s) ont été supprimés.`);
   };
 
   const handleSaveName = async () => {
@@ -2357,6 +2395,27 @@ Votre superviseur`;
                   >
                     📥 Exporter en CSV (Excel)
                   </button>
+                  <button
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.8rem',
+                      background: 'rgba(239, 68, 68, 0.12)',
+                      color: '#f87171',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={handlePurgeAnonymousUsers}
+                    title="Purger tous les comptes anonymes ou orphelins sans email"
+                  >
+                    🧹 Purger les comptes anonymes
+                  </button>
                 </div>
               </div>
 
@@ -2398,45 +2457,35 @@ Votre superviseur`;
                             <td>
                               <div className={styles.studentInfo}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                                  <span className={`${styles.statusDot} ${online ? styles.statusDotOnline : styles.statusDotOffline}`} title={online ? "En ligne" : "Hors ligne"} />
-                                  <span className={styles.studentName}>{getUserDisplayName(student)}</span>
-                                  {student.role === 'superadmin' || isUserSuperAdminAccount(student) ? (
-                                    <span style={{ background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(245, 158, 11, 0.25))', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.5)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
-                                      👑 Super Administrateur
+                                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
+                                    {getUserDisplayName(student)}
+                                  </span>
+                                  {isUserSuperAdminAccount(student) && (
+                                    <span style={{ background: '#f59e0b', color: '#000', fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                                      👨‍✈️ Super Administrateur
                                     </span>
-                                  ) : student.role === 'admin' || isUserAdminAccount(student) ? (
-                                    <span style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
+                                  )}
+                                  {isUserAdminAccount(student) && !isUserSuperAdminAccount(student) && (
+                                    <span style={{ background: '#ef4444', color: '#fff', fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 'bold' }}>
                                       🛡️ Administrateur
                                     </span>
-                                  ) : student.role === 'teacher' ? (
-                                    <span style={{ background: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.3)', padding: '1px 6px', borderRadius: '4px', fontSize: '0.65rem', fontWeight: 'bold' }}>
-                                      👨‍🏫 Enseignant
-                                    </span>
-                                  ) : null}
-                                  {student.status === 'suspended' && (
-                                    <span className={styles.miniSuspendedBadge}>Suspendu</span>
-                                  )}
-                                  {online && (
-                                    <span className={styles.miniOnlineBadge}>En ligne</span>
                                   )}
                                 </div>
-                                <span className={styles.studentEmail}>{student.email}</span>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{student.email || 'Email non renseigné'}</span>
                                 {(() => {
                                   const tier = getUserFormulaTier(student);
                                   const isSuperAdminTier = tier === 'superadmin';
                                   const isAdminTier = tier === 'admin';
-                                  const isUltra = tier === 'ultra';
                                   const isExpert = tier === 'expert';
-                                  const isInst = tier === 'institution';
+                                  const isUltra = tier === 'ultra';
+                                  const isInst = tier === 'institutionnel' || tier === 'institution';
                                   const isPro = tier === 'pro';
-
                                   return (
-                                    <div style={{ marginTop: '2px' }}>
+                                    <div style={{ marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                                       <span style={{ 
-                                        display: 'inline-block', 
-                                        background: isSuperAdminTier ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(245, 158, 11, 0.25))' : isAdminTier ? 'rgba(239, 68, 68, 0.15)' : isUltra ? 'rgba(251, 191, 36, 0.15)' : (isExpert || isInst) ? 'rgba(168, 85, 247, 0.15)' : isPro ? 'rgba(13, 148, 136, 0.15)' : 'rgba(56, 189, 248, 0.15)', 
-                                        border: isSuperAdminTier ? '1px solid rgba(251, 191, 36, 0.5)' : isAdminTier ? '1px solid rgba(239, 68, 68, 0.3)' : isUltra ? '1px solid rgba(251, 191, 36, 0.3)' : (isExpert || isInst) ? '1px solid rgba(168, 85, 247, 0.3)' : isPro ? '1px solid rgba(13, 148, 136, 0.3)' : '1px solid rgba(56, 189, 248, 0.3)',
-                                        padding: '1px 6px', 
+                                        padding: '0.1rem 0.4rem', 
+                                        background: (isSuperAdminTier || isUltra) ? 'rgba(251, 191, 36, 0.15)' : isAdminTier ? 'rgba(248, 113, 113, 0.15)' : (isExpert || isInst) ? 'rgba(192, 132, 252, 0.15)' : isPro ? 'rgba(45, 212, 191, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                                        border: `1px solid ${(isSuperAdminTier || isUltra) ? 'rgba(251, 191, 36, 0.4)' : isAdminTier ? 'rgba(248, 113, 113, 0.4)' : (isExpert || isInst) ? 'rgba(192, 132, 252, 0.4)' : isPro ? 'rgba(45, 212, 191, 0.4)' : 'rgba(56, 189, 248, 0.4)'}`,
                                         borderRadius: '4px', 
                                         fontSize: '0.68rem',
                                         fontWeight: 'bold',
@@ -2448,7 +2497,7 @@ Votre superviseur`;
                                     </div>
                                   );
                                 })()}
-                                <span className={styles.lastActiveTime}>{lastActiveStr}</span>
+                                <span className={styles.lastActiveTime} style={{ marginTop: '0.25rem', display: 'block', fontSize: '0.75rem' }}>{lastActiveStr}</span>
                               </div>
                             </td>
                             <td>
@@ -2464,13 +2513,36 @@ Votre superviseur`;
                               <span style={{ fontWeight: '600' }}>{student.stats?.protocolsGenerated || 0}</span>
                             </td>
                             <td>
-                              <button 
-                                className="btn btn-secondary" 
-                                style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
-                                onClick={() => handleSelectStudent(student)}
-                              >
-                                Superviser
-                              </button>
+                              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <button 
+                                  className="btn btn-secondary" 
+                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}
+                                  onClick={() => handleSelectStudent(student)}
+                                >
+                                  Superviser
+                                </button>
+                                {!isUserSuperAdminAccount(student) && (
+                                  <button 
+                                    className="btn btn-secondary" 
+                                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: 'rgba(239, 68, 68, 0.12)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                                    onClick={() => {
+                                      const name = getUserDisplayName(student);
+                                      if (window.confirm(`Supprimer définitivement l'utilisateur ${name} ?`)) {
+                                        deleteUserFully(student.uid).then(() => {
+                                          setStudents(prev => prev.filter(s => s.uid !== student.uid));
+                                          alert(`Utilisateur ${name} supprimé.`);
+                                        }).catch(err => {
+                                          console.error("Erreur suppression:", err);
+                                          alert("Erreur lors de la suppression.");
+                                        });
+                                      }
+                                    }}
+                                    title="Supprimer cet utilisateur"
+                                  >
+                                    🗑️ Supprimer
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
