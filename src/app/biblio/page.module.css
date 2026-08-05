@@ -412,16 +412,21 @@
 }
 
 .synthesisBody table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
-  margin: 1rem 0;
+  margin: 1.25rem 0;
   font-size: 0.85rem;
 }
 
 .synthesisBody th, .synthesisBody td {
   border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 0.6rem 0.85rem;
+  padding: 0.65rem 0.85rem;
   text-align: left;
+  min-width: 140px;
+  word-break: normal;
+  white-space: normal;
+  vertical-align: top;
 }
 
 .synthesisBody th {

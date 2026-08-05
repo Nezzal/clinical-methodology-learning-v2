@@ -1063,22 +1063,26 @@ function renderMarkdown(mdText: string) {
   const flushTable = (key: string) => {
     if (tableHeader.length > 0 || tableRows.length > 0) {
       elements.push(
-        <div key={key} style={{ overflowX: 'auto', margin: '1rem 0' }}>
-          <table>
+        <div key={key} style={{ width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', margin: '1.25rem 0', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <table style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'collapse' }}>
             {tableHeader.length > 0 && (
               <thead>
                 <tr>
                   {tableHeader.map((h, i) => (
-                    <th key={i}>{h.trim()}</th>
+                    <th key={i} style={{ padding: '0.75rem 0.9rem', background: 'rgba(30, 41, 59, 0.95)', color: '#38bdf8', minWidth: '140px', textAlign: 'left', border: '1px solid rgba(255, 255, 255, 0.15)', fontSize: '0.84rem', fontWeight: 700 }}>
+                      {formatInlineFormatting(h.trim())}
+                    </th>
                   ))}
                 </tr>
               </thead>
             )}
             <tbody>
               {tableRows.map((row, rowIndex) => (
-                <tr key={rowIndex}>
+                <tr key={rowIndex} style={{ background: rowIndex % 2 === 0 ? 'rgba(15, 23, 42, 0.5)' : 'rgba(30, 41, 59, 0.35)' }}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex}>{cell.trim()}</td>
+                    <td key={cellIndex} style={{ padding: '0.65rem 0.85rem', minWidth: '140px', border: '1px solid rgba(255, 255, 255, 0.12)', fontSize: '0.82rem', verticalAlign: 'top', wordBreak: 'normal', overflowWrap: 'break-word', lineHeight: '1.55' }}>
+                      {formatInlineFormatting(cell.trim())}
+                    </td>
                   ))}
                 </tr>
               ))}
@@ -1150,7 +1154,20 @@ function renderMarkdown(mdText: string) {
 }
 
 function formatInlineFormatting(text: string): React.ReactNode {
-  // Format des puces en gras **texte**
+  if (!text) return '';
+
+  // 1. Traiter les sauts de lignes HTML <br> ou <br/>
+  const brSplit = text.split(/<br\s*\/?>/i);
+  if (brSplit.length > 1) {
+    return brSplit.map((part, index) => (
+      <React.Fragment key={index}>
+        {index > 0 && <br />}
+        {formatInlineFormatting(part)}
+      </React.Fragment>
+    ));
+  }
+
+  // 2. Traiter le texte en gras **texte**
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**')) {
