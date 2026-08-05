@@ -382,8 +382,9 @@ export async function saveFirestoreSynthesis(uid: string, synthesis: FirestoreSy
   if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const docRef = doc(db, 'users', uid, 'syntheses', synthesis.id);
+    const cleanSynthesis = JSON.parse(JSON.stringify(synthesis));
     await setDoc(docRef, {
-      ...synthesis,
+      ...cleanSynthesis,
       createdAt: serverTimestamp()
     }, { merge: true });
   } catch (error) {
@@ -399,8 +400,14 @@ export async function loadFirestoreSyntheses(uid: string): Promise<FirestoreSynt
     const snap = await getDocsWithCacheFallback(q);
     return snap.docs.map(d => d.data() as FirestoreSynthesis);
   } catch (error) {
-    console.warn('⚠️ Erreur loadFirestoreSyntheses:', error);
-    return [];
+    console.warn('⚠️ Erreur loadFirestoreSyntheses avec orderBy, tentative sans filtre:', error);
+    try {
+      const snap = await getDocsWithCacheFallback(collection(db, 'users', uid, 'syntheses'));
+      return snap.docs.map(d => d.data() as FirestoreSynthesis);
+    } catch (err2) {
+      console.error('❌ Erreur loadFirestoreSyntheses fallback:', err2);
+      return [];
+    }
   }
 }
 
