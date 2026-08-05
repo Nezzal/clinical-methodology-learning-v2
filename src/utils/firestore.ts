@@ -539,6 +539,62 @@ export async function deleteAccessRequest(requestId: string) {
   }
 }
 
+// ----------------------------------------------------
+// Journal d'Accès et Sessions d'Utilisateurs (access_logs)
+// ----------------------------------------------------
+export interface FirestoreAccessLog {
+  id: string;
+  uid: string;
+  email: string;
+  displayName: string;
+  timestamp: any;
+  dateStr: string;
+  timeStr: string;
+  platform: string;
+}
+
+export async function recordAccessLog(uid: string, email: string, displayName?: string) {
+  if (!isFirebaseEnabled || !db || !uid) return;
+  try {
+    const isElectron = typeof window !== 'undefined' && (window as any).electron !== undefined;
+    const platform = isElectron ? 'Application Desktop Electron' : 'Navigateur Web';
+    const now = new Date();
+    const logId = `log_${uid}_${Date.now()}`;
+    const logRef = doc(db, 'access_logs', logId);
+    
+    await setDoc(logRef, {
+      id: logId,
+      uid,
+      email: email || 'Sans email',
+      displayName: displayName || email?.split('@')[0] || 'Utilisateur',
+      timestamp: serverTimestamp(),
+      dateStr: now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      platform
+    });
+  } catch (error) {
+    console.warn('⚠️ Erreur enregistrement journal accès:', error);
+  }
+}
+
+export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
+  if (!isFirebaseEnabled || !db) return [];
+  try {
+    const logsRef = collection(db, 'access_logs');
+    let snap;
+    try {
+      const q = query(logsRef, orderBy('timestamp', 'desc'));
+      snap = await getDocsWithCacheFallback(q);
+    } catch (e) {
+      snap = await getDocsWithCacheFallback(logsRef);
+    }
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as FirestoreAccessLog));
+  } catch (error) {
+    console.warn('⚠️ Erreur loadAccessLogs:', error);
+    return [];
+  }
+}
+
 export async function updateUserDisplayName(uid: string, displayName: string) {
   if (!isFirebaseEnabled || !db || !auth || !auth.currentUser) return;
   try {

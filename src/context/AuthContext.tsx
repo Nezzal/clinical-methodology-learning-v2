@@ -25,6 +25,7 @@ import {
   loadFirestoreProtocols, 
   saveFirestoreProtocol,
   updateUserLastActive,
+  recordAccessLog,
   FirestoreUser
 } from '@/utils/firestore';
 
@@ -267,6 +268,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(currentUser);
         setGuestMode(false);
         localStorage.removeItem('guest_mode_active');
+
+        if (typeof window !== 'undefined') {
+          const sessionLoggedKey = `recif_logged_session_${currentUser.uid}`;
+          if (!sessionStorage.getItem(sessionLoggedKey)) {
+            sessionStorage.setItem(sessionLoggedKey, 'true');
+            recordAccessLog(currentUser.uid, currentUser.email || '', currentUser.displayName || '');
+          }
+        }
 
         try {
           // Force le rafraîchissement du token pour obtenir les derniers Custom Claims

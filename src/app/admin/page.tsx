@@ -21,7 +21,9 @@ import {
   markMessageReadState,
   loadSupportMessages,
   deleteSupportMessage,
-  FirestoreSupportMessage
+  FirestoreSupportMessage,
+  loadAccessLogs,
+  FirestoreAccessLog
 } from '@/utils/firestore';
 import SubscriptionModal from '@/components/SubscriptionModal';
 import { downloadImage } from '@/utils/image-utils';
@@ -212,7 +214,21 @@ export default function AdminDashboard() {
   // States pour les demandes d'accès, aperçu et suppression de reçu
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages'>('students');
+  const [leftTab, setLeftTab] = useState<'students' | 'requests_indiv' | 'requests_group' | 'messages' | 'logs'>('students');
+  const [accessLogsList, setAccessLogsList] = useState<FirestoreAccessLog[]>([]);
+  const [loadingAccessLogs, setLoadingAccessLogs] = useState(false);
+
+  const fetchAccessLogs = async () => {
+    setLoadingAccessLogs(true);
+    try {
+      const logs = await loadAccessLogs();
+      setAccessLogsList(logs);
+    } catch (e) {
+      console.warn("Erreur chargement journal des accès:", e);
+    } finally {
+      setLoadingAccessLogs(false);
+    }
+  };
   const [previewReceiptModal, setPreviewReceiptModal] = useState<{ title: string; image: string; email: string } | null>(null);
 
   // Factures PedagogiAfrica
@@ -2336,6 +2352,16 @@ Votre superviseur`;
             >
               Messagerie {unreadMessagesCount > 0 && <span className={styles.tabRedDot} />}
             </button>
+            <button 
+              className={`${styles.tabBtn} ${leftTab === 'logs' ? styles.activeTab : ''}`}
+              onClick={() => {
+                setLeftTab('logs');
+                fetchAccessLogs();
+                router.push('/admin?tab=logs');
+              }}
+            >
+              📜 Journal des Accès ({accessLogsList.length})
+            </button>
           </div>
 
           {leftTab === 'students' ? (
@@ -3203,7 +3229,7 @@ Votre superviseur`;
                 </table>
               </div>
             </>
-          ) : (
+          ) : leftTab === 'messages' ? (
             // Onglet Messagerie
             <div style={{ padding: '0.5rem 0' }}>
               {messagingError && <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', padding: '10px 14px', marginBottom: '12px', color: '#ef4444', fontSize: '0.85rem' }}>{messagingError}</div>}
@@ -3429,6 +3455,77 @@ Votre superviseur`;
                     {isSendingNewMsg ? 'Envoi en cours...' : 'Envoyer le message'}
                   </button>
                 </form>
+              </div>
+            </div>
+          ) : (
+            // Onglet Journal des Accès (access_logs)
+            <div style={{ padding: '0.5rem 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
+                  Historique et journal chronologique de toutes les connexions ({accessLogsList.length} enregistrements)
+                </div>
+                <button
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.78rem', padding: '0.35rem 0.75rem' }}
+                  onClick={fetchAccessLogs}
+                  disabled={loadingAccessLogs}
+                >
+                  {loadingAccessLogs ? 'Chargement...' : '🔄 Rafraîchir le journal'}
+                </button>
+              </div>
+
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Date & Heure</th>
+                      <th>Utilisateur</th>
+                      <th>Email</th>
+                      <th>Plateforme</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {accessLogsList.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                          {loadingAccessLogs ? 'Chargement des accès...' : 'Aucune connexion enregistrée dans le journal.'}
+                        </td>
+                      </tr>
+                    ) : (
+                      accessLogsList.map((log, lIdx) => (
+                        <tr key={log.id || `log-${lIdx}`}>
+                          <td>
+                            <div style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '0.85rem' }}>
+                              📅 {log.dateStr || 'Aujourd\'hui'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                              🕒 {log.timeStr || 'Récemment'}
+                            </div>
+                          </td>
+                          <td>
+                            <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{log.displayName || 'Utilisateur'}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{log.email || '—'}</span>
+                          </td>
+                          <td>
+                            <span style={{ 
+                              padding: '0.15rem 0.5rem', 
+                              borderRadius: '4px', 
+                              fontSize: '0.72rem', 
+                              fontWeight: 'bold',
+                              background: log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                              color: log.platform?.includes('Electron') ? '#c084fc' : '#38bdf8',
+                              border: `1px solid ${log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
+                            }}>
+                              {log.platform || 'Web'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
