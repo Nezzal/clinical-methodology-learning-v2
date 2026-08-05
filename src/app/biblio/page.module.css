@@ -638,30 +638,57 @@
   }
 
   .actionsGroup {
-    flex-wrap: wrap;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     gap: 0.5rem;
   }
 
   .actionBtn {
-    flex: 1 1 calc(50% - 0.5rem);
-    min-width: 130px;
+    width: 100%;
+    min-width: 100%;
     justify-content: center;
-    font-size: 0.78rem;
-    padding: 0.5rem 0.5rem;
+    font-size: 0.82rem;
+    padding: 0.65rem 0.85rem;
     text-align: center;
     white-space: normal;
+    word-break: break-word;
   }
 
   .synthesisBody {
     font-size: 0.9rem;
-    line-height: 1.65;
+    line-height: 1.6;
     overflow-x: hidden;
     word-break: break-word;
     overflow-wrap: break-word;
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  .synthesisBody h2 {
+    font-size: 1.15rem;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
+  .synthesisBody h3 {
+    font-size: 1.05rem;
+    line-height: 1.35;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+  }
+
+  .synthesisBody p,
+  .synthesisBody li {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
   }
 
   .synthesisBody table {
