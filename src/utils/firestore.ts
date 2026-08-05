@@ -321,8 +321,14 @@ export async function loadFirestoreProtocols(uid: string): Promise<FirestoreProt
   if (!isFirebaseEnabled || !db || !uid) return [];
   try {
     const protosRef = collection(db, 'users', uid, 'protocols');
-    const q = query(protosRef, orderBy('createdAt', 'desc'));
-    const snap = await getDocsWithCacheFallback(q);
+    let snap;
+    try {
+      const q = query(protosRef, orderBy('createdAt', 'desc'));
+      snap = await getDocsWithCacheFallback(q);
+    } catch (orderErr) {
+      console.warn('⚠️ Fallback query sans orderBy pour loadFirestoreProtocols:', orderErr);
+      snap = await getDocsWithCacheFallback(protosRef);
+    }
     return snap.docs.map(d => d.data() as FirestoreProtocol);
   } catch (error) {
     console.warn('⚠️ Erreur loadFirestoreProtocols:', error);
@@ -345,8 +351,9 @@ export async function saveFirestoreArticle(uid: string, article: FirestoreArticl
   if (!isFirebaseEnabled || !db || !uid) return;
   try {
     const articleDocRef = doc(db, 'users', uid, 'articles', article.id);
+    const cleanArticle = JSON.parse(JSON.stringify(article));
     await setDoc(articleDocRef, {
-      ...article,
+      ...cleanArticle,
       createdAt: serverTimestamp()
     }, { merge: true });
   } catch (error) {
@@ -358,8 +365,14 @@ export async function loadFirestoreArticles(uid: string): Promise<FirestoreArtic
   if (!isFirebaseEnabled || !db || !uid) return [];
   try {
     const articlesRef = collection(db, 'users', uid, 'articles');
-    const q = query(articlesRef, orderBy('createdAt', 'desc'));
-    const snap = await getDocsWithCacheFallback(q);
+    let snap;
+    try {
+      const q = query(articlesRef, orderBy('createdAt', 'desc'));
+      snap = await getDocsWithCacheFallback(q);
+    } catch (orderErr) {
+      console.warn('⚠️ Fallback query sans orderBy pour loadFirestoreArticles:', orderErr);
+      snap = await getDocsWithCacheFallback(articlesRef);
+    }
     return snap.docs.map(d => d.data() as FirestoreArticle);
   } catch (error) {
     console.warn('⚠️ Erreur loadFirestoreArticles:', error);
