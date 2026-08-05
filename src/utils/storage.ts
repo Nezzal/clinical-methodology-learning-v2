@@ -91,3 +91,37 @@ export function updateProgress(updater: (stats: LocalStats) => Partial<LocalStat
 export function resetProgress() {
   saveProgress(DEFAULT_STATS);
 }
+
+// ===========================================
+// STOCKAGE DÉDIÉ SÉCURISÉ DES SYNTHÈSES BIBLIO
+// ===========================================
+const SYNTHESES_STORAGE_KEY = 'recif_saved_syntheses_list';
+
+export function getSavedSynthesesFromLocal(): any[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const data = localStorage.getItem(SYNTHESES_STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    // Fallback aux anciennes statistiques
+    const stats = getProgress();
+    return stats.recentSyntheses || [];
+  } catch (e) {
+    console.error('Error reading saved syntheses', e);
+    return [];
+  }
+}
+
+export function saveSynthesesToLocal(list: any[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SYNTHESES_STORAGE_KEY, JSON.stringify(list));
+    // Egalement synchro dans les stats pour compatibilité ascendance
+    const current = getProgress();
+    saveProgress({ ...current, recentSyntheses: list.slice(0, 15) });
+  } catch (e) {
+    console.error('Error saving syntheses to localStorage', e);
+  }
+}
