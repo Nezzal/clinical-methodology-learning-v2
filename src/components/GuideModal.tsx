@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { APP_VERSION } from '@/utils/constants';
 import styles from './GuideModal.module.css';
 
 interface GuideModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialModule?: number;
 }
 
 const MODULES = [
   { id: 1, name: "🚀 1. Page d'Accueil & Connexion", icon: "🚀" },
   { id: 2, name: "📊 2. Tableau de Bord (Dashboard)", icon: "📊" },
-  { id: 3, name: "🤖 3. Tuteur RECIF (3 Volets)", icon: "🤖" },
+  { id: 3, name: "🤖 3. Tuteur Intelligent (3 Volets)", icon: "🤖" },
   { id: 4, name: "📑 4. Générateur de Protocoles", icon: "📑" },
   { id: 5, name: "🔬 5. Recherche PubMed & Synthèse", icon: "🔬" },
   { id: 6, name: "🧠 6. Quiz & Timer", icon: "🧠" },
@@ -19,13 +21,20 @@ const MODULES = [
   { id: 8, name: "🧮 8. Calculateur NSN", icon: "🧮" },
   { id: 9, name: "✍️ 9. Rédacteur STROBE", icon: "✍️" },
   { id: 10, name: "💻 10. Application Desktop & Offline", icon: "💻" },
-  { id: 11, name: "👨‍🏫 11. Espace Superviseur", icon: "👨‍🏫" },
+  { id: 11, name: "👨‍🏫 11. Espace Encadreurs & Institutions", icon: "👨‍🏫" },
   { id: 12, name: "💬 12. Messagerie Pédagogique", icon: "💬" },
   { id: 13, name: "⚙️ 13. Moteur IA Hybride", icon: "⚙️" },
+  { id: 14, name: "📜 14. Droits & Licence CC", icon: "📜" },
 ];
 
-export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
-  const [activeModule, setActiveModule] = useState(1);
+export default function GuideModal({ isOpen, onClose, initialModule = 1 }: GuideModalProps) {
+  const [activeModule, setActiveModule] = useState(initialModule);
+
+  useEffect(() => {
+    if (isOpen && initialModule) {
+      setActiveModule(initialModule);
+    }
+  }, [initialModule, isOpen]);
 
   if (!isOpen) return null;
 
@@ -37,8 +46,8 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
           <div className={styles.headerLeft}>
             <div className={styles.titleIcon}>📖</div>
             <div>
-              <h3 className={styles.title}>Manuel Utilisateur Officiel & Guide de Prise en Main</h3>
-              <p className={styles.subtitle}>Plateforme Académique PedagogiAfrica / RECIF — Version v1.8.9 (Conforme Loi 18-11 Santé)</p>
+              <h3 className={styles.title}>Manuel Utilisateur Officiel &amp; Guide de Prise en Main</h3>
+              <p className={styles.subtitle}>Plateforme Académique Methodo&amp;Clinique — Version v{APP_VERSION} (Conforme Loi 18-11 Santé)</p>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Fermer">✕</button>
@@ -61,25 +70,27 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
 
           {/* Content Area */}
           <div className={styles.contentArea}>
+            
+            {/* CHAPITRE 1 */}
             {activeModule === 1 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🚀 Chapitre 1 : Page d&apos;Accueil, Connexion & Demandes d&apos;Accès</h2>
+                  <h2 className={styles.moduleTitle}>🚀 Chapitre 1 : Page d&apos;Accueil, Connexion &amp; Demandes d&apos;Accès</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Guide de première prise en main, connexion sécurisée, demandes d&apos;accès et activation hors-ligne.
+                    Guide de première prise en main, connexion sécurisée, demandes d&apos;accès et choix de formule.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.1. Présentation de la Plateforme & Conformité Réglementaire</h4>
+                  <h4 className={styles.subTitle}>1.1. Présentation de la Plateforme &amp; Conformité Réglementaire</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité & Rôle</div>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Rôle</div>
                       <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre conforme aux exigences de la recherche médicale et à la Loi n° 18-11 relative à la santé (Algérie).</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Fonctionnalités & Interface</div>
-                      <p className={styles.cardText}>Panneau de conformité, grille 2x2 des 4 piliers fonctionnels (Tuteur, Générateur, NSN/Quiz, STROBE) et tags du public cible (Résidents, Médecins, Chercheurs, Enseignants, Étudiants).</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Interface &amp; Publics Cibles</div>
+                      <p className={styles.cardText}>Accès adapté pour Résidents, Médecins, Enseignants-Chercheurs, Encadreurs de thèses et Institutions académiques/hospitalières.</p>
                     </div>
                   </div>
                 </div>
@@ -99,31 +110,40 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.3. Réinitialiser un Mot de Passe Oublié</h4>
-                  <div className={styles.itemBlock}>
-                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
-                      <p className={styles.cardText}>Permet de réinitialiser votre mot de passe et de récupérer l&apos;accès à votre compte en toute sécurité.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Cliquez sur &quot;Mot de passe oublié ?&quot;.<br/>2. Saisissez votre e-mail et cliquez sur &quot;Envoyer le lien&quot;.<br/>3. Cliquez sur le bouton dans le mail reçu pour définir votre nouveau mot de passe.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.4. Demander un Accès & Choisir une Formule</h4>
+                  <h4 className={styles.subTitle}>1.3. Demander un Accès &amp; Choisir une Formule (PRO, EXPERT, ULTRA, INSTITUTION)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Cliquez sur &quot;✨ Demander un Accès / Voir les Formules&quot;.<br/>2. Parcourez les 5 offres d&apos;accès (PRO &amp; EXPERT pour usage individuel, ULTRA pour Encadreurs autonomes, INSTITUTION pour facultés/CHU).<br/>3. Remplissez vos coordonnées et validez votre demande.</p>
+                      <p className={styles.cardText}>1. Cliquez sur &quot;✨ Demander un Accès / Voir les Formules&quot;.<br/>2. Parcourez les 4 formules d&apos;accès (PRO &amp; EXPERT pour l&apos;utilisation individuelle, ULTRA pour les Encadreurs autonomes, et INSTITUTION pour les facultés/CHU).<br/>3. Remplissez vos coordonnées et validez votre demande.</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* CHAPITRE 2 */}
+            {activeModule === 2 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>📊 Chapitre 2 : Tableau de Bord &amp; Navigation</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Vue d&apos;ensemble des fonctionnalités, suivi de progression et accès rapide aux outils.
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>2.1. Cartes de Progression &amp; Quotas</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Vue d&apos;ensemble</div>
+                      <p className={styles.cardText}>Visualisez en temps réel le nombre de protocoles rédigés, vos statistiques de quiz et vos crédits d&apos;analyse IA.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHAPITRE 3 */}
             {activeModule === 3 && (
               <div>
                 <div className={styles.moduleHeader}>
@@ -133,18 +153,13 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   </p>
                 </div>
 
-                <div className={styles.tutorFlowchart}>
-                  <div className={styles.flowItem}>
-                    <h5>💬 1. Discussion Libre</h5>
-                    <p>Questions libres, calculs NSN et conseils réglementaires Loi 18-11.</p>
-                  </div>
-                  <div className={styles.flowItem}>
-                    <h5>📄 2. Accompagnement Projet</h5>
-                    <p>Validation pas-à-pas des 23 paramètres canoniques RECIF.</p>
-                  </div>
-                  <div className={styles.flowItem}>
-                    <h5>📜 3. Rédaction STROBE</h5>
-                    <p>Structuration d&apos;articles observationnels pour publication.</p>
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>3.1. Volet 1 : Discussion Libre</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Posez toutes vos questions sur la méthodologie de recherche, les critères de jugement et la réglementation sanitaire (Loi 18-11).</p>
+                    </div>
                   </div>
                 </div>
 
@@ -152,32 +167,19 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <h4 className={styles.subTitle}>3.2. Volet 2 : Accompagnement Projet (23 Paramètres RECIF)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité & Rôle</div>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Rôle</div>
                       <p className={styles.cardText}>Vous guide pas-à-pas pour concevoir un protocole clinique complet et valider l&apos;ensemble des 23 paramètres obligatoires.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Cliquez sur &quot;Accompagnement Projet&quot;.<br/>2. Répondez aux questions du tuteur pour définir la problématique, les objectifs et la méthode.<br/>3. Suivez la jauge de progression.<br/>4. Une fois validé, cliquez sur &quot;🚀 Transférer au Générateur&quot; pour l&apos;export PDF.</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>3.4. Option Commande Vocale (Dictée & Synthèse)</h4>
-                  <div className={styles.itemBlock}>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>💡 Interaction Vocale</div>
-                      <p className={styles.cardText}>Cliquez sur l&apos;icône Microphone 🎙️ pour dicter votre question à l&apos;oral. Le tuteur retranscrit votre voix et lit la réponse à haute voix.</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* CHAPITRE 4 */}
             {activeModule === 4 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>📑 Chapitre 4 : Générateur de Protocoles & Export PDF Officiel</h2>
+                  <h2 className={styles.moduleTitle}>📑 Chapitre 4 : Générateur de Protocoles &amp; Export PDF Officiel</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
                     Génération interactive, personnalisation automatique de l&apos;en-tête utilisateur et export PDF officiel.
                   </p>
@@ -188,29 +190,43 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 En-tête Officiel Certifié</div>
-                      <p className={styles.cardText}>Vos informations d&apos;institution et de profession sont automatiquement reprises dans l&apos;en-tête de vos protocoles cliniques officiels et de vos cahiers d&apos;observation (CRF).</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Renseignez votre profil (Nom, Profession, Institution, Ville) dans le menu &quot;Mon Profil&quot;.<br/>2. Générez ou modifiez votre protocole dans le Générateur.<br/>3. Cliquez sur &quot;Exporter en PDF&quot; : l&apos;en-tête du document affiche directement vos coordonnées d&apos;auteur et d&apos;institution sans aucune mention générique.</p>
+                      <p className={styles.cardText}>Vos informations d&apos;institution et de profession sont automatiquement reprises dans l&apos;en-tête de vos protocoles cliniques et de vos cahiers d&apos;observation (CRF).</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeModule === 6 && (
+            {/* CHAPITRE 5 */}
+            {activeModule === 5 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🧠 Chapitre 6 : Quiz & Flashcards Interactifs</h2>
+                  <h2 className={styles.moduleTitle}>🔬 Chapitre 5 : Recherche PubMed &amp; Synthèse Bibliographique</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Évaluation des connaissances méthodologiques et mémorisation espacée.
+                    Recherche bibliographique automatisée sur PubMed et synthèse probante de la littérature.
                   </p>
                 </div>
 
-                <div className={styles.timerBadge}>
-                  <span>⏱️ RÈGLE DU CHRONOMÈTRE :</span>
-                  <span>Le temps reste fixe à 00:00 et ne commence QU&apos;APRÈS votre clic explicite sur &quot;🚀 Démarrer le Quiz&quot;.</span>
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>5.1. Recherche &amp; Synthèse en Direct</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Interroge la base PubMed de la NLM et génère une synthèse critique des récents articles publiés sur votre thématique.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHAPITRE 6 */}
+            {activeModule === 6 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>🧠 Chapitre 6 : Quiz &amp; Flashcards Interactifs</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Évaluation des connaissances méthodologiques et mémorisation espacée.
+                  </p>
                 </div>
 
                 <div className={styles.subSection}>
@@ -220,15 +236,34 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
                       <p className={styles.cardText}>Évaluez vos compétences sur les pièges de la recherche (biais de sélection, classement, confusion, puissance statistique).</p>
                     </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Choisissez une thématique.<br/>2. Lisez les instructions en toute sérénité (le chrono est sur pause à 00:00).<br/>3. Cliquez sur &quot;🚀 Démarrer le Quiz&quot; pour lancer le chronomètre.<br/>4. Répondez aux questions et lisez les explications immédiates.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHAPITRE 7 */}
+            {activeModule === 7 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>📈 Chapitre 7 : Rapport Pédagogique Synthétique</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Génération automatique du bilan de compétences méthodologiques pour l&apos;étudiant et l&apos;encadreur.
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>7.1. Bilan &amp; Exportation</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Récapitule le parcours d&apos;apprentissage, les quiz validés et les compétences méthodologiques acquises.</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* CHAPITRE 8 */}
             {activeModule === 8 && (
               <div>
                 <div className={styles.moduleHeader}>
@@ -239,79 +274,40 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>8.1. Calcul & Justification en 1-Clic</h4>
+                  <h4 className={styles.subTitle}>8.1. Calcul &amp; Justification en 1-Clic</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
                       <p className={styles.cardText}>Détermine le nombre de sujets requis pour obtenir une étude statistiquement valide et conforme aux exigences des comités d&apos;éthique.</p>
                     </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Sélectionnez le type d&apos;étude (proportions, moyennes, cohorte, cas-témoins).<br/>2. Entrez vos valeurs (p1, p2, alpha 5%, puissance 80%).<br/>3. Cliquez sur &quot;Calculer le NSN&quot;.<br/>4. Cliquez sur &quot;📋 Copier le texte de justification&quot; pour le coller directement dans votre protocole.</p>
-                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeModule === 13 && (
+            {/* CHAPITRE 9 */}
+            {activeModule === 9 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>⚙️ Chapitre 13 : Architecture du Moteur IA Hybride</h2>
+                  <h2 className={styles.moduleTitle}>✍️ Chapitre 9 : Rédacteur STROBE &amp; Rédaction d&apos;Articles</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Fonctionnement automatique des 3 niveaux de résilience réseau.
+                    Assistance à la rédaction d&apos;articles observationnels selon la déclaration internationale STROBE.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>13.1. Cascade de Connectivité Tripro</h4>
+                  <h4 className={styles.subTitle}>9.1. Structuration d&apos;Articles STROBE</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🟢 Mode Connecté (Gemini Cloud)</div>
-                      <p className={styles.cardText}>Puissance maximale et synthèse PubMed en direct lorsque la connexion Internet est active.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🟡 Mode Déconnecté (Ollama Local)</div>
-                      <p className={styles.cardText}>Basculement automatique sur le modèle local (127.0.0.1:11434) sans interruption si Internet est indisponible.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔵 Base Statique Embarquée</div>
-                      <p className={styles.cardText}>Repli ultime sur la base de connaissances RECIF intégrée dans le binaire pour un fonctionnement garanti 24h/24.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
+                      <p className={styles.cardText}>Guide la rédaction des sections Introduction, Méthodes, Résultats et Discussion pour les revues scientifiques de rang A.</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeModule === 11 && (
-              <div>
-                <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>👨‍🏫 Chapitre 11 : Espace Superviseur &amp; Raccordement des Étudiants</h2>
-                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Architecture des accès encadrants, raccordement des étudiants et gouvernance académique.
-                  </p>
-                </div>
-
-                <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>11.1. Modèle d&apos;Accès Encadreur &amp; Formules</h4>
-                  <div className={styles.itemBlock}>
-                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>👑 Formule ULTRA (Encadreur Autonome)</div>
-                      <p className={styles.cardText}>Réservée aux enseignants et praticiens souhaitant inscrire, raccorder et superviser directement leurs propres étudiants avec leur Code d&apos;Affiliation.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🏛️ Formule INSTITUTION (Facultés, CHU)</div>
-                      <p className={styles.cardText}>L&apos;Administrateur de l&apos;établissement (ou SuperAdmin RECIF) crée et affecte les comptes Enseignants ainsi que les étudiants qui leur sont attribués.</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>⚡ Formules PRO &amp; EXPERT</div>
-                      <p className={styles.cardText}>Destinées à l&apos;utilisation individuelle. Si un raccordement avec un encadreur référent est nécessaire, l&apos;attribution est effectuée sur mesure par l&apos;Administrateur Général.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
+            {/* CHAPITRE 10 */}
             {activeModule === 10 && (
               <div>
                 <div className={styles.moduleHeader}>
@@ -338,52 +334,113 @@ export default function GuideModal({ isOpen, onClose }: GuideModalProps) {
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚡ Génération Automatique</div>
                       <p className={styles.cardText}>Toute souscription à une formule (PRO, EXPERT, ULTRA) génère et fournit automatiquement votre clé de licence dédiée sans aucun besoin d&apos;intervention de l&apos;administrateur.</p>
                     </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔑 Activation en 1-Clic</div>
-                      <p className={styles.cardText}>Au premier démarrage de l&apos;application Desktop, collez votre clé dans le champ &quot;Code de Licence Hors-Ligne&quot; pour valider instantanément votre accès.</p>
-                    </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHAPITRE 11 */}
+            {activeModule === 11 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>👨‍🏫 Chapitre 11 : Espace Encadreurs &amp; Institutions (Supervision)</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Architecture des accès encadrants, raccordement des étudiants et gouvernance académique.
+                  </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>10.3. Modes de Connexion Disponibles</h4>
+                  <h4 className={styles.subTitle}>11.1. Modèle d&apos;Accès Encadreur &amp; Formules</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🔑 Licence Hors-Ligne</div>
-                      <p className={styles.cardText}>Mode par défaut au démarrage sur Desktop. Valide les droits localement par cryptographie RSA avec ou sans Internet.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>👑 Formule ULTRA (Encadreur Autonome)</div>
+                      <p className={styles.cardText}>Réservée aux enseignants et praticiens souhaitant inscrire, raccorder et superviser directement leurs propres étudiants avec leur Code d&apos;Affiliation.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🌐 Connexion en Ligne</div>
-                      <p className={styles.cardText}>Permet aux abonnés web de s&apos;identifier avec leur E-mail et Mot de passe habituels lorsqu&apos;Internet est actif (met en cache la session pour le futur hors-ligne).</p>
-                    </div>
-                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🟢 Mode Invité Local</div>
-                      <p className={styles.cardText}>Permet à tout utilisateur déconnecté de découvrir immédiatement l&apos;IA locale Ollama, le calculateur NSN et les quiz sans rester bloqué.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🏛️ Formule INSTITUTION (Facultés, CHU)</div>
+                      <p className={styles.cardText}>L&apos;Administrateur de l&apos;établissement crée et affecte les comptes Enseignants ainsi que les étudiants qui leur sont attribués.</p>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {![1, 3, 4, 6, 8, 10, 11, 13].includes(activeModule) && (
+            {/* CHAPITRE 12 */}
+            {activeModule === 12 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>{MODULES.find(m => m.id === activeModule)?.name}</h2>
+                  <h2 className={styles.moduleTitle}>💬 Chapitre 12 : Messagerie Pédagogique &amp; Diffusion</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Guide d&apos;utilisation pas-à-pas et procédure de prise en main pour ce module.
+                    Échanges directs entre encadrants et étudiants, notifications et annonces d&apos;actualisation.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>Procédure de Prise en Main Pas-à-Pas</h4>
+                  <h4 className={styles.subTitle}>12.1. Échanges Pédagogiques &amp; Annotations de Protocoles</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité & Rôle</div>
-                      <p className={styles.cardText}>Fournit les outils méthodologiques conformes aux exigences académiques de la charte RECIF et à la réglementation sanitaire.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>💬 Messagerie Interne</div>
+                      <p className={styles.cardText}>Permet à l&apos;encadreur d&apos;envoyer des remarques et corrections directement sur les protocoles rédigés par ses résidents/étudiants.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHAPITRE 13 */}
+            {activeModule === 13 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>⚙️ Chapitre 13 : Architecture du Moteur IA Hybride</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Fonctionnement des 3 niveaux de résilience réseau (Cloud &rarr; Local &rarr; Statique).
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>13.1. Cascade de Connectivité Tripro</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🟢 Mode Connecté (Gemini Cloud)</div>
+                      <p className={styles.cardText}>Synthèse PubMed en direct et puissance maximale quand Internet est disponible.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Sélectionnez le module dans la barre latérale.<br/>2. Complétez les champs ou effectuez vos choix.<br/>3. Validez l&apos;action pour obtenir l&apos;analyse ou l&apos;exportation désirée.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🟡 Mode Déconnecté (Ollama Local)</div>
+                      <p className={styles.cardText}>Basculement automatique sur le modèle local (127.0.0.1:11434) sans interruption de travail.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔵 Base Statique Embarquée</div>
+                      <p className={styles.cardText}>Repli ultime sur la base de connaissances RECIF intégrée dans l&apos;application pour un fonctionnement garanti 24h/24.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CHAPITRE 14 */}
+            {activeModule === 14 && (
+              <div>
+                <div className={styles.moduleHeader}>
+                  <h2 className={styles.moduleTitle}>📜 Chapitre 14 : Propriété Intellectuelle &amp; Licence Creative Commons</h2>
+                  <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
+                    Répartition des droits d&apos;auteur, sources documentaires et conditions d&apos;utilisation.
+                  </p>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>14.1. Protection du Logiciel &amp; Licences de Contenu</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>💻 Logiciel &amp; Code Source</div>
+                      <p className={styles.cardText}><strong>© 2026 Methodo&amp;Clinique. Tous droits réservés.</strong> La plateforme, l&apos;interface, l&apos;architecture et la logique RAG sont la propriété exclusive et protégée de l&apos;auteur.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>📚 Sources &amp; Référentiels Officiels</div>
+                      <p className={styles.cardText}>Les documents et lois de référence (Manuel du RECIF, Loi n° 18-11 relative à la santé, Lignes Directrices pour la Conduite des Études Cliniques en Algérie - MSPRH, grilles STROBE/ICMJE) demeurent la propriété exclusive de leurs institutions émettrices respectives et sont exploités à des fins d&apos;analyse RAG et de citation.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🎓 Propriété des Résultats Utilisateurs &amp; Licence CC BY-NC-SA 4.0</div>
+                      <p className={styles.cardText}>Les résultats de recherche, protocoles, fiches et données générés par les utilisateurs <strong>leur appartiennent en toute exclusivité</strong> et ils sont 100% libres de les exploiter pour tous leurs travaux académiques, mémoires, thèses ou publications. Les fiches pédagogiques de formation sont sous licence <strong>Creative Commons CC BY-NC-SA 4.0</strong> (Attribution - Pas d&apos;Utilisation Commerciale - Partage dans les Mêmes Conditions).</p>
                     </div>
                   </div>
                 </div>
