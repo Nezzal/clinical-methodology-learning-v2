@@ -50,7 +50,31 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
               <p className={styles.subtitle}>Plateforme Académique Methodo&amp;Clinique — Version v{APP_VERSION} (Conforme Loi 18-11 Santé)</p>
             </div>
           </div>
-          <button className={styles.closeBtn} onClick={onClose} aria-label="Fermer">✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <a
+              href="/docs/Manuel_Utilisateur_Officiel_MethodoClinique_v2.0.6.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontSize: '0.82rem',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                color: '#ffffff',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                padding: '0.45rem 0.95rem',
+                borderRadius: '8px',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 3px 10px rgba(2, 132, 199, 0.35)'
+              }}
+              title="Ouvrir et imprimer / sauvegarder le Manuel Officiel de Référence Complet en PDF"
+            >
+              📥 Télécharger le Manuel Complet (PDF)
+            </a>
+            <button className={styles.closeBtn} onClick={onClose} aria-label="Fermer">✕</button>
+          </div>
         </div>
 
         {/* Body */}

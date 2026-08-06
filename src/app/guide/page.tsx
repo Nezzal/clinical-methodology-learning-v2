@@ -71,13 +71,25 @@ export default function GuidePage() {
       <header className={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.75rem' }}>
           <h1 className={styles.title} style={{ margin: 0 }}>Acquisition de l'Exécutable Hors-ligne & Licences</h1>
-          <button 
-            className="btn btn-primary"
-            onClick={() => setShowGuideModal(true)}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0.65rem 1.25rem', fontSize: '0.9rem', fontWeight: 600, background: 'linear-gradient(135deg, #0284c7, #0369a1)', border: 'none', borderRadius: '10px', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)' }}
-          >
-            📖 Manuel Utilisateur Officiel (14 Chapitres)
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button 
+              className="btn btn-primary"
+              onClick={() => setShowGuideModal(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.1rem', fontSize: '0.88rem', fontWeight: 600, background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: '10px' }}
+            >
+              📖 Manuel Interactif Intégré
+            </button>
+            <a 
+              href="/docs/Manuel_Utilisateur_Officiel_MethodoClinique_v2.0.6.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0.6rem 1.1rem', fontSize: '0.88rem', fontWeight: 700, background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', border: 'none', borderRadius: '10px', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)', textDecoration: 'none' }}
+              title="Ouvrir et imprimer / sauvegarder le Manuel Officiel de Référence Complet en PDF"
+            >
+              📥 Télécharger le Manuel Complet (PDF)
+            </a>
+          </div>
         </div>
         <p className={styles.subtitle}>
           Ce guide est destiné aux enseignants et aux étudiants souhaitant utiliser l'application de formation <strong>Methodo&Clinique</strong> en local, de façon autonome et <strong>sans aucune connexion internet</strong>.
