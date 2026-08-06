@@ -321,8 +321,8 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                   <h4 className={styles.subTitle}>10.1. Téléchargement &amp; Installation de l&apos;Exécutable</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🍎 Mac (.dmg) &amp; 💻 Windows (.exe)</div>
-                      <p className={styles.cardText}>L&apos;application Desktop s&apos;exécute de façon totalement autonome sans dépendre d&apos;un navigateur web ni d&apos;une connexion Internet permanente.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🍎 Mac (.dmg), 💻 Windows (.exe) &amp; 🐧 Linux (.AppImage / .deb)</div>
+                      <p className={styles.cardText}>L&apos;application Desktop (disponible pour macOS, Windows et Linux) s&apos;exécute de façon totalement autonome sans dépendre d&apos;un navigateur web ni d&apos;une connexion Internet permanente.</p>
                     </div>
                   </div>
                 </div>
