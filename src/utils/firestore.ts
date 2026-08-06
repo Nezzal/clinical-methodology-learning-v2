@@ -560,7 +560,8 @@ export interface FirestoreAccessLog {
 }
 
 export async function recordAccessLog(uid: string, email: string, displayName?: string): Promise<string | null> {
-  if (!uid || uid.startsWith('offline_') || uid === 'guest') return null;
+  const cleanEmail = email?.trim()?.toLowerCase();
+  if (!uid || uid.startsWith('offline_') || uid === 'guest' || !cleanEmail || cleanEmail === 'sans email') return null;
 
   const isElectron = typeof window !== 'undefined' && (window as any).electron !== undefined;
   const platform = isElectron ? 'Application Desktop Electron' : 'Navigateur Web';
@@ -571,8 +572,8 @@ export async function recordAccessLog(uid: string, email: string, displayName?: 
   const newLog: FirestoreAccessLog = {
     id: logId,
     uid,
-    email: email || 'Sans email',
-    displayName: displayName || email?.split('@')[0] || 'Utilisateur',
+    email: cleanEmail,
+    displayName: displayName || cleanEmail.split('@')[0] || 'Utilisateur',
     timestamp: startTimeMs,
     startTimeMs,
     lastPingMs: startTimeMs,
@@ -726,9 +727,14 @@ export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
     return 0;
   };
 
+  const filterValidLogs = (list: FirestoreAccessLog[]) => {
+    return list.filter(l => l.email && l.email !== 'Sans email' && l.email !== '—' && l.email.trim() !== '');
+  };
+
   if (!isFirebaseEnabled || !db) {
-    cachedLogs.sort((a, b) => parseLogTime(b) - parseLogTime(a));
-    return cachedLogs;
+    const validCached = filterValidLogs(cachedLogs);
+    validCached.sort((a, b) => parseLogTime(b) - parseLogTime(a));
+    return validCached;
   }
 
   try {
@@ -744,21 +750,23 @@ export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
       cachedLogs.forEach(l => { if (l.id && !logMap.has(l.id)) logMap.set(l.id, l); });
 
       const mergedLogs = Array.from(logMap.values());
-      mergedLogs.sort((a, b) => parseLogTime(b) - parseLogTime(a));
+      const validMerged = filterValidLogs(mergedLogs);
+      validMerged.sort((a, b) => parseLogTime(b) - parseLogTime(a));
 
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('recif_access_logs_cache', JSON.stringify(mergedLogs));
+          localStorage.setItem('recif_access_logs_cache', JSON.stringify(validMerged));
         } catch (e) {}
       }
-      return mergedLogs;
+      return validMerged;
     }
   } catch (error) {
     console.warn('⚠️ Erreur loadAccessLogs (fallback cache local):', error);
   }
 
-  cachedLogs.sort((a, b) => parseLogTime(b) - parseLogTime(a));
-  return cachedLogs;
+  const validCached = filterValidLogs(cachedLogs);
+  validCached.sort((a, b) => parseLogTime(b) - parseLogTime(a));
+  return validCached;
 }
 
 export async function deleteAccessLog(logId: string) {
