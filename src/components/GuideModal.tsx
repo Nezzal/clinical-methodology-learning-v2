@@ -442,20 +442,65 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                 <div className={styles.moduleHeader}>
                   <h2 className={styles.moduleTitle}>👨‍🏫 Chapitre 11 : Espace Encadreurs &amp; Institutions (Supervision)</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Architecture des accès encadrants, raccordement des étudiants et gouvernance académique.
+                    Architecture des accès encadrants, raccordement des étudiants, traçabilité et gouvernance académique.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>11.1. Modèle d&apos;Accès Encadreur &amp; Formules</h4>
+                  <h4 className={styles.subTitle}>11.1. Modèles d&apos;Accès Encadreur &amp; Offres (ULTRA &amp; INSTITUTION)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>👑 Formule ULTRA (Encadreur Autonome)</div>
-                      <p className={styles.cardText}>Réservée aux enseignants et praticiens souhaitant inscrire, raccorder et superviser directement leurs propres étudiants avec leur Code d&apos;Affiliation.</p>
+                      <p className={styles.cardText}>Réservée aux enseignants, professeurs et praticiens souhaitant inscrire, raccorder et superviser directement leurs propres étudiants/résidents via leur <strong>Code d&apos;Affiliation</strong> unique.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🏛️ Formule INSTITUTION (Facultés, CHU)</div>
-                      <p className={styles.cardText}>L&apos;Administrateur de l&apos;établissement crée et affecte les comptes Enseignants ainsi que les étudiants qui leur sont attribués.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🏛️ Formule INSTITUTION (Facultés de Médecine, CHU)</div>
+                      <p className={styles.cardText}>L&apos;Administrateur de l&apos;établissement déploie des accès multi-sièges, attribue les comptes Enseignants et gère le tableau de bord Doyen / Chef de service avec personnalisation du logo sur les PDF.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>11.2. Tableau de Bord Global de Supervision &amp; Onglets d&apos;Administration</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>📊 5 Onglets de Gestion Centrale</div>
+                      <p className={styles.cardText}>
+                        • <strong>Utilisateurs inscrits :</strong> Vue globale avec recherche par nom/e-mail, tri alphabétique/formule, export CSV (Excel) et nettoyage des comptes.<br/>
+                        • <strong>Demandes Indiv. :</strong> Validation et activation en 1-clic des demandes individuelles en attente.<br/>
+                        • <strong>Groupes &amp; Devis :</strong> Gestion des effectifs groupés et devis d&apos;établissement.<br/>
+                        • <strong>Messagerie :</strong> Canal de communication pédagogique directe avec les étudiants.<br/>
+                        • <strong>📜 Journal des Accès :</strong> Suivi des connexions du jour et historique complet.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>11.3. Fiche Pédagogique Individuelle de l&apos;Étudiant (7 Onglets Détaillés)</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🔍 Traçabilité Globale de l&apos;Apprenant</div>
+                      <p className={styles.cardText}>
+                        1. <strong>Stats :</strong> Compteurs d&apos;activités (questions tuteur, protocoles, scores quiz, flashcards) + options de suspension/suppression.<br/>
+                        2. <strong>👤 Fiche Profil :</strong> Informations académiques, grade, établissement et statut d&apos;abonnement.<br/>
+                        3. <strong>Protocoles &amp; Articles :</strong> Consultation et révision des protocoles RECIF et articles STROBE rédigés par l&apos;étudiant.<br/>
+                        4. <strong>Tuteur &amp; Bilan IA :</strong> Consultation de l&apos;historique des questions posées au tuteur et génération du rapport de compétences automatisé.<br/>
+                        5. <strong>📜 Accès :</strong> Traçabilité nominative des connexions de l&apos;étudiant (dates, heures, durées et total cumulé en minutes).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>11.4. Journal des Accès &amp; Sessions en Temps Réel (Live)</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🟢 Suivi Live &amp; Filtres Temporels</div>
+                      <p className={styles.cardText}>
+                        • <strong>Statut Live :</strong> Détection automatique des sessions <span style={{ color: '#22c55e', fontWeight: 600 }}>🟢 En cours</span> (ping &lt; 2 min) et fermeture automatique en <span style={{ color: '#94a3b8' }}>⚪ Terminée (durée)</span> dès l&apos;arrêt des pings.<br/>
+                        • <strong>Sélecteur de Filtre :</strong> Basculement instantané entre <strong>📅 Connexions du jour</strong> (vue par défaut) et <strong>🌐 Historique global complet</strong>.
+                      </p>
                     </div>
                   </div>
                 </div>
