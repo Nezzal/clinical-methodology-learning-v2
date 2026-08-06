@@ -34,24 +34,156 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     @media print {
+      /* ---- Page setup ---- */
+      @page {
+        size: A4;
+        margin: 22mm 18mm 25mm 18mm;
+        @bottom-center {
+          content: "Methodo\0026Clinique — Grand Manuel de Référence v2.0.6 — Page " counter(page) " / " counter(pages);
+          font-family: Arial, sans-serif;
+          font-size: 8pt;
+          color: #666;
+        }
+        @top-right {
+          content: "Document Officiel de Référence Académique";
+          font-family: Arial, sans-serif;
+          font-size: 7pt;
+          color: #aaa;
+        }
+      }
+      @page :first {
+        margin-top: 15mm;
+        @top-right { content: ""; }
+        @bottom-center { content: ""; }
+      }
+
+      /* ---- Global reset for print ---- */
       .no-print { display: none !important; }
-      .page-break { page-break-before: always; break-before: page; }
-      .avoid-break { page-break-inside: avoid; break-inside: avoid; }
-      body { font-size: 9.5pt; line-height: 1.55; color: #000; background: #fff; font-family: Georgia, serif; }
+      body {
+        font-size: 10pt;
+        line-height: 1.6;
+        color: #000;
+        background: #fff;
+        font-family: Georgia, Cambria, "Times New Roman", serif;
+        orphans: 3;
+        widows: 3;
+      }
       .container { max-width: 100%; padding: 0; margin: 0; }
-      .chapter-card { border: 1px solid #aaa !important; box-shadow: none !important; margin-bottom: 1.5rem; padding: 1.5rem; }
-      h1 { font-size: 22pt; }
-      h2 { font-size: 15pt; }
-      h3 { font-size: 12pt; }
+
+      /* ---- Each chapter = its own page ---- */
+      .chapter-card {
+        page-break-before: always;
+        break-before: page;
+        border: 1px solid #bbb !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        margin-bottom: 0 !important;
+        padding: 1.75rem !important;
+        background: #fff !important;
+      }
+      /* Cover and TOC don't need a forced page-break before them (they are first) */
+      .cover-card {
+        page-break-before: auto !important;
+        break-before: auto !important;
+        border: 2px solid #000 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .toc-card {
+        page-break-before: always;
+        break-before: page;
+        border: 1px solid #bbb !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 1.75rem !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      /* The Avant-propos card */
+      .chapter-card:first-of-type {
+        page-break-before: always;
+        break-before: page;
+      }
+
+      /* ---- Prevent bad cuts inside elements ---- */
+      .avoid-break,
+      .param-card,
+      .strobe-item,
+      .step-item,
+      .tier-card,
+      .admin-tab-card,
+      .box-quote,
+      .box-warning,
+      .box-success,
+      .box-danger,
+      .box-info {
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+
+      /* ---- Headings always glued to their following content ---- */
+      h1, h2, h3, h4, h5 {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+      .section-title, .subsection-title, .subsubsection-title {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+
+      /* ---- Tables ---- */
+      .table-wrap {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      table {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        width: 100%;
+      }
+      thead { display: table-header-group; }
+      tr    { page-break-inside: avoid; break-inside: avoid; }
+
+      /* ---- Grids collapse to 1 col for print readability ---- */
+      .param-grid  { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+      .tier-grid   { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+      .admin-tab-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+      .meta-grid   { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+      .toc-grid    { grid-template-columns: repeat(2, 1fr); }
+
+      /* ---- Typography ---- */
+      h1 { font-size: 20pt; }
+      h2.chapter-title { font-size: 15pt; }
+      h3.section-title { font-size: 12pt; }
       h4 { font-size: 10.5pt; }
+      .chapter-num-label { font-size: 8pt; }
+      .cover-title { font-size: 22pt; }
+      .cover-subtitle { font-size: 12pt; }
+
+      /* ---- Colors ---- */
       .header-bar { display: none; }
-      .cover-card { border: 2px solid #000 !important; }
       a { color: #000; text-decoration: none; }
-      .formula-box { background: #f0f0f0 !important; color: #000 !important; border: 1px solid #999; }
-      .box-quote, .box-warning, .box-success, .box-danger, .box-info { border-left-width: 4px; }
-      .badge { border: 1px solid #666; }
-      table { page-break-inside: avoid; }
-      .toc-list { columns: 1; }
+      .formula-box {
+        background: #f4f4f4 !important;
+        color: #000 !important;
+        border: 1px solid #999;
+        font-size: 8.5pt;
+        line-height: 1.7;
+      }
+      .formula-comment { color: #555 !important; }
+      .badge { border: 1px solid #666; background: #f0f0f0 !important; color: #000 !important; }
+
+      /* ---- Footer ---- */
+      footer {
+        page-break-before: always;
+        break-before: page;
+        border-top: 2px solid #000;
+        padding-top: 1rem;
+      }
     }
 
     /* =============================================
