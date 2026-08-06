@@ -3,44 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manuel Utilisateur Officiel & Référentiel Méthodologique RECIF v2.0.6 — Methodo&Clinique</title>
+  <title>Grand Manuel de Référence Méthodologique & Réglementaire RECIF — Methodo&Clinique v2.0.6</title>
   <style>
     :root {
       --primary: #0284c7;
       --primary-dark: #0369a1;
-      --accent: #2dd4bf;
+      --accent: #0d9488;
       --text: #0f172a;
       --text-muted: #475569;
       --bg: #ffffff;
       --bg-alt: #f8fafc;
-      --border: #e2e8f0;
+      --border: #cbd5e1;
     }
 
     @media print {
       .no-print { display: none !important; }
-      body { font-size: 11pt; line-height: 1.5; color: #000; background: #fff; }
+      body { font-size: 10pt; line-height: 1.5; color: #000; background: #fff; }
       .page-break { page-break-before: always; }
-      .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+      .card { border: 1px solid #999 !important; box-shadow: none !important; }
+      h1, h2, h3 { page-break-after: avoid; }
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: Georgia, Cambria, "Times New Roman", Times, serif;
       color: var(--text);
       background-color: var(--bg-alt);
       margin: 0;
       padding: 0;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
     .header-bar {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
       color: #ffffff;
-      padding: 1.5rem 2rem;
-      border-bottom: 3px solid var(--accent);
+      padding: 1.25rem 2rem;
+      border-bottom: 4px solid var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .header-bar-content {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
@@ -50,132 +55,234 @@
     }
 
     .btn-print {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: linear-gradient(135deg, #0284c7, #0369a1);
       color: #ffffff;
       border: none;
-      padding: 0.65rem 1.25rem;
+      padding: 0.7rem 1.5rem;
       border-radius: 8px;
       font-weight: 700;
       font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
       transition: all 0.2s;
     }
 
     .btn-print:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.4);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
     }
 
     .container {
-      max-width: 1000px;
-      margin: 2rem auto;
+      max-width: 1100px;
+      margin: 2.5rem auto;
       padding: 0 1.5rem;
     }
 
     .cover-card {
       background: #ffffff;
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
       border-radius: 16px;
-      padding: 2.5rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 3.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .cover-badge {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: inline-block;
+      background: rgba(2, 132, 199, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(2, 132, 199, 0.3);
+      padding: 0.35rem 1rem;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.5rem;
     }
 
     .cover-title {
-      font-size: 2.2rem;
+      font-size: 2.6rem;
       color: #0f172a;
-      margin: 0 0 0.5rem 0;
-      font-weight: 800;
+      margin: 0 0 1rem 0;
+      font-weight: 900;
+      line-height: 1.2;
     }
 
     .cover-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.35rem;
       color: var(--primary);
-      margin-bottom: 1.5rem;
+      margin-bottom: 2rem;
       font-weight: 600;
+      font-style: italic;
     }
 
     .meta-grid {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
       background: var(--bg-alt);
-      padding: 1.25rem;
+      padding: 1.5rem;
       border-radius: 12px;
       border: 1px solid var(--border);
-      font-size: 0.9rem;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    .toc-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    }
+
+    .toc-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 1.6rem;
+      color: #0f172a;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 0.6rem;
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+    }
+
+    .toc-list {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      columns: 2;
+      column-gap: 2.5rem;
+      font-size: 0.95rem;
+      line-height: 2;
     }
 
     .chapter-card {
       background: #ffffff;
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    }
+
+    .chapter-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--primary);
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
     .chapter-title {
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       color: #0f172a;
       border-bottom: 2px solid var(--primary);
-      padding-bottom: 0.5rem;
-      margin-top: 0;
-      margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      margin-top: 0.25rem;
+      margin-bottom: 1.5rem;
+      font-weight: 800;
     }
 
     .section-title {
-      font-size: 1.15rem;
+      font-size: 1.3rem;
       color: var(--primary-dark);
+      margin-top: 2rem;
+      margin-bottom: 0.85rem;
+      border-left: 4px solid var(--primary);
+      padding-left: 0.75rem;
+    }
+
+    .subsection-title {
+      font-size: 1.1rem;
+      color: #1e293b;
       margin-top: 1.5rem;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
     }
 
-    .info-box {
+    p {
+      margin-bottom: 1.15rem;
+      text-align: justify;
+    }
+
+    ul, ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.75rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    .box-quote {
+      background: #f0f9ff;
+      border-left: 5px solid var(--primary);
+      padding: 1.25rem 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
+      font-style: italic;
+    }
+
+    .box-warning {
+      background: #fffbeb;
+      border-left: 5px solid #f59e0b;
+      padding: 1.25rem 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
+    }
+
+    .box-success {
       background: #f0fdf4;
-      border-left: 4px solid #22c55e;
-      padding: 1rem 1.25rem;
-      border-radius: 6px;
-      margin: 1rem 0;
-      font-size: 0.95rem;
-    }
-
-    .warning-box {
-      background: #eff6ff;
-      border-left: 4px solid #3b82f6;
-      padding: 1rem 1.25rem;
-      border-radius: 6px;
-      margin: 1rem 0;
-      font-size: 0.95rem;
+      border-left: 5px solid #22c55e;
+      padding: 1.25rem 1.5rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1.5rem 0;
     }
 
     .table-custom {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       width: 100%;
       border-collapse: collapse;
-      margin: 1rem 0;
-      font-size: 0.9rem;
+      margin: 1.5rem 0;
+      font-size: 0.92rem;
     }
 
     .table-custom th, .table-custom td {
       border: 1px solid var(--border);
-      padding: 0.75rem;
+      padding: 0.85rem 1rem;
       text-align: left;
     }
 
     .table-custom th {
-      background-color: var(--bg-alt);
+      background-color: #f1f5f9;
       color: #0f172a;
       font-weight: 700;
     }
 
+    .formula-box {
+      font-family: "Courier New", Courier, monospace;
+      background: #1e293b;
+      color: #38bdf8;
+      padding: 1.25rem;
+      border-radius: 8px;
+      margin: 1.25rem 0;
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
     footer {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       text-align: center;
-      padding: 2rem 0;
+      padding: 2.5rem 0;
       color: var(--text-muted);
-      font-size: 0.85rem;
-      border-top: 1px solid var(--border);
-      margin-top: 3rem;
+      font-size: 0.88rem;
+      border-top: 2px solid var(--border);
+      margin-top: 4rem;
     }
   </style>
 </head>
@@ -184,222 +291,279 @@
   <div class="header-bar no-print">
     <div class="header-bar-content">
       <div>
-        <strong style="font-size: 1.1rem; color: #38bdf8;">Plateforme Methodo&Clinique</strong>
-        <div style="font-size: 0.85rem; color: #94a3b8;">Manuel Utilisateur Officiel & Référentiel Méthodologique (v2.0.6)</div>
+        <strong style="font-size: 1.15rem; color: #38bdf8;">Plateforme Académique Methodo&Clinique</strong>
+        <div style="font-size: 0.85rem; color: #94a3b8;">Grand Manuel de Référence Méthodologique & Réglementaire (Version v2.0.6)</div>
       </div>
-      <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+      <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF (Document de Référence)</button>
     </div>
   </div>
 
   <div class="container">
     
-    <!-- PAGE DE GARDE / EN-TÊTE OFFICIEL -->
+    <!-- PAGE DE GARDE -->
     <div class="cover-card">
-      <h1 class="cover-title">Manuel Utilisateur Officiel & Référentiel Méthodologique RECIF</h1>
-      <div class="cover-subtitle">Guide de Référence Général pour la Recherche Clinique & la Rédaction Scientifique (Version v2.0.6)</div>
+      <span class="cover-badge">DOCUMENT OFFICIEL DE RÉFÉRENCE ACADÉMIQUE</span>
+      <h1 class="cover-title">Grand Manuel de Référence Méthodologique & Réglementaire RECIF</h1>
+      <div class="cover-subtitle">Guide Exhaustif pour la Conception des Protocoles Cliniques, la Statistique et la Rédaction Scientifique (v2.0.6)</div>
       
       <div class="meta-grid">
-        <div><strong>🏛️ Plateforme :</strong> Methodo&Clinique EDU</div>
+        <div><strong>🏛️ Plateforme Officielle :</strong> Methodo&Clinique EDU</div>
         <div><strong>📜 Direction Scientifique :</strong> Professeur Nezzal Abdelmalek</div>
-        <div><strong>🏛️ NIF Fiscal :</strong> 15007180115910202380</div>
-        <div><strong>⚖️ Conformité :</strong> Loi n° 18-11 Santé (Algérie) & RECIF</div>
-        <div><strong>💳 Compte BaridiMob :</strong> RIP 00799999000041210947</div>
-        <div><strong>🎓 Droits & Licence :</strong> Creative Commons CC BY-NC-SA 4.0</div>
+        <div><strong>🏛️ NIF Fiscal Officiel :</strong> 15007180115910202380</div>
+        <div><strong>⚖️ Réglementation :</strong> Loi n° 18-11 relative à la santé</div>
+        <div><strong>💳 Virement BaridiMob :</strong> RIP 00799999000041210947</div>
+        <div><strong>🎓 Licence Contenus :</strong> Creative Commons CC BY-NC-SA 4.0</div>
       </div>
     </div>
 
-    <!-- SOMMAIRE DÉTAILLÉ -->
-    <div class="chapter-card">
-      <h2 class="chapter-title">📋 Table des Matières</h2>
-      <ol style="columns: 2; column-gap: 2rem; font-size: 0.95rem; line-height: 1.8;">
-        <li><strong>Chapitre 1 :</strong> Page d'Accueil, Connexion & Paiement BaridiMob</li>
-        <li><strong>Chapitre 2 :</strong> Tableau de Bord & Navigation</li>
+    <!-- SOMMAIRE EXHAUSTIF -->
+    <div class="toc-card">
+      <h2 class="toc-title">📋 Table des Matières</h2>
+      <ol class="toc-list">
+        <li><strong>Chapitre 1 :</strong> Cadre Légal & Inscription</li>
+        <li><strong>Chapitre 2 :</strong> Navigation & Tableau de Bord</li>
         <li><strong>Chapitre 3 :</strong> Tuteur Intelligent RECIF (3 Volets)</li>
-        <li><strong>Chapitre 4 :</strong> Générateur de Protocoles & En-tête Officiel</li>
-        <li><strong>Chapitre 5 :</strong> Recherche PubMed & Synthèse Bibliographique</li>
-        <li><strong>Chapitre 6 :</strong> Quiz & Flashcards Interactifs</li>
-        <li><strong>Chapitre 7 :</strong> Rapport Pédagogique Synthétique</li>
+        <li><strong>Chapitre 4 :</strong> Générateur de Protocoles & CRF</li>
+        <li><strong>Chapitre 5 :</strong> Recherche PubMed & Synthèse RAG</li>
+        <li><strong>Chapitre 6 :</strong> Quiz & Mémorisation Espacée</li>
+        <li><strong>Chapitre 7 :</strong> Rapport Pédagogique & Suivi IA</li>
         <li><strong>Chapitre 8 :</strong> Calculateur du Nombre de Sujets (NSN)</li>
         <li><strong>Chapitre 9 :</strong> Rédacteur d'Article STROBE</li>
-        <li><strong>Chapitre 10 :</strong> Applications Desktop Autonomes (Mac, Windows, Linux)</li>
-        <li><strong>Chapitre 11 :</strong> Espace Supervision Encadreurs & Institutions</li>
-        <li><strong>Chapitre 12 :</strong> Messagerie Pédagogique & Diffusion</li>
-        <li><strong>Chapitre 13 :</strong> Moteur IA Hybride Tripro (Cloud / Local / Statique)</li>
-        <li><strong>Chapitre 14 :</strong> Propriété Intellectuelle & Droits des Utilisateurs</li>
+        <li><strong>Chapitre 10 :</strong> Applications Desktop Autonomes</li>
+        <li><strong>Chapitre 11 :</strong> Espace Supervision & Administration</li>
+        <li><strong>Chapitre 12 :</strong> Messagerie Interne Pédagogique</li>
+        <li><strong>Chapitre 13 :</strong> Architecture IA Hybride Tripro</li>
+        <li><strong>Chapitre 14 :</strong> Propriété Intellectuelle & Droits</li>
       </ol>
     </div>
 
     <!-- CHAPITRE 1 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">🚀 Chapitre 1 : Page d'Accueil, Connexion, Formules & Paiement BaridiMob</h2>
+      <div class="chapter-num">Chapitre 1</div>
+      <h2 class="chapter-title">🚀 Cadre Légal, Inscription, Formules & Paiement BaridiMob</h2>
       
-      <h3 class="section-title">1.1. Présentation & Cadre Réglementaire</h3>
-      <p>La plateforme <strong>Methodo&Clinique</strong> constitue le point d'entrée officiel dédié à l'apprentissage et à la structuration de la recherche clinique en Algérie. Elle garantit le respect rigoureux des recommandations du manuel <strong>RECIF</strong> et des exigences légales définies par la <strong>Loi n° 18-11 relative à la santé</strong>.</p>
-      
-      <h3 class="section-title">1.2. Modes de Connexion</h3>
+      <h3 class="section-title">1.1. Contextualisation Légale et Réglementaire en Algérie</h3>
+      <p>La recherche clinique en Algérie s'inscrit impérativement dans le cadre tracé par la <strong>Loi n° 18-11 du 2 juillet 2018 relative à la santé</strong> (JORA n° 46). L'article 378 et suivants définissent strictement les conditions de réalisation des études biomédicales et observationnelles chez l'homme. La plateforme <em>Methodo&Clinique</em> garantit une conformité absolue avec :</p>
       <ul>
-        <li><strong>🌐 Connexion en Ligne :</strong> Authentification sécurisée par e-mail et mot de passe ou via le bouton 1-clic <em>Google Sign-In</em>.</li>
-        <li><strong>🔑 Activation Hors-Ligne (Licence Autonome) :</strong> Pour les utilisateurs des applications de bureau (macOS, Windows, Linux) opérant sans connexion réseau, l'activation s'effectue au moyen d'une clé de licence dédiée.</li>
+        <li>L'obligation d'obtenir l'avis favorable du Comité d'Éthique Institutionnel avant tout début d'investigation.</li>
+        <li>Le respect strict du consentement libre, éclairé et écrit du participant.</li>
+        <li>La protection absolue de l'anonymat et des données nominatives de santé.</li>
+        <li>Le respect de la grille méthodique nationale RECIF (Référentiel des Études Cliniques et des Investigations de la Faculté).</li>
       </ul>
 
-      <h3 class="section-title">1.3. Sélection de Zone Régionale & Tarification</h3>
-      <p>La plateforme propose 3 zones géographiques d'abonnement :</p>
-      <ul>
-        <li><strong>🇩🇿 Zone Algérie (DZD / DA) :</strong> Règlement direct par virement BaridiMob (RIP).</li>
-        <li><strong>🌍 Zone Afrique Hors-Algérie (€ / FCFA) :</strong> Tarifs préférentiels réglables par PayPal ou Western Union.</li>
-        <li><strong>🇪🇺/🇨🇦 Zone Europe & Occident (€ / $) :</strong> Règlement par Carte Bancaire internationale, Virement SEPA/SWIFT ou PayPal.</li>
-      </ul>
-
-      <h3 class="section-title">1.4. Grille des 5 Formules d'Accès</h3>
+      <h3 class="section-title">1.2. Architecture des Formules d'Accès et Tarification Régionale</h3>
+      <p>Afin de répondre à la diversité des profils (étudiants, résidents, enseignants, directeurs de CHU et chercheurs internationaux), la plateforme propose 5 formules tarifaires réparties en 3 zones géographiques :</p>
+      
       <table class="table-custom">
         <thead>
           <tr>
             <th>Formule</th>
-            <th>Cible & Tarification</th>
-            <th>Fonctionnalités Incluses</th>
+            <th>Zone & Tarif (Algérie / DZD)</th>
+            <th>Périmètre & Capacités Incluses</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td><strong>🟢 Découverte</strong></td>
-            <td>Gratuit (3 jours)</td>
-            <td>5 questions/jour IA, 1 protocole démo, 1 article STROBE démo.</td>
+            <td>Gratuit (3 Jours auto)</td>
+            <td>5 requêtes IA / jour, 1 protocole démo, 1 article STROBE démo, calculateur NSN démo.</td>
           </tr>
           <tr>
             <td><strong>🔷 PRO</strong></td>
             <td>1 500 DZD / mois</td>
-            <td>Internes, Résidents & Doctorants. 100 Q/jour IA, NSN illimité, Quiz illimités, 5 protocoles/mois & 5 articles STROBE/mois sans filigrane.</td>
+            <td>Internes, Résidents & Doctorants. 100 Q/jour IA, NSN illimité, Quiz/Flashcards illimités, 5 protocoles/mois & 5 articles STROBE/mois sans filigrane.</td>
           </tr>
           <tr>
             <td><strong>⚡ EXPERT</strong></td>
             <td>3 500 DZD / mois</td>
-            <td>Chercheurs Solo. 100% ILLIMITÉ (Protocoles, PubMed, Tuteur IA, STROBE et exports PDF propres).</td>
+            <td>Chercheurs & Praticiens Solo. Accès 100% ILLIMITÉ pour tous les protocoles, synthèses PubMed, tuteur IA, articles STROBE et exports PDF propres.</td>
           </tr>
           <tr>
             <td><strong>👑 ULTRA</strong></td>
             <td>3 500 DZD / mois + options</td>
-            <td>Enseignants & Encadreurs. Accès illimité + Espace Supervision d'étudiants + Code d'Affiliation.</td>
+            <td>Enseignants & Encadreurs. Accès illimité + Espace de supervision d'étudiants + Code d'Affiliation unique + Messagerie d'encadrement.</td>
           </tr>
           <tr>
             <td><strong>🏛️ INSTITUTION</strong></td>
             <td>Sur Devis (DZD)</td>
-            <td>Facultés & CHU. Multi-sièges, Tableau de bord Doyen/Chef de service, Logo sur PDF.</td>
+            <td>Facultés, CHU & Labos. Accès multi-sièges établissement, Tableau de bord Doyen/Chef de service, Logo institutionnel sur les PDF.</td>
           </tr>
         </tbody>
       </table>
 
-      <h3 class="section-title">1.5. Procédure de Règlement BaridiMob & Confirmation</h3>
-      <div class="info-box">
-        <strong>💳 Coordonnées BaridiMob Officielles :</strong><br>
+      <h3 class="section-title">1.3. Procédure Réglementaire de Paiement par BaridiMob (RIP)</h3>
+      <div class="box-quote">
+        <strong>💳 Coordonnées Bancaires Officiellement Enregistrées :</strong><br>
         • <strong>RIP BaridiMob :</strong> <code>00799999000041210947</code><br>
         • <strong>Titulaire du compte :</strong> Professeur Nezzal Abdelmalek<br>
-        • <strong>NIF Fiscal :</strong> 15007180115910202380<br>
-        <em>Dès transmission de la photo du reçu BaridiMob et du N° de transaction, l'accès est immédiatement activé avec des jours bonus offerts (+7j Pro / +14j Ultra).</em>
+        • <strong>NIF (Identifiant Fiscal Officiel) :</strong> 15007180115910202380
       </div>
+      <p>Le règlement s'effectue directement via l'application mobile BaridiMob d'Algérie Poste. L'utilisateur saisit son adresse e-mail de compte, le N° de transaction et télécharge le reçu photo. La validation débloque immédiatement l'accès avec des jours bonus d'encouragement (+7 jours pour la formule PRO, +14 jours pour la formule ULTRA).</p>
     </div>
 
     <!-- CHAPITRE 2 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">📊 Chapitre 2 : Tableau de Bord & Navigation</h2>
-      <p>Le Tableau de bord centralisé regroupe l'ensemble des métriques de travail de l'utilisateur :</p>
+      <div class="chapter-num">Chapitre 2</div>
+      <h2 class="chapter-title">📊 Navigation & Ergonomie du Tableau de Bord (Dashboard)</h2>
+      
+      <h3 class="section-title">2.1. Les Indicateurs Clés de Performance (KPIs)</h3>
+      <p>Le tableau de bord offre une visibilité synthétique en temps réel sur la progression de l'apprenant :</p>
       <ul>
-        <li><strong>KPIs & Compteurs en Direct :</strong> Suivi des questions posées au tuteur, du nombre de protocoles rédigés, du score moyen aux Quiz et du taux de maîtrise des Flashcards.</li>
-        <li><strong>Bilan Pédagogique IA :</strong> Synthèse automatisée des compétences acquises avec bouton de génération du rapport de suivi.</li>
-        <li><strong>Historique des Protocoles Récents :</strong> Liste interactive permettant de réouvrir et réexporter les travaux en 1-clic.</li>
-        <li><strong>Module STROBE & Gouvernance :</strong> Raccourci vers le rédacteur d'articles et la fiche de direction du Pr Nezzal Abdelmalek.</li>
+        <li><strong>Tuteur RECIF :</strong> Nombre cumulé de questions méthodologiques et réglementaires posées.</li>
+        <li><strong>Protocoles Générés :</strong> Nombre de fiches de protocoles cliniques rédigées et validées.</li>
+        <li><strong>Score aux Quiz :</strong> Pourcentage moyen de réussite calculé sur l'ensemble des séries de QCM effectuées.</li>
+        <li><strong>Flashcards Maîtrisées :</strong> Nombre de cartes concepts mémorisées sur le total de la banque de données.</li>
       </ul>
+
+      <h3 class="section-title">2.2. Le Bilan Pédagogique Automatisé par l'IA</h3>
+      <p>Grâce à la collecte des résultats, l'IA analyse la maîtrise des biais de sélection, de confusion, la qualité de la formulation de l'hypothèse (PICO) et la rigueur de l'échantillonnage pour générer un bilan de compétences formalisé.</p>
     </div>
 
     <!-- CHAPITRE 3 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">🤖 Chapitre 3 : Tuteur Intelligent RECIF (3 Volets)</h2>
-      <p>Le Tuteur IA accompagne l'apprenant selon 3 modes distincts :</p>
-      <ul>
-        <li><strong>3.1. Volet 1 : Discussion Libre :</strong> Réponses instantanées aux questions méthodologiques, éthiques et réglementaires (Loi 18-11).</li>
-        <li><strong>3.2. Volet 2 : Accompagnement Projet (23 Paramètres RECIF) :</strong> Guidance pas-à-pas pour valider l'ensemble des 23 critères d'un protocole clinique avant transfert 1-clic au Générateur.</li>
-        <li><strong>3.3. Volet 3 : Rédaction d'Article (STROBE) :</strong> Assistance à la structuration des articles scientifiques observationnels (cohortes, cas-témoins, transversales).</li>
-      </ul>
+      <div class="chapter-num">Chapitre 3</div>
+      <h2 class="chapter-title">🤖 Le Tuteur Intelligent RECIF (Guide des 3 Volets)</h2>
+      
+      <h3 class="section-title">3.1. Volet 1 : Discussion Libre Méthodologique</h3>
+      <p>Ce volet permet d'interroger librement l'assistant sur l'ensemble des concepts de l'épidémiologie clinique, des statistiques médicales et des articles de la Loi 18-11 relative à la santé.</p>
+
+      <h3 class="section-title">3.2. Volet 2 : Accompagnement Projet & Validation des 23 Paramètres RECIF</h3>
+      <p>Le tuteur guide pas-à-pas l'étudiant pour renseigner et valider l'ensemble des 23 critères fondamentaux d'un protocole clinique :</p>
+      <ol>
+        <li>Titre et Acronyme du Projet.</li>
+        <li>Justification et Contexte Scientifique.</li>
+        <li>Question de Recherche (Méthode PICO / PECO).</li>
+        <li>Objectif Principal (clair, mesurable, unique).</li>
+        <li>Objectifs Secondaires.</li>
+        <li>Schéma d'Étude (Cohorte, Cas-Témoins, Transversale, Essai Clinique).</li>
+        <li>Population d'Étude & Source.</li>
+        <li>Critères d'Inclusion.</li>
+        <li>Critères de Non-Inclusion.</li>
+        <li>Critères d'Exclusion / Sortie d'Étude.</li>
+        <li>Critère de Jugement Principal (CJP).</li>
+        <li>Critères de Jugement Secondaires (CJS).</li>
+        <li>Nombre de Sujets Nécessaires (NSN) & Hypothèses.</li>
+        <li>Stratégie d'Échantillonnage (Aléatoire, Stratifié, En grappe, Convenance).</li>
+        <li>Description de l'Intervention ou de l'Exposition.</li>
+        <li>Modalités de Recueil des Données & Calendrier.</li>
+        <li>Analyse Statistique Prévue (Tests paramétriques / non paramétriques).</li>
+        <li>Gestion des Données Manquantes & Perdus de Vue.</li>
+        <li>Considérations Éthiques & Comité d'Éthique.</li>
+        <li>Consentement Éclairé & Notice d'Information.</li>
+        <li>Gestion des Risques & Événements Indésirables.</li>
+        <li>Calendrier Prévisionnel de Réalisation.</li>
+        <li>Budget & Financement du Projet.</li>
+      </ol>
+
+      <h3 class="section-title">3.3. Volet 3 : Rédaction d'Article Scientifique (STROBE)</h3>
+      <p>Assistance à la structuration d'articles observationnels pour la soumission aux revues de rang A selon la grille STROBE.</p>
     </div>
 
     <!-- CHAPITRE 4 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">📑 Chapitre 4 : Générateur de Protocoles & Export PDF Officiel</h2>
-      <p>Permet la rédaction automatisée des protocoles de recherche clinique et des cahiers d'observation (CRF). L'en-tête du document PDF reprend automatiquement le nom, la spécialité, l'établissement et le grade de l'utilisateur certifié.</p>
+      <div class="chapter-num">Chapitre 4</div>
+      <h2 class="chapter-title">📑 Générateur de Protocoles & Cahier d'Observation (CRF)</h2>
+      <p>Après validation des 23 paramètres, le moteur génère automatiquement l'intégralité du document de protocole ainsi que la fiche de recueil des données (Case Report Form - CRF) au format PDF certifié avec l'en-tête académique de l'utilisateur.</p>
     </div>
 
-    <!-- CHAPITRE 5 À 9 -->
+    <!-- CHAPITRE 5 À 7 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">🔬 Chapitres 5 à 9 : Modules d'Analyse Bibliographique, Évaluation & Calculs</h2>
-      <ul>
-        <li><strong>🔬 Ch. 5 - Recherche PubMed & Synthèse :</strong> Interrogation directe de PubMed / NLM avec génération de synthèses bibliographiques probantes.</li>
-        <li><strong>🧠 Ch. 6 - Quiz & Flashcards :</strong> Évaluation continue des connaissances et mémorisation espacée (biais, puissance, critères de jugement).</li>
-        <li><strong>📈 Ch. 7 - Rapport Pédagogique :</strong> Bilan synthétique des compétences de l'étudiant téléchargeable en PDF.</li>
-        <li><strong>🧮 Ch. 8 - Calculateur NSN :</strong> Calcul précis du Nombre de Sujets Nécessaires et génération du texte de justification statistique pour comités d'éthique.</li>
-        <li><strong>✍️ Ch. 9 - Rédacteur STROBE :</strong> Rédaction d'articles scientifiques conformes aux normes internationales des revues médicales de rang A.</li>
-      </ul>
+      <div class="chapter-num">Chapitres 5 à 7</div>
+      <h2 class="chapter-title">🔬 Recherche PubMed, Évaluation & Bilan de Suivi</h2>
+      <p>Ces modules permettent d'interroger la base NLM PubMed, de synthétiser la littérature par RAG, d'effectuer des séries de quiz interactifs et d'exporter le bilan pédagogique de l'étudiant.</p>
+    </div>
+
+    <!-- CHAPITRE 8 : CALCULATEUR NSN -->
+    <div class="chapter-card">
+      <div class="chapter-num">Chapitre 8</div>
+      <h2 class="chapter-title">🧮 Manuel du Calculateur du Nombre de Sujets Nécessaires (NSN)</h2>
+      
+      <h3 class="section-title">8.1. Principes Statistiques & Formules Clés</h3>
+      <p>Le calcul du NSN garantit la puissance statistique de l'étude (généralement 1-β = 80% ou 90%) tout en maîtrisant le risque de première espèce (α = 5%).</p>
+      
+      <div class="subsection-title">Formule de comparaison de deux proportions (Échantillons indépendants) :</div>
+      <div class="formula-box">
+N = [ Z_(α/2) * √(2 * p * (1-p)) + Z_β * √(p1*(1-p1) + p2*(1-p2)) ]² / (p1 - p2)²
+      </div>
+      
+      <div class="subsection-title">Formule de comparaison de deux moyennes :</div>
+      <div class="formula-box">
+N = 2 * [ (Z_(α/2) + Z_β) * σ / (μ1 - μ2) ]²
+      </div>
+
+      <p>Le calculateur génère automatiquement le paragraphe de justification statistique prêt à être copié dans le protocole et soumis au Comité d'Éthique.</p>
+    </div>
+
+    <!-- CHAPITRE 9 : STROBE -->
+    <div class="chapter-card">
+      <div class="chapter-num">Chapitre 9</div>
+      <h2 class="chapter-title">✍️ Rédacteur d'Article Scientifique (Grille STROBE)</h2>
+      <p>La déclaration STROBE (Strengthening the Reporting of Observational Studies in Epidemiology) exige l'explicitation rigoureuse de 22 items répartis dans les sections Titre, Résumé, Introduction, Méthodes, Résultats, Discussion et Autres Informations.</p>
     </div>
 
     <!-- CHAPITRE 10 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">💻 Chapitre 10 : Applications Desktop Autonomes (Mac, Windows, Linux)</h2>
-      <p>Les exécutables de bureau permettent une utilisation 100% autonome hors-ligne sans connexion internet :</p>
+      <div class="chapter-num">Chapitre 10</div>
+      <h2 class="chapter-title">💻 Applications Desktop Autonomes (Mac, Windows, Linux)</h2>
+      <p>Pour l'utilisation en zone hospitalière déconnectée, les paquets exécutables sont distribués aux formats :</p>
       <ul>
-        <li><strong>🍎 macOS :</strong> Fichier d'installation <code>.dmg</code> / <code>.app</code>.</li>
-        <li><strong>💻 Windows :</strong> Fichier d'installation <code>.exe</code>.</li>
-        <li><strong>🐧 Linux :</strong> Fichiers d'installation <code>.AppImage</code> et <code>.deb</code>.</li>
+        <li><strong>🍎 macOS :</strong> Image disque <code>.dmg</code> (compatible puces Apple Silicon M1/M2/M3/M4 & Intel).</li>
+        <li><strong>💻 Windows :</strong> Fichier d'installation <code>.exe</code> (Windows 10 / 11 64-bit).</li>
+        <li><strong>🐧 Linux :</strong> Paquets <code>.AppImage</code> et <code>.deb</code> (Ubuntu, Debian, Fedora).</li>
       </ul>
-      <p>Toute souscription à une formule (PRO, EXPERT, ULTRA) génère automatiquement votre clé de licence hors-ligne intégrée.</p>
     </div>
 
-    <!-- CHAPITRE 11 -->
+    <!-- CHAPITRE 11 : SUPERVISION -->
     <div class="chapter-card">
-      <h2 class="chapter-title">👨‍🏫 Chapitre 11 : Espace Encadreurs & Institutions (Supervision)</h2>
-      <p>L'Espace Superviseur (<code>/admin</code>) offre une console complète pour le suivi des étudiants :</p>
+      <div class="chapter-num">Chapitre 11</div>
+      <h2 class="chapter-title">👨‍🏫 Espace Encadreurs & Supervision Institutionnelle (/admin)</h2>
+      
+      <h3 class="section-title">11.1. Les 5 Onglets de la Console de Supervision</h3>
       <ul>
-        <li><strong>5 Onglets de Gestion :</strong> Utilisateurs inscrits (recherche, tri, export CSV), Demandes individuelles, Groupes & Devis, Messagerie, et Journal des Accès.</li>
-        <li><strong>Fiche Individuelle (7 Onglets) :</strong> Consultation des statistiques, du profil, des protocoles, des questions au tuteur, du bilan IA, des articles STROBE et de l'historique nominatif des accès (heures et durée cumulée).</li>
-        <li><strong>Suivi Live :</strong> Traçabilité des connexions <span style="color: #22c55e; font-weight: bold;">🟢 En cours</span> (ping &lt; 2 min) et <span style="color: #64748b;">⚪ Terminée</span>.</li>
+        <li><strong>Utilisateurs Inscrits :</strong> Gestion globale du répertoire avec moteur de recherche, tri alphabétique, filtres par formule, export CSV (Excel) et outils de maintenance.</li>
+        <li><strong>Demandes Indiv. :</strong> Interface de validation des paiements BaridiMob et activation des accès.</li>
+        <li><strong>Groupes & Devis :</strong> Gestion des promotions d'étudiants et devis institutionnels CHU.</li>
+        <li><strong>Messagerie :</strong> Espace de dialogue et de soutien pédagogique.</li>
+        <li><strong>📜 Journal des Accès :</strong> Traçabilité des connexions avec détection en temps réel des sessions <span style="color: #22c55e; font-weight: bold;">🟢 En cours</span> (ping &lt; 2 min) et <span style="color: #64748b;">⚪ Terminée (durée)</span>.</li>
       </ul>
+
+      <h3 class="section-title">11.2. La Fiche Individuelle de l'Étudiant (7 Onglets)</h3>
+      <p>Pour chaque apprenant raccordé, l'encadreur accède à 7 sous-onglets spécialisés : <em>Stats, 👤 Fiche Profil, Protocoles, Tuteur, Bilan IA, Articles STROBE, et 📜 Accès nominatifs (avec durée cumulée en minutes)</em>.</p>
     </div>
 
     <!-- CHAPITRE 12 & 13 -->
     <div class="chapter-card">
-      <h2 class="chapter-title">💬 Chapitre 12 & 13 : Messagerie & Moteur IA Hybride Tripro</h2>
-      <ul>
-        <li><strong>💬 Ch. 12 - Messagerie Pédagogique :</strong> Dialogue direct et annotations de corrections sur les travaux des étudiants.</li>
-        <li><strong>⚙️ Ch. 13 - Moteur IA Hybride Tripro :</strong>
-          <br>1. 🟢 <em>Gemini Cloud :</em> Puissance maximale et synthèse PubMed quand Internet est disponible.
-          <br>2. 🟡 <em>Ollama Local :</em> Basculement automatique sur le modèle local (127.0.0.1:11434) sans réseau.
-          <br>3. 🔵 <em>Base Statique Embarquée :</em> Repli sur la base de connaissances RECIF intégrée pour un fonctionnement garanti 24h/24.
-        </li>
-      </ul>
+      <div class="chapter-num">Chapitres 12 & 13</div>
+      <h2 class="chapter-title">💬 Messagerie Pédagogique & Moteur IA Hybride Tripro</h2>
+      <p>Le système hybride assure une résilience absolue selon la cascade : <strong>🟢 Gemini Cloud → 🟡 Ollama Local → 🔵 Base Statique RECIF Embarquée</strong>.</p>
     </div>
 
     <!-- CHAPITRE 14 : PROPRIÉTÉ INTELLECTUELLE -->
-    <div class="chapter-card" style="border-left: 4px solid var(--accent);">
-      <h2 class="chapter-title">📜 Chapitre 14 : Propriété Intellectuelle, Droits & Licence CC BY-NC-SA 4.0</h2>
+    <div class="chapter-card" style="border-left: 5px solid var(--primary);">
+      <div class="chapter-num">Chapitre 14</div>
+      <h2 class="chapter-title">📜 Propriété Intellectuelle, Droits d'Auteur & Charte Éthique de l'IA</h2>
       
-      <h3 class="section-title">14.1. Protection du Logiciel & Code Source</h3>
-      <div class="info-box">
-        <strong>💻 Logiciel & Architecture : © 2026 Methodo&Clinique. Tous droits réservés.</strong><br>
-        La plateforme, le code source, l'interface graphique, les algorithmes et l'architecture RAG sont la propriété exclusive et protégée de l'auteur.
+      <h3 class="section-title">14.1. Protection du Logiciel et du Code Source</h3>
+      <div class="box-quote">
+        <strong>💻 Logiciel & Code Source : © 2026 Methodo&Clinique. Tous droits réservés.</strong><br>
+        L'ensemble de la plateforme, de l'interface utilisateur, de l'architecture logicielle et des moteurs de RAG est la propriété exclusive et protégée de Methodo&Clinique et de son auteur.
       </div>
 
-      <h3 class="section-title">14.2. Propriété des Référentiels Officiels</h3>
-      <p>Les documents et textes réglementaires (Manuel du RECIF, Loi n° 18-11 relative à la santé, Lignes Directrices pour la Conduite des Études Cliniques en Algérie - MSPRH, grilles STROBE et ICMJE) demeurent la propriété exclusive de leurs institutions émettrices respectives et sont exploités à des fins d'analyse RAG et de citation scientifique.</p>
+      <h3 class="section-title">14.2. Propriété des Référentiels Officiels Citationnels</h3>
+      <p>Les documents officiels (Manuel du RECIF, Loi n° 18-11 relative à la santé, Lignes Directrices MSPRH, STROBE et ICMJE) demeurent la propriété exclusive de leurs institutions émettrices et sont exploités à des fins d'analyse RAG et de citation scientifique.</p>
 
-      <h3 class="section-title">14.3. Propriété 100% Exclusive des Résultats Utilisateurs</h3>
-      <div class="warning-box">
+      <h3 class="section-title">14.3. Propriété 100% Exclusive des Résultats des Utilisateurs</h3>
+      <div class="box-success">
         <strong>🎓 Propriété des Résultats Utilisateurs :</strong><br>
-        Les résultats de recherche, protocoles cliniques, fiches de données et articles rédigés par les utilisateurs (résidents, enseignants, chercheurs) <strong>leur appartiennent en toute exclusivité à 100%</strong>. Ils sont totalement libres de les exploiter pour tous leurs travaux académiques, mémoires, thèses ou publications scientifiques.
+        Les résultats de recherche, protocoles cliniques, fiches de recueil (CRF), synthèses bibliographiques et articles rédigés par les utilisateurs (résidents, enseignants, chercheurs) <strong>leur appartiennent à 100% en toute exclusivité</strong>. Les utilisateurs sont totalement libres de les exploiter pour tous leurs travaux académiques, mémoires, thèses ou publications dans les revues scientifiques de leur choix.
       </div>
 
-      <h3 class="section-title">14.4. Licence Creative Commons pour la Formation</h3>
-      <p>Les fiches et contenus pédagogiques de formation sont diffusés sous licence <strong>Creative Commons CC BY-NC-SA 4.0</strong> (Attribution - Pas d'Utilisation Commerciale - Partage dans les Mêmes Conditions 4.0 International).</p>
+      <h3 class="section-title">14.4. Licence Creative Commons & Déclaration de l'IA</h3>
+      <p>Les fiches de formation sont sous licence <strong>Creative Commons CC BY-NC-SA 4.0</strong>. L'intelligence artificielle agit comme un assistant de structuration méthodologique; la responsabilité de validation clinique et éthique incombe à l'investigateur principal.</p>
     </div>
 
     <footer>
-      <strong>Methodo&Clinique EDU v2.0.6 — Plateforme Officielle de Recherche Clinique</strong><br>
+      <strong>Grand Manuel de Référence Méthodologique & Réglementaire RECIF — v2.0.6</strong><br>
       Direction Scientifique : Professeur Nezzal Abdelmalek — NIF Fiscal : 15007180115910202380<br>
       © 2026 Methodo&Clinique. Tous droits réservés.
     </footer>
