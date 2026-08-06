@@ -113,6 +113,9 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   // État de la barre latérale principale (Sidebar)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
+  // ✅ Détection mobile — annule les inline-styles sidebar sur petits écrans
+  const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('recif_sidebar_collapsed') === 'true';
@@ -128,6 +131,14 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
         window.removeEventListener('sidebar_collapsed_changed', handleSidebarChange);
       };
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -572,11 +583,22 @@ export default function SuspensionGuard({ children }: { children: React.ReactNod
   return (
     <div className="app-layout-wrapper" style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
-      <main style={{ 
-        flex: 1, 
-        marginLeft: isSidebarCollapsed ? '70px' : '280px', 
-        padding: '2rem', 
-        minHeight: '100vh', 
+      <main style={isMobile ? {
+        // ✅ MOBILE : sidebar cachée, main prend toute la largeur
+        flex: 1,
+        marginLeft: 0,
+        padding: '1rem',
+        minHeight: '100dvh',
+        width: '100%',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+        boxSizing: 'border-box',
+      } : {
+        // 🖥️ DESKTOP : décalage sidebar normal
+        flex: 1,
+        marginLeft: isSidebarCollapsed ? '70px' : '280px',
+        padding: '2rem',
+        minHeight: '100vh',
         width: isSidebarCollapsed ? 'calc(100% - 70px)' : 'calc(100% - 280px)',
         maxWidth: isSidebarCollapsed ? 'calc(100vw - 70px)' : 'calc(100vw - 280px)',
         overflowX: 'hidden',
