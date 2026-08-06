@@ -75,14 +75,25 @@
   outline-offset: 2px;
 }
 
+/* ✅ Garantit que rien ne déborde horizontalement (Safari iOS) */
+html {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   background: radial-gradient(circle at top left, #0F172A, #070A13 85%) no-repeat fixed;
   color: var(--text-primary);
   font-family: var(--font-body);
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height — iOS Safari */
   overflow-x: hidden;
+  max-width: 100vw;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* Empêche le zoom automatique sur les inputs iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Typography */

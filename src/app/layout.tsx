@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import SuspensionGuard from "@/components/SuspensionGuard";
@@ -7,6 +7,15 @@ import MobileOverlay from "@/components/MobileOverlay";
 export const metadata: Metadata = {
   title: "Methodo&Clinique - Formation en Recherche Clinique",
   description: "Plateforme d'apprentissage en ligne de la méthodologie de recherche clinique et générateur de protocole.",
+};
+
+// ✅ Viewport meta — critique pour Safari iOS (évite le layout compressé à 980px)
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
