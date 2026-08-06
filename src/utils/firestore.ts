@@ -702,17 +702,39 @@ export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
     } catch (e) {}
   }
 
-  if (!isFirebaseEnabled || !db) return cachedLogs;
+  const parseLogTime = (log: FirestoreAccessLog): number => {
+    if (typeof log.startTimeMs === 'number' && log.startTimeMs > 0) return log.startTimeMs;
+    if (log.timestamp?.seconds) return log.timestamp.seconds * 1000;
+    if (typeof log.timestamp?.toMillis === 'function') return log.timestamp.toMillis();
+    if (typeof log.timestamp === 'number') return log.timestamp;
+    if (log.dateStr) {
+      try {
+        const parts = log.dateStr.split('/');
+        if (parts.length === 3) {
+          const timeParts = (log.timeStr || '00:00').split(':');
+          const d = new Date(
+            parseInt(parts[2], 10),
+            parseInt(parts[1], 10) - 1,
+            parseInt(parts[0], 10),
+            parseInt(timeParts[0] || '0', 10),
+            parseInt(timeParts[1] || '0', 10)
+          );
+          return d.getTime();
+        }
+      } catch (e) {}
+    }
+    return 0;
+  };
+
+  if (!isFirebaseEnabled || !db) {
+    cachedLogs.sort((a, b) => parseLogTime(b) - parseLogTime(a));
+    return cachedLogs;
+  }
 
   try {
     const logsRef = collection(db, 'access_logs');
-    let snap;
-    try {
-      const q = query(logsRef, orderBy('startTimeMs', 'desc'));
-      snap = await getDocsWithCacheFallback(q);
-    } catch (e) {
-      snap = await getDocsWithCacheFallback(logsRef);
-    }
+    // Récupérer la collection brute sans filtre restrictif pour ne manquer aucun document ancien
+    const snap = await getDocsWithCacheFallback(logsRef);
 
     if (snap && snap.docs && snap.docs.length > 0) {
       const remoteLogs = snap.docs.map(d => ({ id: d.id, ...d.data() } as FirestoreAccessLog));
@@ -722,7 +744,7 @@ export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
       cachedLogs.forEach(l => { if (l.id && !logMap.has(l.id)) logMap.set(l.id, l); });
 
       const mergedLogs = Array.from(logMap.values());
-      mergedLogs.sort((a, b) => (b.startTimeMs || 0) - (a.startTimeMs || 0));
+      mergedLogs.sort((a, b) => parseLogTime(b) - parseLogTime(a));
 
       if (typeof window !== 'undefined') {
         try {
@@ -735,6 +757,7 @@ export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
     console.warn('⚠️ Erreur loadAccessLogs (fallback cache local):', error);
   }
 
+  cachedLogs.sort((a, b) => parseLogTime(b) - parseLogTime(a));
   return cachedLogs;
 }
 

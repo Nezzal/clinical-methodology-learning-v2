@@ -3534,7 +3534,9 @@ Votre superviseur`;
                       </tr>
                     ) : (
                       accessLogsList.map((log, lIdx) => {
-                        const isLive = log.status === 'active' || (log.lastPingMs && (Date.now() - log.lastPingMs < 3 * 60 * 1000));
+                        const nowMs = Date.now();
+                        const hasRecentPing = log.lastPingMs ? (nowMs - log.lastPingMs < 2 * 60 * 1000) : false;
+                        const isLive = log.status !== 'closed' && hasRecentPing;
                         const durationMins = log.durationMins || 1;
                         const durationStr = durationMins < 60 ? `${durationMins} min` : `${Math.floor(durationMins / 60)} h ${durationMins % 60} min`;
                         return (
@@ -3576,7 +3578,7 @@ Votre superviseur`;
                                 color: isLive ? '#34d399' : '#94a3b8',
                                 border: `1px solid ${isLive ? 'rgba(52, 211, 153, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`
                               }}>
-                                {isLive ? `🟢 En cours (${durationStr})` : `⚪ ${durationStr}`}
+                                {isLive ? `🟢 En cours (${durationStr})` : `⚪ Terminée (${durationStr})`}
                               </span>
                             </td>
                             <td>
