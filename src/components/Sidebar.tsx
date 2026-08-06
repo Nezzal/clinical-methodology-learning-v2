@@ -333,8 +333,22 @@ export default function Sidebar() {
       label: "Exécutable & Licences",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      )
+    },
+    {
+      href: '#manuel',
+      isModal: true,
+      label: '📖 Manuel Utilisateur',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          <line x1="10" y1="7" x2="16" y2="7" />
+          <line x1="10" y1="11" x2="16" y2="11" />
         </svg>
       )
     }
@@ -456,6 +470,29 @@ export default function Sidebar() {
                 (link.href === '/contact' && !isAdmin) || 
                 (link.href === '/admin?tab=messages' && isAdmin)
               );
+
+              if ((link as any).isModal) {
+                return (
+                  <li
+                    key={link.href}
+                    className={styles.navItem}
+                    onClick={() => { setIsOpen(false); setShowGuideModal(true); }}
+                    data-tooltip={link.label}
+                    title={isCollapsed ? link.label : undefined}
+                  >
+                    <a 
+                      href="#" 
+                      onClick={(e) => { e.preventDefault(); setShowGuideModal(true); }} 
+                      style={{ position: 'relative', display: 'flex', alignItems: 'center', color: '#38bdf8', fontWeight: 600 }}
+                      title={isCollapsed ? link.label : undefined}
+                    >
+                      {link.icon}
+                      <span>{link.label}</span>
+                    </a>
+                  </li>
+                );
+              }
+
               return (
                 <li
                   key={link.href}
@@ -588,16 +625,6 @@ export default function Sidebar() {
         </div>
 
         <div className={styles.footer}>
-          <button
-            className={styles.versionBtn}
-            onClick={() => setShowGuideModal(true)}
-            style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', marginBottom: '6px' }}
-            title="Consulter le Manuel Utilisateur Officiel & Guide de Prise en Main (14 Chapitres)"
-          >
-            <span>📖</span>
-            <span>Manuel Utilisateur</span>
-          </button>
-
           <button
             className={styles.versionBtn}
             onClick={() => setShowSubscriptionModal(true)}

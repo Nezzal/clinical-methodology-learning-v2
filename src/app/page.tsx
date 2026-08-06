@@ -8,6 +8,7 @@ import { loadUserProfile, loadFirestoreProtocols, syncUserProfile, deleteFiresto
 import { APP_VERSION_LABEL, COMPANY_NIF } from '@/utils/constants';
 import ProfileModal from '@/components/ProfileModal';
 import GovernanceModal from '@/components/GovernanceModal';
+import GuideModal from '@/components/GuideModal';
 import styles from './page.module.css';
 
 export default function Dashboard() {
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showGovernanceModal, setShowGovernanceModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   const fetchStats = async () => {
@@ -107,6 +109,27 @@ export default function Dashboard() {
               <span style={{ fontSize: '0.75rem', fontWeight: 'bold', background: 'rgba(56, 189, 248, 0.12)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '0.25rem 0.65rem', borderRadius: '4px', letterSpacing: '0.05em' }}>
                 🏛️ NIF : {COMPANY_NIF}
               </span>
+              <button
+                onClick={() => setShowGuideModal(true)}
+                style={{
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(56, 189, 248, 0.5)',
+                  padding: '0.28rem 0.85rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
+                  transition: 'all 0.2s ease'
+                }}
+                title="Ouvrir le Manuel Utilisateur Officiel (14 Chapitres)"
+              >
+                📖 Manuel Utilisateur Officiel (14 Chapitres)
+              </button>
             </div>
             <p className={styles.subtitle}>
               Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
@@ -317,6 +340,11 @@ export default function Dashboard() {
       <GovernanceModal
         isOpen={showGovernanceModal}
         onClose={() => setShowGovernanceModal(false)}
+      />
+
+      <GuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
       />
     </div>
   );
