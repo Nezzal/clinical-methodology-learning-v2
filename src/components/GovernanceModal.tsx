@@ -51,11 +51,16 @@ export default function GovernanceModal({ isOpen, onClose }: GovernanceModalProp
               <h5>Réglementation</h5>
               <p>Loi 18-11 Santé (Algérie)</p>
             </div>
+            <div className={styles.infoCard} style={{ gridColumn: 'span 2' }}>
+              <h5>Droits & Licence Pédagogique</h5>
+              <p><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8', textDecoration: 'none' }}>CC BY-NC-SA 4.0 (Creative Commons)</a></p>
+            </div>
           </div>
 
           <div className={styles.governanceBox}>
-            <strong>📜 Mission Académique & Pédagogique :</strong><br/>
-            Cette plateforme e-learning interactive et intelligente vise à former les étudiants, résidents et enseignants-chercheurs aux exigences rigoureuses de la méthodologie de recherche clinique, de la conception des protocoles jusqu&apos;à la rédaction d&apos;articles scientifiques conformes à la grille STROBE.<br/><br/>
+            <strong>📜 Mission Académique & Licence Creative Commons :</strong><br/>
+            Cette plateforme e-learning interactive et intelligente vise à former les étudiants, résidents et enseignants-chercheurs aux exigences rigoureuses de la méthodologie de recherche clinique.<br/>
+            Les contenus pédagogiques sont protégés sous la licence <strong>Creative Commons CC BY-NC-SA 4.0</strong> (Attribution - Pas d&apos;Utilisation Commerciale - Partage dans les Mêmes Conditions).<br/><br/>
             ✉️ Contact & Support Direction : <code>pedagogiafrica@gmail.com</code>
           </div>
         </div>

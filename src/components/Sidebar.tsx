@@ -600,10 +600,35 @@ export default function Sidebar() {
             className={styles.versionBtn}
             onClick={() => setShowChangelog(true)}
             title="Voir les nouveautés et l'historique des versions"
+            style={{ marginBottom: '8px' }}
           >
             <span>✨</span>
             <span>v{APP_VERSION} Nouveautés</span>
           </button>
+
+          <div style={{
+            fontSize: '0.72rem',
+            textAlign: 'center',
+            color: 'var(--text-secondary)',
+            paddingTop: '8px',
+            marginTop: '4px',
+            borderTop: '1px solid var(--border-glass)',
+            lineHeight: '1.4'
+          }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>© 2026 <strong>Methodo&Clinique</strong></div>
+            <div style={{ marginTop: '2px' }}>
+              <a 
+                href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: '#38bdf8', textDecoration: 'none', fontWeight: '500' }}
+                title="Licence Creative Commons Attribution - Pas d'Utilisation Commerciale - Partage dans les Mêmes Conditions 4.0 International"
+              >
+                Droits & Licence<br />
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#38bdf8' }}>CC BY-NC-SA 4.0</span>
+              </a>
+            </div>
+          </div>
         </div>
       </aside>
 
