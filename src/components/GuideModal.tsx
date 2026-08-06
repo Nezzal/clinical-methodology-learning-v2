@@ -172,6 +172,16 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                     </div>
                   </div>
                 </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>3.3. Volet 3 : Rédaction d&apos;Article (STROBE)</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Rôle</div>
+                      <p className={styles.cardText}>Préparez votre article scientifique selon les critères de la grille internationale STROBE. Idéal pour structurer vos résultats observationnels (cohortes, cas-témoins, transversales) et les exporter pour publication.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
