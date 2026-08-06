@@ -4036,73 +4036,89 @@ Votre superviseur`;
               </div>
             ) : activeTab === 'access_logs' ? (
               <div>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>
-                  Sessions d'accès répertoriées pour cet utilisateur ({selectedStudentLogs.length} connexions)
-                </div>
-                {selectedStudentLogs.length === 0 ? (
-                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                    Aucune connexion enregistrée pour cet utilisateur.
-                  </p>
-                ) : (
-                  <div className={styles.tableContainer}>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th>Date & Heure</th>
-                          <th>Plateforme</th>
-                          <th>Durée Session</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedStudentLogs.map((log, sIdx) => {
-                          const nowMs = Date.now();
-                          const hasRecentPing = log.lastPingMs ? (nowMs - log.lastPingMs < 2 * 60 * 1000) : false;
-                          const isLive = log.status !== 'closed' && hasRecentPing;
-                          const durationMins = log.durationMins || 1;
-                          const durationStr = durationMins < 60 ? `${durationMins} min` : `${Math.floor(durationMins / 60)} h ${durationMins % 60} min`;
-                          return (
-                            <tr key={log.id || `slog-${sIdx}`}>
-                              <td>
-                                <div style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '0.82rem' }}>
-                                  📅 {log.dateStr || 'Aujourd\'hui'}
-                                </div>
-                                <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                                  🕒 {log.timeStr || 'Récemment'}
-                                </div>
-                              </td>
-                              <td>
-                                <span style={{ 
-                                  padding: '0.15rem 0.45rem', 
-                                  borderRadius: '4px', 
-                                  fontSize: '0.70rem', 
-                                  fontWeight: 'bold',
-                                  background: log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.15)' : 'rgba(56, 189, 248, 0.15)',
-                                  color: log.platform?.includes('Electron') ? '#c084fc' : '#38bdf8',
-                                  border: `1px solid ${log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
-                                }}>
-                                  {log.platform || 'Web'}
-                                </span>
-                              </td>
-                              <td>
-                                <span style={{
-                                  padding: '0.18rem 0.5rem',
-                                  borderRadius: '6px',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 'bold',
-                                  background: isLive ? 'rgba(52, 211, 153, 0.15)' : 'rgba(148, 163, 184, 0.15)',
-                                  color: isLive ? '#34d399' : '#94a3b8',
-                                  border: `1px solid ${isLive ? 'rgba(52, 211, 153, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`
-                                }}>
-                                  {isLive ? `🟢 En cours (${durationStr})` : `⚪ Terminée (${durationStr})`}
-                                </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                {(() => {
+                  const totalDurationMins = selectedStudentLogs.reduce((acc, log) => acc + (log.durationMins || 1), 0);
+                  const totalDurationStr = totalDurationMins < 60 ? `${totalDurationMins} min` : `${Math.floor(totalDurationMins / 60)} h ${totalDurationMins % 60} min`;
+                  return (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', textAlign: 'center', border: '1px solid rgba(56, 189, 248, 0.25)' }}>
+                          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#38bdf8' }}>{selectedStudentLogs.length}</div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>Total des Accès</div>
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '12px', textAlign: 'center', border: '1px solid rgba(192, 132, 252, 0.25)' }}>
+                          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#c084fc' }}>{totalDurationStr}</div>
+                          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', fontWeight: 600 }}>Durée Totale Cumulée</div>
+                        </div>
+                      </div>
+
+                      {selectedStudentLogs.length === 0 ? (
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                          Aucune connexion enregistrée pour cet utilisateur.
+                        </p>
+                      ) : (
+                        <div className={styles.tableContainer}>
+                          <table className={styles.table}>
+                            <thead>
+                              <tr>
+                                <th>Date & Heure</th>
+                                <th>Plateforme</th>
+                                <th>Durée Session</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {selectedStudentLogs.map((log, sIdx) => {
+                                const nowMs = Date.now();
+                                const hasRecentPing = log.lastPingMs ? (nowMs - log.lastPingMs < 2 * 60 * 1000) : false;
+                                const isLive = log.status !== 'closed' && hasRecentPing;
+                                const durationMins = log.durationMins || 1;
+                                const durationStr = durationMins < 60 ? `${durationMins} min` : `${Math.floor(durationMins / 60)} h ${durationMins % 60} min`;
+                                return (
+                                  <tr key={log.id || `slog-${sIdx}`}>
+                                    <td>
+                                      <div style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '0.82rem' }}>
+                                        📅 {log.dateStr || 'Aujourd\'hui'}
+                                      </div>
+                                      <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                                        🕒 {log.timeStr || 'Récemment'}
+                                      </div>
+                                    </td>
+                                    <td>
+                                      <span style={{ 
+                                        padding: '0.15rem 0.45rem', 
+                                        borderRadius: '4px', 
+                                        fontSize: '0.70rem', 
+                                        fontWeight: 'bold',
+                                        background: log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                                        color: log.platform?.includes('Electron') ? '#c084fc' : '#38bdf8',
+                                        border: `1px solid ${log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
+                                      }}>
+                                        {log.platform || 'Web'}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      <span style={{
+                                        padding: '0.18rem 0.5rem',
+                                        borderRadius: '6px',
+                                        fontSize: '0.72rem',
+                                        fontWeight: 'bold',
+                                        background: isLive ? 'rgba(52, 211, 153, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                        color: isLive ? '#34d399' : '#94a3b8',
+                                        border: `1px solid ${isLive ? 'rgba(52, 211, 153, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`
+                                      }}>
+                                        {isLive ? `🟢 En cours (${durationStr})` : `⚪ Terminée (${durationStr})`}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             ) : null}
           </div>
