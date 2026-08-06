@@ -192,9 +192,10 @@ export default function AdminDashboard() {
   const [studentChats, setStudentChats] = useState<any[]>([]);
   const [studentArticles, setStudentArticles] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [activeTab, setActiveTab] = useState<'stats' | 'profile' | 'protocols' | 'chats' | 'ai-report' | 'articles'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'profile' | 'protocols' | 'chats' | 'ai-report' | 'articles' | 'access_logs'>('stats');
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [loadingAiReport, setLoadingAiReport] = useState(false);
+  const [accessLogFilter, setAccessLogFilter] = useState<'today' | 'all'>('today');
 
   // Modal de consultation détaillée de demande d'accès
   const [selectedRequestDetail, setSelectedRequestDetail] = useState<AccessRequest | null>(null);
@@ -2214,6 +2215,22 @@ Votre superviseur`;
     );
   }
 
+  const todayStr = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const displayedAccessLogs = accessLogsList.filter(log => {
+    if (accessLogFilter === 'today') {
+      return log.dateStr === todayStr || log.dateStr === 'Aujourd\'hui';
+    }
+    return true;
+  });
+
+  const selectedStudentLogs = accessLogsList.filter(l => 
+    selectedStudent && (
+      (l.uid && l.uid === selectedStudent.uid) || 
+      (l.email && selectedStudent.email && l.email.toLowerCase() === selectedStudent.email.toLowerCase())
+    )
+  );
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -3489,9 +3506,34 @@ Votre superviseur`;
             // Onglet Journal des Accès (access_logs)
             <div style={{ padding: '0.5rem 0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                <div style={{ fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-                  Journal des accès successifs ({accessLogsList.length} connexions répertoriées)
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    Journal des Accès
+                  </span>
+                  <select
+                    value={accessLogFilter}
+                    onChange={(e) => setAccessLogFilter(e.target.value as 'today' | 'all')}
+                    style={{
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '1px solid var(--accent-primary)',
+                      color: 'var(--accent-primary)',
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="today" style={{ background: '#1e293b', color: '#fff' }}>
+                      📅 Connexions du jour ({accessLogsList.filter(l => l.dateStr === todayStr || l.dateStr === 'Aujourd\'hui').length})
+                    </option>
+                    <option value="all" style={{ background: '#1e293b', color: '#fff' }}>
+                      🌐 Historique global complet ({accessLogsList.length})
+                    </option>
+                  </select>
                 </div>
+
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <button
                     className="btn btn-secondary"
@@ -3526,14 +3568,14 @@ Votre superviseur`;
                     </tr>
                   </thead>
                   <tbody>
-                    {accessLogsList.length === 0 ? (
+                    {displayedAccessLogs.length === 0 ? (
                       <tr>
                         <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
-                          {loadingAccessLogs ? 'Chargement des accès...' : 'Aucune connexion enregistrée dans le journal.'}
+                          {loadingAccessLogs ? 'Chargement des accès...' : accessLogFilter === 'today' ? 'Aucune connexion enregistrée aujourd\'hui.' : 'Aucune connexion enregistrée dans le journal.'}
                         </td>
                       </tr>
                     ) : (
-                      accessLogsList.map((log, lIdx) => {
+                      displayedAccessLogs.map((log, lIdx) => {
                         const nowMs = Date.now();
                         const hasRecentPing = log.lastPingMs ? (nowMs - log.lastPingMs < 2 * 60 * 1000) : false;
                         const isLive = log.status !== 'closed' && hasRecentPing;
@@ -3640,6 +3682,7 @@ Votre superviseur`;
               <button className={`${styles.tabBtn} ${activeTab === 'chats' ? styles.activeTab : ''}`} onClick={() => setActiveTab('chats')}>Tuteur ({studentChats.length})</button>
               <button className={`${styles.tabBtn} ${activeTab === 'ai-report' ? styles.activeTab : ''}`} onClick={() => setActiveTab('ai-report')}>Bilan IA</button>
               <button className={`${styles.tabBtn} ${activeTab === 'articles' ? styles.activeTab : ''}`} onClick={() => setActiveTab('articles')}>Articles ({studentArticles.length})</button>
+              <button className={`${styles.tabBtn} ${activeTab === 'access_logs' ? styles.activeTab : ''}`} onClick={() => setActiveTab('access_logs')}>📜 Accès ({selectedStudentLogs.length})</button>
             </div>
 
             {loadingDetails ? (
@@ -3988,6 +4031,76 @@ Votre superviseur`;
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{article.date} • {article.studyType}</div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+            ) : activeTab === 'access_logs' ? (
+              <div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '0.75rem', fontWeight: 600 }}>
+                  Sessions d'accès répertoriées pour cet utilisateur ({selectedStudentLogs.length} connexions)
+                </div>
+                {selectedStudentLogs.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                    Aucune connexion enregistrée pour cet utilisateur.
+                  </p>
+                ) : (
+                  <div className={styles.tableContainer}>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th>Date & Heure</th>
+                          <th>Plateforme</th>
+                          <th>Durée Session</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedStudentLogs.map((log, sIdx) => {
+                          const nowMs = Date.now();
+                          const hasRecentPing = log.lastPingMs ? (nowMs - log.lastPingMs < 2 * 60 * 1000) : false;
+                          const isLive = log.status !== 'closed' && hasRecentPing;
+                          const durationMins = log.durationMins || 1;
+                          const durationStr = durationMins < 60 ? `${durationMins} min` : `${Math.floor(durationMins / 60)} h ${durationMins % 60} min`;
+                          return (
+                            <tr key={log.id || `slog-${sIdx}`}>
+                              <td>
+                                <div style={{ fontWeight: '600', color: 'var(--accent-primary)', fontSize: '0.82rem' }}>
+                                  📅 {log.dateStr || 'Aujourd\'hui'}
+                                </div>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                                  🕒 {log.timeStr || 'Récemment'}
+                                </div>
+                              </td>
+                              <td>
+                                <span style={{ 
+                                  padding: '0.15rem 0.45rem', 
+                                  borderRadius: '4px', 
+                                  fontSize: '0.70rem', 
+                                  fontWeight: 'bold',
+                                  background: log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.15)' : 'rgba(56, 189, 248, 0.15)',
+                                  color: log.platform?.includes('Electron') ? '#c084fc' : '#38bdf8',
+                                  border: `1px solid ${log.platform?.includes('Electron') ? 'rgba(192, 132, 252, 0.3)' : 'rgba(56, 189, 248, 0.3)'}`
+                                }}>
+                                  {log.platform || 'Web'}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{
+                                  padding: '0.18rem 0.5rem',
+                                  borderRadius: '6px',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 'bold',
+                                  background: isLive ? 'rgba(52, 211, 153, 0.15)' : 'rgba(148, 163, 184, 0.15)',
+                                  color: isLive ? '#34d399' : '#94a3b8',
+                                  border: `1px solid ${isLive ? 'rgba(52, 211, 153, 0.3)' : 'rgba(148, 163, 184, 0.3)'}`
+                                }}>
+                                  {isLive ? `🟢 En cours (${durationStr})` : `⚪ Terminée (${durationStr})`}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
