@@ -75,46 +75,99 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
             {activeModule === 1 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🚀 Chapitre 1 : Page d&apos;Accueil, Connexion &amp; Demandes d&apos;Accès</h2>
+                  <h2 className={styles.moduleTitle}>🚀 Chapitre 1 : Page d&apos;Accueil, Connexion, Formules &amp; Paiement BaridiMob</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
-                    Guide de première prise en main, connexion sécurisée, demandes d&apos;accès et choix de formule.
+                    Guide complet de première prise en main, modes de connexion, grilles tarifaires régionales et règlement BaridiMob.
                   </p>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.1. Présentation de la Plateforme &amp; Conformité Réglementaire</h4>
+                  <h4 className={styles.subTitle}>1.1. Présentation &amp; Cadre Réglementaire (Loi 18-11 Santé)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Rôle</div>
-                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre conforme aux exigences de la recherche médicale et à la Loi n° 18-11 relative à la santé (Algérie).</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Conformité</div>
+                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre méthodologique strict conforme au manuel RECIF et à la Loi n° 18-11 relative à la santé (Algérie).</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Interface &amp; Publics Cibles</div>
-                      <p className={styles.cardText}>Accès adapté pour Résidents, Médecins, Enseignants-Chercheurs, Encadreurs de thèses et Institutions académiques/hospitalières.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Publics Cibles</div>
+                      <p className={styles.cardText}>Accès personnalisé pour Résidents, Doctorants, Praticiens-Chercheurs, Enseignants-Encadreurs et Institutions (Facultés &amp; CHU).</p>
                     </div>
                   </div>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.2. Connexion à votre Espace Utilisateur</h4>
+                  <h4 className={styles.subTitle}>1.2. Modes de Connexion (En Ligne vs Licence Hors-Ligne)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité</div>
-                      <p className={styles.cardText}>Permet d&apos;accéder à votre tableau de bord personnel, vos protocoles sauvegardés et vos quotas d&apos;utilisation.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🌐 Connexion en Ligne</div>
+                      <p className={styles.cardText}>Connectez-vous avec votre e-mail et mot de passe ou directement en 1-clic via &quot;Se connecter avec Google&quot;.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Entrez votre e-mail et mot de passe dans le formulaire.<br/>2. Cliquez sur &quot;Se connecter&quot; ou utilisez &quot;Se connecter avec Google&quot; pour un accès direct.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🔑 Licence Autonome Hors-Ligne</div>
+                      <p className={styles.cardText}>Pour les utilisateurs des applications Mac, Windows et Linux travaillant sans réseau Internet, activez votre application autonome à l&apos;aide de votre clé de licence dédiée.</p>
                     </div>
                   </div>
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>1.3. Demander un Accès &amp; Choisir une Formule (PRO, EXPERT, ULTRA, INSTITUTION)</h4>
+                  <h4 className={styles.subTitle}>1.3. Sélection de la Zone Régionale de Résidence</h4>
                   <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🌍 3 Zones Géographiques Tarifaires</div>
+                      <p className={styles.cardText}>
+                        1. <strong>🇩🇿 Zone Algérie (DZD / DA) :</strong> Tarifs régionaux préférentiels et paiement direct par virement BaridiMob (RIP).<br/>
+                        2. <strong>🌍 Zone Afrique Hors-Algérie (€ / FCFA) :</strong> Tarifs adaptés à la zone subsaharienne et Maghreb (PayPal, Western Union).<br/>
+                        3. <strong>🇪🇺/🇨🇦 Zone Europe &amp; Occident (€ / $) :</strong> Règlement par Carte Bancaire internationale, Virement SEPA/SWIFT ou PayPal.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>1.4. Grille Complète des 5 Formules d&apos;Accès</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>🟢 Formule Découverte (Gratuit 3 jours)</div>
+                      <p className={styles.cardText}>Accès automatique à l&apos;inscription pour tester les fonctionnalités de base (5 Q/jour IA, 1 protocole démo, 1 article STROBE démo).</p>
+                    </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Procédure Pas-à-Pas</div>
-                      <p className={styles.cardText}>1. Cliquez sur &quot;✨ Demander un Accès / Voir les Formules&quot;.<br/>2. Parcourez les 4 formules d&apos;accès (PRO &amp; EXPERT pour l&apos;utilisation individuelle, ULTRA pour les Encadreurs autonomes, et INSTITUTION pour les facultés/CHU).<br/>3. Remplissez vos coordonnées et validez votre demande.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🔷 Formule PRO (1 500 DZD/mois)</div>
+                      <p className={styles.cardText}>Idéale pour Internes, Résidents et Doctorants (100 Q/jour IA, Calculateur NSN illimité, Quiz/Flashcards illimités, 5 protocoles/mois et 5 articles STROBE/mois sans filigrane).</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>⚡ Formule EXPERT (3 500 DZD/mois)</div>
+                      <p className={styles.cardText}>Conçue pour Chercheurs &amp; Praticiens Solo (Accès 100% ILLIMITÉ pour protocoles, synthèses PubMed, tuteur IA et exports PDF HD propres sans filigrane).</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>👑 Formule ULTRA (3 500 DZD/mois + Encadrement)</div>
+                      <p className={styles.cardText}>Destinée aux Enseignants &amp; Encadreurs (Accès illimité + Espace de supervision d&apos;étudiants + Messagerie interne d&apos;encadrement + Raccordement direct par Code Affiliation).</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>🏛️ Formule INSTITUTION (Sur Devis)</div>
+                      <p className={styles.cardText}>Sur mesure pour Facultés de Médecine, CHU et Laboratoires (Accès multi-sièges établissement, Tableau de bord Doyen/Chef de service, Logo institutionnel personnalisé sur les PDF).</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>1.5. Procédure de Règlement BaridiMob &amp; Transmission de Reçu (Algérie)</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>💳 Coordonnées Officielles BaridiMob</div>
+                      <p className={styles.cardText}>
+                        • <strong>RIP BaridiMob :</strong> <code style={{ color: '#2dd4bf', background: 'rgba(45, 212, 191, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>00799999000041210947</code><br/>
+                        • <strong>Titulaire du compte :</strong> Professeur Nezzal Abdelmalek<br/>
+                        • <strong>NIF Fiscal :</strong> 15007180115910202380
+                      </p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📩 Transmission du Reçu &amp; Activation Instantanée</div>
+                      <p className={styles.cardText}>
+                        1. Effectuez votre virement sur l&apos;application BaridiMob vers le RIP ci-dessus.<br/>
+                        2. Saisissez votre e-mail de compte et le N° de transaction.<br/>
+                        3. Joignez la photo de votre reçu (JPG, PNG, WebP) puis cliquez sur <strong>&quot;📩 Transmettre le Reçu et la Photo&quot;</strong>.<br/>
+                        4. Dès validation, votre accès s&apos;active immédiatement avec des jours bonus offerts (+7j Pro / +14j Ultra) !
+                      </p>
                     </div>
                   </div>
                 </div>
