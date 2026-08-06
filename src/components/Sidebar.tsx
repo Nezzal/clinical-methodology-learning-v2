@@ -10,6 +10,7 @@ import { APP_VERSION } from '@/utils/constants';
 import ChangelogModal from './ChangelogModal';
 import SubscriptionModal from './SubscriptionModal';
 import ProfileModal from './ProfileModal';
+import GuideModal from './GuideModal';
 import styles from './Sidebar.module.css';
 
 export default function Sidebar() {
@@ -21,6 +22,7 @@ export default function Sidebar() {
   const [showChangelog, setShowChangelog] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const [level, setLevel] = useState('Débutant');
 
   const [profileName, setProfileName] = useState('');
@@ -588,6 +590,16 @@ export default function Sidebar() {
         <div className={styles.footer}>
           <button
             className={styles.versionBtn}
+            onClick={() => setShowGuideModal(true)}
+            style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', marginBottom: '6px' }}
+            title="Consulter le Manuel Utilisateur Officiel & Guide de Prise en Main (14 Chapitres)"
+          >
+            <span>📖</span>
+            <span>Manuel Utilisateur</span>
+          </button>
+
+          <button
+            className={styles.versionBtn}
             onClick={() => setShowSubscriptionModal(true)}
             style={{ background: 'rgba(13,148,136,0.15)', color: '#2dd4bf', border: '1px solid rgba(13,148,136,0.3)', marginBottom: '6px' }}
             title="Consulter les formules d'abonnement et le RIP"
@@ -631,6 +643,11 @@ export default function Sidebar() {
           </div>
         </div>
       </aside>
+
+      <GuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+      />
 
       <ChangelogModal
         isOpen={showChangelog}

@@ -2,11 +2,13 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import GuideModal from '@/components/GuideModal';
 import styles from './page.module.css';
 
 export default function GuidePage() {
   const { user, profile } = useAuth();
   const [copyStates, setCopyStates] = useState<{ [key: string]: boolean }>({});
+  const [showGuideModal, setShowGuideModal] = useState(false);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestSuccess, setRequestSuccess] = useState('');
@@ -67,7 +69,16 @@ export default function GuidePage() {
   return (
     <div className={styles.mainContent}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Acquisition de l'Exécutable Hors-ligne & Licences</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.75rem' }}>
+          <h1 className={styles.title} style={{ margin: 0 }}>Acquisition de l'Exécutable Hors-ligne & Licences</h1>
+          <button 
+            className="btn btn-primary"
+            onClick={() => setShowGuideModal(true)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '0.65rem 1.25rem', fontSize: '0.9rem', fontWeight: 600, background: 'linear-gradient(135deg, #0284c7, #0369a1)', border: 'none', borderRadius: '10px', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)' }}
+          >
+            📖 Manuel Utilisateur Officiel (14 Chapitres)
+          </button>
+        </div>
         <p className={styles.subtitle}>
           Ce guide est destiné aux enseignants et aux étudiants souhaitant utiliser l'application de formation <strong>Methodo&Clinique</strong> en local, de façon autonome et <strong>sans aucune connexion internet</strong>.
         </p>
@@ -545,6 +556,10 @@ export default function GuidePage() {
         </ul>
       </section>
 
+      <GuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+      />
     </div>
   );
 }
