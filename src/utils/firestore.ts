@@ -560,93 +560,196 @@ export interface FirestoreAccessLog {
 }
 
 export async function recordAccessLog(uid: string, email: string, displayName?: string): Promise<string | null> {
-  if (!isFirebaseEnabled || !db || !uid || uid.startsWith('offline_') || uid === 'guest' || !auth?.currentUser) return null;
-  try {
-    const isElectron = typeof window !== 'undefined' && (window as any).electron !== undefined;
-    const platform = isElectron ? 'Application Desktop Electron' : 'Navigateur Web';
-    const now = new Date();
-    const startTimeMs = now.getTime();
-    const logId = `log_${uid}_${startTimeMs}`;
-    const logRef = doc(db, 'access_logs', logId);
-    
-    await setDoc(logRef, {
-      id: logId,
-      uid,
-      email: email || 'Sans email',
-      displayName: displayName || email?.split('@')[0] || 'Utilisateur',
-      timestamp: serverTimestamp(),
-      startTimeMs,
-      lastPingMs: startTimeMs,
-      durationMins: 1,
-      status: 'active',
-      dateStr: now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      timeStr: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-      platform
-    });
-    return logId;
-  } catch (error: any) {
-    if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
-      console.warn('⚠️ Erreur enregistrement journal accès:', error);
-    }
-    return null;
+  if (!uid || uid.startsWith('offline_') || uid === 'guest') return null;
+
+  const isElectron = typeof window !== 'undefined' && (window as any).electron !== undefined;
+  const platform = isElectron ? 'Application Desktop Electron' : 'Navigateur Web';
+  const now = new Date();
+  const startTimeMs = now.getTime();
+  const logId = `log_${uid}_${startTimeMs}`;
+
+  const newLog: FirestoreAccessLog = {
+    id: logId,
+    uid,
+    email: email || 'Sans email',
+    displayName: displayName || email?.split('@')[0] || 'Utilisateur',
+    timestamp: startTimeMs,
+    startTimeMs,
+    lastPingMs: startTimeMs,
+    durationMins: 1,
+    status: 'active',
+    dateStr: now.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+    timeStr: now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    platform
+  };
+
+  // 1. Sauvegarde synchrone immédiate dans le cache local (LocalStorage)
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('recif_access_logs_cache');
+      const list: FirestoreAccessLog[] = raw ? JSON.parse(raw) : [];
+      if (!list.some(l => l.id === logId)) {
+        list.unshift(newLog);
+        localStorage.setItem('recif_access_logs_cache', JSON.stringify(list));
+      }
+    } catch (e) {}
   }
+
+  // 2. Synchronisation dans Cloud Firestore si connecté
+  if (isFirebaseEnabled && db && auth?.currentUser) {
+    try {
+      const logRef = doc(db, 'access_logs', logId);
+      await setDoc(logRef, {
+        ...newLog,
+        timestamp: serverTimestamp()
+      });
+    } catch (error: any) {
+      if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
+        console.warn('⚠️ Erreur enregistrement journal accès Firestore:', error);
+      }
+    }
+  }
+
+  return logId;
 }
 
 export async function updateAccessLogPing(logId: string, startTimeMs: number) {
-  if (!isFirebaseEnabled || !db || !logId || !auth?.currentUser) return;
-  try {
-    const logRef = doc(db, 'access_logs', logId);
-    const nowMs = Date.now();
-    const durationMins = Math.max(1, Math.round((nowMs - (startTimeMs || nowMs)) / 60000));
-    await setDoc(logRef, {
-      lastPingMs: nowMs,
-      durationMins,
-      status: 'active'
-    }, { merge: true });
-  } catch (error: any) {
-    if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
-      console.warn('⚠️ Erreur mise à jour ping session:', error);
+  if (!logId) return;
+  const nowMs = Date.now();
+  const durationMins = Math.max(1, Math.round((nowMs - (startTimeMs || nowMs)) / 60000));
+
+  // 1. Mettre à jour le cache local
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('recif_access_logs_cache');
+      if (raw) {
+        const list: FirestoreAccessLog[] = JSON.parse(raw);
+        const item = list.find(l => l.id === logId);
+        if (item) {
+          item.lastPingMs = nowMs;
+          item.durationMins = durationMins;
+          item.status = 'active';
+          localStorage.setItem('recif_access_logs_cache', JSON.stringify(list));
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. Mettre à jour Firestore si connecté
+  if (isFirebaseEnabled && db && logId && auth?.currentUser) {
+    try {
+      const logRef = doc(db, 'access_logs', logId);
+      await setDoc(logRef, {
+        lastPingMs: nowMs,
+        durationMins,
+        status: 'active'
+      }, { merge: true });
+    } catch (error: any) {
+      if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
+        console.warn('⚠️ Erreur mise à jour ping session:', error);
+      }
     }
   }
 }
 
 export async function closeAccessLog(logId: string, startTimeMs: number) {
-  if (!isFirebaseEnabled || !db || !logId || !auth?.currentUser) return;
-  try {
-    const logRef = doc(db, 'access_logs', logId);
-    const nowMs = Date.now();
-    const durationMins = Math.max(1, Math.round((nowMs - (startTimeMs || nowMs)) / 60000));
-    await setDoc(logRef, {
-      lastPingMs: nowMs,
-      durationMins,
-      status: 'closed'
-    }, { merge: true });
-  } catch (error: any) {
-    if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
-      console.warn('⚠️ Erreur fermeture log session:', error);
+  if (!logId) return;
+  const nowMs = Date.now();
+  const durationMins = Math.max(1, Math.round((nowMs - (startTimeMs || nowMs)) / 60000));
+
+  // 1. Mettre à jour le cache local
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('recif_access_logs_cache');
+      if (raw) {
+        const list: FirestoreAccessLog[] = JSON.parse(raw);
+        const item = list.find(l => l.id === logId);
+        if (item) {
+          item.lastPingMs = nowMs;
+          item.durationMins = durationMins;
+          item.status = 'closed';
+          localStorage.setItem('recif_access_logs_cache', JSON.stringify(list));
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 2. Mettre à jour Firestore si connecté
+  if (isFirebaseEnabled && db && logId && auth?.currentUser) {
+    try {
+      const logRef = doc(db, 'access_logs', logId);
+      await setDoc(logRef, {
+        lastPingMs: nowMs,
+        durationMins,
+        status: 'closed'
+      }, { merge: true });
+    } catch (error: any) {
+      if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
+        console.warn('⚠️ Erreur fermeture log session:', error);
+      }
     }
   }
 }
 
 export async function loadAccessLogs(): Promise<FirestoreAccessLog[]> {
-  if (!isFirebaseEnabled || !db) return [];
+  let cachedLogs: FirestoreAccessLog[] = [];
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('recif_access_logs_cache');
+      if (raw) {
+        cachedLogs = JSON.parse(raw);
+      }
+    } catch (e) {}
+  }
+
+  if (!isFirebaseEnabled || !db) return cachedLogs;
+
   try {
     const logsRef = collection(db, 'access_logs');
     let snap;
     try {
-      const q = query(logsRef, orderBy('timestamp', 'desc'));
+      const q = query(logsRef, orderBy('startTimeMs', 'desc'));
       snap = await getDocsWithCacheFallback(q);
     } catch (e) {
       snap = await getDocsWithCacheFallback(logsRef);
     }
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as FirestoreAccessLog));
+
+    if (snap && snap.docs && snap.docs.length > 0) {
+      const remoteLogs = snap.docs.map(d => ({ id: d.id, ...d.data() } as FirestoreAccessLog));
+      
+      const logMap = new Map<string, FirestoreAccessLog>();
+      remoteLogs.forEach(l => { if (l.id) logMap.set(l.id, l); });
+      cachedLogs.forEach(l => { if (l.id && !logMap.has(l.id)) logMap.set(l.id, l); });
+
+      const mergedLogs = Array.from(logMap.values());
+      mergedLogs.sort((a, b) => (b.startTimeMs || 0) - (a.startTimeMs || 0));
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('recif_access_logs_cache', JSON.stringify(mergedLogs));
+        } catch (e) {}
+      }
+      return mergedLogs;
+    }
   } catch (error) {
-    console.warn('⚠️ Erreur loadAccessLogs:', error);
-    return [];
+    console.warn('⚠️ Erreur loadAccessLogs (fallback cache local):', error);
   }
+
+  return cachedLogs;
 }
 
 export async function deleteAccessLog(logId: string) {
+  if (typeof window !== 'undefined' && logId) {
+    try {
+      const raw = localStorage.getItem('recif_access_logs_cache');
+      if (raw) {
+        const list: FirestoreAccessLog[] = JSON.parse(raw);
+        const filtered = list.filter(l => l.id !== logId);
+        localStorage.setItem('recif_access_logs_cache', JSON.stringify(filtered));
+      }
+    } catch (e) {}
+  }
+
   if (!isFirebaseEnabled || !db || !logId) return;
   try {
     const logRef = doc(db, 'access_logs', logId);
@@ -658,6 +761,12 @@ export async function deleteAccessLog(logId: string) {
 }
 
 export async function clearAllAccessLogs() {
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('recif_access_logs_cache');
+    } catch (e) {}
+  }
+
   if (!isFirebaseEnabled || !db) return;
   try {
     const logsRef = collection(db, 'access_logs');

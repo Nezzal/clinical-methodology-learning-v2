@@ -224,7 +224,9 @@ export default function AdminDashboard() {
     setLoadingAccessLogs(true);
     try {
       const logs = await loadAccessLogs();
-      setAccessLogsList(logs);
+      if (logs && logs.length > 0) {
+        setAccessLogsList(logs);
+      }
     } catch (e) {
       console.warn("Erreur chargement journal des accès:", e);
     } finally {
