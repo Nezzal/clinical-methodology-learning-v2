@@ -3,572 +3,2200 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Grand Manuel de Référence Méthodologique & Réglementaire RECIF — Methodo&Clinique v2.0.6</title>
+  <title>Grand Manuel de Référence Officiel — Methodo&Clinique v2.0.6</title>
   <style>
+    /* =============================================
+       VARIABLES & RESET
+    ============================================= */
     :root {
       --primary: #0284c7;
       --primary-dark: #0369a1;
+      --primary-light: #38bdf8;
       --accent: #0d9488;
+      --accent-light: #5eead4;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --success: #22c55e;
       --text: #0f172a;
-      --text-muted: #475569;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
       --bg: #ffffff;
       --bg-alt: #f8fafc;
-      --border: #cbd5e1;
+      --bg-dark: #0f172a;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --shadow: 0 4px 24px rgba(0,0,0,0.06);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+      --radius: 12px;
+      --radius-lg: 16px;
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     @media print {
       .no-print { display: none !important; }
-      body { font-size: 10pt; line-height: 1.5; color: #000; background: #fff; }
-      .page-break { page-break-before: always; }
-      .card { border: 1px solid #999 !important; box-shadow: none !important; }
-      h1, h2, h3 { page-break-after: avoid; }
+      .page-break { page-break-before: always; break-before: page; }
+      .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+      body { font-size: 9.5pt; line-height: 1.55; color: #000; background: #fff; font-family: Georgia, serif; }
+      .container { max-width: 100%; padding: 0; margin: 0; }
+      .chapter-card { border: 1px solid #aaa !important; box-shadow: none !important; margin-bottom: 1.5rem; padding: 1.5rem; }
+      h1 { font-size: 22pt; }
+      h2 { font-size: 15pt; }
+      h3 { font-size: 12pt; }
+      h4 { font-size: 10.5pt; }
+      .header-bar { display: none; }
+      .cover-card { border: 2px solid #000 !important; }
+      a { color: #000; text-decoration: none; }
+      .formula-box { background: #f0f0f0 !important; color: #000 !important; border: 1px solid #999; }
+      .box-quote, .box-warning, .box-success, .box-danger, .box-info { border-left-width: 4px; }
+      .badge { border: 1px solid #666; }
+      table { page-break-inside: avoid; }
+      .toc-list { columns: 1; }
     }
 
+    /* =============================================
+       TYPOGRAPHY & BASE
+    ============================================= */
     body {
       font-family: Georgia, Cambria, "Times New Roman", Times, serif;
       color: var(--text);
       background-color: var(--bg-alt);
-      margin: 0;
-      padding: 0;
-      line-height: 1.7;
+      line-height: 1.75;
+      font-size: 16px;
     }
 
+    h1, h2, h3, h4, h5 {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.25;
+    }
+
+    p { margin-bottom: 1.1rem; text-align: justify; }
+    strong { font-weight: 700; }
+    em { font-style: italic; }
+    code {
+      font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+      background: #f1f5f9;
+      color: #0369a1;
+      padding: 0.15em 0.45em;
+      border-radius: 4px;
+      font-size: 0.88em;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* =============================================
+       HEADER STICKY
+    ============================================= */
     .header-bar {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #ffffff;
-      padding: 1.25rem 2rem;
-      border-bottom: 4px solid var(--accent);
+      color: #fff;
+      padding: 1rem 2rem;
+      border-bottom: 3px solid var(--accent);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
 
-    .header-bar-content {
-      max-width: 1100px;
+    .header-bar-inner {
+      max-width: 1200px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.75rem;
+    }
+
+    .header-logo { display: flex; align-items: center; gap: 0.75rem; }
+    .header-logo-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
     }
 
     .btn-print {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: linear-gradient(135deg, #0284c7, #0369a1);
-      color: #ffffff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
       border: none;
-      padding: 0.7rem 1.5rem;
+      padding: 0.6rem 1.4rem;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+      box-shadow: 0 4px 14px rgba(2,132,199,0.4);
       transition: all 0.2s;
+      white-space: nowrap;
     }
+    .btn-print:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(2,132,199,0.55); }
 
-    .btn-print:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
-    }
-
+    /* =============================================
+       LAYOUT
+    ============================================= */
     .container {
-      max-width: 1100px;
-      margin: 2.5rem auto;
-      padding: 0 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
     }
 
+    /* =============================================
+       COVER PAGE
+    ============================================= */
     .cover-card {
-      background: #ffffff;
-      border: 2px solid var(--border);
-      border-radius: 16px;
-      padding: 3.5rem;
+      background: #fff;
+      border: 2px solid var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 4rem;
       margin-bottom: 2.5rem;
-      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-lg);
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-
+    .cover-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 8px;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary-light));
+    }
     .cover-badge {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: inline-block;
-      background: rgba(2, 132, 199, 0.1);
+      background: rgba(2,132,199,0.08);
       color: var(--primary);
-      border: 1px solid rgba(2, 132, 199, 0.3);
-      padding: 0.35rem 1rem;
+      border: 1px solid rgba(2,132,199,0.25);
+      padding: 0.35rem 1.2rem;
       border-radius: 20px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 1.5rem;
+      font-weight: 700; font-size: 0.78rem;
+      text-transform: uppercase; letter-spacing: 0.12em;
+      margin-bottom: 1.75rem;
     }
-
     .cover-title {
-      font-size: 2.6rem;
-      color: #0f172a;
-      margin: 0 0 1rem 0;
-      font-weight: 900;
-      line-height: 1.2;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      color: var(--text); font-weight: 900;
+      margin-bottom: 0.85rem;
+      line-height: 1.18;
     }
-
     .cover-subtitle {
-      font-size: 1.35rem;
-      color: var(--primary);
-      margin-bottom: 2rem;
-      font-weight: 600;
-      font-style: italic;
+      font-size: 1.2rem; color: var(--primary-dark);
+      font-weight: 600; font-style: italic;
+      margin-bottom: 0.75rem;
     }
-
+    .cover-desc {
+      font-size: 1rem; color: var(--text-muted);
+      max-width: 680px; margin: 0 auto 2.5rem;
+      font-style: normal;
+    }
     .meta-grid {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1rem;
       background: var(--bg-alt);
       padding: 1.5rem;
-      border-radius: 12px;
+      border-radius: var(--radius);
       border: 1px solid var(--border);
-      font-size: 0.92rem;
       text-align: left;
-    }
-
-    .toc-card {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 2.5rem;
-      margin-bottom: 2.5rem;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-    }
-
-    .toc-title {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 1.6rem;
-      color: #0f172a;
-      border-bottom: 3px solid var(--primary);
-      padding-bottom: 0.6rem;
-      margin-top: 0;
-      margin-bottom: 1.5rem;
-    }
-
-    .toc-list {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      columns: 2;
-      column-gap: 2.5rem;
-      font-size: 0.95rem;
-      line-height: 2;
-    }
-
-    .chapter-card {
-      background: #ffffff;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 2.5rem;
-      margin-bottom: 2.5rem;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-    }
-
-    .chapter-num {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: var(--primary);
       font-size: 0.9rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 0.2rem; }
+    .meta-item strong { color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .meta-item span { color: var(--text); font-weight: 600; }
+
+    /* =============================================
+       TABLE OF CONTENTS
+    ============================================= */
+    .toc-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow);
+    }
+    .toc-header {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1.5rem; font-weight: 800;
+      color: var(--text);
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.5rem;
+    }
+    .toc-item {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .toc-item:hover {
+      background: rgba(2,132,199,0.06);
+      border-color: rgba(2,132,199,0.2);
+      color: var(--primary);
+    }
+    .toc-num {
+      background: rgba(2,132,199,0.1);
+      color: var(--primary);
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* =============================================
+       CHAPTER CARDS
+    ============================================= */
+    .chapter-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 3rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .chapter-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; bottom: 0; width: 5px;
+      background: linear-gradient(180deg, var(--primary), var(--accent));
+      border-radius: 4px 0 0 4px;
+    }
+
+    .chapter-num-label {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(2,132,199,0.08);
+      color: var(--primary);
+      border: 1px solid rgba(2,132,199,0.2);
+      padding: 0.3rem 0.9rem;
+      border-radius: 20px;
+      font-weight: 800; font-size: 0.78rem;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 0.75rem;
     }
 
     .chapter-title {
-      font-size: 1.8rem;
-      color: #0f172a;
-      border-bottom: 2px solid var(--primary);
-      padding-bottom: 0.6rem;
-      margin-top: 0.25rem;
-      margin-bottom: 1.5rem;
-      font-weight: 800;
+      font-size: 2rem;
+      color: var(--text); font-weight: 900;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.85rem;
+      margin-bottom: 2rem;
     }
 
     .section-title {
-      font-size: 1.3rem;
-      color: var(--primary-dark);
-      margin-top: 2rem;
-      margin-bottom: 0.85rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1.35rem;
+      color: var(--primary-dark); font-weight: 800;
+      margin-top: 2.25rem; margin-bottom: 1rem;
+      padding-left: 1rem;
       border-left: 4px solid var(--primary);
-      padding-left: 0.75rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
 
     .subsection-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-size: 1.1rem;
-      color: #1e293b;
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
+      color: var(--text); font-weight: 700;
+      margin-top: 1.75rem; margin-bottom: 0.75rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .subsection-title::before {
+      content: '';
+      display: inline-block; width: 8px; height: 8px;
+      background: var(--accent); border-radius: 50%; flex-shrink: 0;
     }
 
-    p {
-      margin-bottom: 1.15rem;
-      text-align: justify;
+    .subsubsection-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1rem; font-weight: 700;
+      color: var(--text-secondary);
+      margin-top: 1.25rem; margin-bottom: 0.5rem;
+      padding-left: 1rem;
+      text-decoration: underline;
+      text-decoration-color: var(--border-strong);
+      text-underline-offset: 4px;
     }
 
     ul, ol {
-      margin-bottom: 1.25rem;
       padding-left: 1.75rem;
+      margin-bottom: 1.25rem;
     }
+    li { margin-bottom: 0.6rem; }
+    li::marker { color: var(--primary); }
 
-    li {
-      margin-bottom: 0.5rem;
+    /* =============================================
+       CALLOUT BOXES
+    ============================================= */
+    .box-quote, .box-warning, .box-success, .box-danger, .box-info {
+      padding: 1.25rem 1.5rem;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 1.75rem 0;
+      font-size: 0.95rem;
     }
-
     .box-quote {
       background: #f0f9ff;
       border-left: 5px solid var(--primary);
-      padding: 1.25rem 1.5rem;
-      border-radius: 0 8px 8px 0;
-      margin: 1.5rem 0;
-      font-style: italic;
     }
-
     .box-warning {
       background: #fffbeb;
-      border-left: 5px solid #f59e0b;
-      padding: 1.25rem 1.5rem;
-      border-radius: 0 8px 8px 0;
-      margin: 1.5rem 0;
+      border-left: 5px solid var(--warning);
     }
-
     .box-success {
       background: #f0fdf4;
-      border-left: 5px solid #22c55e;
-      padding: 1.25rem 1.5rem;
-      border-radius: 0 8px 8px 0;
-      margin: 1.5rem 0;
+      border-left: 5px solid var(--success);
+    }
+    .box-danger {
+      background: #fef2f2;
+      border-left: 5px solid var(--danger);
+    }
+    .box-info {
+      background: #f0fdfa;
+      border-left: 5px solid var(--accent);
+    }
+    .box-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 800; font-size: 0.9rem;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.6rem;
     }
 
+    /* =============================================
+       TABLES
+    ============================================= */
+    .table-wrap { overflow-x: auto; margin: 1.75rem 0; border-radius: var(--radius); box-shadow: var(--shadow); }
     .table-custom {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      width: 100%;
-      border-collapse: collapse;
-      margin: 1.5rem 0;
-      font-size: 0.92rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      width: 100%; border-collapse: collapse;
+      font-size: 0.9rem;
     }
-
-    .table-custom th, .table-custom td {
-      border: 1px solid var(--border);
-      padding: 0.85rem 1rem;
-      text-align: left;
-    }
-
     .table-custom th {
-      background-color: #f1f5f9;
-      color: #0f172a;
-      font-weight: 700;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: #fff; font-weight: 700;
+      padding: 0.9rem 1.1rem; text-align: left;
     }
+    .table-custom td {
+      border: 1px solid var(--border);
+      padding: 0.85rem 1.1rem;
+      vertical-align: top;
+    }
+    .table-custom tr:nth-child(even) td { background: var(--bg-alt); }
+    .table-custom tr:hover td { background: rgba(2,132,199,0.04); }
+    .table-custom th:first-child { border-radius: var(--radius) 0 0 0; }
+    .table-custom th:last-child { border-radius: 0 var(--radius) 0 0; }
 
+    /* =============================================
+       FORMULAS
+    ============================================= */
     .formula-box {
-      font-family: "Courier New", Courier, monospace;
-      background: #1e293b;
+      font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+      background: #0f172a;
       color: #38bdf8;
-      padding: 1.25rem;
-      border-radius: 8px;
-      margin: 1.25rem 0;
+      padding: 1.5rem 1.75rem;
+      border-radius: var(--radius);
+      margin: 1.5rem 0;
       font-size: 0.95rem;
       overflow-x: auto;
+      line-height: 1.8;
+      border: 1px solid #1e3a5f;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .formula-comment { color: #64748b; font-style: italic; }
+
+    /* =============================================
+       BADGES / CHIPS
+    ============================================= */
+    .badge {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: inline-block;
+      padding: 0.22rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.78rem; font-weight: 700;
+    }
+    .badge-primary { background: rgba(2,132,199,0.12); color: var(--primary); border: 1px solid rgba(2,132,199,0.25); }
+    .badge-success { background: rgba(34,197,94,0.12); color: #16a34a; border: 1px solid rgba(34,197,94,0.25); }
+    .badge-warning { background: rgba(245,158,11,0.12); color: #b45309; border: 1px solid rgba(245,158,11,0.25); }
+    .badge-danger  { background: rgba(239,68,68,0.12);  color: #b91c1c; border: 1px solid rgba(239,68,68,0.25); }
+    .badge-accent  { background: rgba(13,148,136,0.12); color: var(--accent); border: 1px solid rgba(13,148,136,0.25); }
+
+    /* =============================================
+       STEP CARDS (numbered steps)
+    ============================================= */
+    .steps-list { list-style: none; padding: 0; margin: 1.5rem 0; }
+    .step-item {
+      display: flex; gap: 1.25rem;
+      margin-bottom: 1.25rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.9rem;
+      flex-shrink: 0; margin-top: 2px;
+      box-shadow: 0 4px 10px rgba(2,132,199,0.3);
+    }
+    .step-content { flex: 1; }
+    .step-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 700; margin-bottom: 0.35rem;
+      color: var(--text);
     }
 
-    footer {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    /* =============================================
+       PARAM GRID (23 params)
+    ============================================= */
+    .param-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .param-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      display: flex; gap: 0.85rem;
+    }
+    .param-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-width: 30px; height: 30px;
+      background: var(--primary); color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.8rem; flex-shrink: 0;
+    }
+    .param-title {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      margin-bottom: 0.25rem; color: var(--text);
+    }
+    .param-desc { font-size: 0.84rem; color: var(--text-muted); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
+    /* =============================================
+       TIER CARDS (Formules)
+    ============================================= */
+    .tier-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin: 1.75rem 0;
+    }
+    .tier-card {
+      background: #fff;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
       text-align: center;
-      padding: 2.5rem 0;
+      transition: all 0.2s;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .tier-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow); }
+    .tier-card.featured { border-color: var(--primary); background: linear-gradient(135deg, rgba(2,132,199,0.04), rgba(13,148,136,0.04)); }
+    .tier-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .tier-name { font-weight: 900; font-size: 1.05rem; color: var(--text); margin-bottom: 0.3rem; }
+    .tier-price { font-weight: 700; font-size: 1.25rem; color: var(--primary); margin-bottom: 0.75rem; }
+    .tier-features { text-align: left; font-size: 0.82rem; color: var(--text-secondary); }
+    .tier-features li { margin-bottom: 0.3rem; }
+    .tier-features li::before { content: "✓ "; color: var(--success); font-weight: 700; }
+    .tier-features { list-style: none; padding: 0; }
+
+    /* =============================================
+       STROBE TABLE
+    ============================================= */
+    .strobe-item {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 0.75rem;
+      display: flex; gap: 1rem; align-items: flex-start;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .strobe-num {
+      min-width: 30px; height: 30px;
+      background: var(--accent); color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.8rem; flex-shrink: 0;
+    }
+    .strobe-content { flex: 1; }
+    .strobe-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text); }
+    .strobe-desc { font-size: 0.83rem; color: var(--text-muted); }
+
+    /* =============================================
+       FOOTER
+    ============================================= */
+    footer {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+      padding: 2.5rem 1rem;
       color: var(--text-muted);
       font-size: 0.88rem;
       border-top: 2px solid var(--border);
       margin-top: 4rem;
     }
+
+    /* =============================================
+       DIVIDER
+    ============================================= */
+    .divider {
+      border: none; border-top: 2px dashed var(--border);
+      margin: 2rem 0;
+    }
+
+    /* Admin tab grid */
+    .admin-tab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem; margin: 1.5rem 0;
+    }
+    .admin-tab-card {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .admin-tab-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .admin-tab-name { font-weight: 700; font-size: 0.92rem; color: var(--text); margin-bottom: 0.25rem; }
+    .admin-tab-desc { font-size: 0.82rem; color: var(--text-muted); }
   </style>
 </head>
 <body>
 
-  <div class="header-bar no-print">
-    <div class="header-bar-content">
+<!-- ==========================================
+     STICKY HEADER
+=========================================== -->
+<div class="header-bar no-print">
+  <div class="header-bar-inner">
+    <div class="header-logo">
+      <div class="header-logo-icon">📚</div>
       <div>
-        <strong style="font-size: 1.15rem; color: #38bdf8;">Plateforme Académique Methodo&Clinique</strong>
-        <div style="font-size: 0.85rem; color: #94a3b8;">Grand Manuel de Référence Méthodologique & Réglementaire (Version v2.0.6)</div>
+        <div style="font-weight:800;font-size:1.05rem;color:#f8fafc;">Methodo&amp;Clinique</div>
+        <div style="font-size:0.78rem;color:#94a3b8;">Grand Manuel de Référence Officiel — v2.0.6</div>
       </div>
-      <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF (Document de Référence)</button>
+    </div>
+    <button class="btn-print" onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button>
+  </div>
+</div>
+
+<!-- ==========================================
+     MAIN CONTAINER
+=========================================== -->
+<div class="container">
+
+  <!-- ==========================================
+       PAGE DE GARDE
+  =========================================== -->
+  <div class="cover-card avoid-break">
+    <span class="cover-badge">📋 Document Officiel de Référence Académique — Version 2.0.6</span>
+    <h1 class="cover-title">Grand Manuel de Référence<br>Méthodologique &amp; Réglementaire</h1>
+    <div class="cover-subtitle">Plateforme Académique Methodo&amp;Clinique EDU — Référentiel RECIF</div>
+    <p class="cover-desc">
+      Guide exhaustif et complet destiné aux résidents, internes, doctorants, enseignants-chercheurs et administrateurs institutionnels utilisant la plateforme d'apprentissage Methodo&amp;Clinique pour la conception, la conduite et la rédaction d'études cliniques et observationnelles.
+    </p>
+    <div class="meta-grid">
+      <div class="meta-item"><strong>Direction Scientifique</strong><span>Professeur Nezzal Abdelmalek</span></div>
+      <div class="meta-item"><strong>Référentiel Principal</strong><span>RECIF — Loi n° 18-11 relative à la santé (Algérie)</span></div>
+      <div class="meta-item"><strong>NIF Fiscal Officiel</strong><span>15007180115910202380</span></div>
+      <div class="meta-item"><strong>RIP BaridiMob</strong><span>00799999000041210947</span></div>
+      <div class="meta-item"><strong>Version Logicielle</strong><span>2.0.6 (Electron + Next.js)</span></div>
+      <div class="meta-item"><strong>Licence Contenus</strong><span>Creative Commons CC BY-NC-SA 4.0</span></div>
+      <div class="meta-item"><strong>Moteur IA</strong><span>Hybride Tripro : Gemini ↔ Ollama ↔ RECIF Statique</span></div>
+      <div class="meta-item"><strong>Date de Révision</strong><span>Août 2026</span></div>
     </div>
   </div>
 
-  <div class="container">
-    
-    <!-- PAGE DE GARDE -->
-    <div class="cover-card">
-      <span class="cover-badge">DOCUMENT OFFICIEL DE RÉFÉRENCE ACADÉMIQUE</span>
-      <h1 class="cover-title">Grand Manuel de Référence Méthodologique & Réglementaire RECIF</h1>
-      <div class="cover-subtitle">Guide Exhaustif pour la Conception des Protocoles Cliniques, la Statistique et la Rédaction Scientifique (v2.0.6)</div>
-      
-      <div class="meta-grid">
-        <div><strong>🏛️ Plateforme Officielle :</strong> Methodo&Clinique EDU</div>
-        <div><strong>📜 Direction Scientifique :</strong> Professeur Nezzal Abdelmalek</div>
-        <div><strong>🏛️ NIF Fiscal Officiel :</strong> 15007180115910202380</div>
-        <div><strong>⚖️ Réglementation :</strong> Loi n° 18-11 relative à la santé</div>
-        <div><strong>💳 Virement BaridiMob :</strong> RIP 00799999000041210947</div>
-        <div><strong>🎓 Licence Contenus :</strong> Creative Commons CC BY-NC-SA 4.0</div>
-      </div>
+  <!-- ==========================================
+       AVANT-PROPOS
+  =========================================== -->
+  <div class="chapter-card avoid-break">
+    <div class="chapter-num-label">✍️ Avant-propos</div>
+    <h2 class="chapter-title">Message du Directeur Scientifique</h2>
+    <p>Ce manuel constitue le document de référence officiel de la plateforme <strong>Methodo&amp;Clinique</strong>. Il a été conçu pour répondre à un besoin crucial et longtemps identifié dans nos facultés de médecine, pharmacie et odontologie : celui de fournir aux jeunes chercheurs cliniciens un outil pédagogique structuré, rigoureux, ancré dans la réalité réglementaire algérienne et adapté aux exigences scientifiques internationales.</p>
+    <p>La démarche méthodologique constitue le fondement de toute investigation scientifique valide. Sans une hypothèse clairement formulée, sans un schéma d'étude approprié, sans un calcul du nombre de sujets nécessaires rigoureusement établi, et sans une analyse statistique adaptée à la nature des données, aucun résultat de recherche ne saurait prétendre à la validité ni à la reproductibilité. Ces exigences ne sont pas de simples formalités académiques — elles sont les garants de la protection des participants, de la crédibilité de la science médicale, et in fine, de la qualité des soins prodigués à nos patients.</p>
+    <p>La plateforme Methodo&amp;Clinique ambitionne de rendre ces concepts accessibles, interactifs et maîtrisables par tout clinicien désireux de s'engager dans la recherche, quel que soit son niveau initial. En intégrant l'intelligence artificielle comme tuteur pédagogique, en automatisant le calcul statistique et en guidant la rédaction selon les normes internationales (STROBE, CONSORT, PRISMA), nous plaçons entre vos mains un outil sans précédent dans l'espace académique algérien et africain.</p>
+    <p>Je vous invite à parcourir ce manuel avec attention, à vous l'approprier, et à en faire un compagnon quotidien dans votre parcours de chercheur.</p>
+    <p style="text-align:right;"><em>Professeur Nezzal Abdelmalek<br>Direction Scientifique, Methodo&amp;Clinique</em></p>
+  </div>
+
+  <!-- ==========================================
+       TABLE DES MATIÈRES
+  =========================================== -->
+  <div class="toc-card">
+    <h2 class="toc-header">📋 Table des Matières Détaillée</h2>
+    <div class="toc-grid">
+      <a class="toc-item" href="#ch1"><span class="toc-num">1</span>Cadre Légal, Inscription & Paiement BaridiMob</a>
+      <a class="toc-item" href="#ch2"><span class="toc-num">2</span>Navigation & Tableau de Bord (Dashboard)</a>
+      <a class="toc-item" href="#ch3"><span class="toc-num">3</span>Le Tuteur Intelligent RECIF — 3 Volets</a>
+      <a class="toc-item" href="#ch4"><span class="toc-num">4</span>Générateur de Protocoles & CRF</a>
+      <a class="toc-item" href="#ch5"><span class="toc-num">5</span>Recherche PubMed & Synthèse Bibliographique RAG</a>
+      <a class="toc-item" href="#ch6"><span class="toc-num">6</span>Quiz Interactifs & Mémorisation Espacée</a>
+      <a class="toc-item" href="#ch7"><span class="toc-num">7</span>Rapport Pédagogique & Bilan de Compétences IA</a>
+      <a class="toc-item" href="#ch8"><span class="toc-num">8</span>Calculateur NSN — Formules & Exemples Cliniques</a>
+      <a class="toc-item" href="#ch9"><span class="toc-num">9</span>Rédacteur d'Article Scientifique STROBE</a>
+      <a class="toc-item" href="#ch10"><span class="toc-num">10</span>Applications Desktop Autonomes (Mac / Win / Linux)</a>
+      <a class="toc-item" href="#ch11"><span class="toc-num">11</span>Espace Supervision & Administration Institutionnelle</a>
+      <a class="toc-item" href="#ch12"><span class="toc-num">12</span>Messagerie Pédagogique & Suivi d'Encadrement</a>
+      <a class="toc-item" href="#ch13"><span class="toc-num">13</span>Architecture IA Hybride Tripro & Résilience Offline</a>
+      <a class="toc-item" href="#ch14"><span class="toc-num">14</span>Propriété Intellectuelle, Droits & Charte Éthique IA</a>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 1
+  =========================================== -->
+  <div id="ch1" class="chapter-card page-break">
+    <div class="chapter-num-label">🏛️ Chapitre 1</div>
+    <h2 class="chapter-title">Cadre Légal, Inscription, Formules d'Accès &amp; Paiement BaridiMob</h2>
+
+    <h3 class="section-title">1.1 Fondements Juridiques : La Loi n° 18-11 du 2 Juillet 2018 Relative à la Santé</h3>
+    <p>La recherche clinique et épidémiologique en Algérie est impérativement régie par la <strong>Loi n° 18-11 du 2 juillet 2018 relative à la santé</strong>, publiée au Journal Officiel de la République Algérienne Démocratique et Populaire (JORA) n° 46 du 29 juillet 2018. Cette loi constitue le corpus législatif fondamental que tout investigateur clinicien doit maîtriser avant d'initier toute étude impliquant des êtres humains, des données de santé ou des substances biologiques.</p>
+
+    <h4 class="subsection-title">Dispositions générales applicables à la recherche (Titre VII, Chapitre II)</h4>
+    <p>L'article <strong>378</strong> de la Loi 18-11 stipule que toute recherche biomédicale portant sur l'être humain doit :</p>
+    <ul>
+      <li>Être fondée sur la connaissance scientifique la plus récente et sur une expérimentation préclinique suffisante.</li>
+      <li>Présenter un rapport bénéfice/risque favorable pour les participants.</li>
+      <li>Être conduite exclusivement par des chercheurs qualifiés disposant des compétences et des équipements adéquats.</li>
+      <li>Obtenir le consentement libre, éclairé, exprès et écrit du participant ou de son représentant légal.</li>
+    </ul>
+
+    <p>L'article <strong>379</strong> précise que les recherches biomédicales portent sur :</p>
+    <ul>
+      <li>Les médicaments, dispositifs médicaux et techniques chirurgicales.</li>
+      <li>Les études pharmacogénomiques et pharmacoépidémiologiques.</li>
+      <li>Les études non interventionnelles ou observationnelles impliquant des données de santé nominatives ou anonymisées.</li>
+    </ul>
+
+    <h4 class="subsection-title">Le Comité National d'Éthique pour les Sciences de la Santé (CNESS)</h4>
+    <p>Conformément aux articles <strong>381 à 384</strong> de la Loi 18-11, l'avis favorable d'un <strong>Comité d'Éthique</strong> doit être obtenu obligatoirement avant le début de toute investigation impliquant des sujets humains. Ce comité évalue :</p>
+    <ul>
+      <li>La pertinence scientifique et sociale du projet.</li>
+      <li>La clarté et l'adéquation du formulaire de consentement éclairé et de la notice d'information.</li>
+      <li>La protection de la vie privée, de l'anonymat et des données personnelles des participants.</li>
+      <li>La qualification des investigateurs et l'adéquation des moyens disponibles.</li>
+    </ul>
+
+    <div class="box-warning avoid-break">
+      <div class="box-title">⚠️ Obligation Réglementaire Non Négociable</div>
+      <p>Aucune donnée de patient ne peut être collectée, analysée ou publiée sans l'avis préalable favorable du Comité d'Éthique compétent. Toute violation de cette disposition expose l'investigateur à des sanctions disciplinaires, civiles et pénales prévues par la Loi 18-11. La plateforme Methodo&amp;Clinique intègre cette exigence dans chacun de ses modules de génération de protocoles.</p>
     </div>
 
-    <!-- SOMMAIRE EXHAUSTIF -->
-    <div class="toc-card">
-      <h2 class="toc-title">📋 Table des Matières</h2>
-      <ol class="toc-list">
-        <li><strong>Chapitre 1 :</strong> Cadre Légal & Inscription</li>
-        <li><strong>Chapitre 2 :</strong> Navigation & Tableau de Bord</li>
-        <li><strong>Chapitre 3 :</strong> Tuteur Intelligent RECIF (3 Volets)</li>
-        <li><strong>Chapitre 4 :</strong> Générateur de Protocoles & CRF</li>
-        <li><strong>Chapitre 5 :</strong> Recherche PubMed & Synthèse RAG</li>
-        <li><strong>Chapitre 6 :</strong> Quiz & Mémorisation Espacée</li>
-        <li><strong>Chapitre 7 :</strong> Rapport Pédagogique & Suivi IA</li>
-        <li><strong>Chapitre 8 :</strong> Calculateur du Nombre de Sujets (NSN)</li>
-        <li><strong>Chapitre 9 :</strong> Rédacteur d'Article STROBE</li>
-        <li><strong>Chapitre 10 :</strong> Applications Desktop Autonomes</li>
-        <li><strong>Chapitre 11 :</strong> Espace Supervision & Administration</li>
-        <li><strong>Chapitre 12 :</strong> Messagerie Interne Pédagogique</li>
-        <li><strong>Chapitre 13 :</strong> Architecture IA Hybride Tripro</li>
-        <li><strong>Chapitre 14 :</strong> Propriété Intellectuelle & Droits</li>
-      </ol>
-    </div>
+    <h4 class="subsection-title">Protection des Données de Santé</h4>
+    <p>L'article <strong>394</strong> de la Loi 18-11 garantit la confidentialité absolue des données de santé. Les données nominatives ne peuvent être utilisées à des fins de recherche que sous stricte anonymisation irréversible. La plateforme Methodo&amp;Clinique ne collecte, ne traite ni ne stocke aucune donnée patient — elle accompagne uniquement la conception méthodologique et la rédaction des protocoles d'investigation.</p>
 
-    <!-- CHAPITRE 1 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 1</div>
-      <h2 class="chapter-title">🚀 Cadre Légal, Inscription, Formules & Paiement BaridiMob</h2>
-      
-      <h3 class="section-title">1.1. Contextualisation Légale et Réglementaire en Algérie</h3>
-      <p>La recherche clinique en Algérie s'inscrit impérativement dans le cadre tracé par la <strong>Loi n° 18-11 du 2 juillet 2018 relative à la santé</strong> (JORA n° 46). L'article 378 et suivants définissent strictement les conditions de réalisation des études biomédicales et observationnelles chez l'homme. La plateforme <em>Methodo&Clinique</em> garantit une conformité absolue avec :</p>
-      <ul>
-        <li>L'obligation d'obtenir l'avis favorable du Comité d'Éthique Institutionnel avant tout début d'investigation.</li>
-        <li>Le respect strict du consentement libre, éclairé et écrit du participant.</li>
-        <li>La protection absolue de l'anonymat et des données nominatives de santé.</li>
-        <li>Le respect de la grille méthodique nationale RECIF (Référentiel des Études Cliniques et des Investigations de la Faculté).</li>
-      </ul>
+    <hr class="divider">
 
-      <h3 class="section-title">1.2. Architecture des Formules d'Accès et Tarification Régionale</h3>
-      <p>Afin de répondre à la diversité des profils (étudiants, résidents, enseignants, directeurs de CHU et chercheurs internationaux), la plateforme propose 5 formules tarifaires réparties en 3 zones géographiques :</p>
-      
+    <h3 class="section-title">1.2 Accès à la Plateforme : Modes de Connexion</h3>
+    <p>La plateforme Methodo&amp;Clinique est accessible selon deux modalités distinctes selon le contexte d'utilisation de l'utilisateur :</p>
+
+    <h4 class="subsection-title">Mode Connecté (Web — Cloud)</h4>
+    <p>L'accès via navigateur web (<em>Chrome, Firefox, Safari, Edge</em>) à l'adresse officielle de la plateforme permet une expérience complète nécessitant une connexion Internet active. Dans ce mode :</p>
+    <ul>
+      <li>Les interactions avec le Tuteur RECIF bénéficient du moteur <strong>Gemini (Google DeepMind)</strong>, le plus performant des moteurs disponibles.</li>
+      <li>La synchronisation des données est temps réel entre tous les appareils de l'utilisateur.</li>
+      <li>Les mises à jour de la base de connaissances RECIF et des références réglementaires sont instantanées.</li>
+      <li>Les exports PDF des protocoles et articles STROBE sont générés via les serveurs cloud.</li>
+    </ul>
+
+    <h4 class="subsection-title">Mode Autonome Hors-ligne (Application Desktop — Electron)</h4>
+    <p>Pour les établissements hospitaliers à connectivité limitée, les blocs opératoires, les services de garde ou les zones à faible couverture réseau, la plateforme est disponible sous forme d'application de bureau installable sur :</p>
+    <ul>
+      <li><strong>🍎 macOS :</strong> Fichier <code>.dmg</code> compatible Apple Silicon (M1/M2/M3/M4) et Intel 64-bit.</li>
+      <li><strong>💻 Windows :</strong> Installateur <code>.exe</code> pour Windows 10 et Windows 11 (64-bit uniquement).</li>
+      <li><strong>🐧 Linux :</strong> Paquets <code>.AppImage</code> (universel) et <code>.deb</code> (Debian, Ubuntu, Mint, Pop!_OS).</li>
+    </ul>
+    <p>En mode hors-ligne, l'IA bascule automatiquement vers le moteur local <strong>Ollama</strong> (si installé sur la machine) ou vers la <strong>base statique RECIF embarquée</strong>, garantissant une continuité pédagogique totale même sans Internet.</p>
+
+    <hr class="divider">
+
+    <h3 class="section-title">1.3 Les Trois Zones Géographiques Tarifaires</h3>
+    <p>La plateforme Methodo&amp;Clinique applique une politique tarifaire régionale et solidaire, reflet de son engagement pour l'accessibilité à la formation médicale de qualité :</p>
+    <div class="table-wrap">
       <table class="table-custom">
-        <thead>
-          <tr>
-            <th>Formule</th>
-            <th>Zone & Tarif (Algérie / DZD)</th>
-            <th>Périmètre & Capacités Incluses</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Zone Géographique</th><th>Pays Concernés</th><th>Devise & Paiement</th><th>Particularités</th></tr></thead>
         <tbody>
           <tr>
-            <td><strong>🟢 Découverte</strong></td>
-            <td>Gratuit (3 Jours auto)</td>
-            <td>5 requêtes IA / jour, 1 protocole démo, 1 article STROBE démo, calculateur NSN démo.</td>
+            <td><strong>🇩🇿 Zone Algérie</strong></td>
+            <td>Algérie</td>
+            <td>Dinar Algérien (DZD) — BaridiMob (RIP)</td>
+            <td>Tarification sociale adaptée au pouvoir d'achat local. Paiement 100% national via Algérie Poste.</td>
           </tr>
           <tr>
-            <td><strong>🔷 PRO</strong></td>
-            <td>1 500 DZD / mois</td>
-            <td>Internes, Résidents & Doctorants. 100 Q/jour IA, NSN illimité, Quiz/Flashcards illimités, 5 protocoles/mois & 5 articles STROBE/mois sans filigrane.</td>
+            <td><strong>🌍 Zone Afrique Francophone</strong></td>
+            <td>Maroc, Tunisie, Sénégal, Côte d'Ivoire, Mali, Burkina Faso, Cameroun, RDC...</td>
+            <td>USD / EUR — PayPal (Carte bancaire internationale)</td>
+            <td>Tarif préférentiel Afrique appliqué. Facturation en devise internationale.</td>
           </tr>
           <tr>
-            <td><strong>⚡ EXPERT</strong></td>
-            <td>3 500 DZD / mois</td>
-            <td>Chercheurs & Praticiens Solo. Accès 100% ILLIMITÉ pour tous les protocoles, synthèses PubMed, tuteur IA, articles STROBE et exports PDF propres.</td>
-          </tr>
-          <tr>
-            <td><strong>👑 ULTRA</strong></td>
-            <td>3 500 DZD / mois + options</td>
-            <td>Enseignants & Encadreurs. Accès illimité + Espace de supervision d'étudiants + Code d'Affiliation unique + Messagerie d'encadrement.</td>
-          </tr>
-          <tr>
-            <td><strong>🏛️ INSTITUTION</strong></td>
-            <td>Sur Devis (DZD)</td>
-            <td>Facultés, CHU & Labos. Accès multi-sièges établissement, Tableau de bord Doyen/Chef de service, Logo institutionnel sur les PDF.</td>
+            <td><strong>🌍 Zone Europe / Occident</strong></td>
+            <td>France, Belgique, Canada, Suisse, USA, Maghreb diaspora...</td>
+            <td>EUR / USD — PayPal (Carte bancaire internationale)</td>
+            <td>Tarif standard international. Accès complet ULTRA ou INSTITUTION disponible.</td>
           </tr>
         </tbody>
       </table>
+    </div>
 
-      <h3 class="section-title">1.3. Procédure Réglementaire de Paiement par BaridiMob (RIP)</h3>
-      <div class="box-quote">
-        <strong>💳 Coordonnées Bancaires Officiellement Enregistrées :</strong><br>
-        • <strong>RIP BaridiMob :</strong> <code>00799999000041210947</code><br>
-        • <strong>Titulaire du compte :</strong> Professeur Nezzal Abdelmalek<br>
-        • <strong>NIF (Identifiant Fiscal Officiel) :</strong> 15007180115910202380
+    <hr class="divider">
+
+    <h3 class="section-title">1.4 Les 5 Formules d'Accès — Descriptif Exhaustif</h3>
+
+    <div class="tier-grid">
+      <div class="tier-card">
+        <div class="tier-icon">🟢</div>
+        <div class="tier-name">Découverte</div>
+        <div class="tier-price">Gratuit — 3 jours</div>
+        <ul class="tier-features">
+          <li>5 requêtes Tuteur IA / jour</li>
+          <li>1 Protocole démo (avec filigrane)</li>
+          <li>1 Article STROBE démo (avec filigrane)</li>
+          <li>Calculateur NSN démo (1 calcul)</li>
+          <li>Quiz (10 questions/jour)</li>
+        </ul>
       </div>
-      <p>Le règlement s'effectue directement via l'application mobile BaridiMob d'Algérie Poste. L'utilisateur saisit son adresse e-mail de compte, le N° de transaction et télécharge le reçu photo. La validation débloque immédiatement l'accès avec des jours bonus d'encouragement (+7 jours pour la formule PRO, +14 jours pour la formule ULTRA).</p>
-    </div>
-
-    <!-- CHAPITRE 2 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 2</div>
-      <h2 class="chapter-title">📊 Navigation & Ergonomie du Tableau de Bord (Dashboard)</h2>
-      
-      <h3 class="section-title">2.1. Les Indicateurs Clés de Performance (KPIs)</h3>
-      <p>Le tableau de bord offre une visibilité synthétique en temps réel sur la progression de l'apprenant :</p>
-      <ul>
-        <li><strong>Tuteur RECIF :</strong> Nombre cumulé de questions méthodologiques et réglementaires posées.</li>
-        <li><strong>Protocoles Générés :</strong> Nombre de fiches de protocoles cliniques rédigées et validées.</li>
-        <li><strong>Score aux Quiz :</strong> Pourcentage moyen de réussite calculé sur l'ensemble des séries de QCM effectuées.</li>
-        <li><strong>Flashcards Maîtrisées :</strong> Nombre de cartes concepts mémorisées sur le total de la banque de données.</li>
-      </ul>
-
-      <h3 class="section-title">2.2. Le Bilan Pédagogique Automatisé par l'IA</h3>
-      <p>Grâce à la collecte des résultats, l'IA analyse la maîtrise des biais de sélection, de confusion, la qualité de la formulation de l'hypothèse (PICO) et la rigueur de l'échantillonnage pour générer un bilan de compétences formalisé.</p>
-    </div>
-
-    <!-- CHAPITRE 3 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 3</div>
-      <h2 class="chapter-title">🤖 Le Tuteur Intelligent RECIF (Guide des 3 Volets)</h2>
-      
-      <h3 class="section-title">3.1. Volet 1 : Discussion Libre Méthodologique</h3>
-      <p>Ce volet permet d'interroger librement l'assistant sur l'ensemble des concepts de l'épidémiologie clinique, des statistiques médicales et des articles de la Loi 18-11 relative à la santé.</p>
-
-      <h3 class="section-title">3.2. Volet 2 : Accompagnement Projet & Validation des 23 Paramètres RECIF</h3>
-      <p>Le tuteur guide pas-à-pas l'étudiant pour renseigner et valider l'ensemble des 23 critères fondamentaux d'un protocole clinique :</p>
-      <ol>
-        <li>Titre et Acronyme du Projet.</li>
-        <li>Justification et Contexte Scientifique.</li>
-        <li>Question de Recherche (Méthode PICO / PECO).</li>
-        <li>Objectif Principal (clair, mesurable, unique).</li>
-        <li>Objectifs Secondaires.</li>
-        <li>Schéma d'Étude (Cohorte, Cas-Témoins, Transversale, Essai Clinique).</li>
-        <li>Population d'Étude & Source.</li>
-        <li>Critères d'Inclusion.</li>
-        <li>Critères de Non-Inclusion.</li>
-        <li>Critères d'Exclusion / Sortie d'Étude.</li>
-        <li>Critère de Jugement Principal (CJP).</li>
-        <li>Critères de Jugement Secondaires (CJS).</li>
-        <li>Nombre de Sujets Nécessaires (NSN) & Hypothèses.</li>
-        <li>Stratégie d'Échantillonnage (Aléatoire, Stratifié, En grappe, Convenance).</li>
-        <li>Description de l'Intervention ou de l'Exposition.</li>
-        <li>Modalités de Recueil des Données & Calendrier.</li>
-        <li>Analyse Statistique Prévue (Tests paramétriques / non paramétriques).</li>
-        <li>Gestion des Données Manquantes & Perdus de Vue.</li>
-        <li>Considérations Éthiques & Comité d'Éthique.</li>
-        <li>Consentement Éclairé & Notice d'Information.</li>
-        <li>Gestion des Risques & Événements Indésirables.</li>
-        <li>Calendrier Prévisionnel de Réalisation.</li>
-        <li>Budget & Financement du Projet.</li>
-      </ol>
-
-      <h3 class="section-title">3.3. Volet 3 : Rédaction d'Article Scientifique (STROBE)</h3>
-      <p>Assistance à la structuration d'articles observationnels pour la soumission aux revues de rang A selon la grille STROBE.</p>
-    </div>
-
-    <!-- CHAPITRE 4 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 4</div>
-      <h2 class="chapter-title">📑 Générateur de Protocoles & Cahier d'Observation (CRF)</h2>
-      <p>Après validation des 23 paramètres, le moteur génère automatiquement l'intégralité du document de protocole ainsi que la fiche de recueil des données (Case Report Form - CRF) au format PDF certifié avec l'en-tête académique de l'utilisateur.</p>
-    </div>
-
-    <!-- CHAPITRE 5 À 7 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitres 5 à 7</div>
-      <h2 class="chapter-title">🔬 Recherche PubMed, Évaluation & Bilan de Suivi</h2>
-      <p>Ces modules permettent d'interroger la base NLM PubMed, de synthétiser la littérature par RAG, d'effectuer des séries de quiz interactifs et d'exporter le bilan pédagogique de l'étudiant.</p>
-    </div>
-
-    <!-- CHAPITRE 8 : CALCULATEUR NSN -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 8</div>
-      <h2 class="chapter-title">🧮 Manuel du Calculateur du Nombre de Sujets Nécessaires (NSN)</h2>
-      
-      <h3 class="section-title">8.1. Principes Statistiques & Formules Clés</h3>
-      <p>Le calcul du NSN garantit la puissance statistique de l'étude (généralement 1-β = 80% ou 90%) tout en maîtrisant le risque de première espèce (α = 5%).</p>
-      
-      <div class="subsection-title">Formule de comparaison de deux proportions (Échantillons indépendants) :</div>
-      <div class="formula-box">
-N = [ Z_(α/2) * √(2 * p * (1-p)) + Z_β * √(p1*(1-p1) + p2*(1-p2)) ]² / (p1 - p2)²
+      <div class="tier-card">
+        <div class="tier-icon">🔷</div>
+        <div class="tier-name">PRO</div>
+        <div class="tier-price">1 500 DZD / mois</div>
+        <ul class="tier-features">
+          <li>100 requêtes Tuteur IA / jour</li>
+          <li>5 Protocoles PDF / mois (sans filigrane)</li>
+          <li>5 Articles STROBE / mois (sans filigrane)</li>
+          <li>NSN illimité</li>
+          <li>Quiz & Flashcards illimités</li>
+          <li>Recherche PubMed illimitée</li>
+        </ul>
       </div>
-      
-      <div class="subsection-title">Formule de comparaison de deux moyennes :</div>
-      <div class="formula-box">
-N = 2 * [ (Z_(α/2) + Z_β) * σ / (μ1 - μ2) ]²
+      <div class="tier-card featured">
+        <div class="tier-icon">⚡</div>
+        <div class="tier-name">EXPERT</div>
+        <div class="tier-price">3 500 DZD / mois</div>
+        <ul class="tier-features">
+          <li>Requêtes IA : ILLIMITÉ</li>
+          <li>Protocoles PDF : ILLIMITÉ</li>
+          <li>Articles STROBE : ILLIMITÉ</li>
+          <li>NSN : ILLIMITÉ</li>
+          <li>Synthèses PubMed RAG : ILLIMITÉ</li>
+          <li>Bilan pédagogique IA mensuel</li>
+          <li>Export PDF sans filigrane</li>
+        </ul>
       </div>
-
-      <p>Le calculateur génère automatiquement le paragraphe de justification statistique prêt à être copié dans le protocole et soumis au Comité d'Éthique.</p>
-    </div>
-
-    <!-- CHAPITRE 9 : STROBE -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 9</div>
-      <h2 class="chapter-title">✍️ Rédacteur d'Article Scientifique (Grille STROBE)</h2>
-      <p>La déclaration STROBE (Strengthening the Reporting of Observational Studies in Epidemiology) exige l'explicitation rigoureuse de 22 items répartis dans les sections Titre, Résumé, Introduction, Méthodes, Résultats, Discussion et Autres Informations.</p>
-    </div>
-
-    <!-- CHAPITRE 10 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 10</div>
-      <h2 class="chapter-title">💻 Applications Desktop Autonomes (Mac, Windows, Linux)</h2>
-      <p>Pour l'utilisation en zone hospitalière déconnectée, les paquets exécutables sont distribués aux formats :</p>
-      <ul>
-        <li><strong>🍎 macOS :</strong> Image disque <code>.dmg</code> (compatible puces Apple Silicon M1/M2/M3/M4 & Intel).</li>
-        <li><strong>💻 Windows :</strong> Fichier d'installation <code>.exe</code> (Windows 10 / 11 64-bit).</li>
-        <li><strong>🐧 Linux :</strong> Paquets <code>.AppImage</code> et <code>.deb</code> (Ubuntu, Debian, Fedora).</li>
-      </ul>
-    </div>
-
-    <!-- CHAPITRE 11 : SUPERVISION -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitre 11</div>
-      <h2 class="chapter-title">👨‍🏫 Espace Encadreurs & Supervision Institutionnelle (/admin)</h2>
-      
-      <h3 class="section-title">11.1. Les 5 Onglets de la Console de Supervision</h3>
-      <ul>
-        <li><strong>Utilisateurs Inscrits :</strong> Gestion globale du répertoire avec moteur de recherche, tri alphabétique, filtres par formule, export CSV (Excel) et outils de maintenance.</li>
-        <li><strong>Demandes Indiv. :</strong> Interface de validation des paiements BaridiMob et activation des accès.</li>
-        <li><strong>Groupes & Devis :</strong> Gestion des promotions d'étudiants et devis institutionnels CHU.</li>
-        <li><strong>Messagerie :</strong> Espace de dialogue et de soutien pédagogique.</li>
-        <li><strong>📜 Journal des Accès :</strong> Traçabilité des connexions avec détection en temps réel des sessions <span style="color: #22c55e; font-weight: bold;">🟢 En cours</span> (ping &lt; 2 min) et <span style="color: #64748b;">⚪ Terminée (durée)</span>.</li>
-      </ul>
-
-      <h3 class="section-title">11.2. La Fiche Individuelle de l'Étudiant (7 Onglets)</h3>
-      <p>Pour chaque apprenant raccordé, l'encadreur accède à 7 sous-onglets spécialisés : <em>Stats, 👤 Fiche Profil, Protocoles, Tuteur, Bilan IA, Articles STROBE, et 📜 Accès nominatifs (avec durée cumulée en minutes)</em>.</p>
-    </div>
-
-    <!-- CHAPITRE 12 & 13 -->
-    <div class="chapter-card">
-      <div class="chapter-num">Chapitres 12 & 13</div>
-      <h2 class="chapter-title">💬 Messagerie Pédagogique & Moteur IA Hybride Tripro</h2>
-      <p>Le système hybride assure une résilience absolue selon la cascade : <strong>🟢 Gemini Cloud → 🟡 Ollama Local → 🔵 Base Statique RECIF Embarquée</strong>.</p>
-    </div>
-
-    <!-- CHAPITRE 14 : PROPRIÉTÉ INTELLECTUELLE -->
-    <div class="chapter-card" style="border-left: 5px solid var(--primary);">
-      <div class="chapter-num">Chapitre 14</div>
-      <h2 class="chapter-title">📜 Propriété Intellectuelle, Droits d'Auteur & Charte Éthique de l'IA</h2>
-      
-      <h3 class="section-title">14.1. Protection du Logiciel et du Code Source</h3>
-      <div class="box-quote">
-        <strong>💻 Logiciel & Code Source : © 2026 Methodo&Clinique. Tous droits réservés.</strong><br>
-        L'ensemble de la plateforme, de l'interface utilisateur, de l'architecture logicielle et des moteurs de RAG est la propriété exclusive et protégée de Methodo&Clinique et de son auteur.
+      <div class="tier-card">
+        <div class="tier-icon">👑</div>
+        <div class="tier-name">ULTRA</div>
+        <div class="tier-price">3 500 DZD / mois</div>
+        <ul class="tier-features">
+          <li>Tout EXPERT inclus</li>
+          <li>Console de supervision étudiants</li>
+          <li>Code d'affiliation unique</li>
+          <li>Messagerie pédagogique d'encadrement</li>
+          <li>Accès Journal des sessions étudiantes</li>
+          <li>Badge "Encadreur Certifié"</li>
+        </ul>
       </div>
-
-      <h3 class="section-title">14.2. Propriété des Référentiels Officiels Citationnels</h3>
-      <p>Les documents officiels (Manuel du RECIF, Loi n° 18-11 relative à la santé, Lignes Directrices MSPRH, STROBE et ICMJE) demeurent la propriété exclusive de leurs institutions émettrices et sont exploités à des fins d'analyse RAG et de citation scientifique.</p>
-
-      <h3 class="section-title">14.3. Propriété 100% Exclusive des Résultats des Utilisateurs</h3>
-      <div class="box-success">
-        <strong>🎓 Propriété des Résultats Utilisateurs :</strong><br>
-        Les résultats de recherche, protocoles cliniques, fiches de recueil (CRF), synthèses bibliographiques et articles rédigés par les utilisateurs (résidents, enseignants, chercheurs) <strong>leur appartiennent à 100% en toute exclusivité</strong>. Les utilisateurs sont totalement libres de les exploiter pour tous leurs travaux académiques, mémoires, thèses ou publications dans les revues scientifiques de leur choix.
+      <div class="tier-card">
+        <div class="tier-icon">🏛️</div>
+        <div class="tier-name">INSTITUTION</div>
+        <div class="tier-price">Sur Devis (DZD)</div>
+        <ul class="tier-features">
+          <li>Tout ULTRA inclus</li>
+          <li>Multi-sièges établissement</li>
+          <li>Logo institutionnel sur les PDF</li>
+          <li>Tableau de bord Doyen / Chef de service</li>
+          <li>Facturation institutionnelle officielle</li>
+          <li>Support dédié prioritaire</li>
+        </ul>
       </div>
-
-      <h3 class="section-title">14.4. Licence Creative Commons & Déclaration de l'IA</h3>
-      <p>Les fiches de formation sont sous licence <strong>Creative Commons CC BY-NC-SA 4.0</strong>. L'intelligence artificielle agit comme un assistant de structuration méthodologique; la responsabilité de validation clinique et éthique incombe à l'investigateur principal.</p>
     </div>
 
-    <footer>
-      <strong>Grand Manuel de Référence Méthodologique & Réglementaire RECIF — v2.0.6</strong><br>
-      Direction Scientifique : Professeur Nezzal Abdelmalek — NIF Fiscal : 15007180115910202380<br>
-      © 2026 Methodo&Clinique. Tous droits réservés.
-    </footer>
+    <hr class="divider">
 
+    <h3 class="section-title">1.5 Procédure Officielle de Paiement par BaridiMob</h3>
+    <p>Pour les utilisateurs résidant en Algérie, le règlement s'effectue exclusivement via l'application mobile <strong>BaridiMob</strong>, le service de paiement électronique d'<strong>Algérie Poste</strong>. Voici la procédure étape par étape :</p>
+
+    <div class="box-quote avoid-break">
+      <div class="box-title">💳 Coordonnées Officielles du Compte</div>
+      <p><strong>RIP BaridiMob :</strong> <code>00799999000041210947</code><br>
+      <strong>Titulaire :</strong> Professeur Nezzal Abdelmalek<br>
+      <strong>NIF (Identifiant Fiscal Officiel) :</strong> <code>15007180115910202380</code></p>
+    </div>
+
+    <ol class="steps-list">
+      <li class="step-item">
+        <span class="step-num">1</span>
+        <div class="step-content">
+          <div class="step-title">Ouvrir l'application BaridiMob</div>
+          <p>Lancez l'application BaridiMob sur votre smartphone (disponible sur Android et iOS) et authentifiez-vous avec votre numéro CCP / CPA et votre code secret.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">2</span>
+        <div class="step-content">
+          <div class="step-title">Initier un Virement par RIP</div>
+          <p>Sélectionnez <em>"Virement"</em>, puis <em>"Virement par RIP"</em>. Saisissez le RIP destinataire : <strong>00799999000041210947</strong>. Vérifiez que le nom du titulaire affiché est bien <em>"Nezzal Abdelmalek"</em> avant de confirmer.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">3</span>
+        <div class="step-content">
+          <div class="step-title">Saisir le Montant & la Référence</div>
+          <p>Entrez le montant correspondant à la formule choisie (ex: 1 500 DZD pour PRO, 3 500 DZD pour EXPERT/ULTRA). Dans le champ <em>"Motif"</em>, indiquez votre <strong>adresse e-mail de compte</strong> et la formule souhaitée.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">4</span>
+        <div class="step-content">
+          <div class="step-title">Confirmer & Télécharger le Reçu</div>
+          <p>Confirmez le virement avec votre code secret. Une fois la transaction validée, téléchargez le <strong>reçu de virement PDF</strong> généré par BaridiMob. Ce reçu est votre preuve officielle de paiement.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">5</span>
+        <div class="step-content">
+          <div class="step-title">Soumettre la Demande d'Activation</div>
+          <p>Sur la plateforme Methodo&amp;Clinique, naviguez vers la section <em>"Demande d'Accès"</em> (page /login ou /contact). Renseignez votre e-mail, le numéro de transaction BaridiMob et téléchargez la photo du reçu. La validation est généralement effectuée dans un délai de <strong>12 à 24 heures ouvrables</strong>.</p>
+        </div>
+      </li>
+      <li class="step-item">
+        <span class="step-num">6</span>
+        <div class="step-content">
+          <div class="step-title">Activation & Jours Bonus</div>
+          <p>Un e-mail de confirmation vous est envoyé dès validation. Des <strong>jours bonus d'encouragement</strong> sont automatiquement ajoutés : +7 jours pour la formule PRO, +14 jours pour les formules EXPERT, ULTRA et INSTITUTION.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="box-success avoid-break">
+      <div class="box-title">✅ Remboursement & Réclamations</div>
+      <p>En cas de problème technique ou de non-activation dans le délai prévu, contactez directement l'équipe via la <strong>Messagerie Interne</strong> de la plateforme (module disponible après connexion) ou via le formulaire de contact à la page <code>/contact</code>. Les demandes légitimes sont traitées avec priorité absolue.</p>
+    </div>
   </div>
 
+  <!-- ==========================================
+       CHAPITRE 2 — TABLEAU DE BORD
+  =========================================== -->
+  <div id="ch2" class="chapter-card page-break">
+    <div class="chapter-num-label">📊 Chapitre 2</div>
+    <h2 class="chapter-title">Navigation &amp; Ergonomie du Tableau de Bord (Dashboard)</h2>
+
+    <h3 class="section-title">2.1 Architecture Générale de l'Interface Utilisateur</h3>
+    <p>L'interface de Methodo&amp;Clinique adopte une architecture en deux zones distinctes, optimisée pour une navigation fluide et une consultation rapide des modules pédagogiques :</p>
+    <ul>
+      <li><strong>La Barre de Navigation Latérale (Sidebar)</strong> : Permanente sur écran de bureau, repliable sur mobile. Elle contient les liens vers tous les modules principaux de la plateforme, ainsi que le bouton d'accès au Manuel Utilisateur Officiel et l'information de la formule active et sa date d'expiration.</li>
+      <li><strong>La Zone de Contenu Principal</strong> : Occupe 80% de l'écran et affiche dynamiquement le module sélectionné. La navigation est instantanée grâce à l'architecture Next.js côté client.</li>
+    </ul>
+
+    <h3 class="section-title">2.2 Les Quatre Blocs de KPIs (Indicateurs Clés de Performance)</h3>
+    <p>Dès la connexion, la page d'accueil (<code>/</code>) affiche quatre compteurs en temps réel qui synthétisent l'activité pédagogique cumulative de l'utilisateur depuis son inscription :</p>
+
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Indicateur</th><th>Signification</th><th>Mise à Jour</th><th>Intérêt Pédagogique</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>🤖 <strong>Tuteur RECIF</strong></td>
+            <td>Nombre total de questions posées au Tuteur IA depuis l'inscription</td>
+            <td>Temps réel (incrémenté à chaque envoi)</td>
+            <td>Mesure l'intensité de l'engagement avec la matière méthodologique</td>
+          </tr>
+          <tr>
+            <td>📑 <strong>Protocoles</strong></td>
+            <td>Nombre de protocoles cliniques générés et finalisés</td>
+            <td>Temps réel</td>
+            <td>Reflète la progression dans la maîtrise de la conception protocolaire</td>
+          </tr>
+          <tr>
+            <td>🎯 <strong>Score Quiz</strong></td>
+            <td>Pourcentage moyen de réussite aux séries de QCM</td>
+            <td>Recalculé après chaque série</td>
+            <td>Indicateur de solidité des bases théoriques en épidémiologie et statistique</td>
+          </tr>
+          <tr>
+            <td>🃏 <strong>Flashcards</strong></td>
+            <td>Nombre de cartes-concepts mémorisées / total disponibles</td>
+            <td>Mise à jour après chaque session de révision</td>
+            <td>Indicateur de la couverture du référentiel RECIF par mémorisation active</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">2.3 Le Bilan Pédagogique IA (Analyse Dynamique)</h3>
+    <p>Le module de Bilan Pédagogique (<code>/rapport</code>) effectue une analyse multidimensionnelle de la trajectoire d'apprentissage de l'utilisateur. L'IA croise les données de progression pour identifier :</p>
+    <ul>
+      <li><strong>Les domaines maîtrisés</strong> : Thèmes sur lesquels les scores de quiz sont supérieurs à 75% de façon consistante.</li>
+      <li><strong>Les lacunes persistantes</strong> : Thèmes sur lesquels des erreurs répétées sont enregistrées (ex: Confusion entre Odds Ratio et Risque Relatif, mauvaise identification des biais).</li>
+      <li><strong>L'évolution temporelle</strong> : Courbe de progression sur 4, 8 et 12 semaines.</li>
+      <li><strong>Les recommandations personnalisées</strong> : Le moteur IA suggère les chapitres à réviser en priorité, les flashcards sous-représentées et les types de protocoles à pratiquer davantage.</li>
+    </ul>
+
+    <h3 class="section-title">2.4 L'Historique des Protocoles Récents</h3>
+    <p>Le tableau de bord affiche les 5 derniers protocoles générés avec les informations essentielles : titre, date de création, schéma d'étude, statut (brouillon / finalisé) et bouton de téléchargement PDF direct. Cette vue rapide permet à l'utilisateur de reprendre un travail en cours sans naviguer dans les archives.</p>
+
+    <h3 class="section-title">2.5 Les Accès Rapides STROBE & Gouvernance</h3>
+    <p>La section inférieure du tableau de bord propose des raccourcis contextuels :</p>
+    <ul>
+      <li><strong>Nouvel Article STROBE</strong> : Lien direct vers le module de rédaction avec pré-sélection du type d'étude observationnelle.</li>
+      <li><strong>Calculateur NSN</strong> : Accès direct au calculateur du nombre de sujets nécessaires.</li>
+      <li><strong>Manuel Officiel</strong> : Bouton prominent pour accéder au présent document de référence en un clic.</li>
+      <li><strong>Formule Active</strong> : Affichage de la formule d'abonnement en cours, de la date d'expiration et du nombre de crédits restants (pour la formule PRO).</li>
+    </ul>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 3 — TUTEUR IA
+  =========================================== -->
+  <div id="ch3" class="chapter-card page-break">
+    <div class="chapter-num-label">🤖 Chapitre 3</div>
+    <h2 class="chapter-title">Le Tuteur Intelligent RECIF — Maîtrise des 3 Volets</h2>
+
+    <h3 class="section-title">3.1 Volet 1 — Discussion Libre Méthodologique & Réglementaire</h3>
+    <p>Le premier volet du Tuteur RECIF est un espace de dialogue académique libre. L'utilisateur peut formuler toute question relative à :</p>
+    <ul>
+      <li>L'épidémiologie clinique (incidence, prévalence, facteurs de risque, associations causales).</li>
+      <li>Les schémas d'études cliniques (cohortes prospectives/rétrospectives, études cas-témoins, études transversales, essais cliniques randomisés).</li>
+      <li>La biostatistique médicale (tests paramétriques et non paramétriques, intervalles de confiance, régression logistique, courbes ROC, survie de Kaplan-Meier).</li>
+      <li>Les articles spécifiques de la Loi 18-11 relative à la santé.</li>
+      <li>Les principes de Good Clinical Practice (GCP) et les recommandations de la Déclaration d'Helsinki.</li>
+      <li>La déontologie médicale de la recherche.</li>
+    </ul>
+
+    <div class="box-info">
+      <div class="box-title">💡 Conseil d'Utilisation Optimale</div>
+      <p>Pour obtenir les réponses les plus précises du Tuteur, formulez vos questions en incluant le contexte clinique de votre étude. Par exemple : <em>"Dans le cadre d'une étude cas-témoins sur le diabète de type 2 dans la population de Constantine, quel type de biais de sélection est le plus susceptible de biaiser mes résultats et comment puis-je le contrôler ?"</em></p>
+    </div>
+
+    <h4 class="subsection-title">Exemples de Questions Fréquentes & Réponses Types</h4>
+    <p><strong>Q : "Quelle est la différence entre l'incidence et la prévalence ?"</strong><br>
+    Le tuteur expliquera que l'<em>incidence</em> mesure le nombre de nouveaux cas survenant dans une population pendant une période donnée (mesure dynamique du risque), tandis que la <em>prévalence</em> mesure la proportion de cas existants à un moment donné (mesure statique de la fréquence). Il illustrera avec des exemples cliniques algériens (tuberculose, diabète, hypertension artérielle).</p>
+
+    <p><strong>Q : "Comment calculer un Odds Ratio et comment l'interpréter ?"</strong><br>
+    Le tuteur expliquera la formule <code>OR = (a/c) / (b/d) = (a×d) / (b×c)</code> d'un tableau 2×2, détaillera les conditions d'interprétation (OR = 1 : pas d'association, OR > 1 : facteur de risque, OR < 1 : facteur protecteur) et précisera dans quels schémas d'étude l'OR est l'estimateur approprié (études cas-témoins, régression logistique).</p>
+
+    <hr class="divider">
+
+    <h3 class="section-title">3.2 Volet 2 — Accompagnement Projet : Les 23 Paramètres Fondamentaux RECIF</h3>
+    <p>Le Volet 2 est la pièce maîtresse du Tuteur RECIF. Il guide l'utilisateur pas-à-pas dans la construction rigoureuse de son protocole de recherche clinique en validant l'ensemble des <strong>23 critères fondamentaux</strong> définis par le Référentiel des Études Cliniques et des Investigations de la Faculté (RECIF).</p>
+
+    <div class="param-grid">
+      <div class="param-card avoid-break">
+        <span class="param-num">1</span>
+        <div>
+          <div class="param-title">Titre & Acronyme</div>
+          <div class="param-desc">Titre descriptif complet de l'étude et acronyme mémorisable (ex: CARDIO-DZ pour une étude sur les facteurs de risque cardiovasculaires en Algérie).</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">2</span>
+        <div>
+          <div class="param-title">Justification Scientifique</div>
+          <div class="param-desc">Revue de la littérature existante, lacunes identifiées dans les connaissances, pertinence épidémiologique locale et intérêt pour la santé publique algérienne.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">3</span>
+        <div>
+          <div class="param-title">Question de Recherche (PICO/PECO)</div>
+          <div class="param-desc">Population, Intervention/Exposition, Comparateur, Outcome (critère de jugement). Formulation en une seule phrase interrogative précise et mesurable.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">4</span>
+        <div>
+          <div class="param-title">Objectif Principal</div>
+          <div class="param-desc">Un seul objectif, formulé avec un verbe d'action mesurable (évaluer, déterminer, comparer, identifier) et lié directement au critère de jugement principal.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">5</span>
+        <div>
+          <div class="param-title">Objectifs Secondaires</div>
+          <div class="param-desc">Objectifs complémentaires (maximum 3-5) explorant des dimensions additionnelles sans modifier la puissance statistique principale de l'étude.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">6</span>
+        <div>
+          <div class="param-title">Schéma d'Étude</div>
+          <div class="param-desc">Choix entre cohorte prospective, cohorte rétrospective, étude cas-témoins appariée ou non, étude transversale analytique, essai clinique randomisé ou quasi-expérimental.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">7</span>
+        <div>
+          <div class="param-title">Population d'Étude & Source</div>
+          <div class="param-desc">Définition précise de la population cible (âge, sexe, pathologie, localisation géographique) et de la population source (établissement de recrutement, période).</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">8</span>
+        <div>
+          <div class="param-title">Critères d'Inclusion</div>
+          <div class="param-desc">Liste exhaustive des critères positifs définissant les sujets éligibles. Chaque critère doit être objectif, mesurable et vérifiable par l'investigateur.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">9</span>
+        <div>
+          <div class="param-title">Critères de Non-Inclusion</div>
+          <div class="param-desc">Critères d'exclusion a priori (avant le recrutement) : contre-indications, impossibilité de recueil du consentement, comorbidités invalidant l'analyse.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">10</span>
+        <div>
+          <div class="param-title">Critères d'Exclusion / Sortie d'Étude</div>
+          <div class="param-desc">Critères survenant en cours d'étude : retrait du consentement, perte de vue, survenue d'un événement intercurrent invalidant la participation.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">11</span>
+        <div>
+          <div class="param-title">Critère de Jugement Principal (CJP)</div>
+          <div class="param-desc">Unique variable réponse principale, clairement définie, mesurable et cliniquement pertinente. Doit être cohérente avec la question de recherche PICO et l'objectif principal.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">12</span>
+        <div>
+          <div class="param-title">Critères de Jugement Secondaires (CJS)</div>
+          <div class="param-desc">Variables réponses complémentaires permettant d'explorer les objectifs secondaires. Chacun doit être défini avant le début de l'étude (pré-spécification).</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">13</span>
+        <div>
+          <div class="param-title">Nombre de Sujets Nécessaires (NSN)</div>
+          <div class="param-desc">Calcul statistique basé sur α (5%), β (20% ou 10%), effet attendu et variabilité. Doit être justifié avec les hypothèses de calcul, les données antérieures et la formule utilisée.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">14</span>
+        <div>
+          <div class="param-title">Stratégie d'Échantillonnage</div>
+          <div class="param-desc">Méthode de sélection des sujets : aléatoire simple, aléatoire stratifié, systématique, en grappe, par convenance (à justifier). Impact sur la représentativité et la généralisation.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">15</span>
+        <div>
+          <div class="param-title">Description de l'Intervention / Exposition</div>
+          <div class="param-desc">Pour les études interventionnelles : protocole précis d'administration, dosage, durée. Pour les études observationnelles : définition opérationnelle de l'exposition et de sa mesure.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">16</span>
+        <div>
+          <div class="param-title">Modalités de Recueil & Calendrier</div>
+          <div class="param-desc">Outils de recueil (CRF, questionnaire validé, dossier médical, biologie), fréquence des mesures, calendrier de visites et formation des investigateurs au protocole de recueil.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">17</span>
+        <div>
+          <div class="param-title">Analyse Statistique Prévue</div>
+          <div class="param-desc">Plan d'analyse statistique (Statistical Analysis Plan - SAP) : tests choisis selon la nature des variables, logiciels utilisés (SPSS, R, Stata), seuil de significativité, méthodes de contrôle du biais de confusion.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">18</span>
+        <div>
+          <div class="param-title">Gestion des Données Manquantes & Perdus de Vue</div>
+          <div class="param-desc">Stratégie a priori pour gérer les données manquantes (imputation multiple, analyse per protocole vs intention de traiter) et les perdus de vue (analyse de sensibilité).</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">19</span>
+        <div>
+          <div class="param-title">Considérations Éthiques & Comité</div>
+          <div class="param-desc">Identification du Comité d'Éthique compétent, numéro d'avis éthique, conformité à la Loi 18-11, à la Déclaration d'Helsinki et aux GCP ICH-E6. Déclaration des conflits d'intérêts.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">20</span>
+        <div>
+          <div class="param-title">Consentement Éclairé & Notice d'Information</div>
+          <div class="param-desc">Formulaire de consentement éclairé conforme aux exigences légales : information compréhensible du patient, droit de retrait, protection des données, signature et date.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">21</span>
+        <div>
+          <div class="param-title">Gestion des Risques & Événements Indésirables</div>
+          <div class="param-desc">Identification des risques potentiels pour les participants, procédures de notification des Événements Indésirables Graves (EIG), règles d'arrêt prématuré de l'étude.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">22</span>
+        <div>
+          <div class="param-title">Calendrier Prévisionnel</div>
+          <div class="param-desc">Diagramme de Gantt de l'étude : phase de préparation/soumission éthique, phase de recrutement, phase de suivi, phase d'analyse statistique, phase de rédaction et soumission à une revue.</div>
+        </div>
+      </div>
+      <div class="param-card avoid-break">
+        <span class="param-num">23</span>
+        <div>
+          <div class="param-title">Budget & Financement</div>
+          <div class="param-desc">Estimation budgétaire (personnel, consommables, analyses biologiques, logiciels statistiques, déplacements) et identification des sources de financement (laboratoire, CHU, MESRS, organismes internationaux).</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <h3 class="section-title">3.3 Volet 3 — Rédaction d'Article Scientifique (Grille STROBE — Guide Complet)</h3>
+    <p>Le Volet 3 du Tuteur accompagne la rédaction structurée d'articles scientifiques observationnels selon la <strong>déclaration internationale STROBE</strong> (<em>Strengthening the Reporting of Observational Studies in Epidemiology</em>), adoptée par les principales revues médicales mondiales (The Lancet, BMJ, NEJM, JAMA, Annals of Internal Medicine).</p>
+
+    <p>La grille STROBE comporte <strong>22 items répartis en 7 sections</strong>. Pour chaque item, le tuteur fournit les exigences précises, les formulations recommandées et les erreurs fréquentes à éviter.</p>
+
+    <h4 class="subsection-title">STROBE — Section Titre & Résumé (Items 1-2)</h4>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">1</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 1 — Titre : Indication du type d'étude</div>
+        <div class="strobe-desc">Le titre doit clairement indiquer la nature de l'étude observationnelle (cohorte, cas-témoins ou transversale). Exemple : "Facteurs de risque de la néphropathie diabétique chez des patients hypertendus : une étude cas-témoins menée dans la wilaya de Sétif (2022-2024)".</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">2</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 2 — Résumé (Abstract) structuré</div>
+        <div class="strobe-desc">Le résumé doit inclure obligatoirement : Contexte/Objectif, Méthodes (design, population, critères, mesures), Résultats principaux (avec valeurs chiffrées et IC 95%), Discussion/Limitations, Conclusion. Limite : 250-300 mots selon la revue cible.</div>
+      </div>
+    </div>
+
+    <h4 class="subsection-title">STROBE — Section Introduction (Items 3-4)</h4>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">3</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 3 — Contexte / Raisonnement Scientifique</div>
+        <div class="strobe-desc">Expliquez les bases biologiques, épidémiologiques ou cliniques de la question de recherche. Citez les études antérieures pertinentes et identifiez explicitement la lacune dans les connaissances que votre étude vise à combler.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">4</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 4 — Objectifs et Hypothèses</div>
+        <div class="strobe-desc">Énoncez clairement l'objectif principal de l'étude et, le cas échéant, les hypothèses a priori. L'objectif doit être formulé avec un verbe d'action mesurable et cohérent avec le critère de jugement principal.</div>
+      </div>
+    </div>
+
+    <h4 class="subsection-title">STROBE — Section Méthodes (Items 5-12)</h4>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">5</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 5 — Schéma d'Étude</div>
+        <div class="strobe-desc">Nommez explicitement le schéma d'étude (cohorte prospective, rétrospective, cas-témoins, transversale). Justifiez le choix du design par rapport à la question de recherche et aux contraintes éthiques et pratiques.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">6</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 6 — Cadre & Période de l'Étude</div>
+        <div class="strobe-desc">Décrivez le(s) lieu(x) de recrutement (établissement(s) hospitalier(s), service(s), région(s)), la période de recrutement (dates de début et de fin), et la période de suivi le cas échéant.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">7</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 7 — Participants (Éligibilité)</div>
+        <div class="strobe-desc">Pour les cohortes et transversales : critères d'éligibilité, sources des données et modalités de sélection. Pour les cas-témoins : critères de définition des cas et des témoins, méthodes d'appariement (si applicable). Pour toutes : flux des participants (CONSORT-like flowchart si possible).</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">8</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 8 — Variables d'Étude</div>
+        <div class="strobe-desc">Définissez toutes les variables étudiées : le(s) critère(s) de jugement, les variables d'exposition, les prédicteurs et les facteurs de confusion potentiels. Précisez la définition opérationnelle de chaque variable (échelle de mesure, définition clinique ou biologique).</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">9</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 9 — Sources de Données & Mesures</div>
+        <div class="strobe-desc">Décrivez les sources de données pour chaque variable (dossier médical informatisé, questionnaire auto-administré, mesure directe, biologie) et les méthodes de mesure. Pour les questionnaires : citez la référence de validation et la langue.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">10</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 10 — Biais</div>
+        <div class="strobe-desc">Identifiez les biais potentiels et décrivez les mesures prises pour les contrôler ou les minimiser : biais de sélection (non-réponse, perdus de vue), biais de mesure (classement différentiel/non-différentiel), biais de confusion (ajustement, appariement, restriction).</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">11</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 11 — Calcul du Nombre de Sujets (NSN)</div>
+        <div class="strobe-desc">Décrivez le calcul a priori du NSN : valeurs de α et β retenues, taille d'effet attendue (avec sa justification par les données antérieures), formule statistique utilisée, logiciel de calcul. Mentionnez les marges pour tenir compte des perdus de vue.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">12</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 12 — Méthodes Statistiques</div>
+        <div class="strobe-desc">Décrivez les méthodes utilisées : analyse descriptive (moyennes±DS ou médianes [IQR] selon la distribution), tests inférentiels (t-Student, Mann-Whitney, Chi², Fisher, régression logistique binaire/ordinale, régression de Cox, etc.), contrôle du confounding, analyses de sensibilité et gestion des données manquantes.</div>
+      </div>
+    </div>
+
+    <h4 class="subsection-title">STROBE — Section Résultats (Items 13-17)</h4>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">13</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 13 — Participants (Flux & Diagramme)</div>
+        <div class="strobe-desc">Présentez le flux des participants : nombre de sujets évalués pour l'éligibilité, exclus (avec raisons détaillées), inclus, et le cas échéant, perdus de vue. Un diagramme de flux (flowchart CONSORT) est fortement recommandé.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">14</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 14 — Données Descriptives (Tableau 1)</div>
+        <div class="strobe-desc">Caractéristiques socio-démographiques et cliniques des participants : âge (moyenne±DS ou médiane[IQR]), sexe (%), comorbidités principales (%), exposition principale (%). Comparez les groupes si pertinent. Vérifiez l'équilibre des facteurs de confusion potentiels entre groupes.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">15</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 15 — Données sur les Résultats Principaux</div>
+        <div class="strobe-desc">Présentez les résultats bruts (non ajustés) puis les résultats ajustés (OR, RR, HR avec IC 95% et valeur p). Pour les cohortes : incidence cumulative ou taux d'incidence. Pour les cas-témoins : OR brut et ajusté. Pour les transversales : prévalence et OR de prévalence.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">16</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 16 — Analyses Complémentaires</div>
+        <div class="strobe-desc">Analyses de sous-groupes pré-spécifiées, analyses d'interaction (effet modificateur), analyses de sensibilité. Précisez qu'elles sont exploratoires si non planifiées a priori (pour éviter l'inflation du risque α).</div>
+      </div>
+    </div>
+
+    <h4 class="subsection-title">STROBE — Section Discussion (Items 17-20)</h4>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">17</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 17 — Résultats Clés (Summary)</div>
+        <div class="strobe-desc">Résumez les principaux résultats en les mettant en perspective avec les objectifs et l'hypothèse de départ. Restez factuel sans sur-interpréter à ce stade.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">18</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 18 — Limites de l'Étude</div>
+        <div class="strobe-desc">Discussion critique et honnête des limites : biais résiduels potentiels, causalité inversée, généralisation limitée (validité externe), puissance statistique insuffisante pour les objectifs secondaires. Ne jamais minimiser les limites — les reviewers les connaissent.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">19</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 19 — Interprétation & Comparaison Littérature</div>
+        <div class="strobe-desc">Interprétez vos résultats à la lumière de la littérature internationale et nationale. Expliquez les concordances et les divergences avec les études antérieures en proposant des hypothèses mécanistiques ou méthodologiques.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">20</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 20 — Généralisabilité (Validité Externe)</div>
+        <div class="strobe-desc">Discutez dans quelle mesure vos résultats sont généralisables au-delà de la population étudiée. Considérez les spécificités de la population algérienne (génétique, mode de vie, accès aux soins) par rapport aux populations des études internationales citées.</div>
+      </div>
+    </div>
+
+    <h4 class="subsection-title">STROBE — Section Autres Informations (Items 21-22)</h4>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">21</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 21 — Financement & Conflits d'Intérêts</div>
+        <div class="strobe-desc">Déclarez les sources de financement, le rôle éventuel des financeurs dans la conception, la collecte, l'analyse ou la publication. Déclarez tous les conflits d'intérêts réels ou potentiels. Une absence de conflit doit aussi être explicitement mentionnée.</div>
+      </div>
+    </div>
+    <div class="strobe-item avoid-break">
+      <span class="strobe-num">22</span>
+      <div class="strobe-content">
+        <div class="strobe-title">Item 22 — Approbation Éthique & Enregistrement</div>
+        <div class="strobe-desc">Mentionnez le numéro d'approbation du Comité d'Éthique, la référence de l'enregistrement sur un registre d'études (le cas échéant, ClinicalTrials.gov ou PACTR pour les études africaines), la conformité à la Loi 18-11 et à la Déclaration d'Helsinki.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 4 — GÉNÉRATEUR DE PROTOCOLES
+  =========================================== -->
+  <div id="ch4" class="chapter-card page-break">
+    <div class="chapter-num-label">📑 Chapitre 4</div>
+    <h2 class="chapter-title">Générateur de Protocoles Cliniques &amp; Cahier de Recueil des Données (CRF)</h2>
+
+    <h3 class="section-title">4.1 Processus de Génération du Protocole</h3>
+    <p>Après validation des 23 paramètres RECIF dans le Volet 2 du Tuteur, l'utilisateur peut initier la génération automatisée du document de protocole complet. Le moteur de génération agrège l'ensemble des réponses fournies et les structure selon le plan standardisé suivant :</p>
+    <ol>
+      <li><strong>Page de Garde</strong> : Titre de l'étude, acronyme, investigateur principal, co-investigateurs, structure hospitalière, date de soumission.</li>
+      <li><strong>Résumé Exécutif (Synopsis)</strong> : Synthèse du protocole en 1 page : contexte, objectifs, schéma, population, critères, NSN, durée.</li>
+      <li><strong>Introduction & Justification</strong> : Revue de la littérature, lacune scientifique, hypothèse.</li>
+      <li><strong>Objectifs de l'Étude</strong> : Objectif principal + objectifs secondaires.</li>
+      <li><strong>Méthodes</strong> : Schéma, population, critères d'éligibilité, stratégie d'échantillonnage, recueil des données, calendrier.</li>
+      <li><strong>Analyse Statistique</strong> : Plan d'analyse complet avec justification des tests.</li>
+      <li><strong>Considérations Éthiques</strong> : Conformité réglementaire, gestion des données, consentement.</li>
+      <li><strong>Budget & Financement</strong> : Tableau des coûts estimés.</li>
+      <li><strong>Calendrier de Réalisation</strong> : Diagramme de Gantt.</li>
+      <li><strong>Références Bibliographiques</strong> : Liste des références RECIF et standards internationaux (format Vancouver).</li>
+    </ol>
+
+    <h3 class="section-title">4.2 Le Cahier de Recueil des Données (CRF — Case Report Form)</h3>
+    <p>En complément du protocole, le générateur produit automatiquement le <strong>Cahier de Recueil des Données (CRF)</strong>, outil standardisé de collecte d'informations pour chaque participant de l'étude. Le CRF généré comprend :</p>
+    <ul>
+      <li>Formulaire d'identification du patient (anonymisé — numéro de sujet uniquement).</li>
+      <li>Critères d'éligibilité à vérifier (checklist de vérification inclusion/exclusion).</li>
+      <li>Formulaire de recueil des données socio-démographiques.</li>
+      <li>Formulaire de recueil des variables d'exposition et des covariables.</li>
+      <li>Formulaire de recueil du critère de jugement principal et des critères secondaires.</li>
+      <li>Formulaire de suivi et de notation des événements indésirables.</li>
+      <li>Signature de l'investigateur et date.</li>
+    </ul>
+
+    <div class="box-success">
+      <div class="box-title">✅ Format PDF & Options de Personnalisation</div>
+      <p>Le protocole et le CRF sont exportés en format <strong>PDF haute définition</strong> avec :<br>
+      • <strong>Formule PRO & sup.</strong> : Export sans filigrane, avec en-tête personnalisable (prénom/nom, spécialité, établissement).<br>
+      • <strong>Formule INSTITUTION</strong> : Logo et en-tête de l'établissement intégrés, numérotation officielle des pages, pied de page institutionnel.</p>
+    </div>
+
+    <h3 class="section-title">4.3 Archivage & Gestion des Protocoles</h3>
+    <p>Chaque protocole généré est archivé dans le compte de l'utilisateur avec :</p>
+    <ul>
+      <li>Titre, acronyme, date de création et statut (Brouillon / En révision / Soumis au Comité d'Éthique / Approuvé).</li>
+      <li>Historique des versions (génération V1, V2, V3 après modifications).</li>
+      <li>Possibilité de rééditer et régénérer un nouveau PDF à tout moment.</li>
+      <li>Fonctionnalité de partage sécurisé avec un co-investigateur (en cours de développement).</li>
+    </ul>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 5 — PUBMED
+  =========================================== -->
+  <div id="ch5" class="chapter-card page-break">
+    <div class="chapter-num-label">🔬 Chapitre 5</div>
+    <h2 class="chapter-title">Recherche PubMed &amp; Synthèse Bibliographique RAG</h2>
+
+    <h3 class="section-title">5.1 Interrogation de la Base PubMed (NLM/NIH)</h3>
+    <p>Le module Bibliographie (<code>/biblio</code>) intègre une interface de recherche directe dans la base de données <strong>PubMed</strong> de la National Library of Medicine (NLM, NIH, États-Unis), qui indexe plus de <strong>37 millions de références</strong> issues des principales revues biomédicales mondiales.</p>
+
+    <h4 class="subsection-title">Stratégie de Recherche MeSH (Medical Subject Headings)</h4>
+    <p>L'IA assiste l'utilisateur dans la construction d'une équation de recherche structurée utilisant les <strong>termes MeSH</strong> (Medical Subject Headings) — la classification hiérarchique contrôlée de NLM. Une équation MeSH bien construite garantit une sensibilité et une spécificité optimales de la recherche bibliographique.</p>
+
+    <div class="formula-box">
+<span class="formula-comment">/* Exemple d'équation de recherche structurée PubMed */</span>
+("Diabetes Mellitus, Type 2"[MeSH Major Topic])
+AND ("Hypertension"[MeSH Terms])
+AND ("Nephropathy"[MeSH Terms] OR "Kidney Diseases"[MeSH Terms])
+AND ("Algeria"[Affiliation] OR "North Africa"[MeSH Terms])
+AND ("Epidemiology"[MeSH Subheading])
+AND (("2015"[PDAT] : "2024"[PDAT]))
+AND ("Observational Study"[Publication Type])
+    </div>
+
+    <h3 class="section-title">5.2 La Synthèse RAG (Retrieval-Augmented Generation)</h3>
+    <p>La technologie <strong>RAG (Retrieval-Augmented Generation)</strong> permet au moteur IA de synthétiser les résultats de recherche PubMed de façon structurée, académique et citée. Le processus se déroule en trois étapes :</p>
+    <ol>
+      <li><strong>Récupération</strong> : Le moteur récupère les abstracts des articles PubMed correspondant à l'équation de recherche.</li>
+      <li><strong>Augmentation</strong> : L'IA contextualise les résultats avec les connaissances du référentiel RECIF et les spécificités épidémiologiques algériennes.</li>
+      <li><strong>Génération</strong> : Production d'une synthèse bibliographique académique structurée avec citations en format Vancouver, prête à être intégrée dans la section "Introduction" ou "Discussion" d'un article scientifique.</li>
+    </ol>
+
+    <h3 class="section-title">5.3 Gestion des Références & Export</h3>
+    <p>Les références identifiées peuvent être exportées aux formats :</p>
+    <ul>
+      <li><strong>Format Vancouver (ICMJE)</strong> : Standard des revues médicales internationales et algériennes.</li>
+      <li><strong>Format APA 7ème édition</strong> : Pour les revues en sciences humaines et de la santé.</li>
+      <li><strong>Format RIS / BibTeX</strong> : Pour importation dans Zotero, Mendeley, EndNote.</li>
+    </ul>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 6 — QUIZ
+  =========================================== -->
+  <div id="ch6" class="chapter-card page-break">
+    <div class="chapter-num-label">🎯 Chapitre 6</div>
+    <h2 class="chapter-title">Quiz Interactifs &amp; Mémorisation Espacée par Flashcards</h2>
+
+    <h3 class="section-title">6.1 Les Séries de QCM Interactifs</h3>
+    <p>Le module Quiz (<code>/quiz</code>) propose une banque de questions à choix multiples (QCM) couvrant l'intégralité du référentiel RECIF et organisées en thèmes :</p>
+    <ul>
+      <li>Concepts fondamentaux en épidémiologie clinique.</li>
+      <li>Schémas d'étude et leur interprétation.</li>
+      <li>Biostatistique médicale (tests, intervalles de confiance, puissance).</li>
+      <li>Calcul du nombre de sujets nécessaires.</li>
+      <li>Biais en recherche clinique (sélection, mesure, confusion).</li>
+      <li>Éthique de la recherche et réglementation algérienne (Loi 18-11).</li>
+      <li>Lecture et interprétation critique d'un article scientifique.</li>
+      <li>Grilles de déclaration (STROBE, CONSORT, PRISMA).</li>
+    </ul>
+
+    <h3 class="section-title">6.2 Fonctionnement de la Mémorisation Espacée (Algorithme SM-2)</h3>
+    <p>Les Flashcards utilisent le principe de la <strong>répétition espacée</strong> (Spaced Repetition System — SRS), basé sur l'algorithme SM-2 (SuperMemo 2), qui optimise les intervalles de révision selon la facilité de mémorisation perçue par l'utilisateur (boutons : Facile / Correct / Difficile / Oublié).</p>
+    <p>Cet algorithme garantit que les cartes difficiles sont présentées plus fréquemment et les cartes maîtrisées à intervalles croissants, maximisant ainsi le ratio information mémorisée / temps investi selon la <strong>courbe d'Ebbinghaus</strong> de la mémoire.</p>
+
+    <div class="box-info">
+      <div class="box-title">📚 Conseil de Révision Optimale</div>
+      <p>Pour un résultat maximal, consacrez <strong>15 à 20 minutes par jour</strong> aux flashcards en mode "Révision quotidienne". À raison de 6 semaines régulières, la majorité des 300+ cartes du référentiel RECIF sera solidement ancrée en mémoire à long terme.</p>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 7 — RAPPORT PÉDAGOGIQUE
+  =========================================== -->
+  <div id="ch7" class="chapter-card page-break">
+    <div class="chapter-num-label">📈 Chapitre 7</div>
+    <h2 class="chapter-title">Rapport Pédagogique &amp; Bilan de Compétences par Intelligence Artificielle</h2>
+
+    <h3 class="section-title">7.1 Structure du Rapport Pédagogique</h3>
+    <p>Le module Rapport (<code>/rapport</code>) génère un document de bilan pédagogique personnalisé, structuré en cinq sections :</p>
+    <ol>
+      <li><strong>Synthèse des Activités</strong> : Vue d'ensemble chiffrée de toutes les interactions avec la plateforme (questions tuteur, quiz, flashcards, protocoles, articles).</li>
+      <li><strong>Analyse des Compétences Acquises</strong> : Identification des domaines maîtrisés avec scores de référence.</li>
+      <li><strong>Identification des Lacunes Prioritaires</strong> : Thèmes sur lesquels l'IA détecte des patterns d'erreurs répétés.</li>
+      <li><strong>Plan de Progression Personnalisé</strong> : Recommandations concrètes et hiérarchisées pour les 4 prochaines semaines.</li>
+      <li><strong>Courbe de Progression Temporelle</strong> : Évolution graphique du score moyen aux quiz sur la durée d'utilisation.</li>
+    </ol>
+
+    <h3 class="section-title">7.2 Utilisation par l'Encadreur</h3>
+    <p>Pour les utilisateurs formule ULTRA et INSTITUTION, l'encadreur peut accéder au rapport pédagogique de chacun de ses étudiants rattachés via la console de supervision (<code>/admin</code>). Ce rapport constitue un outil d'évaluation formative précieux pour :</p>
+    <ul>
+      <li>Objectiver les progrès de l'étudiant lors des séances de supervision.</li>
+      <li>Adapter les objectifs d'apprentissage en fonction des lacunes identifiées.</li>
+      <li>Valider les compétences acquises dans le cadre du suivi de thèse ou de mémoire de résidence.</li>
+    </ul>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 8 — CALCULATEUR NSN
+  =========================================== -->
+  <div id="ch8" class="chapter-card page-break">
+    <div class="chapter-num-label">🧮 Chapitre 8</div>
+    <h2 class="chapter-title">Calculateur du Nombre de Sujets Nécessaires (NSN) — Formules, Théorie &amp; Exemples Cliniques</h2>
+
+    <h3 class="section-title">8.1 Fondements Théoriques du Calcul de l'Effectif</h3>
+    <p>Le calcul du <strong>Nombre de Sujets Nécessaires (NSN)</strong> — ou taille de l'échantillon — est l'une des étapes les plus critiques de la conception d'une étude clinique. Un effectif insuffisant conduit à une étude sous-puissante, incapable de détecter des différences cliniquement significatives (erreur de type II — β). Un effectif excessif expose des participants à des risques inutiles et gaspille des ressources précieuses.</p>
+
+    <h4 class="subsection-title">Les Deux Types d'Erreur Statistique</h4>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Type d'Erreur</th><th>Symbole</th><th>Définition</th><th>Valeur Conventionnelle</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Erreur de Type I</strong> (Faux Positif)</td>
+            <td>α</td>
+            <td>Rejeter H₀ alors qu'elle est vraie (conclure à une différence qui n'existe pas)</td>
+            <td>α = 5% (bilatéral) ou 2.5% (unilatéral)</td>
+          </tr>
+          <tr>
+            <td><strong>Erreur de Type II</strong> (Faux Négatif)</td>
+            <td>β</td>
+            <td>Ne pas rejeter H₀ alors qu'elle est fausse (manquer une différence réelle)</td>
+            <td>β = 20% (puissance 80%) ou 10% (puissance 90%)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">8.2 Formules de Calcul selon le Type d'Étude</h3>
+
+    <h4 class="subsection-title">Formule 1 : Comparaison de Deux Proportions (Études Cas-Témoins, Cohortes, ECR)</h4>
+    <p>Utilisée lorsque le critère de jugement principal est <strong>qualitative binaire</strong> (guérison/non guérison, survie/décès, complication/absence de complication) :</p>
+    <div class="formula-box">
+<span class="formula-comment">/* Formule de Kelsey — Comparaison de 2 Proportions (Test bilatéral) */</span>
+
+n = [ Z_(α/2) × √(2 × p̄ × (1 - p̄)) + Z_β × √(p₁×(1-p₁) + p₂×(1-p₂)) ]²
+    _______________________________________________________________
+                         (p₁ - p₂)²
+
+<span class="formula-comment">/* Où : */</span>
+Z_(α/2) = 1.96  <span class="formula-comment">/* pour α = 5% bilatéral (valeur de la loi normale) */</span>
+Z_β     = 0.84  <span class="formula-comment">/* pour β = 20% (puissance = 80%) */</span>
+Z_β     = 1.28  <span class="formula-comment">/* pour β = 10% (puissance = 90%) */</span>
+p₁      = proportion dans le groupe exposé/cas
+p₂      = proportion dans le groupe contrôle/témoins
+p̄       = (p₁ + p₂) / 2  <span class="formula-comment">/* proportion poolée */</span>
+n       = taille de chaque groupe (total = 2n, augmenté pour perdus de vue)
+    </div>
+
+    <h4 class="subsection-title">Formule 2 : Comparaison de Deux Moyennes (Critère Quantitatif Continu)</h4>
+    <p>Utilisée lorsque le critère de jugement est <strong>quantitatif continu</strong> (taux d'HbA1c, pression artérielle systolique, score de qualité de vie) :</p>
+    <div class="formula-box">
+<span class="formula-comment">/* Comparaison de 2 Moyennes — Échantillons Indépendants */</span>
+
+n = 2 × [ (Z_(α/2) + Z_β) × σ ]²
+         _________________________
+                 (μ₁ - μ₂)²
+
+<span class="formula-comment">/* Où : */</span>
+σ       = écart-type commun estimé (d'après la littérature)
+μ₁ - μ₂ = différence minimale cliniquement significative (DMCS)
+(Z_(α/2) + Z_β) = 2.80 pour α=5% et puissance=80%
+(Z_(α/2) + Z_β) = 3.24 pour α=5% et puissance=90%
+    </div>
+
+    <h4 class="subsection-title">Formule 3 : Étude de Prévalence / Descriptive</h4>
+    <div class="formula-box">
+<span class="formula-comment">/* Estimation d'une Proportion dans une Population */</span>
+
+n = Z²_(α/2) × p × (1-p)
+    ______________________
+           d²
+
+<span class="formula-comment">/* Où : */</span>
+Z_(α/2) = 1.96  <span class="formula-comment">/* pour α = 5% bilatéral */</span>
+p       = prévalence estimée (de la littérature ou estimée à 50% si inconnue)
+d       = marge d'erreur acceptable (ex: d = 0.05 pour ± 5%)
+    </div>
+
+    <h4 class="subsection-title">Formule 4 : Ajustement pour Études Cas-Témoins Appariées</h4>
+    <div class="formula-box">
+<span class="formula-comment">/* Études Cas-Témoins Appariées — Odds Ratio attendu */</span>
+
+n_paires = [ Z_(α/2) × √(p_ab + p_ba) + Z_β × √(p_ab + p_ba - (p_ba - p_ab)²) ]²
+           _________________________________________________________________________
+                                  (p_ba - p_ab)²
+
+<span class="formula-comment">/* Où : */</span>
+p_ba = proportion de paires discordantes (cas exposé, témoin non exposé)
+p_ab = proportion de paires discordantes (cas non exposé, témoin exposé)
+OR   = Odds Ratio attendu → p_ba/p_ab = OR
+    </div>
+
+    <h3 class="section-title">8.3 Exemples Cliniques Résolus</h3>
+
+    <h4 class="subsection-title">Exemple 1 — Étude Cas-Témoins sur la Néphropathie Diabétique</h4>
+    <p><strong>Contexte :</strong> Vous souhaitez évaluer l'association entre l'HTA et la néphropathie diabétique chez des patients DT2 dans un CHU algérien. Dans la littérature, la prévalence de l'HTA chez les témoins (DT2 sans néphropathie) est estimée à <strong>40%</strong>. Vous attendez un OR de <strong>2.5</strong> (ce qui implique une prévalence de l'HTA chez les cas d'environ 62.5%). Puissance souhaitée : <strong>80%</strong>. α = <strong>5% bilatéral</strong>.</p>
+    <div class="formula-box">
+p₂ = 0.40  (prévalence HTA chez les témoins)
+p₁ = 0.625  (prévalence HTA chez les cas, calculée à partir de OR=2.5)
+p̄  = (0.625 + 0.40) / 2 = 0.5125
+
+Z_(α/2) = 1.96 ; Z_β = 0.84
+
+Numérateur = [ 1.96 × √(2 × 0.5125 × 0.4875) + 0.84 × √(0.625×0.375 + 0.40×0.60) ]²
+           = [ 1.96 × 0.7068 + 0.84 × 0.6758 ]²
+           = [ 1.385 + 0.568 ]²
+           = [ 1.953 ]² = 3.814
+
+Dénominateur = (0.625 - 0.40)² = (0.225)² = 0.0506
+
+n = 3.814 / 0.0506 ≈ 75 sujets par groupe
+
+→ Taille totale : 75 cas + 75 témoins = 150 sujets
+→ Avec majoration de 10% pour les perdus de vue : 83 + 83 = 166 sujets
+    </div>
+
+    <h4 class="subsection-title">Exemple 2 — Essai Clinique Randomisé sur l'HbA1c</h4>
+    <p><strong>Contexte :</strong> Évaluation d'un programme d'éducation thérapeutique sur le contrôle glycémique (HbA1c) chez des patients DT2. Différence minimale cliniquement significative : <strong>0.5%</strong> d'HbA1c. Écart-type estimé : <strong>1.2%</strong>. Puissance = <strong>90%</strong>. α = <strong>5% bilatéral</strong>.</p>
+    <div class="formula-box">
+σ = 1.2 ; DMCS = 0.5
+(Z_(α/2) + Z_β) = 3.24 (pour puissance = 90%)
+
+n = 2 × (3.24 × 1.2)² / (0.5)²
+  = 2 × (3.888)² / 0.25
+  = 2 × 15.12 / 0.25
+  = 2 × 60.47
+  = 121 sujets par groupe
+
+→ Taille totale : 121 + 121 = 242 sujets
+→ Avec majoration de 15% pour perdus de vue : 140 + 140 = 280 sujets
+    </div>
+
+    <h3 class="section-title">8.4 Texte de Justification Statistique Modèle</h3>
+    <p>Le calculateur NSN génère automatiquement un paragraphe de justification prêt à être copié dans la section "Méthodes" du protocole ou de l'article :</p>
+    <div class="box-quote">
+      <p><em>"Le calcul du nombre de sujets nécessaires a été effectué en utilisant la formule de comparaison de deux proportions [Kelsey 1996]. En supposant une proportion de l'exposition dans le groupe contrôle de 40%, un Odds Ratio attendu de 2.5 (soit une proportion de 62.5% dans le groupe cas), un risque de première espèce α = 5% (test bilatéral) et une puissance statistique de 80% (risque de deuxième espèce β = 20%), le nombre de sujets calculé est de 75 sujets par groupe. En tenant compte d'un taux attendu de perdus de vue de 10%, le nombre de sujets à inclure a été fixé à 83 sujets par groupe, soit un total de 166 sujets. Les calculs ont été effectués via la plateforme Methodo&amp;Clinique (version 2.0.6)."</em></p>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 9 — ARTICLE STROBE
+  =========================================== -->
+  <div id="ch9" class="chapter-card page-break">
+    <div class="chapter-num-label">✍️ Chapitre 9</div>
+    <h2 class="chapter-title">Module Rédacteur d'Article Scientifique (STROBE &amp; CONSORT)</h2>
+
+    <h3 class="section-title">9.1 Interface de Rédaction</h3>
+    <p>Le module Article (<code>/article</code>) propose une interface de rédaction guidée section par section. Pour chaque section (Titre, Résumé, Introduction, Méthodes, Résultats, Discussion), l'IA :</p>
+    <ul>
+      <li>Rappelle les exigences STROBE/CONSORT correspondantes.</li>
+      <li>Propose une structure de paragraphe type basée sur le protocole déjà généré.</li>
+      <li>Suggère des formulations académiques appropriées selon le schéma d'étude.</li>
+      <li>Vérifie la cohérence entre les différentes sections.</li>
+    </ul>
+
+    <h3 class="section-title">9.2 Types d'Études Supportés</h3>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Type d'Étude</th><th>Grille de Référence</th><th>Items</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Études observationnelles (cohorte, cas-témoins, transversale)</td>
+            <td>STROBE 2007</td>
+            <td>22 items</td>
+          </tr>
+          <tr>
+            <td>Essais cliniques randomisés</td>
+            <td>CONSORT 2010</td>
+            <td>25 items</td>
+          </tr>
+          <tr>
+            <td>Revues systématiques & méta-analyses</td>
+            <td>PRISMA 2020</td>
+            <td>27 items</td>
+          </tr>
+          <tr>
+            <td>Études de diagnostic & précision</td>
+            <td>STARD 2015</td>
+            <td>30 items</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 10 — APPLICATIONS DESKTOP
+  =========================================== -->
+  <div id="ch10" class="chapter-card page-break">
+    <div class="chapter-num-label">💻 Chapitre 10</div>
+    <h2 class="chapter-title">Applications Desktop Autonomes — Installation &amp; Configuration (macOS, Windows, Linux)</h2>
+
+    <h3 class="section-title">10.1 Acquisition de l'Application Desktop</h3>
+    <p>Les livrables d'installation sont disponibles en téléchargement depuis la page dédiée (<code>/guide</code>) de la plateforme web. L'accès aux liens de téléchargement est conditionné à une formule PRO, EXPERT, ULTRA ou INSTITUTION active.</p>
+
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Système d'Exploitation</th><th>Fichier</th><th>Taille Approximative</th><th>Configuration Requise</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>🍎 macOS</strong></td>
+            <td><code>RECIF-MethodoClinique-v2.0.6.dmg</code></td>
+            <td>~180 Mo</td>
+            <td>macOS 12 Monterey minimum, Apple Silicon (M1-M4) & Intel 64-bit</td>
+          </tr>
+          <tr>
+            <td><strong>💻 Windows</strong></td>
+            <td><code>RECIF-MethodoClinique-Setup-v2.0.6.exe</code></td>
+            <td>~160 Mo</td>
+            <td>Windows 10 / 11 (64-bit uniquement), 4 Go RAM minimum</td>
+          </tr>
+          <tr>
+            <td><strong>🐧 Linux (AppImage)</strong></td>
+            <td><code>RECIF-MethodoClinique-v2.0.6.AppImage</code></td>
+            <td>~175 Mo</td>
+            <td>Kernel Linux ≥ 4.4, glibc ≥ 2.17, FUSE 2 ou 3</td>
+          </tr>
+          <tr>
+            <td><strong>🐧 Linux (Debian/Ubuntu)</strong></td>
+            <td><code>recif-methodoclinique_2.0.6_amd64.deb</code></td>
+            <td>~160 Mo</td>
+            <td>Ubuntu 20.04+, Debian 11+, Linux Mint 20+, Pop!_OS 20.04+</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">10.2 Installation Pas-à-Pas</h3>
+
+    <h4 class="subsection-title">Installation sur macOS</h4>
+    <ol>
+      <li>Téléchargez le fichier <code>.dmg</code> depuis la page <code>/guide</code>.</li>
+      <li>Double-cliquez sur le fichier <code>.dmg</code> pour monter l'image disque.</li>
+      <li>Glissez l'icône <em>"RECIF-MethodoClinique"</em> vers le dossier <em>Applications</em>.</li>
+      <li>Si macOS affiche un avertissement de sécurité (Gatekeeper), rendez-vous dans <em>Réglages Système → Confidentialité & Sécurité → Sécurité</em> et cliquez sur <em>"Ouvrir quand même"</em>.</li>
+      <li>Lancez l'application depuis le dossier Applications ou depuis Launchpad.</li>
+    </ol>
+
+    <h4 class="subsection-title">Installation sur Windows</h4>
+    <ol>
+      <li>Téléchargez le fichier <code>.exe</code> (installateur NSIS).</li>
+      <li>Double-cliquez sur l'installateur. Si Windows Defender SmartScreen affiche un avertissement, cliquez sur <em>"Informations complémentaires"</em> puis <em>"Exécuter quand même"</em>.</li>
+      <li>Suivez les étapes de l'assistant d'installation (répertoire d'installation, création d'un raccourci Bureau).</li>
+      <li>L'application est accessible depuis le Bureau ou le Menu Démarrer.</li>
+    </ol>
+
+    <h4 class="subsection-title">Installation sur Linux (AppImage)</h4>
+    <ol>
+      <li>Téléchargez le fichier <code>.AppImage</code>.</li>
+      <li>Rendez le fichier exécutable : <code>chmod +x RECIF-MethodoClinique-v2.0.6.AppImage</code></li>
+      <li>Lancez l'application : <code>./RECIF-MethodoClinique-v2.0.6.AppImage</code></li>
+      <li>Pour une intégration dans le menu des applications, utilisez <code>AppImageLauncher</code> ou créez manuellement un fichier <code>.desktop</code>.</li>
+    </ol>
+
+    <h4 class="subsection-title">Installation sur Linux (paquet .deb)</h4>
+    <ol>
+      <li>Téléchargez le fichier <code>.deb</code>.</li>
+      <li>Installez via le gestionnaire de paquets : <code>sudo dpkg -i recif-methodoclinique_2.0.6_amd64.deb</code></li>
+      <li>En cas de dépendances manquantes : <code>sudo apt-get install -f</code></li>
+      <li>L'application apparaît dans le menu Applications.</li>
+    </ol>
+
+    <h3 class="section-title">10.3 Configuration du Moteur IA Local (Ollama)</h3>
+    <p>Pour profiter pleinement du mode hors-ligne avec un moteur IA local de qualité, il est recommandé d'installer <strong>Ollama</strong> (<a href="https://ollama.ai" target="_blank">ollama.ai</a>) :</p>
+    <ol>
+      <li>Téléchargez et installez Ollama pour votre système d'exploitation.</li>
+      <li>Téléchargez un modèle adapté à votre configuration matérielle :
+        <ul>
+          <li><strong>Machines avec 8 Go RAM :</strong> <code>ollama run gemma2:2b</code> (modèle léger — 1.6 Go)</li>
+          <li><strong>Machines avec 16 Go RAM :</strong> <code>ollama run gemma2:9b</code> (modèle équilibré — 5.5 Go)</li>
+          <li><strong>Machines avec GPU &amp; 32 Go RAM :</strong> <code>ollama run llama3.3:70b</code> (haute qualité — 40 Go)</li>
+        </ul>
+      </li>
+      <li>L'application Methodo&amp;Clinique détecte automatiquement Ollama et bascule vers lui lors des sessions hors-ligne.</li>
+    </ol>
+
+    <div class="box-info">
+      <div class="box-title">🔄 Hiérarchie des Moteurs IA (Cascade de Résilience)</div>
+      <p>
+        <span class="badge badge-success">1er</span> <strong>Gemini Cloud</strong> — Qualité maximale, nécessite Internet<br>
+        <span class="badge badge-warning">2ème</span> <strong>Ollama Local</strong> — Très bon, 100% hors-ligne, nécessite installation<br>
+        <span class="badge badge-primary">3ème</span> <strong>Base Statique RECIF Embarquée</strong> — Toujours disponible, répond aux questions RECIF standards
+      </p>
+    </div>
+
+    <h3 class="section-title">10.4 Gestion des Licences Hors-ligne</h3>
+    <p>L'application desktop utilise un système de <strong>licence cryptée offline</strong> générée lors de la connexion initiale et valable pour la durée de l'abonnement actif. La licence est stockée localement de façon sécurisée et ne nécessite pas de connexion Internet pour être vérifiée lors des utilisations ultérieures, uniquement une reconnexion occasionnelle (toutes les 7 jours) pour synchronisation et renouvellement.</p>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 11 — SUPERVISION
+  =========================================== -->
+  <div id="ch11" class="chapter-card page-break">
+    <div class="chapter-num-label">👨‍🏫 Chapitre 11</div>
+    <h2 class="chapter-title">Espace Supervision &amp; Administration Institutionnelle (/admin)</h2>
+
+    <h3 class="section-title">11.1 Accès et Prérequis</h3>
+    <p>L'espace de supervision est accessible aux formules <strong>ULTRA</strong> et <strong>INSTITUTION</strong> uniquement. Les administrateurs système disposent en outre d'un accès complet à l'ensemble des fonctionnalités d'administration des comptes.</p>
+
+    <div class="box-warning">
+      <div class="box-title">⚠️ Confidentialité des Données des Étudiants</div>
+      <p>Les données d'activité des étudiants (protocoles, questions posées, résultats de quiz) accessibles via la console de supervision sont à usage exclusivement pédagogique et encadreur. Leur divulgation à des tiers ou leur utilisation à des fins autres que l'encadrement académique est strictement interdite et constitue une violation de la charte d'utilisation.</p>
+    </div>
+
+    <h3 class="section-title">11.2 Les Cinq Onglets de la Console de Supervision</h3>
+
+    <div class="admin-tab-grid">
+      <div class="admin-tab-card">
+        <div class="admin-tab-icon">👥</div>
+        <div class="admin-tab-name">Utilisateurs Inscrits</div>
+        <div class="admin-tab-desc">Répertoire complet de tous les utilisateurs inscrits. Recherche par nom, e-mail, formule, wilaya. Filtres multi-critères. Export CSV (Excel). Actions individuelles : prolonger, suspendre, changer de formule.</div>
+      </div>
+      <div class="admin-tab-card">
+        <div class="admin-tab-icon">📋</div>
+        <div class="admin-tab-name">Demandes Individuelles</div>
+        <div class="admin-tab-desc">File d'attente des demandes d'activation par paiement BaridiMob. Chaque demande affiche : e-mail, formule demandée, N° de transaction, reçu photo. Actions : Valider / Rejeter / Demander une correction.</div>
+      </div>
+      <div class="admin-tab-card">
+        <div class="admin-tab-icon">🏛️</div>
+        <div class="admin-tab-name">Groupes & Devis</div>
+        <div class="admin-tab-desc">Création et gestion de promotions d'étudiants (ex: "Résidents Cardiologie CHU Alger 2024"). Génération de devis institutionnels PDF personnalisés pour les CHU, facultés et laboratoires.</div>
+      </div>
+      <div class="admin-tab-card">
+        <div class="admin-tab-icon">💬</div>
+        <div class="admin-tab-name">Messagerie d'Encadrement</div>
+        <div class="admin-tab-desc">Interface de messagerie bidirectionnelle entre l'encadreur et ses étudiants rattachés. Historique des échanges, pièces jointes (protocoles, articles). Notifications push en temps réel.</div>
+      </div>
+      <div class="admin-tab-card">
+        <div class="admin-tab-icon">📜</div>
+        <div class="admin-tab-name">Journal des Accès</div>
+        <div class="admin-tab-desc">Log chronologique de toutes les connexions avec : date/heure de connexion, durée de session calculée, statut en temps réel (🟢 En cours / ⚪ Terminée), et calcul automatique des heures d'utilisation cumulées.</div>
+      </div>
+    </div>
+
+    <h3 class="section-title">11.3 La Fiche Individuelle de l'Étudiant — 7 Onglets</h3>
+    <p>En cliquant sur le nom d'un étudiant dans la liste, l'encadreur accède à une fiche de profil complète organisée en <strong>7 sous-onglets</strong> :</p>
+
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Onglet</th><th>Contenu</th><th>Utilité pour l'Encadreur</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>📊 <strong>Stats</strong></td>
+            <td>Vue synthétique : questions tuteur, protocoles, score quiz moyen, flashcards, articles STROBE. Graphique d'activité hebdomadaire.</td>
+            <td>Évaluation globale rapide de l'engagement et de la progression.</td>
+          </tr>
+          <tr>
+            <td>👤 <strong>Fiche Profil</strong></td>
+            <td>Informations personnelles : nom, e-mail, spécialité, wilaya, établissement, date d'inscription, formule active et expiration.</td>
+            <td>Vérification de l'identité et du statut de l'abonnement.</td>
+          </tr>
+          <tr>
+            <td>📑 <strong>Protocoles</strong></td>
+            <td>Liste de tous les protocoles générés par l'étudiant : titre, schéma d'étude, date, statut. Accès PDF de chaque protocole.</td>
+            <td>Revue et validation des protocoles dans le cadre du suivi de thèse/mémoire.</td>
+          </tr>
+          <tr>
+            <td>🤖 <strong>Tuteur</strong></td>
+            <td>Historique des conversations avec le Tuteur RECIF (questions posées, thèmes abordés, fréquence).</td>
+            <td>Identification des difficultés conceptuelles récurrentes de l'étudiant.</td>
+          </tr>
+          <tr>
+            <td>📈 <strong>Bilan IA</strong></td>
+            <td>Rapport pédagogique complet généré par l'IA : compétences acquises, lacunes prioritaires, plan de progression recommandé.</td>
+            <td>Outil de supervision formative structuré et objectif.</td>
+          </tr>
+          <tr>
+            <td>📝 <strong>Articles STROBE</strong></td>
+            <td>Liste des articles scientifiques rédigés par l'étudiant. Accès et révision PDF de chaque article.</td>
+            <td>Suivi de la production scientifique, corrections et validation avant soumission.</td>
+          </tr>
+          <tr>
+            <td>📜 <strong>Accès (Journal)</strong></td>
+            <td>Log nominatif des connexions avec date, heure, durée de chaque session et durée cumulée en minutes/heures.</td>
+            <td>Vérification de l'assiduité, calcul des heures de formation pour les évaluations institutionnelles.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">11.4 Fonctionnalité Live : Détection des Sessions en Cours</h3>
+    <p>Le Journal des Accès affiche en temps réel le statut de chaque session :</p>
+    <ul>
+      <li><span class="badge badge-success">🟢 En cours</span> : Session active détectée par ping (dernier signal IA reçu il y a moins de 2 minutes).</li>
+      <li><span class="badge" style="background:#f1f5f9;color:#64748b;">⚪ Terminée — Xh Xmin</span> : Session terminée avec durée calculée automatiquement.</li>
+    </ul>
+    <p>Cette fonctionnalité est particulièrement utile pour les sessions de formation en présentiel où l'encadreur souhaite vérifier en temps réel la participation active des étudiants à distance.</p>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 12 — MESSAGERIE
+  =========================================== -->
+  <div id="ch12" class="chapter-card page-break">
+    <div class="chapter-num-label">💬 Chapitre 12</div>
+    <h2 class="chapter-title">Messagerie Interne Pédagogique &amp; Suivi d'Encadrement</h2>
+
+    <h3 class="section-title">12.1 Architecture de la Messagerie</h3>
+    <p>Le système de messagerie interne de Methodo&amp;Clinique est conçu spécifiquement pour l'encadrement pédagogique. Il fonctionne sur un modèle <strong>asymétrique</strong> :</p>
+    <ul>
+      <li><strong>Encadreurs (ULTRA & INSTITUTION)</strong> : Peuvent initier des conversations avec n'importe lequel de leurs étudiants rattachés et répondre aux demandes reçues.</li>
+      <li><strong>Étudiants (toutes formules)</strong> : Peuvent contacter leur encadreur pour toute question relative à leur projet de recherche, à l'interprétation d'un résultat ou à la validation d'une section de protocole.</li>
+    </ul>
+
+    <h3 class="section-title">12.2 Fonctionnalités Disponibles</h3>
+    <ul>
+      <li>Échanges textuels avec mise en forme Markdown (titres, listes, code, formules mathématiques).</li>
+      <li>Partage de pièces jointes PDF (protocoles, articles, résultats d'analyse statistique).</li>
+      <li>Notifications en temps réel (badge de messages non lus dans la sidebar).</li>
+      <li>Historique complet et persistent des échanges.</li>
+      <li>Fonctionnalité de recherche dans l'historique des messages.</li>
+    </ul>
+
+    <h3 class="section-title">12.3 Messagerie Institutionnelle (INSTITUTION uniquement)</h3>
+    <p>Les formules INSTITUTION bénéficient d'une messagerie étendue permettant :</p>
+    <ul>
+      <li>La communication entre plusieurs encadreurs d'un même établissement.</li>
+      <li>Les messages groupés à destination d'une promotion entière d'étudiants.</li>
+      <li>L'intégration avec la messagerie institutionnelle de l'établissement (en cours de développement).</li>
+    </ul>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 13 — ARCHITECTURE IA
+  =========================================== -->
+  <div id="ch13" class="chapter-card page-break">
+    <div class="chapter-num-label">🧠 Chapitre 13</div>
+    <h2 class="chapter-title">Architecture IA Hybride Tripro &amp; Résilience Offline</h2>
+
+    <h3 class="section-title">13.1 Le Moteur IA Tripro — Philosophie de Conception</h3>
+    <p>Le moteur IA de Methodo&amp;Clinique adopte une architecture hybride à trois niveaux — baptisée <strong>Tripro</strong> — conçue pour garantir une disponibilité maximale du service pédagogique, quelle que soit la qualité de la connexion Internet de l'utilisateur.</p>
+
+    <div class="box-quote">
+      <div class="box-title">🔄 Cascade de Résilience Tripro</div>
+      <p>
+        <strong>Niveau 1 — 🟢 Gemini Cloud (Google DeepMind)</strong><br>
+        Moteur principal. Actif dès qu'une connexion Internet est disponible. Fournit les réponses de la plus haute qualité : nuancées, contextualisées, riches en exemples cliniques et alignées sur les dernières mises à jour du référentiel RECIF.
+        <br><br>
+        <strong>Niveau 2 — 🟡 Ollama Local (Modèle embarqué sur la machine)</strong><br>
+        Activé automatiquement si Gemini Cloud est inaccessible. Nécessite l'installation préalable d'Ollama et le téléchargement d'un modèle LLM (Gemma 2, Llama 3.3...). Fonctionne 100% hors-ligne avec une qualité de réponse très satisfaisante pour les questions RECIF courantes.
+        <br><br>
+        <strong>Niveau 3 — 🔵 Base Statique RECIF Embarquée</strong><br>
+        Disponible en toutes circonstances, même sans Internet et sans Ollama. Constitue un index pré-calculé de questions/réponses RECIF fréquentes, embarqué dans l'application. Garantit un minimum pédagogique en toute situation.
+      </p>
+    </div>
+
+    <h3 class="section-title">13.2 Technologie RAG (Retrieval-Augmented Generation)</h3>
+    <p>Le Tuteur RECIF n'est pas un simple chatbot généraliste. Il est fondé sur la technologie <strong>RAG (Retrieval-Augmented Generation)</strong> qui combine :</p>
+    <ul>
+      <li><strong>Une base de connaissances vectorielle</strong> indexant le Manuel RECIF complet, les articles de la Loi 18-11, les grilles STROBE/CONSORT/PRISMA, les recommandations MSPRH et les publications épidémiologiques algériennes de référence.</li>
+      <li><strong>Un moteur de recherche sémantique</strong> qui identifie les passages les plus pertinents de la base de connaissances pour répondre à chaque question.</li>
+      <li><strong>Un modèle de langage (LLM)</strong> qui synthétise les passages récupérés et génère une réponse cohérente, contextualisée et citée.</li>
+    </ul>
+    <p>Cette architecture garantit que les réponses du Tuteur sont <strong>ancrées dans les textes officiels</strong> et non dans des informations génériques potentiellement incorrectes ou inappropriées au contexte algérien.</p>
+
+    <h3 class="section-title">13.3 Sécurité & Confidentialité des Échanges IA</h3>
+    <p>Les interactions avec le Tuteur RECIF sont chiffrées en transit (HTTPS/TLS 1.3). Aucune donnée patient nominative ne doit être saisie dans le Tuteur. Les conversations ne sont utilisées qu'à des fins d'amélioration du service pédagogique sous forme agrégée et anonymisée.</p>
+
+    <h3 class="section-title">13.4 Architecture Technique de la Plateforme</h3>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Composant</th><th>Technologie</th><th>Rôle</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Frontend</td>
+            <td>Next.js 16 (App Router)</td>
+            <td>Interface utilisateur réactive et rendu hybride SSR/SSG</td>
+          </tr>
+          <tr>
+            <td>Application Desktop</td>
+            <td>Electron</td>
+            <td>Wrapper natif pour macOS, Windows et Linux</td>
+          </tr>
+          <tr>
+            <td>Authentification</td>
+            <td>Firebase Authentication</td>
+            <td>Gestion sécurisée des sessions, authentification multi-facteur</td>
+          </tr>
+          <tr>
+            <td>Base de Données</td>
+            <td>Firebase Firestore</td>
+            <td>Stockage NoSQL temps réel des profils, protocoles et résultats</td>
+          </tr>
+          <tr>
+            <td>IA Cloud</td>
+            <td>Gemini (Google DeepMind)</td>
+            <td>Moteur principal du Tuteur, de la synthèse RAG et du bilan pédagogique</td>
+          </tr>
+          <tr>
+            <td>IA Locale</td>
+            <td>Ollama (Gemma2, Llama 3.3)</td>
+            <td>Moteur IA hors-ligne de secours</td>
+          </tr>
+          <tr>
+            <td>Recherche Bibliographique</td>
+            <td>API PubMed (NLM E-utilities)</td>
+            <td>Interrogation de la base PubMed en temps réel</td>
+          </tr>
+          <tr>
+            <td>Génération PDF</td>
+            <td>Puppeteer / React-PDF</td>
+            <td>Rendu PDF haute qualité des protocoles et articles</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       CHAPITRE 14 — PROPRIÉTÉ INTELLECTUELLE
+  =========================================== -->
+  <div id="ch14" class="chapter-card page-break" style="border-left-color: var(--accent);">
+    <div class="chapter-num-label">📜 Chapitre 14</div>
+    <h2 class="chapter-title">Propriété Intellectuelle, Droits d'Auteur, Licences &amp; Charte Éthique de l'IA</h2>
+
+    <h3 class="section-title">14.1 Protection du Logiciel et du Code Source</h3>
+    <div class="box-danger avoid-break">
+      <div class="box-title">🔒 Droits Réservés — Code Source & Plateforme</div>
+      <p><strong>© 2026 Methodo&amp;Clinique — Tous droits réservés.</strong><br>
+      L'ensemble de la plateforme Methodo&amp;Clinique, incluant son interface utilisateur, son architecture logicielle, ses moteurs de génération de protocoles et d'articles, ses algorithmes d'analyse pédagogique, son système RAG, ses pipelines de données et son code source (web et applicatif Electron) constitue une œuvre de l'esprit protégée par la législation algérienne et internationale relative au droit d'auteur et à la propriété industrielle.<br><br>
+      Toute reproduction, redistribution, désassemblage, décompilation, rétro-ingénierie, copie partielle ou totale du code source ou des fonctionnalités de la plateforme, à des fins commerciales ou non, sans autorisation écrite préalable de l'auteur, est strictement interdite et fera l'objet de poursuites judiciaires.</p>
+    </div>
+
+    <h3 class="section-title">14.2 Statut des Référentiels Officiels Intégrés</h3>
+    <p>La plateforme Methodo&amp;Clinique intègre et exploite, à des fins d'analyse RAG et d'enseignement, les textes officiels suivants qui demeurent la propriété exclusive de leurs institutions émettrices :</p>
+    <ul>
+      <li><strong>Loi n° 18-11 du 2 juillet 2018 relative à la santé</strong> — Propriété de la République Algérienne Démocratique et Populaire, JORA.</li>
+      <li><strong>Référentiel RECIF</strong> — Propriété de l'institution académique ayant élaboré ce référentiel.</li>
+      <li><strong>Déclaration STROBE 2007</strong> — Propriété de l'initiative STROBE (Epidemiology, Journal editorial boards).</li>
+      <li><strong>Déclaration CONSORT 2010</strong> — Propriété du groupe CONSORT.</li>
+      <li><strong>Déclaration de Helsinki</strong> — Propriété de l'Association Médicale Mondiale (AMM/WMA).</li>
+      <li><strong>Recommandations ICMJE</strong> — Propriété de l'International Committee of Medical Journal Editors.</li>
+    </ul>
+
+    <h3 class="section-title">14.3 Propriété 100% Exclusive des Utilisateurs sur Leurs Résultats</h3>
+    <div class="box-success avoid-break">
+      <div class="box-title">🎓 Droits Complets des Utilisateurs sur Leurs Productions</div>
+      <p>Les résultats de recherche, protocoles cliniques, cahiers de recueil des données (CRF), synthèses bibliographiques, bilans pédagogiques et articles scientifiques <strong>générés ou co-rédigés par les utilisateurs via la plateforme Methodo&amp;Clinique leur appartiennent à 100% en toute exclusivité</strong>.</p>
+      <p>Les utilisateurs conservent l'intégralité de leurs droits moraux et patrimoniaux sur ces productions et sont entièrement libres de :</p>
+      <ul>
+        <li>Les exploiter pour leurs mémoires de Master, thèses de Doctorat ou thèses de Résidence.</li>
+        <li>Les soumettre à toute revue scientifique nationale ou internationale de leur choix.</li>
+        <li>Les présenter lors de congrès médicaux et scientifiques.</li>
+        <li>Les déposer sur des plateformes de préprints (medRxiv, bioRxiv, Zenodo).</li>
+        <li>Les utiliser à des fins d'amélioration des pratiques dans leurs établissements de soins.</li>
+      </ul>
+      <p><strong>Methodo&amp;Clinique ne revendique aucun droit de co-auteur sur les productions des utilisateurs.</strong></p>
+    </div>
+
+    <h3 class="section-title">14.4 Licence Creative Commons des Contenus Pédagogiques</h3>
+    <p>Les fiches de formation, les questions de quiz, les flashcards et les documents d'accompagnement pédagogique produits par l'équipe de Methodo&amp;Clinique sont mis à disposition sous licence <strong>Creative Commons CC BY-NC-SA 4.0</strong> :</p>
+    <ul>
+      <li><strong>BY</strong> : Attribution obligatoire à Methodo&amp;Clinique.</li>
+      <li><strong>NC</strong> : Usage non commercial uniquement.</li>
+      <li><strong>SA</strong> : Partage dans les mêmes conditions.</li>
+    </ul>
+
+    <h3 class="section-title">14.5 Charte Éthique de l'Intelligence Artificielle</h3>
+    <p>L'utilisation de l'intelligence artificielle dans un contexte médical et académique impose des garde-fous éthiques stricts que la plateforme Methodo&amp;Clinique s'engage à respecter :</p>
+
+    <h4 class="subsection-title">Principes Fondamentaux</h4>
+    <ol>
+      <li><strong>L'IA comme Outil d'Assistance, jamais de Substitution</strong> : Le Tuteur RECIF est un assistant de structuration méthodologique. La validation clinique, éthique et scientifique des décisions de recherche incombe exclusivement à l'investigateur principal et à son directeur de thèse.</li>
+      <li><strong>Transparence</strong> : L'IA identifie clairement ses limites et indique lorsqu'une question dépasse son périmètre de compétence ou nécessite l'avis d'un expert humain.</li>
+      <li><strong>Non-discrimination</strong> : Le système est conçu pour servir équitablement tous les utilisateurs, sans biais lié à la spécialité, au genre, à la wilaya d'appartenance ou au niveau académique.</li>
+      <li><strong>Protection des données</strong> : Aucune donnée patient nominative ne doit être saisie dans la plateforme. Seules des données anonymisées et agrégées peuvent être traitées.</li>
+      <li><strong>Responsabilité humaine</strong> : En matière de recherche clinique, la responsabilité éthique, scientifique et légale reste entièrement celle de l'investigateur signataire du protocole.</li>
+    </ol>
+
+    <h4 class="subsection-title">Conformité RGPD et Réglementation Algérienne</h4>
+    <p>La plateforme se conformé aux principes du <strong>Règlement Général sur la Protection des Données (RGPD)</strong> de l'Union Européenne et aux dispositions de protection des données de la Loi 18-11 algérienne, notamment :</p>
+    <ul>
+      <li>Collecte minimale des données personnelles (uniquement e-mail et prénom/nom).</li>
+      <li>Droit d'accès, de rectification et de suppression des données personnelles sur simple demande.</li>
+      <li>Chiffrement des données en transit et au repos.</li>
+      <li>Aucune revente ni transmission des données personnelles à des tiers.</li>
+    </ul>
+  </div>
+
+  <!-- ==========================================
+       ANNEXES
+  =========================================== -->
+  <div class="chapter-card page-break" style="border-left-color: var(--text-muted);">
+    <div class="chapter-num-label">📎 Annexes</div>
+    <h2 class="chapter-title">Annexes de Référence</h2>
+
+    <h3 class="section-title">Annexe A — Glossaire des Termes Statistiques & Épidémiologiques</h3>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Terme</th><th>Définition</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Incidence</strong></td><td>Nombre de nouveaux cas d'une maladie ou d'un événement de santé survenant dans une population à risque pendant une période de temps définie.</td></tr>
+          <tr><td><strong>Prévalence</strong></td><td>Proportion de sujets atteints d'une maladie dans une population à un moment précis (prévalence ponctuelle) ou durant une période donnée (prévalence périodique).</td></tr>
+          <tr><td><strong>Risque Relatif (RR)</strong></td><td>Rapport entre l'incidence de la maladie dans le groupe exposé et l'incidence dans le groupe non-exposé. Mesure d'association dans les études de cohorte.</td></tr>
+          <tr><td><strong>Odds Ratio (OR)</strong></td><td>Rapport de la cote de l'événement dans le groupe exposé sur la cote dans le groupe non-exposé. Estimateur utilisé dans les études cas-témoins et la régression logistique.</td></tr>
+          <tr><td><strong>Hazard Ratio (HR)</strong></td><td>Rapport du risque instantané de l'événement dans le groupe exposé versus le groupe non-exposé. Estimateur principal des analyses de survie (modèle de Cox).</td></tr>
+          <tr><td><strong>Intervalle de Confiance (IC 95%)</strong></td><td>Plage de valeurs dans laquelle la vraie valeur du paramètre estimé se situe avec une probabilité de 95%.</td></tr>
+          <tr><td><strong>Valeur p (p-value)</strong></td><td>Probabilité d'obtenir un résultat au moins aussi extrême que celui observé, en supposant que l'hypothèse nulle est vraie. Seuil conventionnel : p < 0.05.</td></tr>
+          <tr><td><strong>Biais de Sélection</strong></td><td>Distorsion systématique résultant d'une procédure de sélection des participants qui conduit à une échantillon non représentatif de la population cible.</td></tr>
+          <tr><td><strong>Biais de Mesure (d'information)</strong></td><td>Erreur systématique dans la mesure de l'exposition ou du critère de jugement, pouvant être différentiel (entre les groupes) ou non différentiel.</td></tr>
+          <tr><td><strong>Facteur de Confusion</strong></td><td>Variable associée à la fois à l'exposition et au critère de jugement, et qui n'est pas sur la voie causale entre les deux. Peut conduire à une sur- ou sous-estimation de l'association étudiée.</td></tr>
+          <tr><td><strong>Puissance Statistique (1-β)</strong></td><td>Probabilité de détecter une différence réelle entre les groupes lorsqu'elle existe. Conventionnellement fixée à 80% ou 90%.</td></tr>
+          <tr><td><strong>Test paramétrique</strong></td><td>Test statistique basé sur des hypothèses sur la distribution des données (normalité). Exemples : test t de Student, ANOVA, corrélation de Pearson.</td></tr>
+          <tr><td><strong>Test non paramétrique</strong></td><td>Test statistique ne faisant pas d'hypothèse sur la distribution. Exemples : test de Mann-Whitney, test de Kruskal-Wallis, corrélation de Spearman.</td></tr>
+          <tr><td><strong>Courbe ROC</strong></td><td>Receiver Operating Characteristic — Représentation graphique de la sensibilité en fonction de (1-spécificité) pour différents seuils de positivité d'un test diagnostique. L'AUC (Aire sous la courbe ROC) mesure la performance globale du test.</td></tr>
+          <tr><td><strong>Courbe de Kaplan-Meier</strong></td><td>Méthode d'estimation non paramétrique de la fonction de survie, permettant de représenter la probabilité de survie (ou de survenue d'un événement) en fonction du temps, en tenant compte des données censurées.</td></tr>
+          <tr><td><strong>Régression logistique</strong></td><td>Modèle statistique permettant d'analyser l'association entre plusieurs variables indépendantes (continues ou catégorielles) et un critère de jugement binaire. Produit des Odds Ratios ajustés.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">Annexe B — Valeurs Critiques des Lois de Probabilité</h3>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Paramètre</th><th>Valeur</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>Z_(α/2) pour α = 5% bilatéral</td><td><strong>1.96</strong></td><td>Calcul NSN standard, IC 95%</td></tr>
+          <tr><td>Z_(α/2) pour α = 1% bilatéral</td><td><strong>2.576</strong></td><td>Calcul NSN avec IC 99%</td></tr>
+          <tr><td>Z_β pour puissance = 80% (β = 20%)</td><td><strong>0.842</strong></td><td>Calcul NSN standard</td></tr>
+          <tr><td>Z_β pour puissance = 90% (β = 10%)</td><td><strong>1.282</strong></td><td>Calcul NSN haute puissance</td></tr>
+          <tr><td>Z_β pour puissance = 95% (β = 5%)</td><td><strong>1.645</strong></td><td>Calcul NSN très haute puissance</td></tr>
+          <tr><td>(Z_(α/2) + Z_β)² pour α=5%, puissance=80%</td><td><strong>7.849</strong></td><td>Facteur combiné pour formule simplifiée</td></tr>
+          <tr><td>(Z_(α/2) + Z_β)² pour α=5%, puissance=90%</td><td><strong>10.508</strong></td><td>Facteur combiné haute puissance</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">Annexe C — Choix du Test Statistique selon les Variables</h3>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Variable Dépendante</th><th>Variable Indépendante</th><th>Hypothèses Vérifiées</th><th>Test Recommandé</th></tr></thead>
+        <tbody>
+          <tr><td>Quantitative continue</td><td>Binaire (2 groupes indép.)</td><td>Normalité + Homogénéité variances</td><td>Test t de Student indépendant</td></tr>
+          <tr><td>Quantitative continue</td><td>Binaire (2 groupes indép.)</td><td>Non-normalité ou effectif ≤ 30</td><td>Test de Mann-Whitney</td></tr>
+          <tr><td>Quantitative continue</td><td>Binaire (2 groupes appariés)</td><td>Normalité de la différence</td><td>Test t de Student apparié</td></tr>
+          <tr><td>Quantitative continue</td><td>3+ groupes indépendants</td><td>Normalité + Homogénéité variances</td><td>ANOVA à un facteur (+ Tukey HSD)</td></tr>
+          <tr><td>Quantitative continue</td><td>3+ groupes indépendants</td><td>Non-normalité</td><td>Test de Kruskal-Wallis</td></tr>
+          <tr><td>Qualitative binaire</td><td>Qualitative (2 groupes indép.)</td><td>Effectifs ≥ 5 dans chaque cellule</td><td>Test du Chi-deux (χ²)</td></tr>
+          <tr><td>Qualitative binaire</td><td>Qualitative (2 groupes indép.)</td><td>Effectifs < 5 dans au moins une cellule</td><td>Test exact de Fisher</td></tr>
+          <tr><td>Délai jusqu'à l'événement</td><td>Qualitative (groupes)</td><td>Données de survie avec censure</td><td>Log-rank test + Modèle de Cox</td></tr>
+          <tr><td>Qualitative binaire</td><td>Multiple (quantitatives + qualitatives)</td><td>Indépendance des observations</td><td>Régression logistique binaire</td></tr>
+          <tr><td>Quantitative continue</td><td>Multiple (quantitatives + qualitatives)</td><td>Normalité des résidus</td><td>Régression linéaire multiple</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="section-title">Annexe D — Checklist de Soumission au Comité d'Éthique (Algérie)</h3>
+    <div class="box-info avoid-break">
+      <div class="box-title">📋 Documents requis pour soumission au Comité d'Éthique</div>
+      <ul>
+        <li>☐ Protocole de recherche complet (version datée et signée par l'investigateur principal).</li>
+        <li>☐ CV de l'investigateur principal et des co-investigateurs.</li>
+        <li>☐ Formulaire de consentement éclairé du participant (version patient).</li>
+        <li>☐ Notice d'information destinée au patient (compréhensible, en langue accessible).</li>
+        <li>☐ Questionnaire ou grille de recueil des données (CRF).</li>
+        <li>☐ Lettre d'autorisation du Chef de service / Directeur de l'établissement.</li>
+        <li>☐ Justification du calcul du nombre de sujets nécessaires (NSN).</li>
+        <li>☐ Déclaration d'absence de conflit d'intérêts signée.</li>
+        <li>☐ Attestation d'assurance responsabilité civile (pour les études interventionnelles).</li>
+        <li>☐ Formulaire de demande d'avis du Comité (fourni par l'institution).</li>
+      </ul>
+    </div>
+
+    <h3 class="section-title">Annexe E — Registres d'Études Cliniques pour l'Afrique & l'Algérie</h3>
+    <div class="table-wrap">
+      <table class="table-custom">
+        <thead><tr><th>Registre</th><th>Portée</th><th>Gratuit ?</th><th>Exigé par les revues ?</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>PACTR</strong><br>(Pan African Clinical Trials Registry)</td>
+            <td>Afrique, y compris Algérie</td>
+            <td>Oui</td>
+            <td>Recommandé pour les revues africaines et certaines revues internationales</td>
+          </tr>
+          <tr>
+            <td><strong>ClinicalTrials.gov</strong><br>(NLM/NIH, USA)</td>
+            <td>International</td>
+            <td>Oui</td>
+            <td>Obligatoire pour les ECR soumis aux grandes revues ICMJE</td>
+          </tr>
+          <tr>
+            <td><strong>ISRCTN</strong><br>(UK Research)</td>
+            <td>International</td>
+            <td>Non (frais modiques)</td>
+            <td>Accepté par les revues ICMJE</td>
+          </tr>
+          <tr>
+            <td><strong>WHO ICTRP</strong><br>(WHO International)</td>
+            <td>International</td>
+            <td>Oui (portail agrégateur)</td>
+            <td>Portail de recherche global (agrégeant PACTR, ClinicalTrials, ISRCTN...)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       FOOTER
+  =========================================== -->
+  <footer>
+    <div style="font-size:1.05rem;font-weight:800;color:#0f172a;margin-bottom:0.5rem;">
+      Grand Manuel de Référence Méthodologique &amp; Réglementaire RECIF — Methodo&amp;Clinique v2.0.6
+    </div>
+    <div style="margin-bottom:0.35rem;">Direction Scientifique : Professeur Nezzal Abdelmalek</div>
+    <div style="margin-bottom:0.35rem;">NIF Fiscal : <code>15007180115910202380</code> | RIP BaridiMob : <code>00799999000041210947</code></div>
+    <div style="margin-bottom:0.75rem;">Licence Creative Commons CC BY-NC-SA 4.0 (contenus pédagogiques)</div>
+    <div style="color:#94a3b8;font-size:0.82rem;">© 2026 Methodo&amp;Clinique — Tous droits réservés sur le code source et la plateforme<br>
+    Document généré par la Plateforme Académique Methodo&amp;Clinique — Pour imprimer en PDF : utilisez <kbd>Cmd+P</kbd> (macOS) ou <kbd>Ctrl+P</kbd> (Windows/Linux)</div>
+  </footer>
+
+</div><!-- /.container -->
 </body>
 </html>
