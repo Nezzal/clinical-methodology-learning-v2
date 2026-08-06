@@ -132,11 +132,45 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>2.1. Cartes de Progression &amp; Quotas</h4>
+                  <h4 className={styles.subTitle}>2.1. Cartes de Progression, Quotas &amp; Actions Rapides</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
-                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Vue d&apos;ensemble</div>
-                      <p className={styles.cardText}>Visualisez en temps réel le nombre de protocoles rédigés, vos statistiques de quiz et vos crédits d&apos;analyse IA.</p>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Statistiques &amp; Compteurs en Direct</div>
+                      <p className={styles.cardText}>Visualisez en temps réel vos 4 indicateurs clés : le nombre de questions posées au Tuteur RECIF, les protocoles cliniques générés, le pourcentage de réussite aux Quiz et le taux de maîtrise des Flashcards.</p>
+                    </div>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚡ Boutons d&apos;Action Rapide</div>
+                      <p className={styles.cardText}>Accédez directement en 1 clic à la création d&apos;un nouveau protocole, au lancement d&apos;une session de quiz ou à la révision de vos cartes mémoires.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>2.2. Parcours &amp; Rapport de Suivi Pédagogique IA</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🎓 Bilan Pédagogique Automatisé</div>
+                      <p className={styles.cardText}>Consultez votre synthèse globale générée par l&apos;IA qui évalue vos compétences méthodologiques en analysant vos résultats et la rigueur de vos travaux.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>2.3. Historique des Protocoles Récents</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📂 Accès Immédiat aux Travaux</div>
+                      <p className={styles.cardText}>Retrouvez la liste chronologique de vos derniers protocoles rédigés et ouvrez-les directement en 1-clic pour consultation, édition ou réexport PDF.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.subSection}>
+                  <h4 className={styles.subTitle}>2.4. Module Rédacteur STROBE &amp; Gouvernance Académique</h4>
+                  <div className={styles.itemBlock}>
+                    <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
+                      <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>✍️ Rédaction STROBE &amp; Superviseur</div>
+                      <p className={styles.cardText}>Lancez le rédacteur d&apos;articles scientifiques selon les normes internationales STROBE et consultez la fiche de gouvernance du Superviseur Scientifique (Pr Nezzal Abdelmalek).</p>
                     </div>
                   </div>
                 </div>
