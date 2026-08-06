@@ -560,7 +560,7 @@ export interface FirestoreAccessLog {
 }
 
 export async function recordAccessLog(uid: string, email: string, displayName?: string): Promise<string | null> {
-  if (!isFirebaseEnabled || !db || !uid) return null;
+  if (!isFirebaseEnabled || !db || !uid || uid.startsWith('offline_') || uid === 'guest' || !auth?.currentUser) return null;
   try {
     const isElectron = typeof window !== 'undefined' && (window as any).electron !== undefined;
     const platform = isElectron ? 'Application Desktop Electron' : 'Navigateur Web';
@@ -584,14 +584,16 @@ export async function recordAccessLog(uid: string, email: string, displayName?: 
       platform
     });
     return logId;
-  } catch (error) {
-    console.warn('⚠️ Erreur enregistrement journal accès:', error);
+  } catch (error: any) {
+    if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
+      console.warn('⚠️ Erreur enregistrement journal accès:', error);
+    }
     return null;
   }
 }
 
 export async function updateAccessLogPing(logId: string, startTimeMs: number) {
-  if (!isFirebaseEnabled || !db || !logId) return;
+  if (!isFirebaseEnabled || !db || !logId || !auth?.currentUser) return;
   try {
     const logRef = doc(db, 'access_logs', logId);
     const nowMs = Date.now();
@@ -601,13 +603,15 @@ export async function updateAccessLogPing(logId: string, startTimeMs: number) {
       durationMins,
       status: 'active'
     }, { merge: true });
-  } catch (error) {
-    console.warn('⚠️ Erreur mise à jour ping session:', error);
+  } catch (error: any) {
+    if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
+      console.warn('⚠️ Erreur mise à jour ping session:', error);
+    }
   }
 }
 
 export async function closeAccessLog(logId: string, startTimeMs: number) {
-  if (!isFirebaseEnabled || !db || !logId) return;
+  if (!isFirebaseEnabled || !db || !logId || !auth?.currentUser) return;
   try {
     const logRef = doc(db, 'access_logs', logId);
     const nowMs = Date.now();
@@ -617,8 +621,10 @@ export async function closeAccessLog(logId: string, startTimeMs: number) {
       durationMins,
       status: 'closed'
     }, { merge: true });
-  } catch (error) {
-    console.warn('⚠️ Erreur fermeture log session:', error);
+  } catch (error: any) {
+    if (error?.code !== 'permission-denied' && !error?.message?.includes('permissions')) {
+      console.warn('⚠️ Erreur fermeture log session:', error);
+    }
   }
 }
 
