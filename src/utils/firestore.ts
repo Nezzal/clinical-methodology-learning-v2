@@ -55,23 +55,24 @@ async function getDocsWithCacheFallback(q: any): Promise<QuerySnapshot<any, any>
     try {
       return await getDocsFromCache(q);
     } catch (e) {
-      console.warn("⚠️ Échec de la récupération des documents depuis le cache Firestore:", e);
-      throw e;
+      return { docs: [], empty: true, size: 0, forEach: () => {} } as any;
     }
   }
   try {
     const serverPromise = getDocs(q);
     const timeoutPromise = new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error('TIMEOUT')), 5000)
+      setTimeout(() => reject(new Error('TIMEOUT')), 4000)
     );
     return await Promise.race([serverPromise, timeoutPromise]);
-  } catch (error) {
-    console.warn("⚠️ Échec ou timeout de la connexion serveur Firestore, bascule vers le cache local...", error);
+  } catch (error: any) {
+    const isPermissionErr = error?.code === 'permission-denied' || error?.message?.includes('permissions');
+    if (!isPermissionErr) {
+      console.warn("⚠️ Bascule vers le cache local Firestore:", error?.message || error);
+    }
     try {
       return await getDocsFromCache(q);
     } catch (cacheError) {
-      console.warn("⚠️ Impossible de lire les documents Firestore (Serveur & Cache):", cacheError);
-      throw cacheError;
+      return { docs: [], empty: true, size: 0, forEach: () => {} } as any;
     }
   }
 }
