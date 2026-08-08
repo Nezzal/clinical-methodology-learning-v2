@@ -63,15 +63,26 @@ export function parseMarkdownCrfToMethodoSchema(
       
       bodyLines.forEach((line) => {
         const trimmed = line.trim();
-        if (trimmed.includes('[ ]') || trimmed.includes('[____]') || trimmed.includes(':')) {
+        // Ignore table delimiter lines and empty dividers
+        if (trimmed.startsWith(':---') || trimmed.startsWith('|:---') || trimmed === '---' || trimmed.startsWith('##')) return;
+
+        if (trimmed.includes('[ ]') || trimmed.includes('[____]') || trimmed.includes(':') || trimmed.includes('?')) {
           let label = trimmed
             .replace(/^[-*|]\s*/, '')
+            .replace(/\*\*|\*|__/g, '')
             .replace(/\[\s*\]/g, '')
             .replace(/\[_+\]/g, '')
+            .replace(/_{2,}/g, '')
+            .replace(/\/\//g, '')
+            .replace(/OUI\s*NON/gi, '')
+            .replace(/Normal\s*Anormal/gi, '')
+            .replace(/Excellente\s*Moyenne\s*Mauvaise/gi, '')
+            .replace(/Nul\s*Possible\s*Fort/gi, '')
             .replace(/\|/g, ' ')
+            .replace(/\s+/g, ' ')
             .trim();
             
-          if (label && label.length > 3 && !label.startsWith('#') && !label.startsWith('---')) {
+          if (label && label.length > 3 && !label.startsWith('#') && !label.startsWith('---') && !label.startsWith(':---')) {
             let fieldType: MethodoCRFField['type'] = 'text';
             let options: string[] | undefined = undefined;
             
@@ -79,21 +90,30 @@ export function parseMarkdownCrfToMethodoSchema(
               fieldType = 'checkbox';
               options = ['Présent', 'Absent'];
             }
-            if (label.toLowerCase().includes('date')) {
+            
+            if (trimmed.toLowerCase().includes('date') || label.toLowerCase().includes('date')) {
               fieldType = 'date';
             } else if (label.toLowerCase().includes('âge') || label.toLowerCase().includes('taille') || label.toLowerCase().includes('poids') || label.toLowerCase().includes('score')) {
               fieldType = 'number';
-            } else if (label.includes('?') || label.includes('Oui') || label.includes('Non')) {
+            } else if (trimmed.includes('?') || trimmed.includes('OUI') || trimmed.includes('NON') || trimmed.includes('Oui') || trimmed.includes('Non')) {
               fieldType = 'radio';
-              options = ['Oui', 'Non', 'Non évalué'];
+              if (trimmed.includes('Normal') || trimmed.includes('Anormal')) {
+                options = ['Normal', 'Anormal', 'Non évalué'];
+              } else if (trimmed.includes('Excellente')) {
+                options = ['Excellente', 'Moyenne', 'Mauvaise'];
+              } else if (trimmed.includes('Nul')) {
+                options = ['Nul', 'Possible', 'Fort'];
+              } else {
+                options = ['Oui', 'Non', 'Non évalué'];
+              }
             }
             
-            // Seuls les 2 premiers champs ou ceux contenant un astérisque sont obligatoires
-            const isReq = idx === 0 || trimmed.includes('*') || label.toLowerCase().includes('code') || label.toLowerCase().includes('patient');
+            // Seuls les champs de code patient ou contenant un astérisque explicite sont requis
+            const isReq = label.toLowerCase().includes('code patient') || label.toLowerCase().includes('usubjid') || (idx === 0 && fieldCounter === 1);
 
             fields.push({
               id: `f_${idx}_${fieldCounter++}`,
-              label: label.substring(0, 100),
+              label: label.substring(0, 120),
               type: fieldType,
               required: isReq,
               options
