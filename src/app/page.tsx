@@ -132,7 +132,7 @@ export default function Dashboard() {
               </button>
             </div>
             <p className={styles.subtitle}>
-              Concevez vos protocoles selon les recommandations du manuel <strong>RECIF</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
+              Concevez vos protocoles selon les recommandations du manuel <strong>Methodo&Clinique</strong> et maîtrisez la réglementation algérienne de la recherche clinique.
             </p>
           </div>
           <div 
@@ -164,7 +164,7 @@ export default function Dashboard() {
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
             </svg>
           </div>
-          <span className={styles.statLabel}>Tuteur RECIF</span>
+          <span className={styles.statLabel}>Tuteur Methodo&Clinique</span>
           <span className={styles.statValue}>{stats.questionsAsked}</span>
           <span className={styles.statProgress}>Questions posées</span>
           <Link href="/tuteur" style={{ marginTop: 'auto', paddingTop: '1rem', fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: '600' }}>
@@ -295,8 +295,8 @@ export default function Dashboard() {
 
       {/* Pied de page Officiel avec NIF */}
       <footer style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)', textAlign: 'center', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-        <p style={{ margin: '0 0 0.35rem 0', fontWeight: 600, color: 'var(--text-secondary)' }}>
-          Plateforme Officielle RECIF — Méthodologie & Recherche Clinique
+        <p style={{ margin: '0 0 0.35rem 0', fontStyle: 'normal', fontWeight: 600, color: 'var(--text-secondary)' }}>
+          Plateforme Officielle Methodo&Clinique — Méthodologie & Recherche Clinique
         </p>
         <p style={{ margin: 0, fontFamily: 'monospace', color: '#94a3b8', fontSize: '0.85rem' }}>
           🏛️ Numéro d'Identification Fiscale (NIF) : <strong style={{ color: '#38bdf8', letterSpacing: '0.05em' }}>{COMPANY_NIF}</strong>

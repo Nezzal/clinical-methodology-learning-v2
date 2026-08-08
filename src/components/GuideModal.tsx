@@ -110,7 +110,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Conformité</div>
-                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre méthodologique strict conforme au manuel RECIF et à la Loi n° 18-11 relative à la santé (Algérie).</p>
+                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre méthodologique strict conforme au manuel Methodo&amp;Clinique et à la Loi n° 18-11 relative à la santé (Algérie).</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Publics Cibles</div>
@@ -213,7 +213,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Statistiques &amp; Compteurs en Direct</div>
-                      <p className={styles.cardText}>Visualisez en temps réel vos 4 indicateurs clés : le nombre de questions posées au Tuteur RECIF, les protocoles cliniques générés, le pourcentage de réussite aux Quiz et le taux de maîtrise des Flashcards.</p>
+                      <p className={styles.cardText}>Visualisez en temps réel vos 4 indicateurs clés : le nombre de questions posées au Tuteur Methodo&amp;Clinique, les protocoles cliniques générés, le pourcentage de réussite aux Quiz et le taux de maîtrise des Flashcards.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚡ Boutons d&apos;Action Rapide</div>
@@ -258,7 +258,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
             {activeModule === 3 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🤖 Chapitre 3 : Tuteur Intelligent RECIF (3 Volets)</h2>
+                  <h2 className={styles.moduleTitle}>🤖 Chapitre 3 : Tuteur Intelligent Methodo&amp;Clinique (3 Volets)</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
                     Accompagnement méthodologique personnalisé, validation des 23 paramètres et transfert 1-clic.
                   </p>
@@ -275,7 +275,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>3.2. Volet 2 : Accompagnement Projet (23 Paramètres RECIF)</h4>
+                  <h4 className={styles.subTitle}>3.2. Volet 2 : Accompagnement Projet (23 Paramètres Methodo&amp;Clinique)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Rôle</div>
@@ -508,7 +508,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                       <p className={styles.cardText}>
                         1. <strong>Stats :</strong> Compteurs d&apos;activités (questions tuteur, protocoles, scores quiz, flashcards) + options de suspension/suppression.<br/>
                         2. <strong>👤 Fiche Profil :</strong> Informations académiques, grade, établissement et statut d&apos;abonnement.<br/>
-                        3. <strong>Protocoles &amp; Articles :</strong> Consultation et révision des protocoles RECIF et articles STROBE rédigés par l&apos;étudiant.<br/>
+                        3. <strong>Protocoles &amp; Articles :</strong> Consultation et révision des protocoles Methodo&amp;Clinique et articles STROBE rédigés par l&apos;étudiant.<br/>
                         4. <strong>Tuteur &amp; Bilan IA :</strong> Consultation de l&apos;historique des questions posées au tuteur et génération du rapport de compétences automatisé.<br/>
                         5. <strong>📜 Accès :</strong> Traçabilité nominative des connexions de l&apos;étudiant (dates, heures, durées et total cumulé en minutes).
                       </p>
@@ -576,7 +576,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔵 Base Statique Embarquée</div>
-                      <p className={styles.cardText}>Repli ultime sur la base de connaissances RECIF intégrée dans l&apos;application pour un fonctionnement garanti 24h/24.</p>
+                      <p className={styles.cardText}>Repli ultime sur la base de connaissances Methodo&amp;Clinique intégrée dans l&apos;application pour un fonctionnement garanti 24h/24.</p>
                     </div>
                   </div>
                 </div>
@@ -602,7 +602,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>📚 Sources &amp; Référentiels Officiels</div>
-                      <p className={styles.cardText}>Les documents et lois de référence (Manuel du RECIF, Loi n° 18-11 relative à la santé, Lignes Directrices pour la Conduite des Études Cliniques en Algérie - MSPRH, grilles STROBE/ICMJE) demeurent la propriété exclusive de leurs institutions émettrices respectives et sont exploités à des fins d&apos;analyse RAG et de citation.</p>
+                      <p className={styles.cardText}>Les documents et lois de référence (Guide de Méthodologie Clinique, Loi n° 18-11 relative à la santé, Lignes Directrices pour la Conduite des Études Cliniques en Algérie - MSPRH, grilles STROBE/ICMJE) demeurent la propriété exclusive de leurs institutions émettrices respectives et sont exploités à des fins d&apos;analyse RAG et de citation.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🎓 Propriété des Résultats Utilisateurs &amp; Licence CC BY-NC-SA 4.0</div>
