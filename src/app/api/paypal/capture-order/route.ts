@@ -175,7 +175,7 @@ export async function POST(req: Request) {
         });
 
         await transporter.sendMail({
-          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
+          from: `"Plateforme Methodo-Clinique" <${smtpUser}>`,
           to: cleanEmail,
           subject: `✅ Activation Instantanée - Votre abonnement ${cleanTier.toUpperCase()} (Paiement PayPal réussi)`,
           html: `
@@ -184,7 +184,7 @@ export async function POST(req: Request) {
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; background: linear-gradient(135deg, #0d9488, #0284c7); border-radius: 16px; margin-bottom: 12px; color: white; font-size: 26px;">
                   ⚕
                 </div>
-                <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 700;">Plateforme Methodo&Clinique</h1>
+                <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 700;">Plateforme Methodo-Clinique</h1>
                 <p style="color: #0d9488; margin: 4px 0 0; font-size: 0.9rem; font-weight: 600;">Confirmation de Paiement & Activation Automatique</p>
               </div>
 
@@ -215,11 +215,11 @@ export async function POST(req: Request) {
               ` : ''}
 
               <p style="color: #475569; font-size: 0.9rem; line-height: 1.6;">
-                Vous pouvez maintenant vous connecter et profiter pleinement de toutes les fonctionnalités avancées de la plateforme Methodo&Clinique.
+                Vous pouvez maintenant vous connecter et profiter pleinement de toutes les fonctionnalités avancées de la plateforme Methodo-Clinique.
               </p>
 
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0 16px;" />
-              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Message automatique d'activation — Plateforme RECIF Methodo&Clinique</p>
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Message automatique d'activation — Plateforme RECIF Methodo-Clinique</p>
             </div>
           `
         });

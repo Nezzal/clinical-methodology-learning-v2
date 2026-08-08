@@ -291,7 +291,7 @@ export default function Tuteur() {
       } else if (newMode === 'protocol') {
         welcomeMsg = {
           role: 'assistant',
-          content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **Methodo&Clinique**, de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
+          content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **Methodo-Clinique**, de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
           timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
         };
       } else {
@@ -517,7 +517,7 @@ export default function Tuteur() {
 
   const getWelcomeMessage = () => ({
     role: 'assistant' as const,
-    content: `Bonjour ! Je suis votre tuteur virtuel spécialisé dans la méthodologie de recherche clinique (manuel **Methodo&Clinique**, **Loi n° 18-11 relative à la santé en Algérie**, et **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**).\n\nJe peux vous expliquer les schémas d'études, vous détailler les obligations réglementaires algériennes, ou vous guider sur vos projets. Que souhaitez-vous savoir aujourd'hui ?`,
+    content: `Bonjour ! Je suis votre tuteur virtuel spécialisé dans la méthodologie de recherche clinique (manuel **Methodo-Clinique**, **Loi n° 18-11 relative à la santé en Algérie**, et **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**).\n\nJe peux vous expliquer les schémas d'études, vous détailler les obligations réglementaires algériennes, ou vous guider sur vos projets. Que souhaitez-vous savoir aujourd'hui ?`,
     timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
   });
 
@@ -976,7 +976,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 
   const handleExport = () => {
     const transcript = messages
-      .map((m) => `[${m.timestamp}] ${m.role === 'user' ? 'Étudiant' : 'Tuteur Methodo&Clinique'}:\n${m.content}\n`)
+      .map((m) => `[${m.timestamp}] ${m.role === 'user' ? 'Étudiant' : 'Tuteur Methodo-Clinique'}:\n${m.content}\n`)
       .join('\n----------------------------------------\n\n');
 
     const blob = new Blob([transcript], { type: 'text/plain;charset=utf-8' });
@@ -990,7 +990,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 
   const handleExportDiscussionHtml = () => {
     const { authorName, profession, institution, city } = getUserProfileHeaderInfo(profile, user);
-    let chatTitle = 'Discussion Tuteur Methodo&Clinique';
+    let chatTitle = 'Discussion Tuteur Methodo-Clinique';
     if (user && activeSessionId) {
       const activeSession = sessions.find(s => s.id === activeSessionId);
       if (activeSession && activeSession.title) {
@@ -1002,7 +1002,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     
     messages.forEach((msg, idx) => {
       const isUser = msg.role === 'user';
-      const senderName = isUser ? 'Étudiant (Question)' : 'Tuteur Methodo&Clinique (Réponse)';
+      const senderName = isUser ? 'Étudiant (Question)' : 'Tuteur Methodo-Clinique (Réponse)';
       const parsedContent = parseMarkdownToHtml(msg.content);
       
       bodyContent += `
@@ -1400,7 +1400,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     <header class="report-header">
       <div class="header-left">
         <h1 style="font-size: 1.3rem; margin: 0 0 0.35rem 0; color: #0f766e;">
-          TUTEUR VIRTUEL METHODO&CLINIQUE — COMPTE-RENDU DE DISCUSSION
+          TUTEUR VIRTUEL Methodo-Clinique — COMPTE-RENDU DE DISCUSSION
         </h1>
         <div style="font-size: 0.85rem; color: #475569; text-transform: none; letter-spacing: normal;">
           <div><strong>Apprenant / Rédacteur :</strong> ${authorName}${profession ? ` (${profession})` : ''}</div>
@@ -1418,7 +1418,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     
     <footer class="report-footer">
       Document de travail — ${authorName}${institution ? ' • ' + institution : ''}<br>
-      Basé sur le Référentiel de Recherche Clinique Methodo&Clinique et conforme aux articles 377-399 de la Loi n° 18-11 relative à la santé.
+      Basé sur le Référentiel de Recherche Clinique Methodo-Clinique et conforme aux articles 377-399 de la Loi n° 18-11 relative à la santé.
     </footer>
   </div>
 </body>
@@ -1498,7 +1498,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Rapport Tuteur Methodo&Clinique - Question ${index + 1}</title>`rseMarkdownToHtml(htmlContent);
+  <title>Rapport Tuteur Methodo-Clinique - Question ${index + 1}</title>`rseMarkdownToHtml(htmlContent);
     }
 
     const fullDocument = `<!DOCTYPE html>
@@ -1855,7 +1855,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     <header class="report-header">
       <div class="header-left">
         <h1 style="font-size: 1.3rem; margin: 0 0 0.35rem 0; color: #0f766e;">
-          TUTEUR VIRTUEL METHODO&CLINIQUE — EXTRAIT MÉTHODOLOGIQUE
+          TUTEUR VIRTUEL Methodo-Clinique — EXTRAIT MÉTHODOLOGIQUE
         </h1>
         <div style="font-size: 0.85rem; color: #475569; text-transform: none; letter-spacing: normal;">
           <div><strong>Utilisateur / Chercheur :</strong> ${authorName}${profession ? ` (${profession})` : ''}</div>
@@ -1873,7 +1873,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
     
     <footer class="report-footer">
       Document de travail — ${authorName}${institution ? ' • ' + institution : ''}<br>
-      Basé sur le Référentiel Methodo&Clinique (Recherche Clinique et Épidémiologique) et conforme aux articles 377-399 de la Loi n° 18-11 du 2 juillet 2018 relative à la santé.
+      Basé sur le Référentiel Methodo-Clinique (Recherche Clinique et Épidémiologique) et conforme aux articles 377-399 de la Loi n° 18-11 du 2 juillet 2018 relative à la santé.
     </footer>
   </div>
 </body>
@@ -1951,7 +1951,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
       <header className={styles.header}>
         <div className={styles.headerMain}>
           <div>
-            <h1 className={styles.title}>Tuteur Virtuel Methodo&Clinique</h1>
+            <h1 className={styles.title}>Tuteur Virtuel Methodo-Clinique</h1>
             <p className={styles.subtitle}>
               Posez vos questions méthodologiques et réglementaires sur la base du guide officiel de recherche clinique.
             </p>
@@ -1959,13 +1959,13 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
           <a
             href="/guide"
             className={styles.manualButton}
-            title="Consulter le Guide Methodo&Clinique"
+            title="Consulter le Guide Methodo-Clinique"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
               <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
             </svg>
-            <span>Guide Methodo&Clinique</span>
+            <span>Guide Methodo-Clinique</span>
           </a>
         </div>
       </header>
@@ -2164,7 +2164,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
           {chatMode === null ? (
             <div className={styles.modeSelectionContainer}>
               <div className={styles.modeSelectionHeader}>
-                <h2 className={styles.modeSelectionTitle}>Bienvenue sur le Tuteur Methodo&Clinique</h2>
+                <h2 className={styles.modeSelectionTitle}>Bienvenue sur le Tuteur Methodo-Clinique</h2>
                 <p className={styles.modeSelectionSubtitle}>
                   Choisissez le mode de travail qui correspond le mieux à votre besoin d'apprentissage aujourd'hui.
                 </p>
@@ -2221,7 +2221,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                     setChatMode('protocol');
                     const welcome = {
                       role: 'assistant' as const,
-                      content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **Methodo&Clinique**, de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
+                      content: `Bonjour ! Je suis votre coach en méthodologie de recherche clinique pour votre **Projet de Protocole**.\n\nJe vais vous guider pas-à-pas pour concevoir, structurer et valider vos 23 paramètres méthodologiques conformément aux exigences du guide **Methodo-Clinique**, de la **Loi n° 18-11 relative à la santé** et des **Lignes Directrices pour la Conduite des Études Cliniques en Algérie**.\n\nCommençons par l'étape 1 (Identité & Règles). Quel est le **titre complet** (ou l'idée générale) de votre étude clinique ?`,
                       timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
                     };
                     setMessages([welcome]);
@@ -2420,7 +2420,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                     })()}
 
                     <span className={styles.messageMeta}>
-                      {msg.role === 'user' ? 'Vous' : 'Tuteur Methodo&Clinique'} • {msg.timestamp}
+                      {msg.role === 'user' ? 'Vous' : 'Tuteur Methodo-Clinique'} • {msg.timestamp}
                       {msg.role === 'assistant' && (
                         <>
                           <button
@@ -2494,7 +2494,7 @@ Remplis TOUS les champs méthodologiques avec les détails convenus dans notre d
                         <div className={styles.typingDot}></div>
                       </div>
                     </div>
-                    <span className={styles.messageMeta}>Tuteur Methodo&Clinique réfléchit...</span>
+                    <span className={styles.messageMeta}>Tuteur Methodo-Clinique réfléchit...</span>
                   </div>
                 )}
                 <div ref={messagesEndRef} />

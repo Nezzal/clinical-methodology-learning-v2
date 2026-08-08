@@ -495,7 +495,7 @@ export default function Login() {
                     boxShadow: '0 0 20px rgba(56, 189, 248, 0.2)'
                   }} 
                 />
-                <span className={styles.logoText}>Methodo&Clinique</span>
+                <span className={styles.logoText}>Methodo-Clinique</span>
               </div>
 
               {/* BLOC NOUVEAU SUR LA PLATEFORME (PLACÉ EN HAUT ET EN COULEURS ATTRAYANTES) */}

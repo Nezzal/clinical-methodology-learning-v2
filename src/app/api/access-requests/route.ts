@@ -219,11 +219,11 @@ export async function POST(req: Request) {
         const isExpert = cleanTier === 'expert';
         const isUltra = cleanTier === 'ultra';
 
-        let emailSubject = "Confirmation de votre demande d'accès - Methodo&Clinique";
-        if (isDecouverte) emailSubject = "Confirmation de votre demande d'accès Test Découverte (3j) - Methodo&Clinique";
-        else if (isPro) emailSubject = "Confirmation de votre demande d'accès PRO - Methodo&Clinique";
-        else if (isExpert) emailSubject = "Confirmation de votre demande d'accès EXPERT - Methodo&Clinique";
-        else if (isUltra) emailSubject = "Confirmation de votre demande d'accès ULTRA Enseignant - Methodo&Clinique";
+        let emailSubject = "Confirmation de votre demande d'accès - Methodo-Clinique";
+        if (isDecouverte) emailSubject = "Confirmation de votre demande d'accès Test Découverte (3j) - Methodo-Clinique";
+        else if (isPro) emailSubject = "Confirmation de votre demande d'accès PRO - Methodo-Clinique";
+        else if (isExpert) emailSubject = "Confirmation de votre demande d'accès EXPERT - Methodo-Clinique";
+        else if (isUltra) emailSubject = "Confirmation de votre demande d'accès ULTRA Enseignant - Methodo-Clinique";
         // Calcul exact de la date et heure d'expiration (72 heures = 3 jours)
         const now = new Date();
         const expiryDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
@@ -261,7 +261,7 @@ export async function POST(req: Request) {
         `;
 
         await transporter.sendMail({
-          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
+          from: `"Plateforme Methodo-Clinique" <${smtpUser}>`,
           to: cleanEmail,
           subject: emailSubject,
           html: `
@@ -270,7 +270,7 @@ export async function POST(req: Request) {
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; background: linear-gradient(135deg, #0d9488, #0284c7); border-radius: 14px; margin-bottom: 12px;">
                   <span style="color: white; font-size: 24px;">⚕</span>
                 </div>
-                <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 600;">Plateforme Methodo&Clinique</h1>
+                <h1 style="color: #1e293b; margin: 0; font-size: 1.4rem; font-weight: 600;">Plateforme Methodo-Clinique</h1>
                 <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Méthodologie de Recherche Clinique</p>
               </div>
 
@@ -407,7 +407,7 @@ export async function POST(req: Request) {
 
         let adminSubject = `Nouvelle demande d'accès [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}] - ${firstName.trim()} ${lastName.trim()}`;
         let adminHeading = `Nouvelle demande d'inscription [${cleanRole === 'teacher' ? 'Enseignant' : 'Étudiant'}]`;
-        let adminIntro = `Un utilisateur a demandé l'accès à la Plateforme Methodo&Clinique. Le courrier de confirmation lui a été envoyé automatiquement.`;
+        let adminIntro = `Un utilisateur a demandé l'accès à la Plateforme Methodo-Clinique. Le courrier de confirmation lui a été envoyé automatiquement.`;
 
         if (cleanTier === 'institution') {
           adminSubject = `🏛️ [DEVIS INSTITUTION] Demande de devis - ${firstName.trim()} ${lastName.trim()} (${institution.trim()})`;
@@ -420,7 +420,7 @@ export async function POST(req: Request) {
         }
 
         await transporter.sendMail({
-          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
+          from: `"Plateforme Methodo-Clinique" <${smtpUser}>`,
           to: adminNotificationEmail,
           subject: adminSubject,
           html: `
@@ -510,7 +510,7 @@ export async function PUT(req: Request) {
         });
 
         await transporter.sendMail({
-          from: `"Plateforme Methodo&Clinique" <${smtpUser}>`,
+          from: `"Plateforme Methodo-Clinique" <${smtpUser}>`,
           to: adminEmail,
           subject: `📲 Reçu BaridiMob Soumis - ${cleanEmail}`,
           html: `

@@ -172,7 +172,7 @@ export default function Sidebar() {
   useEffect(() => {
     if (user) {
       if (role === 'admin' || role === 'teacher') {
-        setProfileName('Superviseur Methodo&Clinique');
+        setProfileName('Superviseur Methodo-Clinique');
       } else {
         setProfileName(profile?.displayName || user.displayName || 'Utilisateur');
       }
@@ -248,7 +248,7 @@ export default function Sidebar() {
     },
     {
       href: '/tuteur',
-      label: 'Tuteur Virtuel Methodo&Clinique',
+      label: 'Tuteur Virtuel Methodo-Clinique',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -443,7 +443,7 @@ export default function Sidebar() {
               border: '2px solid rgba(56, 189, 248, 0.4)' 
             }} 
           />
-          <span className={styles.logoText}>Methodo&Clinique</span>
+          <span className={styles.logoText}>Methodo-Clinique</span>
         </div>
 
         <nav className={styles.sidebarNav}>
@@ -654,7 +654,7 @@ export default function Sidebar() {
             borderTop: '1px solid var(--border-glass)',
             lineHeight: '1.4'
           }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>© 2026 <strong>Methodo&Clinique</strong></div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>© 2026 <strong>Methodo-Clinique</strong></div>
             <div style={{ marginTop: '2px' }}>
               <a 
                 href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.fr" 

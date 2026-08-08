@@ -154,7 +154,7 @@ function getStaticFallbackArticle(
 ---
 
 ## 7. Déclaration d'utilisation de l'intelligence artificielle
-${data.aiDeclaration || "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo&Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication."}
+${data.aiDeclaration || "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo-Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication."}
 `;
 }
 
@@ -215,7 +215,7 @@ export async function POST(req: Request) {
     interpretation = '',
     generalisability = '',
     funding = '',
-    aiDeclaration = "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo&Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication."
+    aiDeclaration = "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo-Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication."
   } = payload;
 
   const requestHeaders = new Headers(req.headers);

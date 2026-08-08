@@ -92,7 +92,7 @@ export default function GuidePage() {
           </div>
         </div>
         <p className={styles.subtitle}>
-          Ce guide est destiné aux enseignants et aux étudiants souhaitant utiliser l'application de formation <strong>Methodo&Clinique</strong> en local, de façon autonome et <strong>sans aucune connexion internet</strong>.
+          Ce guide est destiné aux enseignants et aux étudiants souhaitant utiliser l'application de formation <strong>Methodo-Clinique</strong> en local, de façon autonome et <strong>sans aucune connexion internet</strong>.
         </p>
       </header>
 
@@ -105,7 +105,7 @@ export default function GuidePage() {
           🔑 1. Pourquoi acquérir l'Exécutable de bureau ?
         </h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.6' }}>
-          La version exécutable de bureau (disponible aux formats <strong>.exe</strong> pour Windows, <strong>.app / .dmg</strong> pour macOS et <strong>.AppImage / .deb</strong> pour Linux) vous permet d'emporter toute l'intelligence méthodologique de <strong>Methodo&Clinique</strong> partout avec vous, même dans les zones blanches ou les sous-sols d'hôpitaux totalement coupés du réseau.
+          La version exécutable de bureau (disponible aux formats <strong>.exe</strong> pour Windows, <strong>.app / .dmg</strong> pour macOS et <strong>.AppImage / .deb</strong> pour Linux) vous permet d'emporter toute l'intelligence méthodologique de <strong>Methodo-Clinique</strong> partout avec vous, même dans les zones blanches ou les sous-sols d'hôpitaux totalement coupés du réseau.
         </p>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.6', fontWeight: 600 }}>
@@ -113,7 +113,7 @@ export default function GuidePage() {
         </p>
         <ul style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.6', paddingLeft: '1.5rem', listStyleType: 'disc' }}>
           <li style={{ marginBottom: '0.5rem' }}><strong>Confidentialité 100% absolue :</strong> Vos données de recherche et vos fiches de protocoles cliniques sont stockées et traitées uniquement sur votre disque dur, sans aucun transfert cloud.</li>
-          <li style={{ marginBottom: '0.5rem' }}><strong>Zéro Dépendance Internet :</strong> Le Tuteur IA Methodo&Clinique continue de répondre intelligemment en exploitant un modèle d'IA local (Ollama).</li>
+          <li style={{ marginBottom: '0.5rem' }}><strong>Zéro Dépendance Internet :</strong> Le Tuteur IA Methodo-Clinique continue de répondre intelligemment en exploitant un modèle d'IA local (Ollama).</li>
           <li style={{ marginBottom: '0.5rem' }}><strong>Zéro Latence & Zéro Quota :</strong> Pas de limitation de jetons ou de ralentissements dus à la bande passante.</li>
         </ul>
 
@@ -264,7 +264,7 @@ export default function GuidePage() {
               </div>
             </div>
             <p style={{ fontSize: '0.83rem', color: 'var(--text-secondary)', lineHeight: '1.5', flexGrow: 1, marginBottom: '1rem' }}>
-              <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Methodo&Clinique » sera créé sur votre bureau.
+              <strong>Instructions :</strong> Téléchargez l'installateur <code>.exe</code>, double-cliquez dessus et suivez l'assistant d'installation. Un raccourci « Methodo-Clinique » sera créé sur votre bureau.
             </p>
             <a 
               href="https://github.com/Nezzal/clinical-methodology-learning-v2/releases/download/v2.0.7/RECIF-MethodoClinique.Setup.2.0.7.exe" 
@@ -528,7 +528,7 @@ export default function GuidePage() {
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
-          🚀 5. Étape 3 : Lancer l'application Methodo&Clinique
+          🚀 5. Étape 3 : Lancer l'application Methodo-Clinique
         </h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', lineHeight: '1.6' }}>
           Une fois Ollama installé et le modèle téléchargé :
@@ -538,7 +538,7 @@ export default function GuidePage() {
           <li className={styles.stepItem}>
             <span className={styles.stepNumber}>1</span>
             <div className={styles.stepText}>
-              <p>Démarrez simplement l'application <strong>Methodo&Clinique</strong> (en double-cliquant sur son raccourci de bureau ou depuis votre dossier Applications).</p>
+              <p>Démarrez simplement l'application <strong>Methodo-Clinique</strong> (en double-cliquant sur son raccourci de bureau ou depuis votre dossier Applications).</p>
             </div>
           </li>
           <li className={styles.stepItem}>

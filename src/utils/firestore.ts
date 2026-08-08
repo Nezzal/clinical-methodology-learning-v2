@@ -1049,7 +1049,7 @@ export async function sendSupportMessage(
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #e6fffa; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
                   ✉️
                 </div>
-                <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo-Clinique</h2>
                 <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Vous avez reçu un nouveau message de supervision</p>
               </div>
               
@@ -1070,7 +1070,7 @@ export async function sendSupportMessage(
               </div>
               
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
-              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo-Clinique.</p>
             </div>
           `
           : `
@@ -1079,7 +1079,7 @@ export async function sendSupportMessage(
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #edf2f7; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
                   💬
                 </div>
-                <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo-Clinique</h2>
                 <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Nouveau message de support reçu</p>
               </div>
               
@@ -1100,7 +1100,7 @@ export async function sendSupportMessage(
               </div>
               
               <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
-              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+              <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo-Clinique.</p>
             </div>
           `;
 
@@ -1180,7 +1180,7 @@ export async function replyToSupportMessage(
                       <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #edf2f7; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
                         💬
                       </div>
-                      <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                      <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo-Clinique</h2>
                       <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Réponse d'étudiant reçue</p>
                     </div>
                     
@@ -1201,7 +1201,7 @@ export async function replyToSupportMessage(
                     </div>
                     
                     <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
-                    <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+                    <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo-Clinique.</p>
                   </div>
                 `
               })
@@ -1225,7 +1225,7 @@ export async function replyToSupportMessage(
                       <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: #e6fffa; border-radius: 12px; font-size: 24px; margin-bottom: 8px;">
                         ✉️
                       </div>
-                      <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo&Clinique</h2>
+                      <h2 style="color: #1e293b; margin: 0; font-size: 1.25rem; font-weight: 600;">Plateforme Methodo-Clinique</h2>
                       <p style="color: #64748b; margin: 4px 0 0; font-size: 0.85rem;">Une réponse a été apportée à votre question</p>
                     </div>
                     
@@ -1246,7 +1246,7 @@ export async function replyToSupportMessage(
                     </div>
                     
                     <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 28px 0 16px;" />
-                    <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo&Clinique.</p>
+                    <p style="font-size: 0.78rem; color: #94a3b8; margin: 0; text-align: center;">Cet e-mail a été envoyé automatiquement par la Plateforme Methodo-Clinique.</p>
                   </div>
                 `
               })

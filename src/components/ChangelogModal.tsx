@@ -82,7 +82,7 @@ const RELEASES: ReleaseItem[] = [
     title: 'Lancement Officiel de la Version 2.0 & Système de Design UI/UX',
     tags: ['UI/UX Redesign', 'Design System', 'Figtree & Inter', 'Medical Teal', 'WCAG AA'],
     features: [
-      'Lancement officiel de la Version 2.0 de la plateforme Methodo&Clinique.',
+      'Lancement officiel de la Version 2.0 de la plateforme Methodo-Clinique.',
       'Nouveau Système de Design "Medical Teal & Scientific Slate" avec fonds sombres profonds (#070A13), cartes glassmorphism et accents néon cyan (#00E5FF).',
       'Intégration des polices typographiques scientifiques et académiques : Figtree (titres), Inter (corps de texte) et JetBrains Mono (données biostatistiques & code).',
       'Boutons d\'action néon cyan interactifs avec lueurs lumineuses (glow) et micro-animations fluides (200-300ms).',
@@ -229,11 +229,11 @@ const RELEASES: ReleaseItem[] = [
   {
     version: 'v1.6.0',
     date: 'Juillet 2026',
-    title: 'Graphique Radar de Compétences & Branding Methodo&Clinique',
+    title: 'Graphique Radar de Compétences & Branding Methodo-Clinique',
     tags: ['Graphique', 'Branding', 'Admin'],
     features: [
       'Visualisation radar des 6 piliers de compétences dans le Rapport Pédagogique.',
-      'Rebranding global vers Methodo&Clinique avec intégration du logo officiel HD.',
+      'Rebranding global vers Methodo-Clinique avec intégration du logo officiel HD.',
       'Panneau d administration repensé pour la gestion et le suivi des utilisateurs.',
       'Optimisation des styles d impression PDF sans logos parasites.'
     ]
@@ -344,7 +344,7 @@ export default function ChangelogModal({ isOpen, onClose }: ChangelogModalProps)
         </div>
 
         <footer className={styles.modalFooter}>
-          <span>Methodo&Clinique Éducation v{APP_VERSION}</span>
+          <span>Methodo-Clinique Éducation v{APP_VERSION}</span>
           <span>Plateforme Pédagogique & Recherche Clinique</span>
         </footer>
       </div>

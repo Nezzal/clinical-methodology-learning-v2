@@ -47,7 +47,7 @@ function renderMarkdown(text: string): string {
   return formatted;
 }
 
-const DEFAULT_AI_DECLARATION = "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo&Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication.";
+const DEFAULT_AI_DECLARATION = "Lors de la préparation de ce manuscrit, les auteurs ont utilisé l'application Methodo-Clinique (fonctionnant en RAG sur le manuel du RECIF et appuyée sur les modèles de langage Gemini / Qwen) comme assistant méthodologique pour la structuration du protocole et le suivi des recommandations de la grille STROBE. Après l'utilisation de cet outil, les auteurs ont rigoureusement vérifié, relu et édité l'intégralité du contenu et assument l'entière responsabilité de la validité scientifique et rédactionnelle de la publication.";
 
 export default function ArticleGenerator() {
   const { user } = useAuth();

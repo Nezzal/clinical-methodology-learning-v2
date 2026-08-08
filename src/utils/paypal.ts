@@ -41,7 +41,7 @@ export function calculatePlanPrice(
     throw new Error(`Tarif introuvable pour la formule ${tier}, durée ${duration}, zone ${residence}`);
   }
 
-  const description = `Abonnement Methodo&Clinique ${tier.toUpperCase()} (${labelDuration}) - Zone ${residence === 'africa' ? 'Afrique' : 'Europe & Occident'}`;
+  const description = `Abonnement Methodo-Clinique ${tier.toUpperCase()} (${labelDuration}) - Zone ${residence === 'africa' ? 'Afrique' : 'Europe & Occident'}`;
 
   return {
     amount: price.toFixed(2),

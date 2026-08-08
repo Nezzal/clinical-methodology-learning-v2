@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         },
       ],
       application_context: {
-        brand_name: 'Methodo&Clinique Platform',
+        brand_name: 'Methodo-Clinique Platform',
         landing_page: 'NO_PREFERENCE',
         user_action: 'PAY_NOW',
         shipping_preference: 'NO_SHIPPING'

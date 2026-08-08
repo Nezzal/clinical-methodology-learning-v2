@@ -47,7 +47,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
             <div className={styles.titleIcon}>📖</div>
             <div>
               <h3 className={styles.title}>Manuel Utilisateur Officiel &amp; Guide de Prise en Main</h3>
-              <p className={styles.subtitle}>Plateforme Académique Methodo&amp;Clinique — Version v{APP_VERSION} (Conforme Loi 18-11 Santé)</p>
+              <p className={styles.subtitle}>Plateforme Académique Methodo-Clinique — Version v{APP_VERSION} (Conforme Loi 18-11 Santé)</p>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -110,7 +110,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Conformité</div>
-                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre méthodologique strict conforme au manuel Methodo&amp;Clinique et à la Loi n° 18-11 relative à la santé (Algérie).</p>
+                      <p className={styles.cardText}>Point d&apos;entrée officiel assurant un cadre méthodologique strict conforme au manuel Methodo-Clinique et à la Loi n° 18-11 relative à la santé (Algérie).</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚙️ Publics Cibles</div>
@@ -213,7 +213,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Statistiques &amp; Compteurs en Direct</div>
-                      <p className={styles.cardText}>Visualisez en temps réel vos 4 indicateurs clés : le nombre de questions posées au Tuteur Methodo&amp;Clinique, les protocoles cliniques générés, le pourcentage de réussite aux Quiz et le taux de maîtrise des Flashcards.</p>
+                      <p className={styles.cardText}>Visualisez en temps réel vos 4 indicateurs clés : le nombre de questions posées au Tuteur Methodo-Clinique, les protocoles cliniques générés, le pourcentage de réussite aux Quiz et le taux de maîtrise des Flashcards.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>⚡ Boutons d&apos;Action Rapide</div>
@@ -258,7 +258,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
             {activeModule === 3 && (
               <div>
                 <div className={styles.moduleHeader}>
-                  <h2 className={styles.moduleTitle}>🤖 Chapitre 3 : Tuteur Intelligent Methodo&amp;Clinique (3 Volets)</h2>
+                  <h2 className={styles.moduleTitle}>🤖 Chapitre 3 : Tuteur Intelligent Methodo-Clinique (3 Volets)</h2>
                   <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0 }}>
                     Accompagnement méthodologique personnalisé, validation des 23 paramètres et transfert 1-clic.
                   </p>
@@ -275,7 +275,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                 </div>
 
                 <div className={styles.subSection}>
-                  <h4 className={styles.subTitle}>3.2. Volet 2 : Accompagnement Projet (23 Paramètres Methodo&amp;Clinique)</h4>
+                  <h4 className={styles.subTitle}>3.2. Volet 2 : Accompagnement Projet (23 Paramètres Methodo-Clinique)</h4>
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>📌 Utilité &amp; Rôle</div>
@@ -508,7 +508,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                       <p className={styles.cardText}>
                         1. <strong>Stats :</strong> Compteurs d&apos;activités (questions tuteur, protocoles, scores quiz, flashcards) + options de suspension/suppression.<br/>
                         2. <strong>👤 Fiche Profil :</strong> Informations académiques, grade, établissement et statut d&apos;abonnement.<br/>
-                        3. <strong>Protocoles &amp; Articles :</strong> Consultation et révision des protocoles Methodo&amp;Clinique et articles STROBE rédigés par l&apos;étudiant.<br/>
+                        3. <strong>Protocoles &amp; Articles :</strong> Consultation et révision des protocoles Methodo-Clinique et articles STROBE rédigés par l&apos;étudiant.<br/>
                         4. <strong>Tuteur &amp; Bilan IA :</strong> Consultation de l&apos;historique des questions posées au tuteur et génération du rapport de compétences automatisé.<br/>
                         5. <strong>📜 Accès :</strong> Traçabilité nominative des connexions de l&apos;étudiant (dates, heures, durées et total cumulé en minutes).
                       </p>
@@ -576,7 +576,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowTip}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelTip}`}>🔵 Base Statique Embarquée</div>
-                      <p className={styles.cardText}>Repli ultime sur la base de connaissances Methodo&amp;Clinique intégrée dans l&apos;application pour un fonctionnement garanti 24h/24.</p>
+                      <p className={styles.cardText}>Repli ultime sur la base de connaissances Methodo-Clinique intégrée dans l&apos;application pour un fonctionnement garanti 24h/24.</p>
                     </div>
                   </div>
                 </div>
@@ -598,7 +598,7 @@ export default function GuideModal({ isOpen, onClose, initialModule = 1 }: Guide
                   <div className={styles.itemBlock}>
                     <div className={`${styles.cardRow} ${styles.cardRowAction}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelAction}`}>💻 Logiciel &amp; Code Source</div>
-                      <p className={styles.cardText}><strong>© 2026 Methodo&amp;Clinique. Tous droits réservés.</strong> La plateforme, l&apos;interface, l&apos;architecture et la logique RAG sont la propriété exclusive et protégée de l&apos;auteur.</p>
+                      <p className={styles.cardText}><strong>© 2026 Methodo-Clinique. Tous droits réservés.</strong> La plateforme, l&apos;interface, l&apos;architecture et la logique RAG sont la propriété exclusive et protégée de l&apos;auteur.</p>
                     </div>
                     <div className={`${styles.cardRow} ${styles.cardRowVoice}`}>
                       <div className={`${styles.cardLabel} ${styles.cardLabelVoice}`}>📚 Sources &amp; Référentiels Officiels</div>

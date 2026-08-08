@@ -96,7 +96,7 @@ const getInitialOfflineState = (): InitialOfflineState | null => {
           const isOfflineAdmin = cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com';
           const userRole: 'admin' | 'teacher' | 'student' = isOfflineAdmin ? 'admin' : (tier === 'ultra' ? 'teacher' : 'student');
           const uid = 'offline_license_uid_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
-          const displayName = isOfflineAdmin ? 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+          const displayName = isOfflineAdmin ? 'Superviseur Methodo-Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
           
           const userObj = {
             uid,
@@ -168,7 +168,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const isOfflineAdmin = cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com';
             const userRole = isOfflineAdmin ? 'admin' : (tier === 'ultra' ? 'teacher' : 'student');
             const uid = 'offline_license_uid_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
-            const displayName = isOfflineAdmin ? 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+            const displayName = isOfflineAdmin ? 'Superviseur Methodo-Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
             
             setUser({
               uid,
@@ -319,7 +319,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               const isOfflineAdmin = cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com';
               const userRole = isOfflineAdmin ? 'admin' : (tier === 'ultra' ? 'teacher' : 'student');
               const uid = 'offline_license_uid_' + cleanEmail.replace(/[^a-z0-9]/g, '_');
-              const displayName = isOfflineAdmin ? 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
+              const displayName = isOfflineAdmin ? 'Superviseur Methodo-Clinique (Pr Nezzal Abdelmalek)' : `Utilisateur RECIF (${tier.toUpperCase()} - Hors-ligne)`;
               
               setUser({
                 uid,

@@ -55,7 +55,7 @@ export function getQuotaConfig(tier: SubscriptionTier): QuotaConfig {
         reportsMax: 1,
         tuteurDailyMax: 5,
         watermark: true,
-        watermarkText: 'OFFRE DÉCOUVERTE — METHODO&CLINIQUE'
+        watermarkText: 'OFFRE DÉCOUVERTE — Methodo-Clinique'
       };
     case 'pro':
       return {
@@ -90,7 +90,7 @@ export function getQuotaConfig(tier: SubscriptionTier): QuotaConfig {
         reportsMax: 1,
         tuteurDailyMax: 5,
         watermark: true,
-        watermarkText: 'OFFRE DÉCOUVERTE — METHODO&CLINIQUE'
+        watermarkText: 'OFFRE DÉCOUVERTE — Methodo-Clinique'
       };
   }
 }

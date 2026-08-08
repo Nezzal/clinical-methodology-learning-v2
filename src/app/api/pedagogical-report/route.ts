@@ -252,7 +252,7 @@ Pour consolider vos connaissances et passer au niveau supérieur, voici votre pr
    Utilisez le module Rédacteur STROBE pour transformer votre projet de protocole en manuscrit prêt pour la soumission.
 
 ---
-*Ce bilan pédagogique est un outil personnalisé d'accompagnement de la plateforme Methodo&Clinique Édu (RECIF).*
+*Ce bilan pédagogique est un outil personnalisé d'accompagnement de la plateforme Methodo-Clinique Édu (RECIF).*
 `;
 }
 

@@ -30,7 +30,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
   if (!isOpen) return null;
 
   const handleCopyRip = () => {
-    navigator.clipboard.writeText(residence === 'dz' ? 'BaridiMob (RIP): 00799999000041210947 - Methodo&Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo&Clinique');
+    navigator.clipboard.writeText(residence === 'dz' ? 'BaridiMob (RIP): 00799999000041210947 - Methodo-Clinique' : 'IBAN: XXXXXXXXXXXXXXXXXXXXXXX - SWIFT: XXXXXXX - Methodo-Clinique');
     setCopiedRip(true);
     setTimeout(() => setCopiedRip(false), 2500);
   };
@@ -101,7 +101,7 @@ export default function SubscriptionModal({ isOpen, onClose, onSelectPlan }: Sub
         <header className={styles.modalHeader}>
           <div className={styles.headerTitle}>
             <span>✨</span>
-            <span>Abonnements & Formules Methodo&Clinique</span>
+            <span>Abonnements & Formules Methodo-Clinique</span>
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Fermer">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

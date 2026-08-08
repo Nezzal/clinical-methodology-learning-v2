@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     if (cleanEmail === 'admin@recif.dz' || cleanEmail === 'nezzal.abdelmalek@gmail.com') {
       role = 'admin';
-      displayName = 'Superviseur Methodo&Clinique (Pr Nezzal Abdelmalek)';
+      displayName = 'Superviseur Methodo-Clinique (Pr Nezzal Abdelmalek)';
     }
 
     console.log(`🔌 Connexion hors-ligne réussie pour : ${cleanEmail} (Rôle: ${role})`);
