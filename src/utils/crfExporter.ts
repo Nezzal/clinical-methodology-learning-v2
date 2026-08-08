@@ -63,10 +63,29 @@ export function parseMarkdownCrfToMethodoSchema(
       
       bodyLines.forEach((line) => {
         const trimmed = line.trim();
-        // Ignore table delimiter lines and empty dividers
-        if (trimmed.startsWith(':---') || trimmed.startsWith('|:---') || trimmed === '---' || trimmed.startsWith('##')) return;
+        // Ignore table delimiter lines, section dividers, and markdown headers
+        if (trimmed.startsWith(':---') || trimmed.startsWith('|:---') || trimmed.startsWith('| :---') || trimmed === '---' || trimmed.startsWith('##')) return;
 
-        if (trimmed.includes('[ ]') || trimmed.includes('[____]') || trimmed.includes(':') || trimmed.includes('?')) {
+        // Skip sub-headers ending with colon that do not contain actual fillable input prompts
+        const isPureSubHeader = /^(\*\*|\*).+:\*\*$/.test(trimmed) && !trimmed.includes('[ ]') && !trimmed.includes('[____]') && !trimmed.includes('?') && !trimmed.includes('OUI');
+        if (isPureSubHeader) return;
+
+        // Check if line contains fillable input prompts or questions
+        const isFillableLine = trimmed.includes('[ ]') || 
+                               trimmed.includes('[____]') || 
+                               trimmed.includes('?') || 
+                               trimmed.includes('OUI') || 
+                               trimmed.includes('NON') || 
+                               trimmed.includes('(Unité') || 
+                               trimmed.includes('(Détails') ||
+                               trimmed.toLowerCase().includes('date') || 
+                               trimmed.toLowerCase().includes('âge') || 
+                               trimmed.toLowerCase().includes('sexe') || 
+                               trimmed.toLowerCase().includes('poids') || 
+                               trimmed.toLowerCase().includes('taille') || 
+                               trimmed.toLowerCase().includes('signature');
+
+        if (isFillableLine) {
           let label = trimmed
             .replace(/^[-*|]\s*/, '')
             .replace(/\*\*|\*|__/g, '')
@@ -74,15 +93,19 @@ export function parseMarkdownCrfToMethodoSchema(
             .replace(/\[_+\]/g, '')
             .replace(/_{2,}/g, '')
             .replace(/\/\//g, '')
+            .replace(/\(Détails\s*:\s*\)/gi, '')
+            .replace(/\(Unité\s*:\s*\)/gi, '')
             .replace(/OUI\s*NON/gi, '')
             .replace(/Normal\s*Anormal/gi, '')
             .replace(/Excellente\s*Moyenne\s*Mauvaise/gi, '')
             .replace(/Nul\s*Possible\s*Fort/gi, '')
             .replace(/\|/g, ' ')
             .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/[:\-–]+$/, '')
             .trim();
             
-          if (label && label.length > 3 && !label.startsWith('#') && !label.startsWith('---') && !label.startsWith(':---')) {
+          if (label && label.length > 2 && !label.startsWith('#') && !label.startsWith('---') && !label.startsWith(':---')) {
             let fieldType: MethodoCRFField['type'] = 'text';
             let options: string[] | undefined = undefined;
             
@@ -95,7 +118,7 @@ export function parseMarkdownCrfToMethodoSchema(
               fieldType = 'date';
             } else if (label.toLowerCase().includes('âge') || label.toLowerCase().includes('taille') || label.toLowerCase().includes('poids') || label.toLowerCase().includes('score')) {
               fieldType = 'number';
-            } else if (trimmed.includes('?') || trimmed.includes('OUI') || trimmed.includes('NON') || trimmed.includes('Oui') || trimmed.includes('Non')) {
+            } else if (trimmed.includes('?') || trimmed.includes('OUI') || trimmed.includes('NON') || trimmed.includes('Oui') || trimmed.includes('Non') || trimmed.includes('Normal') || trimmed.includes('Excellente')) {
               fieldType = 'radio';
               if (trimmed.includes('Normal') || trimmed.includes('Anormal')) {
                 options = ['Normal', 'Anormal', 'Non évalué'];
@@ -108,7 +131,7 @@ export function parseMarkdownCrfToMethodoSchema(
               }
             }
             
-            // Seuls les champs de code patient ou contenant un astérisque explicite sont requis
+            // Seuls les champs de code patient ou le tout premier champ sont requis
             const isReq = label.toLowerCase().includes('code patient') || label.toLowerCase().includes('usubjid') || (idx === 0 && fieldCounter === 1);
 
             fields.push({
