@@ -77,6 +77,7 @@ export function parseMarkdownCrfToMethodoSchema(
             
             if (trimmed.includes('[ ]')) {
               fieldType = 'checkbox';
+              options = ['Présent', 'Absent'];
             }
             if (label.toLowerCase().includes('date')) {
               fieldType = 'date';
@@ -87,11 +88,14 @@ export function parseMarkdownCrfToMethodoSchema(
               options = ['Oui', 'Non', 'Non évalué'];
             }
             
+            // Seuls les 2 premiers champs ou ceux contenant un astérisque sont obligatoires
+            const isReq = idx === 0 || trimmed.includes('*') || label.toLowerCase().includes('code') || label.toLowerCase().includes('patient');
+
             fields.push({
               id: `f_${idx}_${fieldCounter++}`,
               label: label.substring(0, 100),
               type: fieldType,
-              required: true,
+              required: isReq,
               options
             });
           }
