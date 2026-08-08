@@ -57,19 +57,20 @@ export async function POST(req: Request) {
     const effectiveProvider = headerProvider || modelProvider;
     const apiKey = effectiveProvider === 'ollama' ? null : process.env.OPENROUTER_API_KEY;
 
-    // Construction du prompt pour Qwen / LLM
-    const systemPrompt = `Tu es un expert en méthodologie de recherche clinique et en rédaction médicale (normes RECIF & STROBE).
-Ta mission est de rédiger une **Revue de la Littérature et Synthèse Bibliographique** rigoureuse, scientifique et impartiale basée EXCLUSIVEMENT sur les résumés PubMed fournis par l'utilisateur.
+    // Construction du prompt pour Qwen / LLM avec analyse du niveau de preuve
+    const systemPrompt = `Tu es un expert senior en méthodologie de recherche clinique, épidémiologie et rédaction scientifique (normes HAS, RECIF & STROBE).
+Ta mission est de rédiger une **Revue de la Littérature & Synthèse Clinique Approfondie** d'excellence basée EXCLUSIVEMENT sur les données des articles PubMed et textes intégraux fournis.
 
-Consignes strictes :
-1. **Ne rien inventer** : Base toutes tes affirmations et conclusions uniquement sur les résumés fournis. Si une donnée manque (ex: taille d'échantillon non précisée), indique "Non spécifié".
-2. **Structure de la réponse** (en Markdown clair avec titres H2 et H3) :
-   - **1. Résumé Analytique & Synthèse Thématique** : Résume les connaissances actuelles et les principaux résultats de recherche ressortant des articles.
-   - **2. Tableau Comparatif des Études Analyées** (au format tableau Markdown) :
-     | PMID / Auteurs | Année | Type d'étude | Objectif & Population | Résultats clés | Limites identifiées |
-   - **3. Lacunes dans la Littérature & Rationnel pour une Nouvelle Étude** : Identifie ce qui reste insuffisamment exploré et justifie pourquoi un nouveau protocole de recherche serait scientifiquement pertinent.
-   - **4. Références Bibliographiques (Format Vancouver)** : Liste numérotée complète avec PMID et DOI.
-3. Rédige en français scientifique de très haute qualité.`;
+Consignes de rigueur scientifique :
+1. **Fidélité absolue aux données** : Ne formule aucune hypothèse non étayée. Si une métrique (ex: $N$ de la population, valeur de $p$, intervalle de confiance à 95%) est présente, cite-la explicitement. Si elle manque, indique "Non rapporté dans l'abstract".
+2. **Structure de la synthèse** (en Markdown rigoureux avec titres H2 et H3) :
+   - **1. Résumé Analytique & Synthèse Thématique** : Analyse critique des connaissances, convergences et divergences entre les publications.
+   - **2. Pyramide & Niveau de Preuve Scientifique** : Classement méthodique des études selon la hiérarchie de la preuve (Méta-analyse / RCT > Cohorte / Cas-témoins > Étude transversale / Série de cas).
+   - **3. Tableau Synthétique d'Extraction des Données** (format tableau Markdown exhaustif) :
+     | PMID / Citation | Année | Niveau de Preuve | Type d'étude & Population (N) | Critères & Résultats Chiffrés (p / IC 95%) | Texte Intégral / PMC | Limites & Biais |
+   - **4. Lacunes de la Littérature & Justification de Recherche (Rationnel)** : Analyse des zones d'ombre scientifiques justifiant un nouveau protocole clinique.
+   - **5. Références Bibliographiques (Norme Vancouver)** : Liste complète avec PMID, PMCID (si disponible) et DOI clickable.
+3. Rédige en français médical et scientifique de niveau publication académique.`;
 
     const articlesFormatted = articles
       .map(
@@ -77,16 +78,20 @@ Consignes strictes :
 ---
 [ARTICLE ${idx + 1}]
 - PMID: ${a.pmid}
+- PMCID: ${a.pmcid || 'Non PMC'}
 - Titre: ${a.title}
 - Auteurs: ${a.authors.join(', ')}
 - Journal: ${a.journal} (${a.year})
 - DOI: ${a.doi || 'Non spécifié'}
-- Type de publication: ${a.pubTypes.join(', ') || 'Article scientifique'}
-- Résumé (Abstract):
+- Niveau de preuve estimé: ${a.evidenceLevel || 'Article Scientifique'}
+- Texte intégral disponible: ${a.hasFullText ? `Oui (${a.fullTextUrl})` : 'Résumé uniquement'}
+- Types de publication: ${a.pubTypes.join(', ') || 'Article scientifique'}
+- Contenu / Résumé (Abstract):
 ${a.abstract}
 ---`
       )
       .join('\n');
+
 
     const userMessage = `Sujet / Question de recherche : "${query || 'Recherche générale PubMed'}"
 

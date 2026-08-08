@@ -894,6 +894,16 @@ export default function BiblioPage() {
                           <div className={styles.pubMeta}>
                             <span className={styles.journalTag}>{art.journal}</span>
                             <span>• {art.year}</span>
+                            {art.evidenceLevel && (
+                              <span className={styles.pubTypeBadge} style={{ background: 'rgba(13, 148, 136, 0.25)', color: '#2dd4bf', borderColor: 'rgba(13, 148, 136, 0.4)' }}>
+                                ⚡ {art.evidenceLevel}
+                              </span>
+                            )}
+                            {art.hasFullText && (
+                              <span className={styles.pubTypeBadge} style={{ background: 'rgba(16, 185, 129, 0.25)', color: '#34d399', borderColor: 'rgba(16, 185, 129, 0.4)' }}>
+                                🟢 Texte Intégral {art.pmcid ? `(${art.pmcid})` : ''}
+                              </span>
+                            )}
                             {art.pubTypes.map((pt, i) => (
                               <span key={i} className={styles.pubTypeBadge}>
                                 {pt}
@@ -930,7 +940,19 @@ export default function BiblioPage() {
                               PMID: {art.pmid} ↗
                             </a>
 
-                            {art.doi && (
+                            {art.fullTextUrl && (
+                              <a
+                                href={art.fullTextUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={styles.linkBtn}
+                                style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: 'rgba(16, 185, 129, 0.4)', color: '#34d399', fontWeight: 600 }}
+                              >
+                                📖 Texte Intégral {art.pmcid ? '(PMC)' : '(DOI)'} ↗
+                              </a>
+                            )}
+
+                            {art.doi && (!art.fullTextUrl || !art.fullTextUrl.includes('doi.org')) && (
                               <a
                                 href={`https://doi.org/${art.doi}`}
                                 target="_blank"

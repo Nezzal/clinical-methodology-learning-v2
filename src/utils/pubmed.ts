@@ -10,6 +10,10 @@ export interface PubMedArticle {
   abstract: string;
   pubTypes: string[];
   url: string;
+  pmcid?: string;
+  hasFullText?: boolean;
+  fullTextUrl?: string;
+  evidenceLevel?: string;
 }
 
 export interface PubMedSearchOptions {
@@ -33,6 +37,30 @@ function cleanXmlTags(str: string): string {
 }
 
 /**
+ * Évalue le niveau de preuve d'une publication clinique
+ */
+function determineEvidenceLevel(pubTypes: string[]): string {
+  const typesLower = pubTypes.map(t => t.toLowerCase());
+
+  if (typesLower.some(t => t.includes('meta-analysis') || t.includes('systematic review'))) {
+    return 'Niveau 1 : Méta-Analyse / Revue Systématique';
+  }
+  if (typesLower.some(t => t.includes('randomized controlled trial'))) {
+    return 'Niveau 1 : Essai Contrôlé Randomisé (RCT)';
+  }
+  if (typesLower.some(t => t.includes('clinical trial') || t.includes('pragmatic clinical trial'))) {
+    return 'Niveau 2 : Essai Clinique / Étude Comparative';
+  }
+  if (typesLower.some(t => t.includes('cohort study') || t.includes('case-control') || t.includes('observational study'))) {
+    return 'Niveau 3 : Étude d\'Observation (Cohorte / Cas-Témoins)';
+  }
+  if (typesLower.some(t => t.includes('review'))) {
+    return 'Niveau 4 : Revue Générale de la Littérature';
+  }
+  return 'Article Scientifique / Étude Clinique';
+}
+
+/**
  * Découpe et extrait le contenu XML des articles PubMed retournés par efetch
  */
 export function parsePubmedXml(xml: string): PubMedArticle[] {
@@ -46,6 +74,10 @@ export function parsePubmedXml(xml: string): PubMedArticle[] {
     const pmidMatch = block.match(/<PMID[^>]*>([\s\S]*?)<\/PMID>/);
     const pmid = pmidMatch ? cleanXmlTags(pmidMatch[1]) : '';
     if (!pmid) continue;
+
+    // PMCID
+    const pmcidMatch = block.match(/<ArticleId IdType="pmc">([\s\S]*?)<\/ArticleId>/);
+    const pmcid = pmcidMatch ? cleanXmlTags(pmcidMatch[1]) : undefined;
 
     // Article Title
     const titleMatch = block.match(/<ArticleTitle[^>]*>([\s\S]*?)<\/ArticleTitle>/);
@@ -124,6 +156,13 @@ export function parsePubmedXml(xml: string): PubMedArticle[] {
       abstract = 'Aucun résumé disponible dans PubMed.';
     }
 
+    const hasFullText = Boolean(pmcid);
+    const fullTextUrl = pmcid
+      ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${pmcid}/`
+      : doi
+      ? `https://doi.org/${doi}`
+      : undefined;
+
     articles.push({
       pmid,
       title,
@@ -134,6 +173,10 @@ export function parsePubmedXml(xml: string): PubMedArticle[] {
       abstract,
       pubTypes,
       url: `https://pubmed.ncbi.nlm.nih.gov/${pmid}/`,
+      pmcid,
+      hasFullText,
+      fullTextUrl,
+      evidenceLevel: determineEvidenceLevel(pubTypes),
     });
   }
 
@@ -141,12 +184,86 @@ export function parsePubmedXml(xml: string): PubMedArticle[] {
 }
 
 /**
- * Recherche des articles sur PubMed via NCBI Entrez API
+ * Interroge l'API EuropePMC pour récupérer les statuts de texte intégral Open Access et les PMCID manquants
+ */
+export async function enrichWithEuropePMC(articles: PubMedArticle[]): Promise<PubMedArticle[]> {
+  if (!articles || articles.length === 0) return articles;
+
+  const pmidsToFetch = articles.filter(a => !a.pmcid).map(a => a.pmid);
+  if (pmidsToFetch.length === 0) return articles;
+
+  try {
+    const queryStr = pmidsToFetch.map(id => `EXT_ID:${id}`).join(' OR ');
+    const url = `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=(${encodeURIComponent(queryStr)})%20SRC:MED&format=json&resultType=core&pageSize=${pmidsToFetch.length}`;
+
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return articles;
+
+    const data = await res.json();
+    const results = data.resultList?.result || [];
+
+    const pmcMap = new Map<string, { pmcid?: string; isOpenAccess?: boolean; fullTextUrl?: string }>();
+    for (const item of results) {
+      if (item.pmid) {
+        const pmcid = item.pmcid;
+        const isOpenAccess = item.isOpenAccess === 'Y';
+        const fullTextUrl = pmcid 
+          ? `https://europepmc.org/article/PMC/${pmcid}` 
+          : item.doi 
+          ? `https://doi.org/${item.doi}`
+          : undefined;
+
+        pmcMap.set(item.pmid, { pmcid, isOpenAccess, fullTextUrl });
+      }
+    }
+
+    return articles.map(art => {
+      const pmcInfo = pmcMap.get(art.pmid);
+      if (pmcInfo) {
+        const pmcid = art.pmcid || pmcInfo.pmcid;
+        const hasFullText = art.hasFullText || pmcInfo.isOpenAccess || Boolean(pmcid);
+        const fullTextUrl = art.fullTextUrl || pmcInfo.fullTextUrl;
+        return {
+          ...art,
+          pmcid,
+          hasFullText,
+          fullTextUrl,
+        };
+      }
+      return art;
+    });
+  } catch (err) {
+    console.warn('⚠️ Erreur lors de l\'enrichissement EuropePMC:', err);
+    return articles;
+  }
+}
+
+/**
+ * Construit une requête hybride PubMed pour éviter de bloquer sur des MeSH stricts non encore indexés
+ */
+export function buildHybridQuery(query: string): string {
+  let trimmed = query.trim();
+  
+  // Si la requête contient déjà du texte libre [TiAb] ou des opérateurs complexes, on la préserve
+  if (trimmed.includes('[TiAb]') || trimmed.includes('[Title/Abstract]') || trimmed.includes('[PDAT]')) {
+    return trimmed;
+  }
+
+  // Si la requête contient uniquement des [Mesh] simples sans TiAb, on crée des paires hybrides (MeSH OR Title/Abstract)
+  if (trimmed.includes('[Mesh]') || trimmed.includes('[mesh]')) {
+    return trimmed.replace(/"([^"]+)"\[Mesh\]/gi, '("$1"[Mesh] OR "$1"[Title/Abstract])');
+  }
+
+  return trimmed;
+}
+
+/**
+ * Recherche des articles sur PubMed via NCBI Entrez API avec stratégie de secours (fallback)
  */
 export async function searchPubMed(query: string, options: PubMedSearchOptions = {}): Promise<PubMedArticle[]> {
   const { retmax = 10, yearStart, yearEnd, publicationType, sort = 'relevance' } = options;
 
-  let term = query.trim();
+  let term = buildHybridQuery(query);
 
   // Ajouter les filtres de type de publication
   if (publicationType === 'clinical_trial') {
@@ -181,13 +298,27 @@ export async function searchPubMed(query: string, options: PubMedSearchOptions =
   }
 
   const searchData = await searchRes.json();
-  const ids: string[] = searchData.esearchresult?.idlist || [];
+  let ids: string[] = searchData.esearchresult?.idlist || [];
+
+  // Stratégie de secours : si la requête hybride/MeSH stricte donne 0 résultat, assouplir la recherche en mots-clés simples
+  if (ids.length === 0 && (query.includes('[Mesh]') || query.includes('[mesh]'))) {
+    console.log('⚠️ [PubMed Search] 0 résultat sur requête MeSH stricte. Exécution du fallback en texte libre...');
+    const relaxedTerm = query.replace(/"/g, '').replace(/\[Mesh\]/gi, '').trim();
+    const relaxedEncoded = encodeURIComponent(relaxedTerm);
+    const fallbackUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${relaxedEncoded}&retmode=json&retmax=${retmax}`;
+    const fallbackRes = await fetch(fallbackUrl, { cache: 'no-store' });
+    if (fallbackRes.ok) {
+      const fallbackData = await fallbackRes.json();
+      ids = fallbackData.esearchresult?.idlist || [];
+    }
+  }
 
   if (ids.length === 0) {
     return [];
   }
 
-  return fetchArticlesByPmids(ids);
+  const baseArticles = await fetchArticlesByPmids(ids);
+  return enrichWithEuropePMC(baseArticles);
 }
 
 /**
@@ -206,3 +337,4 @@ export async function fetchArticlesByPmids(pmids: string[]): Promise<PubMedArtic
   const xmlText = await res.text();
   return parsePubmedXml(xmlText);
 }
+

@@ -10,6 +10,8 @@ import { getUserProfileHeaderInfo } from '@/utils/pdf-utils';
 import { getUserTier, getQuotaConfig } from '@/utils/quota';
 import { QuotaModal } from '@/components/QuotaModal';
 import SubscriptionModal from '@/components/SubscriptionModal';
+import { MethodoCrfExportModal } from '@/components/MethodoCrfExportModal';
+import { parseMarkdownCrfToMethodoSchema } from '@/utils/crfExporter';
 import styles from './page.module.css';
 
 function renderProtocolHtmlTable(rows: string[]): string {
@@ -167,6 +169,7 @@ export default function ProtocoleGenerator() {
   const [loading, setLoading] = useState(false);
   const [loadingCrf, setLoadingCrf] = useState(false);
   const [previewMode, setPreviewMode] = useState<'protocol' | 'crf'>('protocol');
+  const [showMethodoCrfModal, setShowMethodoCrfModal] = useState(false);
   const [activeProtocolId, setActiveProtocolId] = useState<string | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
@@ -1671,7 +1674,7 @@ export default function ProtocoleGenerator() {
             </div>
 
             {((previewMode === 'protocol' && generatedProtocol) || (previewMode === 'crf' && generatedCrf)) && (
-              <div className={styles.previewActions} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', width: '100%' }}>
+              <div className={styles.previewActions} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
                 <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleCopy}>
                   Copier
                 </button>
@@ -1681,6 +1684,20 @@ export default function ProtocoleGenerator() {
                 <button className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={handleExportPDF}>
                   Exporter en PDF
                 </button>
+
+                {previewMode === 'crf' && generatedCrf && (
+                  <button 
+                    className="btn btn-success" 
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', backgroundColor: '#059669', color: '#ffffff', borderColor: '#059669', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, marginLeft: 'auto' }} 
+                    onClick={() => setShowMethodoCrfModal(true)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                    Partager vers MéthodoCRF
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1827,6 +1844,17 @@ export default function ProtocoleGenerator() {
         isOpen={showSubscriptionModal}
         onClose={() => setShowSubscriptionModal(false)}
       />
+
+      {showMethodoCrfModal && generatedCrf && (
+        <MethodoCrfExportModal
+          crfTemplate={parseMarkdownCrfToMethodoSchema(generatedCrf, {
+            title,
+            acronym,
+            methodology
+          })}
+          onClose={() => setShowMethodoCrfModal(false)}
+        />
+      )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin {

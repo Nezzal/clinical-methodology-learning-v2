@@ -6,10 +6,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Directives Systématiques de Modifications & Release RECIF (Workflow en 2 Étapes)
 
-À chaque fois que vous effectuez des modifications de code ou des correctifs dans l'application :
+### 📌 Règle de Versioning
+*La montée de version (`package.json`, `src/utils/constants.ts` et liens de téléchargement `src/app/guide/page.tsx`) **n'est PAS automatique**. Elle s'effectue **UNIQUEMENT lorsque l'utilisateur le demande explicitement**.* Pour les modifications de code ou correctifs courants sans changement de version demandé, appliquez les modifications et effectuez les tests/builds requis sans incrémenter la version.
+
+Lorsqu'une nouvelle release/version est explicitement demandée par l'utilisateur :
 
 ### ⏸️ Étape 1 : Préparation & Build macOS (Pause pour Validation + Signal Sonore)
-1. **Montée de version** : Incrémentez la version dans `package.json` et `src/utils/constants.ts` (`APP_VERSION`).
+1. **Montée de version** : Incrémentez la version choisie dans `package.json` et `src/utils/constants.ts` (`APP_VERSION`).
 2. **Mise à jour des liens du Guide** : Ajustez les URLs de téléchargement dans `src/app/guide/page.tsx` avec le nouveau tag (`vX.Y.Z`).
 3. **Build Electron macOS** : Générez uniquement le livrable macOS (`npm run electron:package:mac`).
 4. **PAUSE & SIGNAL SONORE** : Émettez une notification sonore système (`afplay /System/Library/Sounds/Glass.aiff` ou `say "Validation Mac requise"`) et demandez à l'utilisateur de tester et valider l'application Mac (`dist/mac-arm64/RECIF-MethodoClinique.app`).
@@ -24,4 +27,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
    - `git commit -m "release: ..."`
    - `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
    - `git push origin <branch> --tags`
+
 
