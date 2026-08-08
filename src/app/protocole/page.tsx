@@ -1685,7 +1685,7 @@ export default function ProtocoleGenerator() {
                   Exporter en PDF
                 </button>
 
-                {previewMode === 'crf' && generatedCrf && (
+                {generatedCrf && (
                   <button 
                     className="btn btn-success" 
                     style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', backgroundColor: '#059669', color: '#ffffff', borderColor: '#059669', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, marginLeft: 'auto' }} 
