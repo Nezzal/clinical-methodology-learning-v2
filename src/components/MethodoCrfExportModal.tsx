@@ -9,7 +9,14 @@ interface MethodoCrfExportModalProps {
 }
 
 export function MethodoCrfExportModal({ crfTemplate, onClose }: MethodoCrfExportModalProps) {
-  const [methodoCrfUrl, setMethodoCrfUrl] = useState('http://localhost:5173');
+  const getDefaultUrl = () => {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return 'https://methodo-e73q2kftf-maliks-projects-93427e83.vercel.app';
+    }
+    return 'http://localhost:5173';
+  };
+
+  const [methodoCrfUrl, setMethodoCrfUrl] = useState(getDefaultUrl());
   const [activeTab, setActiveTab] = useState<'link' | 'json' | 'qrcode'>('link');
   const [copied, setCopied] = useState(false);
   const [qrError, setQrError] = useState(false);
