@@ -201,16 +201,27 @@ export function downloadCrfJson(crfTemplate: MethodoCRFTemplate): void {
   downloadAnchor.remove();
 }
 
+export function safeBase64Encode(str: string): string {
+  try {
+    const bytes = new TextEncoder().encode(str);
+    let bin = '';
+    bytes.forEach((b) => (bin += String.fromCharCode(b)));
+    return btoa(bin);
+  } catch (e) {
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+}
+
 /**
  * Generates direct import URL (Deep-link) for MéthodoCRF
  */
 export function generateMethodoCrfDeepLink(
   crfTemplate: MethodoCRFTemplate,
-  baseUrl: string = 'http://localhost:5173'
+  baseUrl: string = 'https://methodo-crf.vercel.app'
 ): string {
   try {
     const jsonStr = JSON.stringify(crfTemplate);
-    const encodedPayload = encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
+    const encodedPayload = encodeURIComponent(safeBase64Encode(jsonStr));
     return `${baseUrl.replace(/\/$/, '')}/?import_crf=${encodedPayload}`;
   } catch (err) {
     console.error('Erreur encodage DeepLink CRF:', err);
