@@ -11,7 +11,7 @@ interface MethodoCrfExportModalProps {
 export function MethodoCrfExportModal({ crfTemplate, onClose }: MethodoCrfExportModalProps) {
   const getDefaultUrl = () => {
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return 'https://methodo-e73q2kftf-maliks-projects-93427e83.vercel.app';
+      return 'https://methodo-crf.vercel.app';
     }
     return 'http://localhost:5173';
   };
